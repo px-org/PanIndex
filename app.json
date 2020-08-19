@@ -1,0 +1,22 @@
+{
+  "name": "PanIndex",
+  "description": "网盘直链",
+  "keywords": [
+    "PanIndex", "cloud.189.cn"
+  ],
+  "env": {
+    "TZ": {
+      "description": "时区，请勿修改",
+      "value": "Asia/Shanghai"
+    },
+    "LANG": {
+      "description": "编码格式，请勿修改",
+      "value": "en_US.UTF-8"
+    }
+  },
+  "addons": [{
+    "plan": "heroku-postgresql"
+  }],
+  "website": "http://github.com/libsgh/PanIndex",
+  "repository": "http://github.com/libsgh/PanIndex"
+}
