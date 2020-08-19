@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/eddieivan01/nic"
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron"
 	"log"
 	"net/http"
 	"os"
 )
-
-var version string = "1.3.0"
 
 func main() {
 	//gin.SetMode(gin.ReleaseMode)
@@ -23,6 +23,14 @@ func main() {
 	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 	//声明一个路由
 	r.GET("/", index)
+	c := cron.New()
+	c.AddFunc("0 0/5 * * * ?", func() {
+		resp, err := nic.Get("https://pan.noki.top/", nil)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		log.Println("heroku防休眠请求成功：" + resp.Status)
+	})
 	r.Run(":" + port) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
