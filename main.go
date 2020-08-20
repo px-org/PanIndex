@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -22,7 +23,16 @@ func main() {
 	r.Static("/static", "static")
 	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 	//声明一个路由
-	r.GET("/", index)
+	//r.GET("/:xx/:s", index)
+	//r.GET("/:second/:third", index)
+	r.NoRoute(func(c *gin.Context) {
+		path := c.Request.URL.Path
+		if strings.HasPrefix(path, "/test") {
+			test(c)
+		} else {
+			c.HTML(http.StatusOK, "index.html", GetFilesByPath(path))
+		}
+	})
 	c := cron.New()
 	c.AddFunc("0 0/5 * * * ?", func() {
 		resp, err := nic.Get("https://pan.noki.top/", nil)
@@ -31,13 +41,18 @@ func main() {
 		}
 		log.Println("heroku防休眠请求成功：" + resp.Status)
 	})
+	login(os.Getenv("USER"), os.Getenv("PASSWORD"))
 	r.Run(":" + port) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
 
-/**
-首页
-*/
 func index(c *gin.Context) {
-	c.HTML(http.StatusOK, "index.html", gin.H{"name": "Libs"})
+	//path := c.Param("path")
+	log.Println(c.Request.URL.Path)
+	c.HTML(http.StatusOK, "index.html", gin.H{"name": c.Request.URL.Path})
+}
+
+func test(c *gin.Context) {
+	GetFiles("-11", "-11")
+	c.JSON(http.StatusOK, "success")
 }
