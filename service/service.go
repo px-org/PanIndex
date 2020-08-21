@@ -1,32 +1,19 @@
-package main
+package service
 
 import (
-	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"PanIndex/Util"
+	"PanIndex/entity"
+	"PanIndex/model"
 	"strings"
 )
 
-var SqliteDb *gorm.DB
-
-func init() {
-	var err error
-	SqliteDb, err = gorm.Open("sqlite3", "data.db")
-	if err != nil {
-		panic(fmt.Sprintf("Got error when connect database, the error is '%v'", err))
-	} else {
-		fmt.Println("Sqlite数据库连接成功")
-	}
-	SqliteDb.SingularTable(true)
-	SqliteDb.AutoMigrate(&FileNode{})
-	//打印sql语句
-	//SqliteDb.LogMode(true)
-}
-
 func GetFilesByPath(path string) map[string]interface{} {
 	result := make(map[string]interface{})
-	list := []FileNode{}
-	SqliteDb.Raw("select * from file_node where parent_path = ?", path).Find(&list)
+	list := []entity.FileNode{}
+	model.SqliteDb.Raw("select * from file_node where parent_path=?", path).Find(&list)
+	if len(list) == 0 {
+		model.SqliteDb.Raw("select * from file_node where path = ?", path).Find(&list)
+	}
 	result["List"] = list
 	result["Path"] = path
 	if path == "/" {
@@ -37,6 +24,11 @@ func GetFilesByPath(path string) map[string]interface{} {
 	result["ParentPath"] = PetParentPath(path)
 	return result
 }
+
+func GetDownlaodUrl(fileIdDigest string) string {
+	return Util.GetDownlaodUrl(fileIdDigest)
+}
+
 func PetParentPath(p string) string {
 	if p == "/" {
 		return ""

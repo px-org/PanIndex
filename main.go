@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/eddieivan01/nic"
+	"PanIndex/entity"
+	"PanIndex/jobs"
+	"PanIndex/service"
 	"github.com/gin-gonic/gin"
-	"github.com/robfig/cron"
 	"log"
 	"net/http"
 	"os"
@@ -11,7 +12,7 @@ import (
 )
 
 func main() {
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("必须设置 $PORT")
@@ -23,36 +24,40 @@ func main() {
 	r.Static("/static", "static")
 	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 	//声明一个路由
-	//r.GET("/:xx/:s", index)
-	//r.GET("/:second/:third", index)
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
-		if strings.HasPrefix(path, "/test") {
-			test(c)
+		if strings.HasPrefix(path, "/admin") {
+			log.Println("保留路由")
 		} else {
-			c.HTML(http.StatusOK, "index.html", GetFilesByPath(path))
+			index(c)
 		}
 	})
-	c := cron.New()
-	c.AddFunc("0 0/5 * * * ?", func() {
-		resp, err := nic.Get("https://pan.noki.top/", nil)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		log.Println("heroku防休眠请求成功：" + resp.Status)
-	})
-	login(os.Getenv("USER"), os.Getenv("PASSWORD"))
+	jobs.Run()
+	jobs.StartInit()
 	r.Run(":" + port) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
 
 func index(c *gin.Context) {
-	//path := c.Param("path")
-	log.Println(c.Request.URL.Path)
-	c.HTML(http.StatusOK, "index.html", gin.H{"name": c.Request.URL.Path})
-}
-
-func test(c *gin.Context) {
-	GetFiles("-11", "-11")
-	c.JSON(http.StatusOK, "success")
+	result := service.GetFilesByPath(c.Request.URL.Path)
+	fs, ok := result["List"].([]entity.FileNode)
+	if ok {
+		if len(fs) == 1 && !fs[0].IsFolder {
+			//文件
+			downUrl := service.GetDownlaodUrl(fs[0].FileIdDigest)
+			c.Redirect(http.StatusMovedPermanently, downUrl)
+			/*if fs[0].MediaType == 1{
+				//图片
+			}else if fs[0].MediaType == 2{
+				//音频
+			}else if fs[0].MediaType == 3{
+				//视频
+			}else if fs[0].MediaType == 4{
+				//文本
+			}else{
+				//其他类型，直接下载
+			}*/
+		}
+	}
+	c.HTML(http.StatusOK, "index.html", result)
 }

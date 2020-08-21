@@ -1,6 +1,8 @@
-package main
+package Util
 
 import (
+	"PanIndex/entity"
+	"PanIndex/model"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -18,36 +20,8 @@ import (
 
 var CLoud189Session = nic.Session{}
 
-type FileNode struct {
-	FileId       string `json:"fileId"`
-	FileIdDigest string `json:"fileIdDigest"`
-	FileName     string `json:"fileName"`
-	FileSize     int64  `json:"fileSize"`
-	SizeFmt      string `json:"sizeFmt"`
-	FileType     string `json:"fileType"`
-	IsFolder     bool   `json:"isFolder"`
-	IsStarred    bool   `json:"isStarred"`
-	LastOpTime   string `json:"lastOpTime"`
-	ParentId     string `json:"parentId"`
-	Path         string `json:"path"`
-	ParentPath   string `json:"parentPath"`
-	DownloadUrl  string `json:"downloadUrl"`
-	MediaType    int    `json:"mediaType"`
-	Icon         Icon   `json:"icon"`
-	CreateTime   string `json:"create_time"`
-}
-type Icon struct {
-	LargeUrl string `json:"largeUrl"`
-	SmallUrl string `json:"smallUrl"`
-}
-type Paths struct {
-	FileId    string `json:"fileId"`
-	FileName  string `json:"fileName"`
-	IsCoShare int    `json:"isCoShare"`
-}
-
 //获取文件列表
-func GetFiles(rootId, fileId string) {
+func Cloud189GetFiles(rootId, fileId string) {
 	pageNum := 1
 	for {
 		url := fmt.Sprintf("https://cloud.189.cn/v2/listFiles.action?fileId=%s&mediaType=&keyword=&inGroupSpace=false&orderBy=3&order=DESC&pageNum=%d&pageSize=100&noCache=%s", fileId, pageNum, random())
@@ -59,7 +33,7 @@ func GetFiles(rootId, fileId string) {
 		totalCount := jsoniter.Get(byteFiles, "recordCount").ToInt()
 		d := jsoniter.Get(byteFiles, "data")
 		paths := jsoniter.Get(byteFiles, "path")
-		ps := []Paths{}
+		ps := []entity.Paths{}
 		err = jsoniter.Unmarshal([]byte(paths.ToString()), &ps)
 		p := ""
 		flag := false
@@ -81,7 +55,7 @@ func GetFiles(rootId, fileId string) {
 			}
 		}
 		if d != nil {
-			m := []FileNode{}
+			m := []entity.FileNode{}
 			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
 			if err == nil {
 				for _, item := range m {
@@ -93,19 +67,19 @@ func GetFiles(rootId, fileId string) {
 					item.ParentPath = p
 					item.SizeFmt = FormatFileSize(item.FileSize)
 					if item.IsFolder == true {
-						GetFiles(rootId, item.FileId)
+						Cloud189GetFiles(rootId, item.FileId)
 					} else {
 						//如果是文件，解析下载直链
-						dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
+						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
 							AllowRedirect: false,
 						})
 						redirectUrl := dRedirectRep.Header.Get("Location")
 						dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
 							AllowRedirect: false,
 						})
-						item.DownloadUrl = dRedirectRep.Header.Get("Location")
+						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
 					}
-					SqliteDb.Save(item)
+					model.SqliteDb.Save(item)
 				}
 			}
 		}
@@ -116,9 +90,19 @@ func GetFiles(rootId, fileId string) {
 		}
 	}
 }
+func GetDownlaodUrl(fileIdDigest string) string {
+	dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
+		AllowRedirect: false,
+	})
+	redirectUrl := dRedirectRep.Header.Get("Location")
+	dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
+		AllowRedirect: false,
+	})
+	return dRedirectRep.Header.Get("Location")
+}
 
 //天翼云网盘登录
-func login(user, password string) string {
+func Cloud189Login(user, password string) string {
 	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
@@ -156,7 +140,6 @@ func login(user, password string) string {
 	restCode := jsoniter.Get([]byte(loginResp.Text), "result").ToInt()
 	//0登录成功，-2，需要获取验证码，-5 app info获取失败
 	if restCode == 0 {
-		log.Println(">> 登录成功。")
 		toUrl := jsoniter.Get([]byte(loginResp.Text), "toUrl").ToString()
 		res, _ := CLoud189Session.Get(toUrl, nil)
 		return res.Cookies()[0].Value
