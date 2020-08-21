@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"log"
 )
 
 var SqliteDb *gorm.DB
@@ -15,7 +16,7 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("Got error when connect database, the error is '%v'", err))
 	} else {
-		fmt.Println("Sqlite数据库连接成功")
+		log.Println("[程序启动]Sqlite数据库 >> 连接成功")
 	}
 	SqliteDb.SingularTable(true)
 	SqliteDb.AutoMigrate(&entity.FileNode{})

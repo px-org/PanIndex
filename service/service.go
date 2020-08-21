@@ -12,7 +12,7 @@ func GetFilesByPath(path string) map[string]interface{} {
 	list := []entity.FileNode{}
 	model.SqliteDb.Raw("select * from file_node where parent_path=?", path).Find(&list)
 	if len(list) == 0 {
-		model.SqliteDb.Raw("select * from file_node where path = ?", path).Find(&list)
+		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0", path).Find(&list)
 	}
 	result["List"] = list
 	result["Path"] = path
