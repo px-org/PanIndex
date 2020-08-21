@@ -23,12 +23,13 @@ $(document).ready(function() {
                 }]
             })
         }
+        var fullUrl = window.location.href+"/"+$(this).text();
         if(fileType == "doc" || fileType == "docx" || fileType == "dotx"
             || fileType == "ppt" || fileType == "pptx" || fileType == "xls" || fileType == "xlsx"){
             window.open(" https://view.officeapps.live.com/op/view.aspx?src="+fullUrl);
         }else if(fileType == "pdf"){
             window.onload = function (){
-               new PDFObject({ url: dURL }).embed();
+               new PDFObject({ url: fullUrl }).embed();
             };
         }
     });

@@ -39,8 +39,8 @@ func StartInit() {
 	cookie := Util.Cloud189Login(config.Config189.User, config.Config189.Password)
 	if cookie != "" {
 		log.Println("[程序启动]cookie更新 >> 登录成功")
-		log.Println(cookie)
 	}
 	model.SqliteDb.Delete(&entity.FileNode{})
 	Util.Cloud189GetFiles(config.Config189.RootId, config.Config189.RootId)
+	log.Println("[程序启动]目录缓存刷新 >> 刷新成功")
 }
