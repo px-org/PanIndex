@@ -13,6 +13,7 @@ $(document).ready(function() {
                     "subHtml": "<h4>"+title+"</h4>"
                 }]
             });
+            return;
         }else if(dmt == 3){
             $(this).lightGallery({
                 dynamic: true,
@@ -22,15 +23,14 @@ $(document).ready(function() {
                     "subHtml": "<h4>"+title+"</h4>"
                 }]
             })
+            return;
         }
         var fullUrl = window.location.href+"/"+$(this).text();
         if(fileType == "doc" || fileType == "docx" || fileType == "dotx"
             || fileType == "ppt" || fileType == "pptx" || fileType == "xls" || fileType == "xlsx"){
             window.open(" https://view.officeapps.live.com/op/view.aspx?src="+fullUrl);
-        }else if(fileType == "pdf"){
-            window.onload = function (){
-               new PDFObject({ url: fullUrl }).embed();
-            };
+        }else{
+            window.open(dURL);
         }
     });
 });
