@@ -91,6 +91,7 @@ func Cloud189GetFiles(rootId, fileId string) {
 	}
 }
 func GetDownlaodUrl(fileIdDigest string) string {
+	//cloud.189.cn/downloadFile.action?fileStr=4DDDA9EF1C2870994B81D1C012FAF0D8275E1B87469254823CAC0CB09D46D3DEF4660ABAC55FE1BEC575DC50A322F6FF631C0C84393339D9&downloadType=1
 	dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
 		AllowRedirect: false,
 	})

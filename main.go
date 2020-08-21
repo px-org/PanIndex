@@ -20,7 +20,7 @@ func main() {
 	//首先先生成一个gin实例
 	r := gin.New()
 	r.Use(gin.Logger())
-	r.LoadHTMLGlob("templates/*.html")
+	r.LoadHTMLGlob("templates/189/classic/*.html")
 	r.Static("/static", "static")
 	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 	//声明一个路由
@@ -45,7 +45,7 @@ func index(c *gin.Context) {
 		if len(fs) == 1 && !fs[0].IsFolder {
 			//文件
 			downUrl := service.GetDownlaodUrl(fs[0].FileIdDigest)
-			c.Redirect(http.StatusMovedPermanently, downUrl)
+			c.Redirect(http.StatusFound, downUrl)
 			/*if fs[0].MediaType == 1{
 				//图片
 			}else if fs[0].MediaType == 2{

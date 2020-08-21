@@ -8,6 +8,7 @@
     </style>
     <link rel="icon" href="/static/img/favicon.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/css/lightgallery.min.css">
 </head>
 <body>
 <h1 id="heading">Index of {{ .Path }}</h1>
@@ -24,20 +25,22 @@
     {{else}}
     {{end}}
     {{range .List}}
-        {{if .IsFolder}}
-            <tr>
+
+        <tr>
+            {{if .IsFolder}}
                 <td class="file-name"><a class="icon icon-dir" href="{{.Path}}">{{.FileName}}/</a></td>
-                <td class="file-size">{{.SizeFmt}}</td>
-                <td class="file-date-modified">{{.LastOpTime}}</td>
-            </tr>
-        {{else}}
-            <tr>
-                <td class="file-name"><a class="icon icon-file" href="{{.Path}}">{{.FileName}}</a></td>
-                <td class="file-size">{{.SizeFmt}}</td>
-                <td class="file-date-modified">{{.LastOpTime}}</td>
-            </tr>
-        {{end}}
+            {{else}}
+                <td class="file-name"><a class="icon icon-file"data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);">{{.FileName}}</a></td>
+            {{end}}
+            <td class="file-size">{{.SizeFmt}}</td>
+            <td class="file-date-modified">{{.LastOpTime}}</td>
+        </tr>
+
     {{end}}
 </table>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/picturefill/2.3.1/picturefill.min.js"></script>
+<script src="/static/js/main189.js"></script>
 </body>
 </html>
