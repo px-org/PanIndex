@@ -42,7 +42,7 @@ func index(c *gin.Context) {
 	result := service.GetFilesByPath(c.Request.URL.Path)
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
-		if len(fs) == 1 && !fs[0].IsFolder {
+		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
 			//文件
 			downUrl := service.GetDownlaodUrl(fs[0].FileIdDigest)
 			c.Redirect(http.StatusFound, downUrl)
