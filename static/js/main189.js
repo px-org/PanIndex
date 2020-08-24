@@ -26,11 +26,12 @@ $(document).ready(function() {
             return;
         }
         var fullUrl = window.location.href+"/"+$(this).text();
+        console.log(fullUrl);
         if(fileType == "doc" || fileType == "docx" || fileType == "dotx"
             || fileType == "ppt" || fileType == "pptx" || fileType == "xls" || fileType == "xlsx"){
             window.open(" https://view.officeapps.live.com/op/view.aspx?src="+fullUrl);
         }else{
-            window.open(dURL);
+            window.location.href = dURL;
         }
     });
 });
