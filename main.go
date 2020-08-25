@@ -64,7 +64,7 @@ func index(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", result)
 }
 func downloadMultiFiles(c *gin.Context) {
-	fileId := c.GetInt64("fileId")
+	fileId := c.Query("fileId")
 	downUrl := service.GetDownlaodMultiFiles(fileId)
 	c.Redirect(http.StatusFound, downUrl)
 }

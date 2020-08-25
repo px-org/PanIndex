@@ -30,7 +30,7 @@ func GetFilesByPath(path string) map[string]interface{} {
 func GetDownlaodUrl(fileIdDigest string) string {
 	return Util.GetDownlaodUrl(fileIdDigest)
 }
-func GetDownlaodMultiFiles(fileId int64) string {
+func GetDownlaodMultiFiles(fileId string) string {
 	return Util.GetDownlaodMultiFiles(fileId)
 }
 

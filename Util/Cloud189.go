@@ -14,7 +14,6 @@ import (
 	"log"
 	math_rand "math/rand"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -101,8 +100,8 @@ func GetDownlaodUrl(fileIdDigest string) string {
 	})
 	return dRedirectRep.Header.Get("Location")
 }
-func GetDownlaodMultiFiles(fileId int64) string {
-	dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/downloadMultiFiles.action?fileIdS=%s&downloadType=1&recursive=1", strconv.FormatInt(fileId, 10)), nic.H{
+func GetDownlaodMultiFiles(fileId string) string {
+	dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/downloadMultiFiles.action?fileIdS=%s&downloadType=1&recursive=1", fileId), nic.H{
 		AllowRedirect: false,
 	})
 	redirectUrl := dRedirectRep.Header.Get("Location")
