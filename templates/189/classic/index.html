@@ -36,12 +36,12 @@
             <td class="file-date-modified">{{.LastOpTime}}</td>
             {{if .IsFolder}}
                 {{if and (ne .FileId "0") (ne .FileId "-12") (ne .FileId "-14") (ne .FileId "-13") (ne .FileId "-15") (ne .FileId "-11") (ne .FileId "-16")}}
-                    <td class="file-size"><a href="/api/downloadMultiFiles?fileId={{.FileId}}" target="_blank"><i class="icon ion-ios-cloud-download" style="font-size:25px"></i></a></td>
+                    <td class="file-size"><a class="folderDown" data-file-id="{{.FileId}}" href="javascript:void(0);" target="_blank" ><i class="icon ion-ios-cloud-download" style="height:100%"></i></a></td>
                 {{else}}
                     <td class="file-size">-</td>
                 {{end}}
             {{else}}
-                <td class="file-size"><a href="{{.Path}}" target="_blank"><i class="icon ion-ios-cloud-download" style="font-size:25px"></i></a></td>
+                <td class="file-size"><a href="{{.Path}}" target="_blank"><i class="icon ion-ios-cloud-download" style="height:100%"></i></a></td>
             {{end}}
         </tr>
     {{end}}

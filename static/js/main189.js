@@ -33,4 +33,15 @@ $(document).ready(function() {
             window.location.href = dURL;
         }
     });
+    $('.folderDown').on('click', function() {
+        var fileId = $(this).attr("data-file-id");
+        $.ajax({
+            type: 'POST',
+            url: "/api/downloadMultiFiles?fileId="+fileId,
+            async:false,
+            success: function(data){
+                window.location.href = data.redirect_url;
+            }
+        });
+    });
 });

@@ -26,8 +26,9 @@ func main() {
 	//声明一个路由
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
+		method := c.Request.Method
 		log.Println(path)
-		if strings.HasPrefix(path, "/api") {
+		if method == "POST" && strings.HasPrefix(path, "/api") {
 			//文件夹下载
 			downloadMultiFiles(c)
 		} else {
@@ -66,5 +67,5 @@ func index(c *gin.Context) {
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
 	downUrl := service.GetDownlaodMultiFiles(fileId)
-	c.Redirect(http.StatusFound, downUrl)
+	c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 }
