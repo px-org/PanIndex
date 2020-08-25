@@ -30,6 +30,9 @@ func GetFilesByPath(path string) map[string]interface{} {
 func GetDownlaodUrl(fileIdDigest string) string {
 	return Util.GetDownlaodUrl(fileIdDigest)
 }
+func GetDownlaodMultiFiles(fileId int64) string {
+	return Util.GetDownlaodMultiFiles(fileId)
+}
 
 func PetParentPath(p string) string {
 	if p == "/" {

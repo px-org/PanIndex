@@ -14,6 +14,7 @@ import (
 	"log"
 	math_rand "math/rand"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -91,7 +92,6 @@ func Cloud189GetFiles(rootId, fileId string) {
 	}
 }
 func GetDownlaodUrl(fileIdDigest string) string {
-	//cloud.189.cn/downloadFile.action?fileStr=4DDDA9EF1C2870994B81D1C012FAF0D8275E1B87469254823CAC0CB09D46D3DEF4660ABAC55FE1BEC575DC50A322F6FF631C0C84393339D9&downloadType=1
 	dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
 		AllowRedirect: false,
 	})
@@ -100,6 +100,13 @@ func GetDownlaodUrl(fileIdDigest string) string {
 		AllowRedirect: false,
 	})
 	return dRedirectRep.Header.Get("Location")
+}
+func GetDownlaodMultiFiles(fileId int64) string {
+	dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/downloadMultiFiles.action?fileIdS=%s&downloadType=1&recursive=1", strconv.FormatInt(fileId, 10)), nic.H{
+		AllowRedirect: false,
+	})
+	redirectUrl := dRedirectRep.Header.Get("Location")
+	return redirectUrl
 }
 
 //天翼云网盘登录

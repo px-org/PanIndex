@@ -26,8 +26,10 @@ func main() {
 	//声明一个路由
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
-		if strings.HasPrefix(path, "/admin") {
-			log.Println("保留路由")
+		log.Println(path)
+		if strings.HasPrefix(path, "/api") {
+			//文件夹下载
+			downloadMultiFiles(c)
 		} else {
 			index(c)
 		}
@@ -60,4 +62,9 @@ func index(c *gin.Context) {
 		}
 	}
 	c.HTML(http.StatusOK, "index.html", result)
+}
+func downloadMultiFiles(c *gin.Context) {
+	fileId := c.GetInt64("fileId")
+	downUrl := service.GetDownlaodMultiFiles(fileId)
+	c.Redirect(http.StatusFound, downUrl)
 }
