@@ -25,8 +25,9 @@ func Run() {
 		log.Println("[定时任务]cookie更新 >> 登录成功")
 	})
 	c.AddFunc("0 0 0/1 * * ?", func() {
-		model.SqliteDb.Delete(&entity.FileNode{})
+		model.SqliteDb.Model(&entity.FileNode{}).Update("delete", "1")
 		Util.Cloud189GetFiles(config.Config189.RootId, config.Config189.RootId)
+		model.SqliteDb.Delete(entity.FileNode{}, "delete = 1")
 		log.Println("[定时任务]目录缓存刷新 >> 刷新成功")
 	})
 	c.Start()
@@ -40,7 +41,8 @@ func StartInit() {
 	if cookie != "" {
 		log.Println("[程序启动]cookie更新 >> 登录成功")
 	}
-	model.SqliteDb.Delete(&entity.FileNode{})
+	model.SqliteDb.Model(&entity.FileNode{}).Update("`delete`", "1")
 	Util.Cloud189GetFiles(config.Config189.RootId, config.Config189.RootId)
+	model.SqliteDb.Delete(entity.FileNode{}, "`delete` = 1")
 	log.Println("[程序启动]目录缓存刷新 >> 刷新成功")
 }

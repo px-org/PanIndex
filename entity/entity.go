@@ -1,7 +1,7 @@
 package entity
 
 type FileNode struct {
-	FileId       string `json:"fileId"`
+	FileId       string `json:"fileId" gorm:"primary_key"`
 	FileIdDigest string `json:"fileIdDigest"`
 	FileName     string `json:"fileName"`
 	FileSize     int64  `json:"fileSize"`
@@ -17,6 +17,8 @@ type FileNode struct {
 	MediaType    int    `json:"mediaType"`
 	Icon         Icon   `json:"icon"`
 	CreateTime   string `json:"create_time"`
+	Delete       int    `json:"delete"`
+	Hide         int    `json:"hide"`
 }
 type Icon struct {
 	LargeUrl string `json:"largeUrl"`

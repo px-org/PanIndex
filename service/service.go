@@ -10,11 +10,11 @@ import (
 func GetFilesByPath(path string) map[string]interface{} {
 	result := make(map[string]interface{})
 	list := []entity.FileNode{}
-	model.SqliteDb.Raw("select * from file_node where parent_path=?", path).Find(&list)
+	model.SqliteDb.Raw("select * from file_node where parent_path=? and hide = 0", path).Find(&list)
 	result["isFile"] = false
 	if len(list) == 0 {
 		result["isFile"] = true
-		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0", path).Find(&list)
+		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and hide = 0", path).Find(&list)
 	}
 	result["List"] = list
 	result["Path"] = path

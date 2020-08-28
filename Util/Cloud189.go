@@ -1,6 +1,7 @@
 package Util
 
 import (
+	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
 	"crypto/rand"
@@ -14,6 +15,7 @@ import (
 	"log"
 	math_rand "math/rand"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -78,6 +80,15 @@ func Cloud189GetFiles(rootId, fileId string) {
 							AllowRedirect: false,
 						})
 						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
+					}
+					item.Delete = 0
+					if config.Config189.HideDirId != "" {
+						listSTring := strings.Split(config.Config189.HideDirId, ",")
+						sort.Strings(listSTring)
+						i := sort.SearchStrings(listSTring, item.FileId)
+						if i < len(listSTring) && listSTring[i] == item.FileId {
+							item.Hide = 1
+						}
 					}
 					model.SqliteDb.Save(item)
 				}
