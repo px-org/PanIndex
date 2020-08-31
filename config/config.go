@@ -10,7 +10,6 @@ var Config189 Cloud189Config
 
 func LoadCloud189Config() {
 	config := os.Getenv("CONFIG")
-	log.Println(config)
 	err := jsoniter.Unmarshal([]byte(config), &Config189)
 	if err != nil {
 		log.Fatal("err：", err)
