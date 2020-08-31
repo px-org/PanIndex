@@ -44,4 +44,52 @@ $(document).ready(function() {
             }
         });
     });
+    $('.table-head').on('click', function() {
+        var orderColumn = $(this).text();
+        var orderSeq = $(this).attr("data-order-seq");
+        var orderType = $(this).attr("data-order-type");
+        $('.table-head').each(function(){
+            $(this).text($(this).text());
+        });
+        if(orderSeq == "" || orderSeq == "down"){
+            //当前是升序排列，按照orderColumn降序
+            sortTable("up", orderType);
+            $(this).attr("data-order-seq", "up");
+            $(this).html(orderColumn+" <i class=\"fa fa-angle-double-up\" aria-hidden=\"true\"></i>");
+        }else if(orderSeq == "up"){
+            sortTable("down", orderType);
+            $(this).attr("data-order-seq", "down");
+            $(this).html(orderColumn+" <i class=\"fa fa-angle-double-down\" aria-hidden=\"true\"></i>");
+        }
+    });
+});
+function sortTable(sort_order, data_type){
+    $('table tbody > tr').sortElements(function (a, b) {
+        let data_a = $(a).find("td[class='"+data_type+"']").text(), data_b = $(b).find("td[class='"+data_type+"']").text();
+        let rt = data_a.localeCompare(data_b);
+        return (sort_order === "down") ? 0-rt : rt;
+    });
+}
+$.fn.extend({
+    sortElements: function (comparator, getSortable) {
+        getSortable = getSortable || function () { return this; };
+
+        var placements = this.map(function () {
+            var sortElement = getSortable.call(this),
+                parentNode = sortElement.parentNode,
+                nextSibling = parentNode.insertBefore(
+                    document.createTextNode(''),
+                    sortElement.nextSibling
+                );
+
+            return function () {
+                parentNode.insertBefore(this, nextSibling);
+                parentNode.removeChild(nextSibling);
+            };
+        });
+
+        return [].sort.call(this, comparator).each(function (i) {
+            placements[i].call(getSortable.call(this));
+        });
+    }
 });

@@ -9,45 +9,67 @@
     <link rel="icon" href="/static/img/favicon.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/css/lightgallery.min.css">
-    <link href="https://cdn.bootcss.com/ionicons/4.5.6/css/ionicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
 </head>
 <body>
 <h1 id="heading">Index of {{ .Path }}</h1>
+
+{{if .HasPwd}}
+<script>
+    promptPwd("{{ .FileId}}");
+    function promptPwd(fileId){
+        var pwd = prompt("这是一个受保护的文件夹，您需要提供访问密码才能查看。");
+        $.cookie("dir_pwd", pwd);
+        location.reload();
+    }
+</script>
+{{else}}
 <table id="table">
-    <tr><th class="file-name">Name</th><th class="file-size">Size</th><th class="file-date-modified">Date Modified</th><th class="file-date-modified">Download</th></tr>
-    {{if .HasParent}}
-        <tr>
-            <td class="file-name">
-                <a class="icon icon-up" href="{{.ParentPath}}">..</a>
-            </td>
-            <td class="file-size"></td>
-            <td class="file-date-modified"></td>
-        </tr>
-    {{else}}
-    {{end}}
-    {{range .List}}
-        <tr>
-            {{if .IsFolder}}
-                <td class="file-name"><a class="icon icon-dir" href="{{.Path}}">{{.FileName}}</a></td>
-            {{else}}
-                <td class="file-name"><a class="icon icon-file"data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);">{{.FileName}}</a></td>
-            {{end}}
-            <td class="file-size">{{.SizeFmt}}</td>
-            <td class="file-date-modified">{{.LastOpTime}}</td>
-            {{if .IsFolder}}
-                {{if and (ne .FileId "0") (ne .FileId "-12") (ne .FileId "-14") (ne .FileId "-13") (ne .FileId "-15") (ne .FileId "-11") (ne .FileId "-16")}}
-                    <td class="file-size"><a class="folderDown" data-file-id="{{.FileId}}" href="javascript:void(0);" target="_blank" ><i class="icon ion-ios-cloud-download" style="height:100%"></i></a></td>
+    <thead>
+    <tr>
+        <th class="file-name"><span class="table-head" data-order-seq="" data-order-type="file-name" style="cursor: default;">Name</span></th>
+        <th class="file-size"><span class="table-head" data-order-seq="" data-order-type="file-size" style="cursor: default;">Size</span></th>
+        <th class="file-date-modified"><span class="table-head" data-order-seq="" data-order-type="file-date-modified" style="cursor: default;">Date Modified</span></th></th>
+        <th class="file-date-modified">Download</th>
+    </tr>
+    </thead>
+    <tbody>
+        {{if .HasParent}}
+            <tr>
+                <td class="file-name">
+                    <a class="icon icon-up" href="{{.ParentPath}}">..</a>
+                </td>
+                <td class="file-size"></td>
+                <td class="file-date-modified"></td>
+            </tr>
+        {{else}}
+        {{end}}
+        {{range .List}}
+            <tr>
+                {{if .IsFolder}}
+                    <td class="file-name"><a class="icon icon-dir" href="{{.Path}}">{{.FileName}}</a></td>
                 {{else}}
-                    <td class="file-size">-</td>
+                    <td class="file-name"><a class="icon icon-file"data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);">{{.FileName}}</a></td>
                 {{end}}
-            {{else}}
-                <td class="file-size"><a href="{{.Path}}" target="_blank"><i class="icon ion-ios-cloud-download" style="height:100%"></i></a></td>
-            {{end}}
-        </tr>
-    {{end}}
+                <td class="file-size">{{.SizeFmt}}</td>
+                <td class="file-date-modified">{{.LastOpTime}}</td>
+                {{if .IsFolder}}
+                    {{if and (ne .FileId "0") (ne .FileId "-12") (ne .FileId "-14") (ne .FileId "-13") (ne .FileId "-15") (ne .FileId "-11") (ne .FileId "-16")}}
+                        <td class="file-size"><a class="folderDown" data-file-id="{{.FileId}}" href="javascript:void(0);" target="_blank" ><i class="fa fa-download" aria-hidden="true"></i></a></td>
+                    {{else}}
+                        <td class="file-size">-</td>
+                    {{end}}
+                {{else}}
+                    <td class="file-size"><a href="{{.Path}}" target="_blank"><i class="icon ion-ios-cloud-download" style="height:100%"></i></a></td>
+                {{end}}
+            </tr>
+        {{end}}
+    </tbody>
 </table>
+{{end}}
 <div id="example1"></div>
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/picturefill/2.3.1/picturefill.min.js"></script>
 <script src="/static/js/main189.js"></script>

@@ -4,15 +4,16 @@ import (
 	"PanIndex/entity"
 	"PanIndex/jobs"
 	"PanIndex/service"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
-	"strings"
 )
 
 func main() {
-	gin.SetMode(gin.ReleaseMode)
+	//gin.SetMode(gin.ReleaseMode)
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("必须设置 $PORT")
@@ -27,8 +28,7 @@ func main() {
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 		method := c.Request.Method
-		log.Println(path)
-		if method == "POST" && strings.HasPrefix(path, "/api") {
+		if method == "POST" && path == "/api/downloadMultiFiles" {
 			//文件夹下载
 			downloadMultiFiles(c)
 		} else {
@@ -42,7 +42,16 @@ func main() {
 }
 
 func index(c *gin.Context) {
-	result := service.GetFilesByPath(c.Request.URL.Path)
+	pwd := ""
+	pwdCookie, err := c.Request.Cookie("dir_pwd")
+	if err == nil {
+		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
+		if err != nil {
+			fmt.Println(err)
+		}
+		pwd = decodePwd
+	}
+	result := service.GetFilesByPath(c.Request.URL.Path, pwd)
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
@@ -52,6 +61,7 @@ func index(c *gin.Context) {
 			/*if fs[0].MediaType == 1{
 				//图片
 			}else if fs[0].MediaType == 2{
+				//音频
 				//音频
 			}else if fs[0].MediaType == 3{
 				//视频

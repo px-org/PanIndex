@@ -2,12 +2,13 @@ package service
 
 import (
 	"PanIndex/Util"
+	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
 	"strings"
 )
 
-func GetFilesByPath(path string) map[string]interface{} {
+func GetFilesByPath(path, pwd string) map[string]interface{} {
 	result := make(map[string]interface{})
 	list := []entity.FileNode{}
 	model.SqliteDb.Raw("select * from file_node where parent_path=? and hide = 0", path).Find(&list)
@@ -15,6 +16,16 @@ func GetFilesByPath(path string) map[string]interface{} {
 	if len(list) == 0 {
 		result["isFile"] = true
 		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and hide = 0", path).Find(&list)
+	}
+	result["HasPwd"] = false
+	fileNode := entity.FileNode{}
+	model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1", path).First(&fileNode)
+	PwdDirIds := config.Config189.PwdDirId
+	for _, pdi := range PwdDirIds {
+		if pdi.Id == fileNode.FileId && pwd != pdi.Pwd {
+			result["HasPwd"] = true
+			result["FileId"] = fileNode.FileId
+		}
 	}
 	result["List"] = list
 	result["Path"] = path
@@ -30,6 +41,7 @@ func GetFilesByPath(path string) map[string]interface{} {
 func GetDownlaodUrl(fileIdDigest string) string {
 	return Util.GetDownlaodUrl(fileIdDigest)
 }
+
 func GetDownlaodMultiFiles(fileId string) string {
 	return Util.GetDownlaodMultiFiles(fileId)
 }
