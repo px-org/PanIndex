@@ -19,11 +19,11 @@ func LoadCloud189Config() {
 }
 
 type Cloud189Config struct {
-	User      string     `json:"user"`
-	Password  string     `json:"password"`
-	RootId    string     `json:"root_id"`
-	PwdDirId  []PwdDirId `json:"pwd_dir_id"`
-	HideDirId string     `json:"hide_dir_id"`
+	User       string     `json:"user"`
+	Password   string     `json:"password"`
+	RootId     string     `json:"root_id"`
+	PwdDirId   []PwdDirId `json:"pwd_dir_id"`
+	HideFileId string     `json:"hide_file_id"`
 }
 type PwdDirId struct {
 	Id  string `json:"id"`

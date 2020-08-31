@@ -82,8 +82,8 @@ func Cloud189GetFiles(rootId, fileId string) {
 						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
 					}
 					item.Delete = 0
-					if config.Config189.HideDirId != "" {
-						listSTring := strings.Split(config.Config189.HideDirId, ",")
+					if config.Config189.HideFileId != "" {
+						listSTring := strings.Split(config.Config189.HideFileId, ",")
 						sort.Strings(listSTring)
 						i := sort.SearchStrings(listSTring, item.FileId)
 						if i < len(listSTring) && listSTring[i] == item.FileId {
