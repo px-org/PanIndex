@@ -14,7 +14,6 @@ func LoadCloud189Config() {
 	if err != nil {
 		log.Fatal("err：", err)
 	}
-	log.Println(Config189)
 }
 
 type Cloud189Config struct {
