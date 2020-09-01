@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 )
 
 var Config189 Cloud189Config
@@ -34,7 +35,8 @@ func LoadCloud189Config(path string) {
 		log.Fatal("配置文件读取失败：", err)
 	}
 	if port != "" {
-		Config189.Port = port
+		portInt, _ := strconv.Atoi(port)
+		Config189.Port = portInt
 	}
 }
 func PathExists(path string) (bool, error) {
