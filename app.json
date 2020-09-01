@@ -6,21 +6,18 @@
   ],
   "env": {
     "TZ": {
-      "description": "时区，请勿修改",
+      "description": "时区",
       "value": "Asia/Shanghai"
     },
     "LANG": {
-      "description": "编码格式，请勿修改",
+      "description": "编码格式",
       "value": "en_US.UTF-8"
     },
     "CONFIG": {
       "description": "程序配置，请自行修改，json数据格式",
-      "value": "{\"user\":\"183xxxx7765\",\"password\":\"xxxx\",\"root_id\":\"-11\",\"pwd_dir_id\":[{\"id\":\"51496311321353335\",\"pwd\":\"1234\"}],\"hide_file_id\":\"\",\"herokuapp_url\":\"https://pan-index.herokuapp.com\"}"
+      "value": "{\"port\":8080,\"user\":\"183xxxx7765\",\"password\":\"xxxx\",\"root_id\":\"-11\",\"pwd_dir_id\":[{\"id\":\"51496311321353335\",\"pwd\":\"1234\"}],\"hide_file_id\":\"\",\"herokuapp_url\":\"https://pan-index.herokuapp.com\"}"
     }
   },
-  "addons": [{
-    "plan": "heroku-postgresql"
-  }],
   "website": "http://github.com/libsgh/PanIndex",
   "repository": "http://github.com/libsgh/PanIndex"
 }
