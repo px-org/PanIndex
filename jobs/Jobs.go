@@ -33,7 +33,6 @@ func Run() {
 	c.Start()
 }
 func StartInit(path string) {
-	log.Println("111:::" + path)
 	config.LoadCloud189Config(path)
 	if config.Config189.User != "" {
 		log.Println("[程序启动]配置加载 >> 获取成功")
