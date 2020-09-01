@@ -19,6 +19,7 @@ func LoadCloud189Config(path string) {
 		log.Fatal("PathExists(%s),err(%v)\n", path, err)
 	}
 	config := os.Getenv("CONFIG")
+	port := os.Getenv("PORT")
 	if b {
 		file, err := os.Open(path)
 		if err != nil {
@@ -31,6 +32,9 @@ func LoadCloud189Config(path string) {
 	err = jsoniter.Unmarshal([]byte(config), &Config189)
 	if err != nil {
 		log.Fatal("配置文件读取失败：", err)
+	}
+	if port != "" {
+		Config189.Port = port
 	}
 }
 func PathExists(path string) (bool, error) {
