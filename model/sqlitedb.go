@@ -21,5 +21,5 @@ func init() {
 	SqliteDb.SingularTable(true)
 	SqliteDb.AutoMigrate(&entity.FileNode{})
 	//打印sql语句
-	SqliteDb.LogMode(true)
+	//SqliteDb.LogMode(true)
 }

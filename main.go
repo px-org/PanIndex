@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
 	"html/template"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -18,7 +19,7 @@ var configPath = flag.String("config.path", "", "配置文件config.json的路�
 
 func main() {
 	flag.Parse()
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
@@ -26,7 +27,7 @@ func main() {
 	//	r.LoadHTMLFiles("templates/**")
 	//	r.Static("/static", "./static")
 	//	r.StaticFS("/static", staticBox)
-	//	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
+	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 	staticBox := packr.New("static", "./static")
 	r.StaticFS("/static", staticBox)
 	//声明一个路由
@@ -49,7 +50,7 @@ func main() {
 func initTemplates() *template.Template {
 	box := packr.New("", "./templates")
 	t := template.New("")
-	tmpl := t.New("index.html")
+	tmpl := t.New("189/classic/index.html")
 	data, _ := box.FindString("189/classic/index.html")
 	tmpl.Parse(data)
 	return t
@@ -61,7 +62,7 @@ func index(c *gin.Context) {
 	if err == nil {
 		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		pwd = decodePwd
 	}
@@ -87,7 +88,7 @@ func index(c *gin.Context) {
 			}*/
 		}
 	}
-	c.HTML(http.StatusOK, "index.html", result)
+	c.HTML(http.StatusOK, "189/classic/index.html", result)
 }
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
