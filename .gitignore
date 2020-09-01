@@ -2,3 +2,4 @@
 .docker_build/
 .idea/
 bin/
+/bin/

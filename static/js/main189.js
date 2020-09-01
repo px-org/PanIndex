@@ -25,7 +25,11 @@ $(document).ready(function() {
             })
             return;
         }
-        var fullUrl = "https://pan-index.herokuapp.com"+dURL;
+        var fullUrl = window.location.protocol+"//"+window.location.host + dURL;
+        console.log(fullUrl);
+        if(HerokuappUrl != ""){
+             fullUrl = HerokuappUrl+dURL;
+        }
         if(fileType == "doc" || fileType == "docx" || fileType == "dotx"
             || fileType == "ppt" || fileType == "pptx" || fileType == "xls" || fileType == "xlsx"){
             window.open("https://view.officeapps.live.com/op/view.aspx?src="+fullUrl);
@@ -64,7 +68,7 @@ $(document).ready(function() {
     });
 });
 function sortTable(sort_order, data_type){
-    $('table tbody > tr').sortElements(function (a, b) {
+    $('table tbody > tr').not('.parent').sortElements(function (a, b) {
         let data_a = $(a).find("td[class='"+data_type+"']").text(), data_b = $(b).find("td[class='"+data_type+"']").text();
         let rt = data_a.localeCompare(data_b);
         return (sort_order === "down") ? 0-rt : rt;

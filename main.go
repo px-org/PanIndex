@@ -1,28 +1,30 @@
 package main
 
 import (
+	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/jobs"
 	"PanIndex/service"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
+	"github.com/gobuffalo/packr"
+	"html/template"
 	"net/http"
 	"net/url"
-	"os"
 )
 
+var configPath = flag.String("config.path", "", "配置文件config.json的路径")
+
 func main() {
+	flag.Parse()
 	//gin.SetMode(gin.ReleaseMode)
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Fatal("必须设置 $PORT")
-	}
-	//首先先生成一个gin实例
 	r := gin.New()
 	r.Use(gin.Logger())
-	r.LoadHTMLGlob("templates/189/classic/*.html")
-	r.Static("/static", "static")
+	staticBox := packr.NewBox("./static")
+	r.SetHTMLTemplate(initTemplates())
+	//r.LoadHTMLGlob("templates/189/classic/*.html")
+	r.StaticFS("/static", staticBox)
 	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 	//声明一个路由
 	r.NoRoute(func(c *gin.Context) {
@@ -36,9 +38,18 @@ func main() {
 		}
 	})
 	jobs.Run()
-	jobs.StartInit()
-	r.Run(":" + port) // 监听并在 0.0.0.0:8080 上启动服务
+	jobs.StartInit(*configPath)
+	r.Run(fmt.Sprintf(":%d", config.Config189.Port)) // 监听并在 0.0.0.0:8080 上启动服务
 
+}
+
+func initTemplates() *template.Template {
+	box := packr.NewBox("./templates")
+	t := template.New("")
+	tmpl := t.New("189/classic/index.html")
+	data, _ := box.FindString("189/classic/index.html")
+	tmpl.Parse(data)
+	return t
 }
 
 func index(c *gin.Context) {
@@ -52,6 +63,7 @@ func index(c *gin.Context) {
 		pwd = decodePwd
 	}
 	result := service.GetFilesByPath(c.Request.URL.Path, pwd)
+	result["HerokuappUrl"] = config.Config189.HerokuAppUrl
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
@@ -72,7 +84,7 @@ func index(c *gin.Context) {
 			}*/
 		}
 	}
-	c.HTML(http.StatusOK, "index.html", result)
+	c.HTML(http.StatusOK, "189/classic/index.html", result)
 }
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")

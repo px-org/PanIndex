@@ -37,7 +37,7 @@
     </thead>
     <tbody>
         {{if .HasParent}}
-            <tr>
+            <tr class="parent">
                 <td class="file-name">
                     <a class="icon icon-up" href="{{.ParentPath}}">..</a>
                 </td>
@@ -70,6 +70,7 @@
 </table>
 {{end}}
 <div id="example1"></div>
+<script>var HerokuappUrl = {{.HerokuappUrl}}</script>
 <script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/picturefill/2.3.1/picturefill.min.js"></script>
 <script src="/static/js/main189.js"></script>

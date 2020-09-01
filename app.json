@@ -1,6 +1,6 @@
 {
   "name": "PanIndex",
-  "description": "网盘直链",
+  "description": "简易的天翼云网盘目录列表",
   "keywords": [
     "PanIndex", "cloud.189.cn"
   ],
@@ -15,7 +15,7 @@
     },
     "CONFIG": {
       "description": "程序配置，请自行修改，json数据格式",
-      "value": "{\n    \"user\": \"183xxxx7765\",\n    \"password\": \"xxxx\",\n    \"root_id\": \"-11\",\n    \"pwd_dir_id\": [\n        {\n            \"id\": \"51496311321353335\",\n            \"pwd\": \"1234\"\n        }\n    ],\n    \"hide_file_id\": \"\"\n}"
+      "value": "{\"user\":\"183xxxx7765\",\"password\":\"xxxx\",\"root_id\":\"-11\",\"pwd_dir_id\":[{\"id\":\"51496311321353335\",\"pwd\":\"1234\"}],\"hide_file_id\":\"\",\"herokuapp_url\":\"https://pan-index.herokuapp.com\"}"
     }
   },
   "addons": [{

@@ -14,7 +14,7 @@ import (
 func Run() {
 	c := cron.New()
 	c.AddFunc("0 0/5 * * * ?", func() {
-		resp, err := nic.Get("https://pan.noki.top/", nil)
+		resp, err := nic.Get(config.Config189.HerokuAppUrl, nil)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -32,8 +32,9 @@ func Run() {
 	})
 	c.Start()
 }
-func StartInit() {
-	config.LoadCloud189Config()
+func StartInit(path string) {
+	log.Println("111:::" + path)
+	config.LoadCloud189Config(path)
 	if config.Config189.User != "" {
 		log.Println("[程序启动]配置加载 >> 获取成功")
 	}

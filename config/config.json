@@ -1,0 +1,14 @@
+{
+  "port": 8080,
+  "user": "",
+  "password": "xxxx",
+  "root_id": "-11",
+  "pwd_dir_id": [
+    {
+      "id": "",
+      "pwd": ""
+    }
+  ],
+  "hide_file_id": "",
+  "heroku_app_url":""
+}
