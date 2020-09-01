@@ -8,7 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gobuffalo/packr"
+	"github.com/gobuffalo/packr/v2"
 	"html/template"
 	"net/http"
 	"net/url"
@@ -21,11 +21,14 @@ func main() {
 	//gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
-	staticBox := packr.NewBox("./static")
-	r.SetHTMLTemplate(initTemplates())
-	//r.LoadHTMLGlob("templates/189/classic/*.html")
+	//	staticBox := packr.NewBox("./static")
+	//	r.SetHTMLTemplate(initTemplates())
+	//	r.LoadHTMLFiles("templates/**")
+	//	r.Static("/static", "./static")
+	//	r.StaticFS("/static", staticBox)
+	//	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
+	staticBox := packr.New("static", "./static")
 	r.StaticFS("/static", staticBox)
-	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
 	//声明一个路由
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
@@ -46,7 +49,7 @@ func main() {
 func initTemplates() *template.Template {
 	box := packr.NewBox("./templates")
 	t := template.New("")
-	tmpl := t.New("189/classic/index.html")
+	tmpl := t.New("index.html")
 	data, _ := box.FindString("189/classic/index.html")
 	tmpl.Parse(data)
 	return t

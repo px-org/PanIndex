@@ -4,7 +4,7 @@ DOCKER_CMD=$(DOCKER_BUILD)/PanIndex
 
 $(DOCKER_CMD): clean
 	mkdir -p $(DOCKER_BUILD)
-	$(GO_BUILD_ENV) packr build -v -o $(DOCKER_CMD) .
+	$(GO_BUILD_ENV) go build -v -o $(DOCKER_CMD) .
 
 clean:
 	rm -rf $(DOCKER_BUILD)
