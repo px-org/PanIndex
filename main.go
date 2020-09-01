@@ -22,7 +22,7 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
-	//	r.SetHTMLTemplate(initTemplates())
+	r.SetHTMLTemplate(initTemplates())
 	//	r.LoadHTMLFiles("templates/**")
 	//	r.Static("/static", "./static")
 	//	r.StaticFS("/static", staticBox)
@@ -47,7 +47,7 @@ func main() {
 }
 
 func initTemplates() *template.Template {
-	box := packr.NewBox("./templates")
+	box := packr.New("", "./templates")
 	t := template.New("")
 	tmpl := t.New("index.html")
 	data, _ := box.FindString("189/classic/index.html")
@@ -87,7 +87,7 @@ func index(c *gin.Context) {
 			}*/
 		}
 	}
-	c.HTML(http.StatusOK, "189/classic/index.html", result)
+	c.HTML(http.StatusOK, "index.html", result)
 }
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
