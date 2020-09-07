@@ -32,7 +32,7 @@ jobs:
       - name: Gzip
         run: |
           mkdir PanIndex-${{ matrix.os }}
-          cp main PanIndex-${{ matrix.os }}
+          cp PanIndex-bin PanIndex-${{ matrix.os }}
           tar -czvf PanIndex-${{ matrix.os }}.tar.gz PanIndex-${{ matrix.os }}
       - name: Upload to release
         uses: JasonEtco/upload-to-release@master
