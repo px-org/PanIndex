@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        go_version: [1.13]
+        go_version: [1.14.3]
         os: [ubuntu-latest]
     steps:
       - name: Set up Go ${{ matrix.go_version }}
@@ -28,7 +28,7 @@ jobs:
           fi
       - name: Build
         run: |
-          go build -v -o main .
+          go build -v -o PanIndex .
       - name: Gzip
         run: |
           mkdir PanIndex-${{ matrix.os }}
