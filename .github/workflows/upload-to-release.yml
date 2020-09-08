@@ -16,6 +16,9 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.14
+      - name: set packr2
+        run: |
+          go get -u github.com/gobuffalo/packr/v2/packr2
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
