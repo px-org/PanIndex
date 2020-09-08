@@ -9,9 +9,7 @@ builds:
       - 386
       - amd64
     env:
-      - CGO_ENABLED=1
-      - CC=/home/runner/work/osxcross/target/bin/o64-clang
-      - XX=/home/runner/work/osxcross/target/bin/o64-clang++
+      - CGO_ENABLED=0
     main: ./main.go
     binary: PanIndex
 
