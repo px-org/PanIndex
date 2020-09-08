@@ -31,9 +31,8 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
+      - '^doc:'
       - '^test:'
-      - 'data.db'
 brews:
   -
     github:
