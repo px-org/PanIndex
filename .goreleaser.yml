@@ -19,7 +19,7 @@ builds:
       - goos: windows
         goarch: ppc64le
     main: ./main.go
-    binary: packr2
+    binary: PanIndex
 
 checksum:
   name_template: 'checksums.txt'
