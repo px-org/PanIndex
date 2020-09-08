@@ -9,9 +9,8 @@ before:
 builds:
   -
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     goos:
-      - darwin
       - linux
       - windows
     goarch:
@@ -29,7 +28,6 @@ archives:
     files:
       - LICENSE
       - README.md
-      - CHANGELOG.md
 
 checksum:
   name_template: 'checksums.txt'
