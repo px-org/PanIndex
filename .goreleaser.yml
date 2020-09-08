@@ -33,6 +33,7 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+      - 'data.db'
 brews:
   -
     github:
