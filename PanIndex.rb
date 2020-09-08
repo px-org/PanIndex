@@ -2,20 +2,17 @@
 class PanIndex < Formula
   desc ""
   homepage ""
-  version "1.1.1"
+  version "1.1.5"
   bottle :unneeded
 
   if OS.mac?
-    url "https://github.com/libsgh/PanIndex/releases/download/v1.1.1/PanIndex_1.1.1_darwin_amd64.tar.gz"
-    sha256 "dae67dbdf8453b2987470d06d0354b52764369dfbc57b7b30b10f5120c479cb6"
   elsif OS.linux?
     if Hardware::CPU.intel?
-      url "https://github.com/libsgh/PanIndex/releases/download/v1.1.1/PanIndex_1.1.1_linux_amd64.tar.gz"
-      sha256 "5697543695f35e4f29536c0c2f56e17fe692417b4a9b9aacb5e31f96b2f121a1"
+      url "https://github.com/libsgh/PanIndex/releases/download/v1.1.5/PanIndex_1.1.5_linux_amd64.tar.gz"
+      sha256 "9cf2f55843d5d1520a60ee24b04de975127132d413e1d44b990588b172dd13d3"
     end
   end
 
   def install
-    bin.install "PanIndex"
   end
 end
