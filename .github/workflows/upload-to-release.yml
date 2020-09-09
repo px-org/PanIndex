@@ -13,7 +13,6 @@ jobs:
         goarch: ["386", amd64]
     steps:
       - uses: actions/checkout@v2
-      - name: set up packr2
       - uses: wangyoucao577/go-release-action@master
         with:
           github_token: ${{ secrets.GH_TOKEN }}
