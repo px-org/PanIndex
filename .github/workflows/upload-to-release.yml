@@ -1,7 +1,7 @@
 name: PanIndex Release
 on:
   release:
-    types: [update]
+    types: [created]
 jobs:
   releases-matrix:
     name: Release Go Binary
