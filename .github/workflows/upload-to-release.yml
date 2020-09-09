@@ -37,7 +37,7 @@ jobs:
         run: |
           go get -u github.com/gobuffalo/packr/v2/packr2
           packr2
-          go build -v -o PanIndex ./
+          go build -v -o PanIndex .
 
       - name: Gzip
         run: |
