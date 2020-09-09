@@ -19,14 +19,6 @@ jobs:
       - name: GCC multilib
         run: |
           sudo apt-get install gcc-multilib g++-multilib
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v1
-        with:
-          version: latest
-          args: release --rm-dist --debug
-          key: ${{ secrets.YOUR_PRIVATE_KEY }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
