@@ -32,11 +32,13 @@ jobs:
               curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
               dep ensure
           fi
-
-      - name: Build
+      - name: set up packr2
         run: |
           go get -u github.com/gobuffalo/packr/v2/packr2
           packr2
+
+      - name: Build
+        run: |
           go build -v -o PanIndex .
 
       - name: Gzip
