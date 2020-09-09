@@ -13,7 +13,7 @@ jobs:
         goarch: ["386", amd64]
     steps:
       - uses: actions/checkout@v2
-      - uses: libsgh/go-release-action@master
+      - uses: wangyoucao577/go-release-action@master
         with:
           github_token: ${{ secrets.GH_TOKEN }}
           goos: ${{ matrix.goos }}
@@ -21,4 +21,5 @@ jobs:
           goversion: "https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz"
           project_path: "./"
           binary_name: "PanIndex"
+          pre_command: "go get -u github.com/gobuffalo/packr/v2/packr2 && packr2"
           extra_files: LICENSE README.md CHANGELOG.md
