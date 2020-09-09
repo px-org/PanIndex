@@ -9,5 +9,4 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/json-iterator/go v1.1.9
 	github.com/robfig/cron v1.2.0
-	github.com/tsingson/packr v0.0.0-20190223195816-896f4a568fc3
 )

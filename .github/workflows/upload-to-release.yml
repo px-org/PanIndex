@@ -1,53 +1,26 @@
-name: Go Release
+name: PanIndex Release
 on:
   release:
-    types: [published]
-
+    types: [created]
 jobs:
-  release:
-    if: github.repository == 'libsgh/PanIndex'
-    name: Build with go ${{ matrix.go_version }} on ${{ matrix.os }} and upload
-    runs-on: ${{ matrix.os }}
-
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        go_version: [1.14]
-        os: [ubuntu-latest]
-
+        # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/386, darwin/amd64
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64]
     steps:
-
-      - name: Set up Go ${{ matrix.go_version }}
-        uses: actions/setup-go@v1
+      - uses: actions/checkout@v2
+      - uses: libsgh/go-release-action@feature/wrap-go-build
         with:
-          go-version: ${{ matrix.go_version }}
-        id: go
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
-      - name: set up packr2
-        run: |
-          go get -u github.com/gobuffalo/packr/v2/packr2
-          packr2
-      - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
-      - name: Build
-        run: |
-          go build -v -o PanIndex .
-
-      - name: Gzip
-        run: |
-          mkdir PanIndex-${{ matrix.os }}
-          cp main PanIndex-${{ matrix.os }}
-          tar -czvf PanIndex-${{ matrix.os }}.tar.gz PanIndex-${{ matrix.os }}
-
-      - name: Upload to release
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: PanIndex-${{ matrix.os }}.tar.gz application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          github_token: ${{ secrets.GH_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          goversion: "https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz"
+          project_path: "./"
+          binary_name: "PanIndex"
+          pre_command: "go get -u github.com/gobuffalo/packr/v2/packr2"
+          build_command: "packr2 build -v"
+          extra_files: LICENSE README.md CHANGELOG.md
