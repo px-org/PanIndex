@@ -48,10 +48,10 @@ func main() {
 }
 
 func initTemplates() *template.Template {
-	box := packr.New("", "./templates")
+	box := packr.New("templates", "./templates")
 	t := template.New("")
 	tmpl := t.New("189/classic/index.html")
-	data, _ := box.FindString("189/classic/index.html")
+	data, _ := box.FindString("templates/189/classic/index.html")
 	tmpl.Parse(data)
 	return t
 }
