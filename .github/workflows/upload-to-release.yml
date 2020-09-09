@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: wangyoucao577/go-release-action@master
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           goversion: "https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz"
