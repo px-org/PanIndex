@@ -26,7 +26,6 @@ $(document).ready(function() {
             return;
         }
         var fullUrl = window.location.protocol+"//"+window.location.host + dURL;
-        console.log(fullUrl);
         if(HerokuappUrl != ""){
              fullUrl = HerokuappUrl+dURL;
         }

@@ -10,6 +10,7 @@
 - [x] 定时同步cookie（每天8点）
 - [x] heroku防止休眠（每5分钟访问一次应用）
 
+demo: https://pan-index.herokuapp.com
 ## 一键部署到heroku
 1.  注册登录账号并绑卡，因为herokuku免费版有使用小时数限制，绑定信用卡可以使应用一直在线，**不扣费**
 2.  点击上面↑的按钮，跳转到heroku部署页面，修改 **CONFIG**
