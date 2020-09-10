@@ -19,7 +19,7 @@ var configPath = flag.String("config.path", "", "配置文件config.json的路�
 
 func main() {
 	flag.Parse()
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
