@@ -41,8 +41,6 @@ docker run -itd \
 $ tar -xvf PanIndex-v1.0.0-linux-amd64.tar.gz
 $ ./PanIndex -config.path=config.json
 ```
-##从程序编译部署
-
 
 **配置文件说明:**
 
