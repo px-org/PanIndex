@@ -14,11 +14,13 @@ import (
 func Run() {
 	c := cron.New()
 	c.AddFunc("0 0/5 * * * ?", func() {
-		resp, err := nic.Get(config.Config189.HerokuAppUrl, nil)
-		if err != nil {
-			log.Println(err.Error())
-		} else {
-			log.Println("[定时任务]heroku防休眠 >> " + resp.Status)
+		if config.Config189.HerokuAppUrl != "" {
+			resp, err := nic.Get(config.Config189.HerokuAppUrl, nil)
+			if err != nil {
+				log.Println(err.Error())
+			} else {
+				log.Println("[定时任务]heroku防休眠 >> " + resp.Status)
+			}
 		}
 	})
 	c.AddFunc("0 0 8 1/1 * ?", func() {
