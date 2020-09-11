@@ -16,9 +16,10 @@ func Run() {
 	c.AddFunc("0 0/5 * * * ?", func() {
 		resp, err := nic.Get(config.Config189.HerokuAppUrl, nil)
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Println(err.Error())
+		} else {
+			log.Println("[定时任务]heroku防休眠 >> " + resp.Status)
 		}
-		log.Println("[定时任务]heroku防休眠 >> " + resp.Status)
 	})
 	c.AddFunc("0 0 8 1/1 * ?", func() {
 		Util.Cloud189Login(os.Getenv("USER"), os.Getenv("PASSWORD"))
@@ -40,6 +41,8 @@ func StartInit(path string) {
 	cookie := Util.Cloud189Login(config.Config189.User, config.Config189.Password)
 	if cookie != "" {
 		log.Println("[程序启动]cookie更新 >> 登录成功")
+	} else {
+		log.Println("[程序启动]cookie更新 >> 登录失败，请检查用户名和密码是否正确")
 	}
 	model.SqliteDb.Model(&entity.FileNode{}).Update("`delete`", "1")
 	Util.Cloud189GetFiles(config.Config189.RootId, config.Config189.RootId)
