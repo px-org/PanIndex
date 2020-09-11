@@ -23,8 +23,8 @@ func LoadCloud189Config(path string) {
 	}
 	config := os.Getenv("CONFIG")
 	port := os.Getenv("PORT")
-	user := os.Getenv("USER")
-	pwd := os.Getenv("PASSWORD")
+	user := os.Getenv("CLOUD_USER")
+	pwd := os.Getenv("CLOUD_PASSWORD")
 	ri := os.Getenv("ROOT_ID")
 	pdi := os.Getenv("PWD_DIR_ID")
 	hfi := os.Getenv("HIDE_FILE_ID")
