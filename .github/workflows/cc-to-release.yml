@@ -1,0 +1,13 @@
+name: PanIndex Release
+on:
+  watch:
+    types: [ started ]
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: libsgh/PanIndex-release-action@master
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
