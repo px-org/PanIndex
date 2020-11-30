@@ -64,24 +64,26 @@ $ ./PanIndex -config.path=config.json
 
 **配置文件说明:**
 
-|  字段名 |  层级  | 必填  | 描述  | 示例  |
-| :------------: | :------------:| :------------: | :------------: | :------------: |
-|  port | 0  | 是 | 端口  | 8080  |
-|  user | 0  | 是 | 天翼云账号，一般是手机号  | 183xxxx7765  |
-|  password | 0  | 是 |  天翼云账号密码 |  1234 |
-|  root_id |  0 | 是 | 网盘根目录ID  |  -11，代表天翼云顶层目录 |
-| pwd_dir_id  | 0  | 否 | 加密文件目录id和密码  | 数组  |
-| id  | 1  | 否 |  加密目录id |  5149xxx1353335 |
-|  pwd |  1 | 否 |  加密目录访问密码 | 1234  |
-|  hide_file_id |  0 | 否 |  隐藏目录id ，多个文件`,`分隔 | 213123,23445  |
-|  heroku_app_url |  0 | 否 | 部署后的herokuapp网盘地址，heroku部署必须 | https://app-name.herokuapp.com  |
-|  api_token |  0 | 否 | 调用私有api的秘钥 | 1234  |
-|  theme | 0 | 是 | 使用的主题，目前支持 classic, bootstrap, materialdesign | bootstrap |
-|  damagou | 1 | 否 | 打码狗平台的用户名和密码，用于识别验证码 | username,password |
+|  字段名         | 层级  | 必填  | 描述                                                    | 示例                           |
+| :-------------: | :----:| :---: | :-----------------------------------------------------: | :----------------------------: |
+|  host           | 0     | 否    | 服务监听地址                                            | 0.0.0.0                        |
+|  port           | 0     | 是    | 端口                                                    | 8080                           |
+|  user           | 0     | 是    | 天翼云账号，一般是手机号                                | 183xxxx7765                    |
+|  password       | 0     | 是    | 天翼云账号密码                                          | 1234                           |
+|  root_id        | 0     | 是    | 网盘根目录ID                                            | -11，代表天翼云顶层目录        |
+|  pwd_dir_id     | 0     | 否    | 加密文件目录id和密码                                    | 数组                           |
+|  id             | 1     | 否    | 加密目录id                                              | 5149xxx1353335                 |
+|  pwd            | 1     | 否    | 加密目录访问密码                                        | 1234                           |
+|  hide_file_id   | 0     | 否    | 隐藏目录id ，多个文件`,`分隔                            | 213123,23445                   |
+|  heroku_app_url | 0     | 否    | 部署后的herokuapp网盘地址，heroku部署必须               | https://app-name.herokuapp.com |
+|  api_token      | 0     | 否    | 调用私有api的秘钥                                       | 1234                           |
+|  theme          | 0     | 是    | 使用的主题，目前支持 classic, bootstrap, materialdesign | bootstrap                      |
+|  damagou        | 1     | 否    | 打码狗平台的用户名和密码，用于识别验证码                | username,password              |
 
 config.json
 ```json
 {
+    "host": "0.0.0.0",
     "port": 8080,
     "user": "183xxxx7765",
     "password": "xxxx",
