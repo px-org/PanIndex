@@ -35,11 +35,7 @@ func Run() {
 	})
 	c.Start()
 }
-func StartInit(path string) {
-	config.LoadCloud189Config(path)
-	if config.Config189.User != "" {
-		log.Println("[程序启动]配置加载 >> 获取成功")
-	}
+func StartInit() {
 	cookie := Util.Cloud189Login(config.Config189.User, config.Config189.Password)
 	if cookie != "" {
 		log.Println("[程序启动]cookie更新 >> 登录成功")

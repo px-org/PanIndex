@@ -22,6 +22,7 @@ func LoadCloud189Config(path string) {
 		log.Fatal("PathExists(%s),err(%v)\n", path, err)
 	}
 	config := os.Getenv("CONFIG")
+	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
 	user := os.Getenv("CLOUD_USER")
 	pwd := os.Getenv("CLOUD_PASSWORD")
@@ -30,6 +31,9 @@ func LoadCloud189Config(path string) {
 	hfi := os.Getenv("HIDE_FILE_ID")
 	hau := os.Getenv("HEROKU_APP_URL")
 	apitk := os.Getenv("API_TOKEN")
+	theme := os.Getenv("THEME")
+	dmg_usr := os.Getenv("DMG_USER")
+	dmg_pwd := os.Getenv("DMG_PASS")
 	if b {
 		file, err := os.Open(path)
 		if err != nil {
@@ -42,6 +46,9 @@ func LoadCloud189Config(path string) {
 	err = jsoniter.Unmarshal([]byte(config), &Config189)
 	if err != nil {
 		log.Println("配置文件读取失败，从环境变量读取配置")
+	}
+	if host != "" {
+		Config189.Host = host
 	}
 	if port != "" {
 		portInt, _ := strconv.Atoi(port)
@@ -76,6 +83,15 @@ func LoadCloud189Config(path string) {
 	if apitk != "" {
 		Config189.ApiToken = apitk
 	}
+	if theme != "" {
+		Config189.Theme = theme
+	}
+	if dmg_usr != "" {
+		Config189.Damagou.Username = dmg_usr
+	}
+	if dmg_pwd != "" {
+		Config189.Damagou.Password = dmg_pwd
+	}
 }
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -89,6 +105,7 @@ func PathExists(path string) (bool, error) {
 }
 
 type Cloud189Config struct {
+	Host         string     `json:"host"`
 	Port         int        `json:"port"`
 	User         string     `json:"user"`
 	Password     string     `json:"password"`
@@ -97,9 +114,16 @@ type Cloud189Config struct {
 	HideFileId   string     `json:"hide_file_id"`
 	HerokuAppUrl string     `json:"heroku_app_url"`
 	ApiToken     string     `json:"api_token"`
+	Theme        string     `json:"theme"`
+	Damagou      Damagou    `json:"damagou"`
 }
 
 type PwdDirId struct {
 	Id  string `json:"id"`
 	Pwd string `json:"pwd"`
+}
+
+type Damagou struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }

@@ -13,12 +13,20 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 var configPath = flag.String("config.path", "", "配置文件config.json的路径")
 
 func main() {
 	flag.Parse()
+	
+	// 配置文件应该最先加载，因为要读取模板名字
+	config.LoadCloud189Config(*configPath)
+	if config.Config189.User != "" {
+		log.Println("[程序启动]配置加载 >> 获取成功")
+	}
+	
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
@@ -44,21 +52,23 @@ func main() {
 		}
 	})
 	jobs.Run()
-	jobs.StartInit(*configPath)
-	r.Run(fmt.Sprintf(":%d", config.Config189.Port)) // 监听并在 0.0.0.0:8080 上启动服务
+	jobs.StartInit()
+	r.Run(fmt.Sprintf("%s:%d", config.Config189.Host, config.Config189.Port)) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
 
 func initTemplates() *template.Template {
+	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.Config189.Theme)
 	box := packr.New("templates", "./templates")
 	t := template.New("")
-	tmpl := t.New("189/classic/index.html")
-	data, _ := box.FindString("189/classic/index.html")
+	tmpl := t.New(tmpFile)
+	data, _ := box.FindString(tmpFile)
 	tmpl.Parse(data)
 	return t
 }
 
 func index(c *gin.Context) {
+	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.Config189.Theme)
 	pwd := ""
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
 	if err == nil {
@@ -90,7 +100,7 @@ func index(c *gin.Context) {
 			}*/
 		}
 	}
-	c.HTML(http.StatusOK, "189/classic/index.html", result)
+	c.HTML(http.StatusOK, tmpFile, result)
 }
 
 func downloadMultiFiles(c *gin.Context) {
