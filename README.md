@@ -27,12 +27,17 @@ docker run -itd \
  --name PanIndex \
  -d -p 8080:8080 \
  -v /home/single/data/docker/data/PanIndex/data:/app/data \
+ -e HOST="0.0.0.0" \
  -e CLOUD_USER="1860****837" \
  -e CLOUD_PASSWORD="1234" \
  -e ROOT_ID="-11" \
  -e PWD_DIR_ID="51496311321353335:1234" \
  -e HIDE_FILE_ID="" \
  -e HEROKU_APP_URL="" \
+ -e API_TOKEN="" \
+ -e THEME="bootstrap" \
+ -e DMG_USER="" \
+ -e DMG_PASS="" \
  iicm/pan-index
 ```
 ## 程序包独立部署（vps）
@@ -50,6 +55,12 @@ $ ./PanIndex -config.path=config.json
 ## 接口
 - 手动刷新目录缓存：`GET /api/updateFolderCache?token=<ApiToken>`
 
+## 验证码识别
+由于天翼云盘登录会有一定几率触发验证码，因此可以利用第三方验证码识别平台进行识别。
+
+目前暂时使用的平台为打码狗 [damagou.top](http://www.damagou.top)，该平台需付费使用。
+
+本功能默认关闭，如需启用只需在配置文件中填写平台用户名密码即可。
 
 **配置文件说明:**
 
@@ -65,6 +76,8 @@ $ ./PanIndex -config.path=config.json
 |  hide_file_id |  0 | 否 |  隐藏目录id ，多个文件`,`分隔 | 213123,23445  |
 |  heroku_app_url |  0 | 否 | 部署后的herokuapp网盘地址，heroku部署必须 | https://app-name.herokuapp.com  |
 |  api_token |  0 | 否 | 调用私有api的秘钥 | 1234  |
+|  theme | 0 | 是 | 使用的主题，目前支持 classic, bootstrap, materialdesign | bootstrap |
+|  damagou | 1 | 否 | 打码狗平台的用户名和密码，用于识别验证码 | username,password |
 
 config.json
 ```json
@@ -81,6 +94,12 @@ config.json
     ],
     "hide_file_id": "",
     "heroku_app_url":"https://pan-index.herokuapp.com",
-    "api_token": "1234"
+    "api_token": "1234",
+    "theme": "bootstrap",
+    "damagou": {
+        "username":"",
+        "password":""
+    }
 }
 ```
+
