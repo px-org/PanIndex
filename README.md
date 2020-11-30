@@ -42,6 +42,15 @@ $ tar -xvf PanIndex-v1.0.0-linux-amd64.tar.gz
 $ ./PanIndex -config.path=config.json
 ```
 
+## 定时任务
+- cookie刷新 `0 0 8 1/1 * ?`
+- 目录缓存刷新 `0 0 0/1 * * ?`
+- heroku防止休眠 `0 0/5 * * * ?`
+
+## 接口
+- 手动刷新目录缓存：`GET /api/updateFolderCache?token=<ApiToken>`
+
+
 **配置文件说明:**
 
 |  字段名 |  层级  | 必填  | 描述  | 示例  |
@@ -55,6 +64,7 @@ $ ./PanIndex -config.path=config.json
 |  pwd |  1 | 否 |  加密目录访问密码 | 1234  |
 |  hide_file_id |  0 | 否 |  隐藏目录id ，多个文件`,`分隔 | 213123,23445  |
 |  heroku_app_url |  0 | 否 | 部署后的herokuapp网盘地址，heroku部署必须 | https://app-name.herokuapp.com  |
+|  api_token |  0 | 否 | 调用私有api的秘钥 | 1234  |
 
 config.json
 ```json
@@ -70,6 +80,7 @@ config.json
         }
     ],
     "hide_file_id": "",
-    "heroku_app_url":"https://pan-index.herokuapp.com"
+    "heroku_app_url":"https://pan-index.herokuapp.com",
+    "api_token": "1234"
 }
 ```
