@@ -29,6 +29,7 @@ func LoadCloud189Config(path string) {
 	pdi := os.Getenv("PWD_DIR_ID")
 	hfi := os.Getenv("HIDE_FILE_ID")
 	hau := os.Getenv("HEROKU_APP_URL")
+	apitk := os.Getenv("API_TOKEN")
 	if b {
 		file, err := os.Open(path)
 		if err != nil {
@@ -72,6 +73,9 @@ func LoadCloud189Config(path string) {
 	if hau != "" {
 		Config189.HerokuAppUrl = hau
 	}
+	if apitk != "" {
+		Config189.ApiToken = apitk
+	}
 }
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -92,7 +96,9 @@ type Cloud189Config struct {
 	PwdDirId     []PwdDirId `json:"pwd_dir_id"`
 	HideFileId   string     `json:"hide_file_id"`
 	HerokuAppUrl string     `json:"heroku_app_url"`
+	ApiToken     string     `json:"api_token"`
 }
+
 type PwdDirId struct {
 	Id  string `json:"id"`
 	Pwd string `json:"pwd"`

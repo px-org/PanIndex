@@ -37,6 +37,8 @@ func main() {
 		if method == "POST" && path == "/api/downloadMultiFiles" {
 			//文件夹下载
 			downloadMultiFiles(c)
+		} else if method == "GET" && path == "/api/updateFolderCache" {
+			updateCaches(c)
 		} else {
 			index(c)
 		}
@@ -90,8 +92,22 @@ func index(c *gin.Context) {
 	}
 	c.HTML(http.StatusOK, "189/classic/index.html", result)
 }
+
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
 	downUrl := service.GetDownlaodMultiFiles(fileId)
 	c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
+}
+
+func updateCaches(c *gin.Context) {
+	requestToken := c.Query("token")
+	if requestToken == config.Config189.ApiToken {
+		service.UpdateFolderCache()
+		log.Println("[API请求]目录缓存刷新 >> 刷新成功")
+		message := "Cache update successful"
+		c.String(http.StatusOK, message)
+	} else {
+		message := "Invalid api token"
+		c.String(http.StatusOK, message)
+	}
 }
