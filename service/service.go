@@ -86,3 +86,10 @@ func GetTotalPage(totalCount, pageSize int) int {
 		return totalCount/pageSize + 1
 	}
 }
+
+//刷新目录缓存
+func UpdateFolderCache() {
+	model.SqliteDb.Model(&entity.FileNode{}).Update("`delete`", "1")
+	Util.Cloud189GetFiles(config.Config189.RootId, config.Config189.RootId)
+	model.SqliteDb.Delete(entity.FileNode{}, "`delete` = 1")
+}

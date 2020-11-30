@@ -92,7 +92,9 @@ type Cloud189Config struct {
 	PwdDirId     []PwdDirId `json:"pwd_dir_id"`
 	HideFileId   string     `json:"hide_file_id"`
 	HerokuAppUrl string     `json:"heroku_app_url"`
+	ApiToken     string     `json:"api_token"`
 }
+
 type PwdDirId struct {
 	Id  string `json:"id"`
 	Pwd string `json:"pwd"`
