@@ -10,19 +10,20 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
 	"log"
 	math_rand "math/rand"
+	"os"
 	"regexp"
 	"sort"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
-	"os"
 )
 
-var CLoud189Session = nic.Session{}
+var CLoud189Session nic.Session
 
 //获取文件列表
 func Cloud189GetFiles(rootId, fileId string) {
@@ -123,6 +124,7 @@ func GetDownlaodMultiFiles(fileId string) string {
 
 //天翼云网盘登录
 func Cloud189Login(user, password string) string {
+	CLoud189Session = nic.Session{}
 	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
@@ -173,16 +175,49 @@ func Cloud189Login(user, password string) string {
 	errorReason := jsoniter.Get([]byte(loginResp.Text), "msg").ToString()
 	if errorReason == "" {
 		switch restCode {
-			case -2:
-				errorReason = "需要验证码"
-			case -5:
-				errorReason = "App Info 获取失败"
-			default:
-				errorReason = "未知错误"
+		case -2:
+			errorReason = "需要验证码"
+		case -5:
+			errorReason = "App Info 获取失败"
+		default:
+			errorReason = "未知错误"
 		}
 	}
 	log.Println("[登录接口]登录失败，错误代码：" + strconv.Itoa(restCode) + " (" + errorReason + ")")
 	return ""
+}
+
+//分享链接跳转下载
+func Cloud189shareToDown(url, passCode, fileId string) string {
+	resp, err := CLoud189Session.Get(url, nil)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err == nil {
+		shareId, exists := doc.Find(".shareId").Attr("value")
+		if !exists || shareId == "" {
+			//文件夹
+			shareId := GetBetweenStr(resp.Text, "_shareId = '", "'")
+			verifyCode := GetBetweenStr(resp.Text, "_verifyCode = '", "'")
+			if shareId == "" {
+				return "https://cloud.189.cn/"
+			}
+			url := fmt.Sprintf("https://cloud.189.cn/v2/listShareDir.action?"+
+				"fileId=%s&shareId=%s&accessCode=%s&verifyCode=%s&"+
+				"orderBy=1&order=ASC&pageNum=1&pageSize=60",
+				fileId, shareId, passCode, verifyCode)
+			resp, _ = CLoud189Session.Get(url, nil)
+			return resp.Text
+		}
+		response, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/shareFileVerifyPass.action?"+
+			"fileVO.id=%s&accessCode=%s", shareId, passCode), nil)
+		if response.Text != "null" {
+			longDownloadUrl := jsoniter.Get([]byte(response.Text), "longDownloadUrl").ToString()
+			return longDownloadUrl
+		}
+	}
+	return "https://cloud.189.cn/"
 }
 
 // 加密
@@ -193,7 +228,7 @@ func RsaEncode(origData []byte, j_rsakey string) string {
 	pub := pubInterface.(*rsa.PublicKey)
 	b, err := rsa.EncryptPKCS1v15(rand.Reader, pub, origData)
 	if err != nil {
-		fmt.Println("err: " + err.Error())
+		log.Println("err: " + err.Error())
 	}
 	return b64tohex(base64.StdEncoding.EncodeToString(b))
 }
@@ -208,21 +243,21 @@ func LoginDamagou() string {
 
 // 调用打码狗获取验证码结果
 func GetValidateCode(params string) string {
-	timeStamp := strconv.FormatInt(time.Now().UnixNano() / 1e6, 10)
+	timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
 	url := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + params + timeStamp
 	log.Println("[登录接口]正在尝试获取验证码")
 	res, err := CLoud189Session.Get(url, nic.H{
 		Headers: nic.KV{
-			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
-			"Referer":    "https://open.e.189.cn/",
+			"User-Agent":     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
+			"Referer":        "https://open.e.189.cn/",
 			"Sec-Fetch-Dest": "image",
 			"Sec-Fetch-Mode": "no-cors",
 			"Sec-Fetch-Site": "same-origin",
 		},
 	})
 	if err != nil {
-        log.Fatal(err.Error())
-    } else {
+		log.Fatal(err.Error())
+	} else {
 		f, err := os.OpenFile("validateCode.png", os.O_RDWR|os.O_CREATE, os.ModePerm)
 		if err != nil {
 			panic(err)
@@ -236,7 +271,7 @@ func GetValidateCode(params string) string {
 		vres, _ := CLoud189Session.Post(url, nic.H{
 			Data: nic.KV{
 				"userkey": damagouKey,
-				"image": base64Str,
+				"image":   base64Str,
 			},
 		})
 		return vres.Text
@@ -308,4 +343,19 @@ func FormatFileSize(fileSize int64) (size string) {
 	} else { //if fileSize < (1024 * 1024 * 1024 * 1024 * 1024 * 1024)
 		return fmt.Sprintf("%.2f EB", float64(fileSize)/float64(1024*1024*1024*1024*1024))
 	}
+}
+
+func GetBetweenStr(str, start, end string) string {
+	n := strings.Index(str, start)
+	if n == -1 {
+		return ""
+	}
+	n = n + len(start)
+	str = string([]byte(str)[n:])
+	m := strings.Index(str, end)
+	if m == -1 {
+		return ""
+	}
+	str = string([]byte(str)[:m])
+	return str
 }

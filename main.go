@@ -1,6 +1,7 @@
 package main
 
 import (
+	"PanIndex/Util"
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/jobs"
@@ -9,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
+	jsoniter "github.com/json-iterator/go"
 	"html/template"
 	"log"
 	"net/http"
@@ -20,13 +22,13 @@ var configPath = flag.String("config.path", "", "配置文件config.json的路�
 
 func main() {
 	flag.Parse()
-	
+
 	// 配置文件应该最先加载，因为要读取模板名字
 	config.LoadCloud189Config(*configPath)
 	if config.Config189.User != "" {
 		log.Println("[程序启动]配置加载 >> 获取成功")
 	}
-	
+
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
@@ -47,6 +49,8 @@ func main() {
 			downloadMultiFiles(c)
 		} else if method == "GET" && path == "/api/updateFolderCache" {
 			updateCaches(c)
+		} else if method == "GET" && path == "/api/shareToDown" {
+			shareToDown(c)
 		} else {
 			index(c)
 		}
@@ -119,5 +123,16 @@ func updateCaches(c *gin.Context) {
 	} else {
 		message := "Invalid api token"
 		c.String(http.StatusOK, message)
+	}
+}
+func shareToDown(c *gin.Context) {
+	url := c.Query("url")
+	passCode := c.Query("passCode")
+	fileId := c.Query("fileId")
+	downUrl := Util.Cloud189shareToDown(url, passCode, fileId)
+	if jsoniter.Valid([]byte(downUrl)) == true {
+		c.String(http.StatusOK, downUrl)
+	} else {
+		c.Redirect(http.StatusFound, downUrl)
 	}
 }
