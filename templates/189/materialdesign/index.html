@@ -44,9 +44,11 @@
 			margin-bottom: 32px;
 		}
 		</style>
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 	</head>
 	<body>
 		{{if .HasPwd}}
+		<script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
 		<script>
 			promptPwd("{{ .FileId}}");
 			function promptPwd(fileId){
@@ -120,7 +122,5 @@
 	</body>
 	<script>var HerokuappUrl = {{.HerokuappUrl}}</script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-	<script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
 	<script src="/static/js/main189.js"></script>
 </html>
