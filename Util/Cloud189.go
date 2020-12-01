@@ -17,7 +17,9 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"strconv"
 	"time"
+	"os"
 )
 
 var CLoud189Session = nic.Session{}
@@ -130,6 +132,12 @@ func Cloud189Login(user, password string) string {
 	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]
 	//reqId := regexp.MustCompile(`reqId = "(.+?)"`).FindStringSubmatch(b)[1]
 	jRsakey := regexp.MustCompile(`j_rsaKey" value="(\S+)"`).FindStringSubmatch(b)[1]
+	vCodeRS := ""
+	if config.Config189.Damagou.Username != "" {
+		vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
+		vCodeRS = GetValidateCode(vCodeID)
+		log.Println("[登录接口]得到验证码：" + vCodeRS)
+	}
 	userRsa := RsaEncode([]byte(user), jRsakey)
 	passwordRsa := RsaEncode([]byte(password), jRsakey)
 	url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
@@ -139,7 +147,7 @@ func Cloud189Login(user, password string) string {
 			"accountType":  "01",
 			"userName":     "{RSA}" + userRsa,
 			"password":     "{RSA}" + passwordRsa,
-			"validateCode": "",
+			"validateCode": vCodeRS,
 			"captchaToken": captchaToken,
 			"returnUrl":    returnUrl,
 			"mailSuffix":   "@189.cn",
@@ -162,6 +170,18 @@ func Cloud189Login(user, password string) string {
 		res, _ := CLoud189Session.Get(toUrl, nil)
 		return res.Cookies()[0].Value
 	}
+	errorReason := jsoniter.Get([]byte(loginResp.Text), "msg").ToString()
+	if errorReason == "" {
+		switch restCode {
+			case -2:
+				errorReason = "需要验证码"
+			case -5:
+				errorReason = "App Info 获取失败"
+			default:
+				errorReason = "未知错误"
+		}
+	}
+	log.Println("[登录接口]登录失败，错误代码：" + strconv.Itoa(restCode) + " (" + errorReason + ")")
 	return ""
 }
 
@@ -176,6 +196,52 @@ func RsaEncode(origData []byte, j_rsakey string) string {
 		fmt.Println("err: " + err.Error())
 	}
 	return b64tohex(base64.StdEncoding.EncodeToString(b))
+}
+
+// 打码狗平台登录
+func LoginDamagou() string {
+	url := "http://www.damagou.top/apiv1/login.html?username=" + config.Config189.Damagou.Username + "&password=" + config.Config189.Damagou.Password
+	res, _ := CLoud189Session.Get(url, nil)
+	rsText := regexp.MustCompile(`([A-Za-z0-9]+)`).FindStringSubmatch(res.Text)[1]
+	return rsText
+}
+
+// 调用打码狗获取验证码结果
+func GetValidateCode(params string) string {
+	timeStamp := strconv.FormatInt(time.Now().UnixNano() / 1e6, 10)
+	url := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + params + timeStamp
+	log.Println("[登录接口]正在尝试获取验证码")
+	res, err := CLoud189Session.Get(url, nic.H{
+		Headers: nic.KV{
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
+			"Referer":    "https://open.e.189.cn/",
+			"Sec-Fetch-Dest": "image",
+			"Sec-Fetch-Mode": "no-cors",
+			"Sec-Fetch-Site": "same-origin",
+		},
+	})
+	if err != nil {
+        log.Fatal(err.Error())
+    } else {
+		f, err := os.OpenFile("validateCode.png", os.O_RDWR|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		f.Write(res.Bytes)
+		damagouKey := LoginDamagou()
+		base64Str := base64.StdEncoding.EncodeToString(res.Bytes)
+		base64Str = "data:image/png;base64," + base64Str
+		url := "http://www.damagou.top/apiv1/recognize.html"
+		vres, _ := CLoud189Session.Post(url, nic.H{
+			Data: nic.KV{
+				"userkey": damagouKey,
+				"image": base64Str,
+			},
+		})
+		return vres.Text
+	}
+	return ""
 }
 
 var b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
