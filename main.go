@@ -1,6 +1,7 @@
 package main
 
 import (
+	"PanIndex/Util"
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/jobs"
@@ -20,13 +21,13 @@ var configPath = flag.String("config.path", "", "配置文件config.json的路�
 
 func main() {
 	flag.Parse()
-	
+
 	// 配置文件应该最先加载，因为要读取模板名字
 	config.LoadCloud189Config(*configPath)
 	if config.Config189.User != "" {
 		log.Println("[程序启动]配置加载 >> 获取成功")
 	}
-	
+
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
@@ -47,6 +48,8 @@ func main() {
 			downloadMultiFiles(c)
 		} else if method == "GET" && path == "/api/updateFolderCache" {
 			updateCaches(c)
+		} else if method == "GET" && path == "/api/shareToDown" {
+			shareToDown(c)
 		} else {
 			index(c)
 		}
@@ -120,4 +123,21 @@ func updateCaches(c *gin.Context) {
 		message := "Invalid api token"
 		c.String(http.StatusOK, message)
 	}
+}
+func shareToDown(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("Access-Control-Allow-Methods", "GET")
+	c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
+	c.Header("Access-Control-Allow-Credentials", "true")
+	url := c.Query("url")
+	passCode := c.Query("passCode")
+	fileId := c.Query("fileId")
+	downUrl := Util.Cloud189shareToDown(url, passCode, fileId)
+	c.String(http.StatusOK, downUrl)
+	/*if jsoniter.Valid([]byte(downUrl)) == true {
+		c.String(http.StatusOK, downUrl)
+	} else {
+		c.Redirect(http.StatusFound, downUrl)
+	}*/
 }
