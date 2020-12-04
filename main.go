@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
-	jsoniter "github.com/json-iterator/go"
 	"html/template"
 	"log"
 	"net/http"
@@ -135,9 +134,10 @@ func shareToDown(c *gin.Context) {
 	passCode := c.Query("passCode")
 	fileId := c.Query("fileId")
 	downUrl := Util.Cloud189shareToDown(url, passCode, fileId)
-	if jsoniter.Valid([]byte(downUrl)) == true {
+	c.String(http.StatusOK, downUrl)
+	/*if jsoniter.Valid([]byte(downUrl)) == true {
 		c.String(http.StatusOK, downUrl)
 	} else {
 		c.Redirect(http.StatusFound, downUrl)
-	}
+	}*/
 }
