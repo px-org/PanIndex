@@ -81,7 +81,11 @@ func index(c *gin.Context) {
 		}
 		pwd = decodePwd
 	}
-	result := service.GetFilesByPath(c.Request.URL.Path, pwd)
+	pathName := c.Request.URL.Path
+	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
+		pathName = pathName[0:len(pathName)-1]
+	}
+	result := service.GetFilesByPath(pathName, pwd)
 	result["HerokuappUrl"] = config.Config189.HerokuAppUrl
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
