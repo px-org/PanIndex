@@ -47,7 +47,16 @@ func main() {
 			//文件夹下载
 			downloadMultiFiles(c)
 		} else if method == "GET" && path == "/api/updateFolderCache" {
-			updateCaches(c)
+			requestToken := c.Query("token")
+			if requestToken == config.Config189.ApiToken {
+				go updateCaches()
+				log.Println("[API请求]目录缓存刷新 >> 请求刷新")
+				message := "Cache update successful"
+				c.String(http.StatusOK, message)
+			} else {
+				message := "Invalid api token"
+				c.String(http.StatusOK, message)
+			}
 		} else if method == "GET" && path == "/api/shareToDown" {
 			shareToDown(c)
 		} else {
@@ -116,17 +125,9 @@ func downloadMultiFiles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 }
 
-func updateCaches(c *gin.Context) {
-	requestToken := c.Query("token")
-	if requestToken == config.Config189.ApiToken {
-		service.UpdateFolderCache()
-		log.Println("[API请求]目录缓存刷新 >> 刷新成功")
-		message := "Cache update successful"
-		c.String(http.StatusOK, message)
-	} else {
-		message := "Invalid api token"
-		c.String(http.StatusOK, message)
-	}
+func updateCaches() {
+	service.UpdateFolderCache()
+	log.Println("[API请求]目录缓存刷新 >> 刷新成功")
 }
 func shareToDown(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
