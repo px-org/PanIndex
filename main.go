@@ -64,7 +64,7 @@ func main() {
 		}
 	})
 	jobs.Run()
-	jobs.StartInit()
+	go jobs.StartInit()
 	r.Run(fmt.Sprintf("%s:%d", config.Config189.Host, config.Config189.Port)) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
@@ -92,7 +92,7 @@ func index(c *gin.Context) {
 	}
 	pathName := c.Request.URL.Path
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
-		pathName = pathName[0:len(pathName)-1]
+		pathName = pathName[0 : len(pathName)-1]
 	}
 	result := service.GetFilesByPath(pathName, pwd)
 	result["HerokuappUrl"] = config.Config189.HerokuAppUrl
@@ -138,7 +138,13 @@ func shareToDown(c *gin.Context) {
 	url := c.Query("url")
 	passCode := c.Query("passCode")
 	fileId := c.Query("fileId")
-	downUrl := Util.Cloud189shareToDown(url, passCode, fileId)
+	fileIdDigest := c.Query("fileIdDigest")
+	downUrl := ""
+	if fileIdDigest != "" {
+		downUrl = service.GetDownlaodUrl(fileIdDigest)
+	} else {
+		downUrl = Util.Cloud189shareToDown(url, passCode, fileId)
+	}
 	c.String(http.StatusOK, downUrl)
 	/*if jsoniter.Valid([]byte(downUrl)) == true {
 		c.String(http.StatusOK, downUrl)
