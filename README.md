@@ -54,10 +54,11 @@ $ ./PanIndex -config.path=config.json
 
 ## 接口
 - 手动刷新目录缓存：`GET /api/updateFolderCache?token=<ApiToken>`
-- 分享链接直链解析：`GET /api/shareToDown?url=<分享链接>&fileId=<文件id>&passCode=<访问密码>`
+- 分享链接直链解析：`GET /api/shareToDown?url=<分享链接>&fileId=<文件id>&passCode=<访问密码>&fileIdDigest=<文件指纹，用于文件夹文件获取下载地址>`
 
-> 如果分享的是文件，直接跳转下载链接
+> 如果分享的是文件，直接返回下载链接
 > 如果分享链接是目录，返回文件目录信息（json格式），由于目录可能存在嵌套，fileId就是获取子目录的
+> 由于官方api调整，文件目录json中不再直接包含下载地址，需要再调用一次接口获取
 > 访问密码有就传，没有就不传
   
 
