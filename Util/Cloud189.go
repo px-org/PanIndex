@@ -217,7 +217,14 @@ func Cloud189shareToDown(url, passCode, fileId string) string {
 			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?shareId=%s&fileId=%s", shareId, fileId), nil)
 			longDownloadUrl := GetBetweenStr(dRedirectRep.Text, "\"", "\"")
 			longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
-			return longDownloadUrl
+			dRedirectRep, _ = CLoud189Session.Get(longDownloadUrl, nic.H{
+				AllowRedirect: false,
+			})
+			redirectUrl := dRedirectRep.Header.Get("Location")
+			dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
+				AllowRedirect: false,
+			})
+			return dRedirectRep.Header.Get("Location")
 		}
 	}
 	return "https://cloud.189.cn/"
