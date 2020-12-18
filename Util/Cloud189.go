@@ -203,17 +203,20 @@ func Cloud189shareToDown(url, passCode, fileId string) string {
 			if shareId == "" {
 				return "https://cloud.189.cn/"
 			}
-			url := fmt.Sprintf("https://cloud.189.cn/v2/listShareDir.action?"+
+			url := fmt.Sprintf("https://cloud.189.cn/v2/listShareDirByShareIdAndFileId.action?"+
 				"fileId=%s&shareId=%s&accessCode=%s&verifyCode=%s&"+
 				"orderBy=1&order=ASC&pageNum=1&pageSize=60",
 				fileId, shareId, passCode, verifyCode)
 			resp, _ = CLoud189Session.Get(url, nil)
 			return resp.Text
 		}
-		response, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/shareFileVerifyPass.action?"+
+		response, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/shareFileByVerifyCode.action?"+
 			"fileVO.id=%s&accessCode=%s", shareId, passCode), nil)
 		if response.Text != "null" {
-			longDownloadUrl := jsoniter.Get([]byte(response.Text), "longDownloadUrl").ToString()
+			fileId = jsoniter.Get([]byte(response.Text), "fileId").ToString()
+			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?shareId=%s&fileId=%s", shareId, fileId), nil)
+			longDownloadUrl := GetBetweenStr(dRedirectRep.Text, "\"", "\"")
+			longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
 			return longDownloadUrl
 		}
 	}
