@@ -1,11 +1,12 @@
 name: PanIndex Release
 on:
-  watch:
-    types: [ started ]
+  release:
+    types: [created]
 jobs:
   releases-matrix:
     name: Release Go Binary
     runs-on: ubuntu-latest
+   # if: github.event.repository.owner.id == github.event.sender.id
     steps:
       - uses: actions/checkout@v2
       - uses: libsgh/PanIndex-release-action@master
