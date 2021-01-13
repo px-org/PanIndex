@@ -226,6 +226,14 @@ func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 			return resp.Text
 		} else {
 			fileId = GetBetweenStr(resp.Text, "window.fileId = \"", "\"")
+			if fileId == "" {
+				//需要访问码，需要将访问码加入到cookie中再次请求获取fileId
+				resp, _ = CLoud189Session.Get(url, nic.H{
+					Cookies: nic.KV{
+						"shareId_" + shareId: passCode,
+					}})
+				fileId = GetBetweenStr(resp.Text, "window.fileId = \"", "\"")
+			}
 			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?"+
 				"shortCode=%s&fileId=%s", shortCode, fileId), nil)
 			longDownloadUrl := GetBetweenStr(dRedirectRep.Text, "\"", "\"")
