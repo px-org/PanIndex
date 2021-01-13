@@ -92,6 +92,9 @@ func LoadCloud189Config(path string) {
 	if dmg_pwd != "" {
 		Config189.Damagou.Password = dmg_pwd
 	}
+	if Config189.Theme == "" {
+		Config189.Theme = "classic"
+	}
 }
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
