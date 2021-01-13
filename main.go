@@ -129,6 +129,7 @@ func updateCaches() {
 	service.UpdateFolderCache()
 	log.Println("[API请求]目录缓存刷新 >> 刷新成功")
 }
+
 func shareToDown(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
 	c.Header("Access-Control-Allow-Methods", "GET")
@@ -138,13 +139,8 @@ func shareToDown(c *gin.Context) {
 	url := c.Query("url")
 	passCode := c.Query("passCode")
 	fileId := c.Query("fileId")
-	fileIdDigest := c.Query("fileIdDigest")
-	downUrl := ""
-	if fileIdDigest != "" {
-		downUrl = service.GetDownlaodUrl(fileIdDigest)
-	} else {
-		downUrl = Util.Cloud189shareToDown(url, passCode, fileId)
-	}
+	subFileId := c.Query("subFileId")
+	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
 	c.String(http.StatusOK, downUrl)
 	/*if jsoniter.Valid([]byte(downUrl)) == true {
 		c.String(http.StatusOK, downUrl)

@@ -188,7 +188,26 @@ func Cloud189Login(user, password string) string {
 }
 
 //分享链接跳转下载
-func Cloud189shareToDown(url, passCode, fileId string) string {
+func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
+	subIndex := strings.LastIndex(url, "/") + 1
+	shortCode := url[subIndex:]
+	if fileId != "" && subFileId != "" {
+		if passCode == "" {
+			passCode = "undefined"
+		}
+		floderFileDownUrlRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?"+
+			"shortCode=%s&fileId=%s&accessCode=%s&subFileId=%s", shortCode, fileId, passCode, subFileId), nil)
+		longDownloadUrl := GetBetweenStr(floderFileDownUrlRep.Text, "\"", "\"")
+		longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
+		floderFileDownUrlRep, _ = CLoud189Session.Get(longDownloadUrl, nic.H{
+			AllowRedirect: false,
+		})
+		redirectUrl := floderFileDownUrlRep.Header.Get("Location")
+		floderFileDownUrlRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
+			AllowRedirect: false,
+		})
+		return floderFileDownUrlRep.Header.Get("Location")
+	}
 	resp, err := CLoud189Session.Get(url, nil)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -198,23 +217,17 @@ func Cloud189shareToDown(url, passCode, fileId string) string {
 		shareId, exists := doc.Find(".shareId").Attr("value")
 		if !exists || shareId == "" {
 			//文件夹
-			shareId := GetBetweenStr(resp.Text, "_shareId = '", "'")
 			verifyCode := GetBetweenStr(resp.Text, "_verifyCode = '", "'")
-			if shareId == "" {
-				return "https://cloud.189.cn/"
-			}
 			url := fmt.Sprintf("https://cloud.189.cn/v2/listShareDirByShareIdAndFileId.action?"+
-				"fileId=%s&shareId=%s&accessCode=%s&verifyCode=%s&"+
+				"shortCode=%s&accessCode=%s&verifyCode=%s&"+
 				"orderBy=1&order=ASC&pageNum=1&pageSize=60",
-				fileId, shareId, passCode, verifyCode)
+				shortCode, passCode, verifyCode)
 			resp, _ = CLoud189Session.Get(url, nil)
 			return resp.Text
-		}
-		response, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/shareFileByVerifyCode.action?"+
-			"fileVO.id=%s&accessCode=%s", shareId, passCode), nil)
-		if response.Text != "null" {
-			fileId = jsoniter.Get([]byte(response.Text), "fileId").ToString()
-			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?shareId=%s&fileId=%s", shareId, fileId), nil)
+		} else {
+			fileId = GetBetweenStr(resp.Text, "window.fileId = \"", "\"")
+			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?"+
+				"shortCode=%s&fileId=%s", shortCode, fileId), nil)
 			longDownloadUrl := GetBetweenStr(dRedirectRep.Text, "\"", "\"")
 			longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
 			dRedirectRep, _ = CLoud189Session.Get(longDownloadUrl, nic.H{
