@@ -20,7 +20,7 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 	result["HasPwd"] = false
 	fileNode := entity.FileNode{}
 	model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1", path).First(&fileNode)
-	PwdDirIds := config.Config189.PwdDirId
+	PwdDirIds := config.GloablConfig.PwdDirId
 	for _, pdi := range PwdDirIds {
 		if pdi.Id == fileNode.FileId && pwd != pdi.Pwd {
 			result["HasPwd"] = true
@@ -90,6 +90,11 @@ func GetTotalPage(totalCount, pageSize int) int {
 //刷新目录缓存
 func UpdateFolderCache() {
 	model.SqliteDb.Model(&entity.FileNode{}).Update("`delete`", "1")
-	Util.Cloud189GetFiles(config.Config189.RootId, config.Config189.RootId)
+	Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
 	model.SqliteDb.Delete(entity.FileNode{}, "`delete` = 1")
+}
+
+//刷新登录cookie
+func RefreshCookie() {
+	Util.Cloud189Login(config.GloablConfig.User, config.GloablConfig.Password)
 }

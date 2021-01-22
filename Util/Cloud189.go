@@ -85,8 +85,8 @@ func Cloud189GetFiles(rootId, fileId string) {
 						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
 					}
 					item.Delete = 0
-					if config.Config189.HideFileId != "" {
-						listSTring := strings.Split(config.Config189.HideFileId, ",")
+					if config.GloablConfig.HideFileId != "" {
+						listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
 						sort.Strings(listSTring)
 						i := sort.SearchStrings(listSTring, item.FileId)
 						if i < len(listSTring) && listSTring[i] == item.FileId {
@@ -135,7 +135,7 @@ func Cloud189Login(user, password string) string {
 	//reqId := regexp.MustCompile(`reqId = "(.+?)"`).FindStringSubmatch(b)[1]
 	jRsakey := regexp.MustCompile(`j_rsaKey" value="(\S+)"`).FindStringSubmatch(b)[1]
 	vCodeRS := ""
-	if config.Config189.Damagou.Username != "" {
+	if config.GloablConfig.Damagou.Username != "" {
 		vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
 		vCodeRS = GetValidateCode(vCodeID)
 		log.Println("[登录接口]得到验证码：" + vCodeRS)
@@ -266,7 +266,7 @@ func RsaEncode(origData []byte, j_rsakey string) string {
 
 // 打码狗平台登录
 func LoginDamagou() string {
-	url := "http://www.damagou.top/apiv1/login.html?username=" + config.Config189.Damagou.Username + "&password=" + config.Config189.Damagou.Password
+	url := "http://www.damagou.top/apiv1/login.html?username=" + config.GloablConfig.Damagou.Username + "&password=" + config.GloablConfig.Damagou.Password
 	res, _ := CLoud189Session.Get(url, nil)
 	rsText := regexp.MustCompile(`([A-Za-z0-9]+)`).FindStringSubmatch(res.Text)[1]
 	return rsText

@@ -9,14 +9,11 @@ import (
 	"strings"
 )
 
-var Config189 Cloud189Config
+var GloablConfig Cloud189Config
 
-func LoadCloud189Config(path string) {
+func LoadConfig(path string) {
 	//配置文件读取优先级,自定义路径->当前路径->环境变量
 	//配置优先级，环境变量最高
-	if path == "" {
-		path = "config.json"
-	}
 	b, err := PathExists(path)
 	if err != nil {
 		log.Fatal("PathExists(%s),err(%v)\n", path, err)
@@ -24,6 +21,7 @@ func LoadCloud189Config(path string) {
 	config := os.Getenv("CONFIG")
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
+	mode := os.Getenv("MODE")
 	user := os.Getenv("CLOUD_USER")
 	pwd := os.Getenv("CLOUD_PASSWORD")
 	ri := os.Getenv("ROOT_ID")
@@ -34,6 +32,9 @@ func LoadCloud189Config(path string) {
 	theme := os.Getenv("THEME")
 	dmg_usr := os.Getenv("DMG_USER")
 	dmg_pwd := os.Getenv("DMG_PASS")
+	cron_refresh_cookie := os.Getenv("CRON_REFRESH_COOKIE")
+	cron_update_folder_cache := os.Getenv("CRON_UPDATE_FOLDER_CACHE")
+	cron_heroku_keep_alive := os.Getenv("CRON_HEROKU_KEEP_ALIVE")
 	if b {
 		file, err := os.Open(path)
 		if err != nil {
@@ -43,25 +44,28 @@ func LoadCloud189Config(path string) {
 		fd, err := ioutil.ReadAll(file)
 		config = string(fd)
 	}
-	err = jsoniter.Unmarshal([]byte(config), &Config189)
+	err = jsoniter.Unmarshal([]byte(config), &GloablConfig)
 	if err != nil {
 		log.Println("配置文件读取失败，从环境变量读取配置")
 	}
 	if host != "" {
-		Config189.Host = host
+		GloablConfig.Host = host
 	}
 	if port != "" {
 		portInt, _ := strconv.Atoi(port)
-		Config189.Port = portInt
+		GloablConfig.Port = portInt
 	}
 	if user != "" {
-		Config189.User = user
+		GloablConfig.Mode = mode
+	}
+	if user != "" {
+		GloablConfig.User = user
 	}
 	if pwd != "" {
-		Config189.Password = pwd
+		GloablConfig.Password = pwd
 	}
 	if ri != "" {
-		Config189.RootId = ri
+		GloablConfig.RootId = ri
 	}
 
 	if pdi != "" {
@@ -71,29 +75,51 @@ func LoadCloud189Config(path string) {
 			pwdDirId := PwdDirId{strings.Split(a, ":")[0], strings.Split(a, ":")[1]}
 			s = append(s, pwdDirId)
 		}
-		Config189.PwdDirId = s
-		//	Config189.Password = pwd
+		GloablConfig.PwdDirId = s
+		//	GloablConfig.Password = pwd
 	}
 	if hfi != "" {
-		Config189.HideFileId = hfi
+		GloablConfig.HideFileId = hfi
 	}
 	if hau != "" {
-		Config189.HerokuAppUrl = hau
+		GloablConfig.HerokuAppUrl = hau
 	}
 	if apitk != "" {
-		Config189.ApiToken = apitk
+		GloablConfig.ApiToken = apitk
 	}
 	if theme != "" {
-		Config189.Theme = theme
+		GloablConfig.Theme = theme
 	}
 	if dmg_usr != "" {
-		Config189.Damagou.Username = dmg_usr
+		GloablConfig.Damagou.Username = dmg_usr
 	}
 	if dmg_pwd != "" {
-		Config189.Damagou.Password = dmg_pwd
+		GloablConfig.Damagou.Password = dmg_pwd
 	}
-	if Config189.Theme == "" {
-		Config189.Theme = "classic"
+	if cron_refresh_cookie != "" {
+		GloablConfig.CronExps.RefreshCookie = cron_refresh_cookie
+	}
+	if cron_update_folder_cache != "" {
+		GloablConfig.CronExps.UpdateFolderCache = cron_update_folder_cache
+	}
+	if cron_heroku_keep_alive != "" {
+		GloablConfig.CronExps.HerokuKeepAlive = cron_heroku_keep_alive
+	}
+	//设置默认值
+	if GloablConfig.Theme == "" {
+		GloablConfig.Theme = "classic"
+	}
+	if GloablConfig.Mode == "" {
+		GloablConfig.Mode = "cloud189"
+	}
+	if GloablConfig.CronExps.RefreshCookie == "" {
+		GloablConfig.CronExps.RefreshCookie = "0 0 8 1/1 * ?"
+	}
+	if GloablConfig.CronExps.UpdateFolderCache == "" {
+		GloablConfig.CronExps.UpdateFolderCache = "0 0 0/1 * * ?"
+	}
+	if GloablConfig.CronExps.HerokuKeepAlive == "" {
+		GloablConfig.CronExps.HerokuKeepAlive = "0 0/5 * * * ?"
 	}
 }
 func PathExists(path string) (bool, error) {
@@ -110,6 +136,7 @@ func PathExists(path string) (bool, error) {
 type Cloud189Config struct {
 	Host         string     `json:"host"`
 	Port         int        `json:"port"`
+	Mode         string     `json:"mode"` //网盘模式，native（本地模式），cloud189(默认，天翼云网盘)，teambition（阿里teambition网盘）
 	User         string     `json:"user"`
 	Password     string     `json:"password"`
 	RootId       string     `json:"root_id"`
@@ -119,6 +146,13 @@ type Cloud189Config struct {
 	ApiToken     string     `json:"api_token"`
 	Theme        string     `json:"theme"`
 	Damagou      Damagou    `json:"damagou"`
+	CronExps     CronExps   `json:"cron_exps"`
+}
+
+type CronExps struct {
+	RefreshCookie     string `json:"refresh_cookie"`
+	UpdateFolderCache string `json:"update_folder_cache"`
+	HerokuKeepAlive   string `json:"heroku_keep_alive"`
 }
 
 type PwdDirId struct {

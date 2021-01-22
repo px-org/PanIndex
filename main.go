@@ -17,14 +17,16 @@ import (
 	"strings"
 )
 
-var configPath = flag.String("config.path", "", "配置文件config.json的路径")
+var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
 
 func main() {
 	flag.Parse()
-
+	if *configPath == "" {
+		configPath = flag.String("config.path", "config.json", "配置文件config.json的路径")
+	}
 	// 配置文件应该最先加载，因为要读取模板名字
-	config.LoadCloud189Config(*configPath)
-	if config.Config189.User != "" {
+	config.LoadConfig(*configPath)
+	if config.GloablConfig.User != "" {
 		log.Println("[程序启动]配置加载 >> 获取成功")
 	}
 
@@ -48,10 +50,21 @@ func main() {
 			downloadMultiFiles(c)
 		} else if method == "GET" && path == "/api/updateFolderCache" {
 			requestToken := c.Query("token")
-			if requestToken == config.Config189.ApiToken {
+			if requestToken == config.GloablConfig.ApiToken {
 				go updateCaches()
 				log.Println("[API请求]目录缓存刷新 >> 请求刷新")
 				message := "Cache update successful"
+				c.String(http.StatusOK, message)
+			} else {
+				message := "Invalid api token"
+				c.String(http.StatusOK, message)
+			}
+		} else if method == "GET" && path == "/api/refreshCookie" {
+			requestToken := c.Query("token")
+			if requestToken == config.GloablConfig.ApiToken {
+				go refreshCookie()
+				log.Println("[API请求]cookie刷新 >> 请求刷新")
+				message := "Cookie refresh successful"
 				c.String(http.StatusOK, message)
 			} else {
 				message := "Invalid api token"
@@ -65,12 +78,12 @@ func main() {
 	})
 	jobs.Run()
 	go jobs.StartInit()
-	r.Run(fmt.Sprintf("%s:%d", config.Config189.Host, config.Config189.Port)) // 监听并在 0.0.0.0:8080 上启动服务
+	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port)) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
 
 func initTemplates() *template.Template {
-	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.Config189.Theme)
+	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.GloablConfig.Theme)
 	box := packr.New("templates", "./templates")
 	t := template.New("")
 	tmpl := t.New(tmpFile)
@@ -80,7 +93,7 @@ func initTemplates() *template.Template {
 }
 
 func index(c *gin.Context) {
-	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.Config189.Theme)
+	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
 	if err == nil {
@@ -95,7 +108,7 @@ func index(c *gin.Context) {
 		pathName = pathName[0 : len(pathName)-1]
 	}
 	result := service.GetFilesByPath(pathName, pwd)
-	result["HerokuappUrl"] = config.Config189.HerokuAppUrl
+	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
@@ -130,6 +143,11 @@ func updateCaches() {
 	log.Println("[API请求]目录缓存刷新 >> 刷新成功")
 }
 
+func refreshCookie() {
+	service.RefreshCookie()
+	log.Println("[API请求]cookie刷新 >> 刷新成功")
+}
+
 func shareToDown(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
 	c.Header("Access-Control-Allow-Methods", "GET")
@@ -142,9 +160,4 @@ func shareToDown(c *gin.Context) {
 	subFileId := c.Query("subFileId")
 	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
 	c.String(http.StatusOK, downUrl)
-	/*if jsoniter.Valid([]byte(downUrl)) == true {
-		c.String(http.StatusOK, downUrl)
-	} else {
-		c.Redirect(http.StatusFound, downUrl)
-	}*/
 }
