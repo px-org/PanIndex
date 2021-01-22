@@ -28,6 +28,7 @@ docker run -itd \
  -d -p 8080:8080 \
  -v /home/single/data/docker/data/PanIndex/data:/app/data \
  -e HOST="0.0.0.0" \
+ -e MODE="cloud189" \
  -e CLOUD_USER="1860****837" \
  -e CLOUD_PASSWORD="1234" \
  -e ROOT_ID="-11" \
@@ -38,6 +39,9 @@ docker run -itd \
  -e THEME="bootstrap" \
  -e DMG_USER="" \
  -e DMG_PASS="" \
+ -e CRON_REFRESH_COOKIE="0 0 8 1/1 * ?" \
+ -e CRON_UPDATE_FOLDER_CACHE="0 0 0/1 * * ?" \
+ -e CRON_HEROKU_KEEP_ALIVE="0 0/5 * * * ?" \
  iicm/pan-index
 ```
 ## 程序包独立部署（vps）
@@ -53,6 +57,7 @@ $ ./PanIndex -config.path=config.json
 - heroku防止休眠 `0 0/5 * * * ?`
 
 ## 接口
+- 手动刷新登录cookie：`GET /api/refreshCookie?token=<ApiToken>`
 - 手动刷新目录缓存：`GET /api/updateFolderCache?token=<ApiToken>`
 - 分享链接直链解析：`GET /api/shareToDown?url=<分享链接>&fileId=<文件父级ID>&passCode=<访问密码>&subFileId=<文件ID，用于文件夹内的文件获取下载地址>`
 
@@ -75,6 +80,7 @@ $ ./PanIndex -config.path=config.json
 | :-------------: | :----:| :---: | :-----------------------------------------------------: | :----------------------------: |
 |  host           | 0     | 否    | 服务监听地址                                            | 0.0.0.0                        |
 |  port           | 0     | 是    | 端口                                                    | 8080                           |
+|  mode           | 0     | 是    | 网盘模式：本地，天翼云，阿里teambition                                | native,cloud189(默认),teambition                    |
 |  user           | 0     | 是    | 天翼云账号，一般是手机号                                | 183xxxx7765                    |
 |  password       | 0     | 是    | 天翼云账号密码                                          | 1234                           |
 |  root_id        | 0     | 是    | 网盘根目录ID                                            | -11，代表天翼云顶层目录        |
@@ -86,12 +92,17 @@ $ ./PanIndex -config.path=config.json
 |  api_token      | 0     | 否    | 调用私有api的秘钥                                       | 1234                           |
 |  theme          | 0     | 是    | 使用的主题，目前支持 classic, bootstrap, materialdesign | bootstrap                      |
 |  damagou        | 1     | 否    | 打码狗平台的用户名和密码，用于识别验证码                | username,password              |
+|  cron_exps      | 1     | 否    | 计划任务                                            | refresh_cookie,update_folder_cache,heroku_keep_alive              |
+|  refresh_cookie      | 0     | 否    | 计划任务-刷新登录cookie                                            |        默认：`0 0 8 1/1 * ?` ，[cron在线生成](https://cron.qqe2.com/)      |
+|  update_folder_cache      | 0     | 否    | 计划任务-刷新目录缓存                                            |      默认：`0 0 0/1 * * ?`，[cron在线生成](https://cron.qqe2.com/)       |
+|  heroku_keep_alive      | 0     | 否    | 计划任务-heroku保持在线                                            |      默认： `0 0/5 * * * ?`，[cron在线生成](https://cron.qqe2.com/)       |
 
 config.json
 ```json
 {
     "host": "0.0.0.0",
     "port": 8080,
+    "mode": "cloud189",
     "user": "183xxxx7765",
     "password": "xxxx",
     "root_id": "-11",
@@ -108,6 +119,11 @@ config.json
     "damagou": {
         "username":"",
         "password":""
+    },
+    "cron_exps": {
+        "refresh_cookie": "0 0 8 1/1 * ?",
+        "update_folder_cache": "0 0 0/1 * * ?",
+        "heroku_keep_alive": "0 0/5 * * * ?"
     }
 }
 ```
