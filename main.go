@@ -21,9 +21,6 @@ var configPath = flag.String("config", "config.json", "配置文件config.json�
 
 func main() {
 	flag.Parse()
-	if *configPath == "" {
-		configPath = flag.String("config.path", "config.json", "配置文件config.json的路径")
-	}
 	// 配置文件应该最先加载，因为要读取模板名字
 	config.LoadConfig(*configPath)
 	if config.GloablConfig.User != "" {

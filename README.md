@@ -48,7 +48,7 @@ docker run -itd \
 在[release](https://github.com/libsgh/PanIndex/releases "release")处下载PanIndex-xxx.tar.gz包
 ```bash
 $ tar -xvf PanIndex-v1.0.0-linux-amd64.tar.gz
-$ ./PanIndex -config.path=config.json
+$ ./PanIndex -config config.json
 ```
 
 ## 定时任务
