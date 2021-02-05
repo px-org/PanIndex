@@ -27,12 +27,17 @@ var CLoud189Session nic.Session
 
 //获取文件列表
 func Cloud189GetFiles(rootId, fileId string) {
+	defer func() {
+		if p := recover(); p != nil {
+			log.Println(p)
+		}
+	}()
 	pageNum := 1
 	for {
 		url := fmt.Sprintf("https://cloud.189.cn/v2/listFiles.action?fileId=%s&mediaType=&keyword=&inGroupSpace=false&orderBy=3&order=DESC&pageNum=%d&pageSize=100&noCache=%s", fileId, pageNum, random())
 		resp, err := CLoud189Session.Get(url, nil)
 		if err != nil {
-			log.Fatal(err.Error())
+			panic(err.Error())
 		}
 		byteFiles := []byte(resp.Text)
 		totalCount := jsoniter.Get(byteFiles, "recordCount").ToInt()
@@ -191,6 +196,11 @@ func Cloud189Login(user, password string) string {
 func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 	subIndex := strings.LastIndex(url, "/") + 1
 	shortCode := url[subIndex:]
+	defer func() {
+		if p := recover(); p != nil {
+			log.Println(p)
+		}
+	}()
 	if fileId != "" && subFileId != "" {
 		if passCode == "" {
 			passCode = "undefined"
@@ -210,7 +220,7 @@ func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 	}
 	resp, err := CLoud189Session.Get(url, nil)
 	if err != nil {
-		log.Fatal(err.Error())
+		panic(err.Error())
 	}
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err == nil {
@@ -286,8 +296,13 @@ func GetValidateCode(params string) string {
 			"Sec-Fetch-Site": "same-origin",
 		},
 	})
+	defer func() {
+		if p := recover(); p != nil {
+			log.Println(p)
+		}
+	}()
 	if err != nil {
-		log.Fatal(err.Error())
+		panic(err.Error())
 	} else {
 		f, err := os.OpenFile("validateCode.png", os.O_RDWR|os.O_CREATE, os.ModePerm)
 		if err != nil {
