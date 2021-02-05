@@ -4,7 +4,8 @@ DOCKER_CMD=$(DOCKER_BUILD)/PanIndex
 
 $(DOCKER_CMD): clean
 	mkdir -p $(DOCKER_BUILD)
-	$(GO_BUILD_ENV) go build -v -o $(DOCKER_CMD) .
+	flags="-X 'main.VERSION=master' -X 'main.BUILD_TIME=$(date "+%F %T")' -X 'main.GO_VERSION=$(go version)'-X 'main.GIT_COMMIT_SHA=$(git show -s --format=%H)'"
+	$(GO_BUILD_ENV) go build -ldflags="$flags" -v -o $(DOCKER_CMD) .
 
 clean:
 	rm -rf $(DOCKER_BUILD)

@@ -19,6 +19,8 @@ import (
 
 var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
 
+//var version = flag.String("version", "1.0.0", "查看版本号")
+
 func main() {
 	flag.Parse()
 	// 配置文件应该最先加载，因为要读取模板名字
@@ -75,6 +77,7 @@ func main() {
 	})
 	jobs.Run()
 	go jobs.StartInit()
+	PrintVersion()
 	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port)) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
