@@ -39,6 +39,7 @@ docker run -itd \
  -e THEME="bootstrap" \
  -e DMG_USER="" \
  -e DMG_PASS="" \
+ -e ONLY_REFERER="baidu.com,qq.com" \
  -e CRON_REFRESH_COOKIE="0 0 8 1/1 * ?" \
  -e CRON_UPDATE_FOLDER_CACHE="0 0 0/1 * * ?" \
  -e CRON_HEROKU_KEEP_ALIVE="0 0/5 * * * ?" \
@@ -92,6 +93,7 @@ $ ./PanIndex -config config.json
 |  api_token      | 0     | 否    | 调用私有api的秘钥                                       | 1234                           |
 |  theme          | 0     | 是    | 使用的主题，目前支持 classic, bootstrap, materialdesign | bootstrap                      |
 |  damagou        | 1     | 否    | 打码狗平台的用户名和密码，用于识别验证码                | username,password              |
+|  only_Referer        | 0     | 否    | 简单防盗链，允许的 Referrer，留空为全部允许                | baidu.com              |
 |  cron_exps      | 1     | 否    | 计划任务                                            | refresh_cookie,update_folder_cache,heroku_keep_alive              |
 |  refresh_cookie      | 0     | 否    | 计划任务-刷新登录cookie                                            |        默认：`0 0 8 1/1 * ?` ，[cron在线生成](https://cron.qqe2.com/)      |
 |  update_folder_cache      | 0     | 否    | 计划任务-刷新目录缓存                                            |      默认：`0 0 0/1 * * ?`，[cron在线生成](https://cron.qqe2.com/)       |
@@ -120,6 +122,7 @@ config.json
         "username":"",
         "password":""
     },
+    "only_Referer": [],
     "cron_exps": {
         "refresh_cookie": "0 0 8 1/1 * ?",
         "update_folder_cache": "0 0 0/1 * * ?",
