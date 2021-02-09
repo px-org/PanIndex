@@ -32,10 +32,11 @@ func LoadConfig(path string) {
 	theme := os.Getenv("THEME")
 	dmg_usr := os.Getenv("DMG_USER")
 	dmg_pwd := os.Getenv("DMG_PASS")
+	only_Referer := os.Getenv("ONLY_REFERER")
 	cron_refresh_cookie := os.Getenv("CRON_REFRESH_COOKIE")
 	cron_update_folder_cache := os.Getenv("CRON_UPDATE_FOLDER_CACHE")
 	cron_heroku_keep_alive := os.Getenv("CRON_HEROKU_KEEP_ALIVE")
-	if b {
+	if b && config == "" {
 		file, err := os.Open(path)
 		if err != nil {
 			panic(err)
@@ -96,6 +97,9 @@ func LoadConfig(path string) {
 	if dmg_pwd != "" {
 		GloablConfig.Damagou.Password = dmg_pwd
 	}
+	if only_Referer != "" {
+		GloablConfig.OnlyReferer = strings.Split(only_Referer, ",")
+	}
 	if cron_refresh_cookie != "" {
 		GloablConfig.CronExps.RefreshCookie = cron_refresh_cookie
 	}
@@ -146,6 +150,7 @@ type Cloud189Config struct {
 	ApiToken     string     `json:"api_token"`
 	Theme        string     `json:"theme"`
 	Damagou      Damagou    `json:"damagou"`
+	OnlyReferer  []string   `json:"only_referrer"`
 	CronExps     CronExps   `json:"cron_exps"`
 }
 

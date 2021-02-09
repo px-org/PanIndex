@@ -19,6 +19,7 @@
 	"username":"",
 	"password":""
   },
+  "only_Referer": [],
   "cron_exps": {
     "refresh_cookie": "0 0 8 1/1 * ?",
     "update_folder_cache": "0 0 0/1 * * ?",

@@ -4,7 +4,6 @@ import (
 	"PanIndex/Util"
 	"PanIndex/config"
 	"PanIndex/entity"
-	"PanIndex/jobs"
 	"PanIndex/service"
 	"flag"
 	"fmt"
@@ -19,7 +18,12 @@ import (
 
 var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
 
-//var version = flag.String("version", "1.0.0", "查看版本号")
+var (
+	VERSION        string
+	GO_VERSION     string
+	BUILD_TIME     string
+	GIT_COMMIT_SHA string
+)
 
 func main() {
 	flag.Parse()
@@ -72,12 +76,40 @@ func main() {
 		} else if method == "GET" && path == "/api/shareToDown" {
 			shareToDown(c)
 		} else {
-			index(c)
+			isForbidden := true
+			host := c.Request.Host
+			referer, err := url.Parse(c.Request.Referer())
+			if err != nil {
+				log.Println(err)
+			}
+			if referer != nil && referer.Host != "" {
+				if referer.Host == host {
+					//站内，自动通过
+					isForbidden = false
+				} else if referer.Host != host && len(config.GloablConfig.OnlyReferer) > 0 {
+					//外部引用，并且设置了防盗链，需要进行判断
+					for _, rf := range config.GloablConfig.OnlyReferer {
+						if rf == referer.Host {
+							isForbidden = false
+							break
+						}
+					}
+				}
+			} else {
+				isForbidden = false
+			}
+			if isForbidden == true {
+				c.String(http.StatusForbidden, "403 Hotlink Forbidden")
+				return
+			} else {
+				index(c)
+			}
 		}
 	})
-	jobs.Run()
-	go jobs.StartInit()
+	//jobs.Run()
+	//go jobs.StartInit()
 	PrintVersion()
+	Util.TeambitionLogin("18603607837", "003675Li,.")
 	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port)) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
@@ -160,4 +192,12 @@ func shareToDown(c *gin.Context) {
 	subFileId := c.Query("subFileId")
 	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
 	c.String(http.StatusOK, downUrl)
+}
+
+func PrintVersion() {
+	GO_VERSION = strings.ReplaceAll(GO_VERSION, "go version ", "")
+	log.Printf("Git Commit Hash: %s \n", GIT_COMMIT_SHA)
+	log.Printf("Version: %s \n", VERSION)
+	log.Printf("Go Version: %s \n", GO_VERSION)
+	log.Printf("Build TimeStamp: %s \n", BUILD_TIME)
 }
