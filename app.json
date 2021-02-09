@@ -13,11 +13,20 @@
       "description": "编码格式",
       "value": "en_US.UTF-8"
     },
+    "PAN_INDEX_VERSION": {
+      "description": "PanIndex版本，默认为最新版，查看：https://github.com/libsgh/PanIndex/releases",
+      "required": false,
+      "value": ""
+    },
     "CONFIG": {
       "description": "程序配置，请自行修改，json数据格式",
       "value": "{\"host\":\"0.0.0.0\",\"port\":8080,\"mode\":\"cloud189\",\"user\":\"\",\"password\":\"xxxx\",\"root_id\":\"-11\",\"pwd_dir_id\":[{\"id\":\"\",\"pwd\":\"\"}],\"hide_file_id\":\"\",\"heroku_app_url\":\"\",\"api_token\":\"\",\"theme\":\"bootstrap\",\"damagou\":{\"username\":\"\",\"password\":\"\"},\"cron_exps\":{\"refresh_cookie\":\"0 0 8 1/1 * ?\",\"update_folder_cache\":\"0 0 0/1 * * ?\",\"heroku_keep_alive\":\"0 0/5 * * * ?\"}}"
     }
   },
   "website": "http://github.com/libsgh/PanIndex",
-  "repository": "http://github.com/libsgh/PanIndex"
+  "repository": "http://github.com/libsgh/PanIndex",
+  "stack": "container",
+  "features": [
+    "runtime-dyno-metadata"
+  ]
 }
