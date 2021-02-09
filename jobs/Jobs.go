@@ -41,8 +41,7 @@ func StartInit() {
 	} else {
 		log.Println("[程序启动]cookie更新 >> 登录失败，请检查用户名和密码是否正确")
 	}
-	model.SqliteDb.Model(&entity.FileNode{}).Update("`delete`", "1")
+	model.SqliteDb.Delete(entity.FileNode{})
 	Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
-	model.SqliteDb.Delete(entity.FileNode{}, "`delete` = 1")
 	log.Println("[程序启动]目录缓存刷新 >> 刷新成功")
 }

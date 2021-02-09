@@ -89,9 +89,8 @@ func GetTotalPage(totalCount, pageSize int) int {
 
 //刷新目录缓存
 func UpdateFolderCache() {
-	model.SqliteDb.Model(&entity.FileNode{}).Update("`delete`", "1")
+	model.SqliteDb.Delete(entity.FileNode{})
 	Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
-	model.SqliteDb.Delete(entity.FileNode{}, "`delete` = 1")
 }
 
 //刷新登录cookie
