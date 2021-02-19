@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
 var SqliteDb *gorm.DB
 
-func init() {
+func InitDb() {
 	path := "data"
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		os.Mkdir(path, os.ModePerm)

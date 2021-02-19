@@ -10,4 +10,5 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/json-iterator/go v1.1.9
 	github.com/robfig/cron v1.2.0
+	github.com/sirupsen/logrus v1.4.2
 )

@@ -14,7 +14,7 @@ type FileNode struct {
 	Path         string `json:"path"`
 	ParentPath   string `json:"parentPath"`
 	DownloadUrl  string `json:"downloadUrl"`
-	MediaType    int    `json:"mediaType"`
+	MediaType    int    `json:"mediaType"` //1图片，2音频，3视频，4文本文档，0其他类型
 	Icon         Icon   `json:"icon"`
 	CreateTime   string `json:"create_time"`
 	Delete       int    `json:"delete"`

@@ -1,8 +1,9 @@
 # PanIndex
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex)
 
-简易的天翼云网盘目录列表
+简易的网盘目录列表
 - [x] cookie方式
+- [x] 本地模式，天翼云网盘，teambition网盘
 - [x] 下载直链
 - [x] 文件夹打包下载
 - [x] 图片、视频、office文件在线预览
@@ -82,16 +83,16 @@ $ ./PanIndex -config config.json
 |  host           | 0     | 否    | 服务监听地址                                            | 0.0.0.0                        |
 |  port           | 0     | 是    | 端口                                                    | 8080                           |
 |  mode           | 0     | 是    | 网盘模式：本地，天翼云，阿里teambition                                | native,cloud189(默认),teambition                    |
-|  user           | 0     | 是    | 天翼云账号，一般是手机号                                | 183xxxx7765                    |
-|  password       | 0     | 是    | 天翼云账号密码                                          | 1234                           |
-|  root_id        | 0     | 是    | 网盘根目录ID                                            | -11，代表天翼云顶层目录        |
+|  user           | 0     | 是    | 账号，一般是手机号或邮箱                                | 183xxxx7765，本地模式可不填                   |
+|  password       | 0     | 是    | 密码                                          | 1234，本地模式可不填                           |
+|  root_id        | 0     | 是    | 网盘根目录ID                                            | -11，代表天翼云顶层目录， teambition自动读取，  本地模式-绝对路径     |
 |  pwd_dir_id     | 0     | 否    | 加密文件目录id和密码                                    | 数组                           |
-|  id             | 1     | 否    | 加密目录id                                              | 5149xxx1353335                 |
+|  id             | 1     | 否    | 加密目录id                                              | 5149xxx1353335，本地模式为绝对路径                 |
 |  pwd            | 1     | 否    | 加密目录访问密码                                        | 1234                           |
-|  hide_file_id   | 0     | 否    | 隐藏目录id ，多个文件`,`分隔                            | 213123,23445                   |
+|  hide_file_id   | 0     | 否    | 隐藏目录id ，多个文件`,`分隔                            | 213123,23445 【本地模式为绝对路径 】                  |
 |  heroku_app_url | 0     | 否    | 部署后的herokuapp网盘地址，heroku部署必须               | https://app-name.herokuapp.com |
 |  api_token      | 0     | 否    | 调用私有api的秘钥                                       | 1234                           |
-|  theme          | 0     | 是    | 使用的主题，目前支持 classic, bootstrap, materialdesign | bootstrap                      |
+|  theme          | 0     | 是    | 使用的主题，目前支持 classic, bootstrap, materialdesign | 默认为classic                      |
 |  damagou        | 1     | 否    | 打码狗平台的用户名和密码，用于识别验证码                | username,password              |
 |  only_Referer        | 0     | 否    | 简单防盗链，允许的 Referrer，留空为全部允许                | baidu.com              |
 |  cron_exps      | 1     | 否    | 计划任务                                            | refresh_cookie,update_folder_cache,heroku_keep_alive              |
@@ -117,7 +118,7 @@ config.json
     "hide_file_id": "",
     "heroku_app_url":"https://pan-index.herokuapp.com",
     "api_token": "1234",
-    "theme": "bootstrap",
+    "theme": "boot",
     "damagou": {
         "username":"",
         "password":""

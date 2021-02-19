@@ -2,14 +2,15 @@ package config
 
 import (
 	jsoniter "github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 )
 
-var GloablConfig Cloud189Config
+var GloablConfig CommonConfig
+var Debug bool = false
 
 func LoadConfig(path string) {
 	//配置文件读取优先级,自定义路径->当前路径->环境变量
@@ -47,7 +48,7 @@ func LoadConfig(path string) {
 	}
 	err = jsoniter.Unmarshal([]byte(config), &GloablConfig)
 	if err != nil {
-		log.Println("配置文件读取失败，从环境变量读取配置")
+		log.Warnln("未发现配置文件，将从环境变量读取配置")
 	}
 	if host != "" {
 		GloablConfig.Host = host
@@ -125,6 +126,7 @@ func LoadConfig(path string) {
 	if GloablConfig.CronExps.HerokuKeepAlive == "" {
 		GloablConfig.CronExps.HerokuKeepAlive = "0 0/5 * * * ?"
 	}
+	log.Infoln("[程序启动]配置加载 >> 获取成功")
 }
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -137,7 +139,7 @@ func PathExists(path string) (bool, error) {
 	return false, err
 }
 
-type Cloud189Config struct {
+type CommonConfig struct {
 	Host         string     `json:"host"`
 	Port         int        `json:"port"`
 	Mode         string     `json:"mode"` //网盘模式，native（本地模式），cloud189(默认，天翼云网盘)，teambition（阿里teambition网盘）
