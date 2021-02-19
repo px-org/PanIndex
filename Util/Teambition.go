@@ -4,12 +4,14 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"encoding/json"
 	"fmt"
 	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sort"
 	"strings"
+	"time"
 )
 
 var GloablOrgId string
@@ -19,10 +21,10 @@ var GloablRootId string
 var TeambitionSession nic.Session
 
 //Teambition网盘登录
-func TeambitionLogin(user, password string) {
+func TeambitionLogin(user, password string) string {
 	defer func() {
 		if p := recover(); p != nil {
-			log.Println(p)
+			log.Errorln(p)
 		}
 	}()
 	//0.登录-获取token
@@ -32,8 +34,6 @@ func TeambitionLogin(user, password string) {
 	}
 	token := GetBetweenStr(resp.Text, "TOKEN\":\"", "\"")
 	clientId := GetBetweenStr(resp.Text, "CLIENT_ID\":\"", "\"")
-	fmt.Println("t: " + token)
-	fmt.Println("c: " + clientId)
 	param := nic.KV{
 		"client_id":     clientId,
 		"token":         token,
@@ -81,96 +81,124 @@ func TeambitionLogin(user, password string) {
 		panic(err.Error())
 	}
 	GloablDriveId = jsoniter.Get(resp.Bytes, "data.driveId").ToString()
-	//5.获取文件列表
-	resp, err = TeambitionSession.Get(fmt.Sprintf("https://pan.teambition.com/pan/api/nodes?orgId=%s&offset=0&limit=100&orderBy=updateTime&orderDirection=desc&driveId=%s&spaceId=%s&parentId=%s", GloablOrgId, GloablDriveId, GloablSpaceId, GloablRootId), nil)
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Println(resp.Text)
+	return "success"
 }
 
 //获取文件列表
-func TeambitionGetFiles(rootId, fileId string) {
+func TeambitionGetFiles(rootId, fileId, p string) {
+	if rootId == "" {
+		//如果没有设置rootId,这里使用全局的rootId
+		rootId = GloablRootId
+		fileId = GloablRootId
+	}
 	defer func() {
 		if p := recover(); p != nil {
-			log.Println(p)
+			log.Warningln(p)
 		}
 	}()
-	pageNum := 1
+	limit := 100
+	pageNum := 0
 	for {
-		url := fmt.Sprintf(fmt.Sprintf("https://pan.teambition.com/pan/api/nodes?orgId=%s&offset=0&limit=100&orderBy=updateTime&orderDirection=desc&driveId=%s&spaceId=%s&parentId=%s", GloablOrgId, GloablDriveId, GloablSpaceId, fileId), nil)
+		offset := pageNum * limit
+		url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes?orgId=%s&offset=%d&limit=%d&orderBy=updateTime&orderDirection=desc&driveId=%s&spaceId=%s&parentId=%s", GloablOrgId, offset, limit, GloablDriveId, GloablSpaceId, fileId)
 		resp, err := TeambitionSession.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
 		}
 		byteFiles := []byte(resp.Text)
-		totalCount := jsoniter.Get(byteFiles, "recordCount").ToInt()
 		d := jsoniter.Get(byteFiles, "data")
-		paths := jsoniter.Get(byteFiles, "path")
-		ps := []entity.Paths{}
-		err = jsoniter.Unmarshal([]byte(paths.ToString()), &ps)
-		p := ""
-		flag := false
-		if err == nil {
-			for _, item := range ps {
-				if flag == true && item.FileId != rootId {
-					if strings.HasSuffix(p, "/") != true {
-						p += "/" + item.FileName
-					} else {
-						p += item.FileName
-					}
+		nextMarker := jsoniter.Get(byteFiles, "nextMarker").ToString()
+		var m []map[string]interface{}
+		json.Unmarshal([]byte(d.ToString()), &m)
+		for _, item := range m {
+			fn := entity.FileNode{}
+			fn.FileId = item["nodeId"].(string)
+			fn.FileName = item["name"].(string)
+			fn.FileIdDigest = ""
+			fn.CreateTime = UTCTimeFormat(item["created"].(string))
+			fn.LastOpTime = UTCTimeFormat(item["updated"].(string))
+			kind := item["kind"].(string)
+			if kind == "file" {
+				fn.FileType = item["ext"].(string)
+				fn.IsFolder = false
+				fn.FileSize = int64(item["size"].(float64))
+				fn.SizeFmt = FormatFileSize(fn.FileSize)
+				category := item["category"].(string)
+				if category == "image" {
+					//图片
+					fn.MediaType = 1
+				} else if category == "doc" {
+					//文本
+					fn.MediaType = 4
+				} else if category == "video" {
+					//视频
+					fn.MediaType = 3
+				} else if category == "audio" {
+					//音频
+					fn.MediaType = 2
+				} else {
+					//其他类型
+					fn.MediaType = 0
 				}
-				if item.FileId == rootId {
-					flag = true
-				}
-				if flag == true && item.FileId == rootId {
-					p += "/"
+				fn.DownloadUrl = item["downloadUrl"].(string)
+			} else {
+				fn.FileType = ""
+				fn.IsFolder = true
+				fn.FileSize = 0
+				fn.SizeFmt = "-"
+				fn.MediaType = 0
+				fn.DownloadUrl = ""
+			}
+			fn.Delete = 0
+			//天翼云网盘独有，这里随便定义一个
+			fn.IsStarred = true
+			fn.ParentId = item["parentId"].(string)
+			fn.Hide = 0
+			if config.GloablConfig.HideFileId != "" {
+				listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+				sort.Strings(listSTring)
+				i := sort.SearchStrings(listSTring, fn.FileId)
+				if i < len(listSTring) && listSTring[i] == fn.FileId {
+					fn.Hide = 1
 				}
 			}
-		}
-		if d != nil {
-			m := []entity.FileNode{}
-			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
-			if err == nil {
-				for _, item := range m {
-					if p == "/" {
-						item.Path = "/" + item.FileName
-					} else {
-						item.Path = p + "/" + item.FileName
-					}
-					item.ParentPath = p
-					item.SizeFmt = FormatFileSize(item.FileSize)
-					if item.IsFolder == true {
-						Cloud189GetFiles(rootId, item.FileId)
-					} else {
-						//如果是文件，解析下载直链
-						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
-							AllowRedirect: false,
-						})
-						redirectUrl := dRedirectRep.Header.Get("Location")
-						dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
-							AllowRedirect: false,
-						})
-						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
-					}
-					item.Delete = 0
-					if config.GloablConfig.HideFileId != "" {
-						listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
-						sort.Strings(listSTring)
-						i := sort.SearchStrings(listSTring, item.FileId)
-						if i < len(listSTring) && listSTring[i] == item.FileId {
-							item.Hide = 1
-						}
-					}
-					log.Println(item.FileName)
-					model.SqliteDb.Save(item)
-				}
+			fn.ParentPath = p
+			if fn.ParentId == rootId {
+				fn.Path = p + fn.FileName
+			} else {
+				fn.Path = p + "/" + fn.FileName
 			}
+			if fn.IsFolder == true {
+				TeambitionGetFiles(rootId, fn.FileId, fn.Path)
+			}
+			model.SqliteDb.Save(fn)
 		}
-		if pageNum*100 < totalCount {
+		if nextMarker != "" {
 			pageNum++
 		} else {
 			break
 		}
 	}
+}
+func GetTeambitionDownUrl(nodeId string) string {
+	url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes/%s?orgId=%s&driveId=%s", nodeId, GloablOrgId, GloablDriveId)
+	resp, err := TeambitionSession.Get(url, nil)
+	defer func() {
+		if p := recover(); p != nil {
+			log.Errorln(p)
+		}
+	}()
+	if err != nil {
+		panic(err.Error())
+	}
+	downUrl := jsoniter.Get(resp.Bytes, "downloadUrl").ToString()
+	if downUrl == "" {
+		log.Warningln("Teambition盘下载地址获取失败")
+	}
+	return downUrl
+}
+func UTCTimeFormat(timeStr string) string {
+	t, _ := time.Parse(time.RFC3339, timeStr)
+	timeUint := t.In(time.Local).Unix()
+	return time.Unix(timeUint, 0).Format("2006-01-02 15:04:05")
 }

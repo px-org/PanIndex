@@ -2,6 +2,7 @@ package main
 
 import (
 	"PanIndex/Util"
+	"PanIndex/boot"
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/service"
@@ -9,8 +10,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
+	log "github.com/sirupsen/logrus"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -18,22 +19,9 @@ import (
 
 var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
 
-var (
-	VERSION        string
-	GO_VERSION     string
-	BUILD_TIME     string
-	GIT_COMMIT_SHA string
-)
-
 func main() {
 	flag.Parse()
-	// 配置文件应该最先加载，因为要读取模板名字
-	config.LoadConfig(*configPath)
-	if config.GloablConfig.User != "" {
-		log.Println("[程序启动]配置加载 >> 获取成功")
-	}
-
-	gin.SetMode(gin.ReleaseMode)
+	boot.Start(*configPath)
 	r := gin.New()
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
@@ -41,7 +29,7 @@ func main() {
 	//	r.LoadHTMLFiles("templates/**")
 	//	r.Static("/static", "./static")
 	//	r.StaticFS("/static", staticBox)
-	r.StaticFile("/favicon.ico", "./static/img/favicon.ico")
+	r.StaticFile("/favicon-cloud189.ico", "./static/img/favicon-cloud189.ico")
 	staticBox := packr.New("static", "./static")
 	r.StaticFS("/static", staticBox)
 	//声明一个路由
@@ -54,9 +42,15 @@ func main() {
 		} else if method == "GET" && path == "/api/updateFolderCache" {
 			requestToken := c.Query("token")
 			if requestToken == config.GloablConfig.ApiToken {
-				go updateCaches()
-				log.Println("[API请求]目录缓存刷新 >> 请求刷新")
-				message := "Cache update successful"
+				message := ""
+				if config.GloablConfig.Mode == "native" {
+					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
+					message = "Native mode does not need to be refreshed"
+				} else {
+					go updateCaches()
+					log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
+					message = "Cache update successful"
+				}
 				c.String(http.StatusOK, message)
 			} else {
 				message := "Invalid api token"
@@ -65,9 +59,15 @@ func main() {
 		} else if method == "GET" && path == "/api/refreshCookie" {
 			requestToken := c.Query("token")
 			if requestToken == config.GloablConfig.ApiToken {
-				go refreshCookie()
-				log.Println("[API请求]cookie刷新 >> 请求刷新")
-				message := "Cookie refresh successful"
+				message := ""
+				if config.GloablConfig.Mode == "native" {
+					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
+					message = "Native mode does not need to be refreshed"
+				} else {
+					go refreshCookie()
+					log.Infoln("[API请求]cookie刷新 >> 请求刷新")
+					message = "Cookie refresh successful"
+				}
 				c.String(http.StatusOK, message)
 			} else {
 				message := "Invalid api token"
@@ -80,7 +80,7 @@ func main() {
 			host := c.Request.Host
 			referer, err := url.Parse(c.Request.Referer())
 			if err != nil {
-				log.Println(err)
+				log.Warningln(err)
 			}
 			if referer != nil && referer.Host != "" {
 				if referer.Host == host {
@@ -106,16 +106,12 @@ func main() {
 			}
 		}
 	})
-	//jobs.Run()
-	//go jobs.StartInit()
-	PrintVersion()
-	Util.TeambitionLogin("18603607837", "003675Li,.")
 	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port)) // 监听并在 0.0.0.0:8080 上启动服务
 
 }
 
 func initTemplates() *template.Template {
-	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.GloablConfig.Theme)
+	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	box := packr.New("templates", "./templates")
 	t := template.New("")
 	tmpl := t.New(tmpFile)
@@ -125,13 +121,13 @@ func initTemplates() *template.Template {
 }
 
 func index(c *gin.Context) {
-	tmpFile := strings.Join([]string{"189/", "/index.html"}, config.GloablConfig.Theme)
+	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
 	if err == nil {
 		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
 		if err != nil {
-			log.Println(err)
+			log.Warningln(err)
 		}
 		pwd = decodePwd
 	}
@@ -141,24 +137,20 @@ func index(c *gin.Context) {
 	}
 	result := service.GetFilesByPath(pathName, pwd)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
+	result["Mode"] = config.GloablConfig.Mode
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
 			//文件
-			downUrl := service.GetDownlaodUrl(fs[0].FileIdDigest)
-			c.Redirect(http.StatusFound, downUrl)
-			/*if fs[0].MediaType == 1{
-				//图片
-			}else if fs[0].MediaType == 2{
-				//音频
-				//音频
-			}else if fs[0].MediaType == 3{
-				//视频
-			}else if fs[0].MediaType == 4{
-				//文本
-			}else{
-				//其他类型，直接下载
-			}*/
+			if config.GloablConfig.Mode == "native" {
+				c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
+				c.Writer.Header().Add("Content-Type", "application/octet-stream")
+				c.File(fs[0].FileId)
+				return
+			} else {
+				downUrl := service.GetDownlaodUrl(fs[0])
+				c.Redirect(http.StatusFound, downUrl)
+			}
 		}
 	}
 	c.HTML(http.StatusOK, tmpFile, result)
@@ -172,12 +164,12 @@ func downloadMultiFiles(c *gin.Context) {
 
 func updateCaches() {
 	service.UpdateFolderCache()
-	log.Println("[API请求]目录缓存刷新 >> 刷新成功")
+	log.Infoln("[API请求]目录缓存刷新 >> 刷新成功")
 }
 
 func refreshCookie() {
 	service.RefreshCookie()
-	log.Println("[API请求]cookie刷新 >> 刷新成功")
+	log.Infoln("[API请求]cookie刷新 >> 刷新成功")
 }
 
 func shareToDown(c *gin.Context) {
@@ -192,12 +184,4 @@ func shareToDown(c *gin.Context) {
 	subFileId := c.Query("subFileId")
 	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
 	c.String(http.StatusOK, downUrl)
-}
-
-func PrintVersion() {
-	GO_VERSION = strings.ReplaceAll(GO_VERSION, "go version ", "")
-	log.Printf("Git Commit Hash: %s \n", GIT_COMMIT_SHA)
-	log.Printf("Version: %s \n", VERSION)
-	log.Printf("Go Version: %s \n", GO_VERSION)
-	log.Printf("Build TimeStamp: %s \n", BUILD_TIME)
 }
