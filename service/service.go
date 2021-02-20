@@ -5,7 +5,6 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -70,7 +69,6 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 						}
 						fileType := Util.GetMimeType(fileInfo)
 						// 实例化FileNode
-						fmt.Println(fileId)
 						file := entity.FileNode{
 							FileId:     fileId,
 							IsFolder:   fileInfo.IsDir(),
