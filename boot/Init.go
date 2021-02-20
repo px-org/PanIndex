@@ -113,10 +113,10 @@ func IsLastVersion(lasted string, now string) bool {
 		now = strings.ReplaceAll(now, ".", "")
 		nowV, _ := strconv.Atoi(now)
 		if lastedV > nowV {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 type GithubRelease struct {
