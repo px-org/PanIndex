@@ -94,6 +94,8 @@ func main() {
 							break
 						}
 					}
+				} else {
+					isForbidden = false
 				}
 			} else {
 				isForbidden = false
