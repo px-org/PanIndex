@@ -1,4 +1,4 @@
-module github.com/libsgh/PanIndex
+module PanIndex
 
 go 1.16
 
