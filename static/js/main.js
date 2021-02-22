@@ -19,7 +19,7 @@ $(document).ready(function() {
                 dynamic: true,
                 fullScreen: true,
                 dynamicEl: [{
-                    html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+dURL+'" type="video/'+fileType+'">Your browser does not support HTML5 video</video>\'',
+                    html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+dURL+'">Your browser does not support HTML5 video</video>\'',
                     "subHtml": "<h4>"+title+"</h4>"
                 }]
             })
