@@ -12,6 +12,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	log "github.com/sirupsen/logrus"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,9 +30,8 @@ func main() {
 	//	r.LoadHTMLFiles("templates/**")
 	//	r.Static("/static", "./static")
 	//	r.StaticFS("/static", staticBox)
-	r.StaticFile("/favicon-cloud189.ico", "./static/img/favicon-cloud189.ico")
-	staticBox := packr.New("static", "./static")
-	r.StaticFS("/static", staticBox)
+	//r.StaticFile("/favicon-cloud189.ico", "./static/img/favicon-cloud189.ico")
+	initStaticBox(r)
 	//声明一个路由
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
@@ -115,13 +115,23 @@ func main() {
 func initTemplates() *template.Template {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	box := packr.New("templates", "./templates")
-	t := template.New("")
-	tmpl := t.New(tmpFile)
 	data, _ := box.FindString(tmpFile)
+	if Util.FileExist("./templates/" + tmpFile) {
+		s, _ := ioutil.ReadFile("./templates/" + tmpFile)
+		data = string(s)
+	}
+	tmpl := template.New(tmpFile)
 	tmpl.Parse(data)
-	return t
+	return tmpl
 }
-
+func initStaticBox(r *gin.Engine) {
+	staticBox := packr.New("static", "./static")
+	if Util.FileExist("./static") {
+		r.Static("/static", "./static")
+	} else {
+		r.StaticFS("/static", staticBox)
+	}
+}
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
