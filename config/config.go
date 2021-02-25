@@ -57,7 +57,7 @@ func LoadConfig(path string) {
 		portInt, _ := strconv.Atoi(port)
 		GloablConfig.Port = portInt
 	}
-	if user != "" {
+	if mode != "" {
 		GloablConfig.Mode = mode
 	}
 	if user != "" {
