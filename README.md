@@ -13,9 +13,9 @@
 - [x] 定时同步cookie（每天8点）
 - [x] heroku防止休眠（每5分钟访问一次应用）
 
-## DEMO
+## 示例
 - [https://pan-index.herokuapp.com](https://pan-index.herokuapp.com "https://pan-index.herokuapp.com")
 - [https://pan.noki.top](https://pan.noki.top "https://pan.noki.top")
 
 ## 文档
-[doc](https://libsgh.github.io/PanIndex/)
+[在线文档](https://libsgh.github.io/PanIndex/)
