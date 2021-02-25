@@ -34,7 +34,7 @@ func Cloud189GetFiles(rootId, fileId string) {
 	}()
 	pageNum := 1
 	for {
-		url := fmt.Sprintf("https://cloud.pan.cn/v2/listFiles.action?fileId=%s&mediaType=&keyword=&inGroupSpace=false&orderBy=3&order=DESC&pageNum=%d&pageSize=100&noCache=%s", fileId, pageNum, random())
+		url := fmt.Sprintf("https://cloud.189.cn/v2/listFiles.action?fileId=%s&mediaType=&keyword=&inGroupSpace=false&orderBy=3&order=DESC&pageNum=%d&pageSize=100&noCache=%s", fileId, pageNum, random())
 		resp, err := CLoud189Session.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
@@ -110,7 +110,7 @@ func Cloud189GetFiles(rootId, fileId string) {
 	}
 }
 func GetDownlaodUrl(fileIdDigest string) string {
-	dRedirectRep, _ := CLoud189Session.Get("https://cloud.pan.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
+	dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
 		AllowRedirect: false,
 	})
 	redirectUrl := dRedirectRep.Header.Get("Location")
@@ -120,7 +120,7 @@ func GetDownlaodUrl(fileIdDigest string) string {
 	return dRedirectRep.Header.Get("Location")
 }
 func GetDownlaodMultiFiles(fileId string) string {
-	dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.pan.cn/downloadMultiFiles.action?fileIdS=%s&downloadType=1&recursive=1", fileId), nic.H{
+	dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/downloadMultiFiles.action?fileIdS=%s&downloadType=1&recursive=1", fileId), nic.H{
 		AllowRedirect: false,
 	})
 	redirectUrl := dRedirectRep.Header.Get("Location")
@@ -130,7 +130,7 @@ func GetDownlaodMultiFiles(fileId string) string {
 //天翼云网盘登录
 func Cloud189Login(user, password string) string {
 	CLoud189Session = nic.Session{}
-	url := "https://cloud.pan.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
+	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
 	lt := regexp.MustCompile(`lt = "(.+?)"`).FindStringSubmatch(b)[1]
@@ -147,7 +147,7 @@ func Cloud189Login(user, password string) string {
 	}
 	userRsa := RsaEncode([]byte(user), jRsakey)
 	passwordRsa := RsaEncode([]byte(password), jRsakey)
-	url = "https://open.e.pan.cn/api/logbox/oauth2/loginSubmit.do"
+	url = "https://open.e.189.cn/api/logbox/oauth2/loginSubmit.do"
 	loginResp, _ := CLoud189Session.Post(url, nic.H{
 		Data: nic.KV{
 			"appKey":       "cloud",
@@ -167,7 +167,7 @@ func Cloud189Login(user, password string) string {
 		Headers: nic.KV{
 			"lt":         lt,
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
-			"Referer":    "https://open.e.pan.cn/",
+			"Referer":    "https://open.e.189.cn/",
 		},
 	})
 	restCode := jsoniter.Get([]byte(loginResp.Text), "result").ToInt()
@@ -205,7 +205,7 @@ func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 		if passCode == "" {
 			passCode = "undefined"
 		}
-		floderFileDownUrlRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.pan.cn/v2/getFileDownloadUrl.action?"+
+		floderFileDownUrlRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?"+
 			"shortCode=%s&fileId=%s&accessCode=%s&subFileId=%s", shortCode, fileId, passCode, subFileId), nil)
 		longDownloadUrl := GetBetweenStr(floderFileDownUrlRep.Text, "\"", "\"")
 		longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
@@ -228,7 +228,7 @@ func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 		if !exists || shareId == "" {
 			//文件夹
 			verifyCode := GetBetweenStr(resp.Text, "_verifyCode = '", "'")
-			url := fmt.Sprintf("https://cloud.pan.cn/v2/listShareDirByShareIdAndFileId.action?"+
+			url := fmt.Sprintf("https://cloud.189.cn/v2/listShareDirByShareIdAndFileId.action?"+
 				"shortCode=%s&accessCode=%s&verifyCode=%s&"+
 				"orderBy=1&order=ASC&pageNum=1&pageSize=60",
 				shortCode, passCode, verifyCode)
@@ -244,7 +244,7 @@ func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 					}})
 				fileId = GetBetweenStr(resp.Text, "window.fileId = \"", "\"")
 			}
-			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.pan.cn/v2/getFileDownloadUrl.action?"+
+			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?"+
 				"shortCode=%s&fileId=%s", shortCode, fileId), nil)
 			longDownloadUrl := GetBetweenStr(dRedirectRep.Text, "\"", "\"")
 			longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
@@ -285,7 +285,7 @@ func LoginDamagou() string {
 // 调用打码狗获取验证码结果
 func GetValidateCode(params string) string {
 	timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
-	url := "https://open.e.pan.cn/api/logbox/oauth2/picCaptcha.do?token=" + params + timeStamp
+	url := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + params + timeStamp
 	log.Warningln("[登录接口]正在尝试获取验证码")
 	res, err := CLoud189Session.Get(url, nic.H{
 		Headers: nic.KV{
