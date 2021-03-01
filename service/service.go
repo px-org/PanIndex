@@ -209,12 +209,23 @@ func GetTotalPage(totalCount, pageSize int) int {
 //刷新目录缓存
 func UpdateFolderCache() {
 	model.SqliteDb.Delete(entity.FileNode{})
-	Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
+	if config.GloablConfig.Mode == "cloud189" {
+		Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
+	} else if config.GloablConfig.Mode == "teambition" {
+		Util.TeambitionGetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId, "/")
+	} else if config.GloablConfig.Mode == "native" {
+	}
 }
 
 //刷新登录cookie
 func RefreshCookie() {
-	Util.Cloud189Login(config.GloablConfig.User, config.GloablConfig.Password)
+	if config.GloablConfig.Mode == "cloud189" {
+		Util.Cloud189Login(config.GloablConfig.User, config.GloablConfig.Password)
+	} else if config.GloablConfig.Mode == "teambition" {
+		Util.TeambitionLogin(config.GloablConfig.User, config.GloablConfig.Password)
+	} else if config.GloablConfig.Mode == "native" {
+	}
+
 }
 func IsDirectory(filename string) bool {
 	info, err := os.Stat(filename)
