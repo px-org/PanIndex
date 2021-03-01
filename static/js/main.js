@@ -14,6 +14,21 @@ $(document).ready(function() {
                 }]
             });
             return;
+        }else if(dmt == 2){
+            const ap = new APlayer({
+                container: document.getElementById('aplayer'),
+                fixed: true,
+                lrcType: 3,
+                autoplay: true,
+                audio: [{
+                    name: title,
+                    artist: 'artist',
+                    url: dURL,
+                    cover: dURL.split('.')[0] + '.jpg',
+                    lrc: dURL.split('.')[0] + '.lrc'
+                }]
+            });
+            return;
         }else if(dmt == 3){
             $(this).lightGallery({
                 dynamic: true,
