@@ -148,7 +148,22 @@ export CRON_UPDATE_FOLDER_CACHE="0 0 0/1 * * ?"
 export CRON_HEROKU_KEEP_ALIVE="0 0/5 * * * ?"
 ```
 
+
+
+# 文件预览
+
+文件预览支持的格式：图片、音频、视频、office文档，其他不支持预览的文件，点击文件名将会进行下载
+
+- 视频：h5播放兼容性最好的是mp4，其他的如mkv，可能播放会有问题
+
+- 音频：支持封面和歌词，歌词必须是lrc格式，封面、歌词、音频必须同名（除后缀）
+
+  ![](_images/audio.png)
+
+
+
 # 自定义主题
+
 > v1.0.4以上版本支持该功能
 - 在[release](https://github.com/libsgh/PanIndex/releases "release")处下载ui.zip包
 - 解压到与PanIndex同级目录，按需修改templates及static目录中的内容
