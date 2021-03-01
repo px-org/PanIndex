@@ -95,7 +95,7 @@
 									{{if .IsFolder}}
 										<td class="file-name"><a class="icon icon-dir" href="{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a></td>
 									{{else}}
-										<td class="file-name"><a class="icon icon-file"data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);"><i class="fa fa-file" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a></td>
+										<td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);"><i class="fa fa-file" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a></td>
 									{{end}}
 									<td class="file-size">{{.SizeFmt}}</td>
 									<td class="file-date-modified">{{.LastOpTime}}</td>
@@ -121,7 +121,7 @@
 			</div>
 		</div>
 		{{end}}
-		<div id="example1"></div>
+		<div id="aplayer"></div>
 	</body>
 	<script>var HerokuappUrl = {{.HerokuappUrl}}</script>
 	<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>

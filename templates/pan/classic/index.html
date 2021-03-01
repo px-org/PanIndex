@@ -53,7 +53,7 @@
                 {{if .IsFolder}}
                     <td class="file-name"><a class="icon icon-dir" href="{{.Path}}">{{.FileName}}</a></td>
                 {{else}}
-                    <td class="file-name"><a class="icon icon-file"data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);">{{.FileName}}</a></td>
+                    <td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);">{{.FileName}}</a></td>
                 {{end}}
                 <td class="file-size">{{.SizeFmt}}</td>
                 <td class="file-date-modified">{{.LastOpTime}}</td>
