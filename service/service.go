@@ -143,10 +143,10 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 		result["HasParent"] = true
 	}
 	result["ParentPath"] = PetParentPath(path)
-	if config.GloablConfig.Mode == "teambition" {
-		result["SurportFolderDown"] = false
-	} else {
+	if config.GloablConfig.Mode == "cloud189" {
 		result["SurportFolderDown"] = true
+	} else {
+		result["SurportFolderDown"] = false
 	}
 	return result
 }
@@ -155,7 +155,11 @@ func GetDownlaodUrl(fileNode entity.FileNode) string {
 	if config.GloablConfig.Mode == "cloud189" {
 		return Util.GetDownlaodUrl(fileNode.FileIdDigest)
 	} else if config.GloablConfig.Mode == "teambition" {
-		return Util.GetTeambitionDownUrl(fileNode.FileId)
+		if Util.IsPorject {
+			return Util.GetTeambitionProDownUrl(fileNode.FileId)
+		} else {
+			return Util.GetTeambitionDownUrl(fileNode.FileId)
+		}
 	} else if config.GloablConfig.Mode == "native" {
 	}
 	return ""

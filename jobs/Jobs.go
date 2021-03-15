@@ -40,7 +40,12 @@ func Run() {
 		if config.GloablConfig.Mode == "cloud189" {
 			Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
 		} else if config.GloablConfig.Mode == "teambition" {
-			Util.TeambitionGetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId, "/")
+			rootId := Util.ProjectIdCheck(config.GloablConfig.RootId)
+			if Util.IsPorject {
+				Util.TeambitionGetProjectFiles(rootId, "/")
+			} else {
+				Util.TeambitionGetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId, "/")
+			}
 		}
 		var fileNodeCount int
 		model.SqliteDb.Model(&entity.FileNode{}).Where("1=1").Count(&fileNodeCount)
@@ -58,9 +63,15 @@ func StartInit() {
 		cookie = Util.Cloud189Login(config.GloablConfig.User, config.GloablConfig.Password)
 		Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
 	} else if config.GloablConfig.Mode == "teambition" {
-		log.Infoln("[网盘模式] >> teambition网盘")
 		cookie = Util.TeambitionLogin(config.GloablConfig.User, config.GloablConfig.Password)
-		Util.TeambitionGetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId, "/")
+		rootId := Util.ProjectIdCheck(config.GloablConfig.RootId)
+		if Util.IsPorject {
+			log.Infoln("[网盘模式] >> teambition网盘-项目")
+			Util.TeambitionGetProjectFiles(rootId, "/")
+		} else {
+			log.Infoln("[网盘模式] >> teambition网盘-个人")
+			Util.TeambitionGetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId, "/")
+		}
 	} else if config.GloablConfig.Mode == "native" {
 		log.Infoln("[网盘模式] >> 本地模式")
 	}
