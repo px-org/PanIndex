@@ -6,6 +6,8 @@ RUN apt-get update
 RUN apt-get install -y curl
 WORKDIR /app
 COPY getPanIndex.sh /app
+RUN sudo apt-get update
+RUN sudo apt-get install libc6
 RUN chmod +x /app/getPanIndex.sh
 RUN sh /app/getPanIndex.sh
 CMD ["/app/PanIndex", "-config=/app/config.json"]
