@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+	<meta name="renderer" content="webkit"/>
+	<meta name="force-rendering" content="webkit"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+	<link rel="icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
+	<link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/css/lightgallery.min.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+	<!-- MDUI CSS -->
+	<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"
+			integrity="sha384-cLRrMq39HOZdvE0j6yBojO4+1PrHfB7a9l5qLcmRm/fiWXYY+CndJPmyu5FV/9Tw"
+			crossorigin="anonymous"
+	/>
+	<!-- MDUI JavaScript -->
+	<script
+			src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+			integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+			crossorigin="anonymous"
+	></script>
+	<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+	<style>
+		.mdui-list-item,
+		.mdui-list-item:hover {
+			border-radius: 20px;
+		}
+		.mdui-container {
+			margin-top: 20px;
+			margin-bottom: 30px;
+		}
+		.mdui-card {
+			box-shadow: none;
+		}
+		.wordWrap {
+			 /*这两行代码可以解决大部分场景下的换行问题*/
+			 word-break: break-all;
+			 word-wrap: break-word;
+			 /*但在有些场景中，还需要加上下面这行代码*/
+			 white-space: normal;
+		 }
+	</style>
+	<title>Index of {{ .Path }}</title>
+	{{ $SurportFolderDown := .SurportFolderDown }}
+</head>
+<body>
+{{if .HasPwd}}
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
+<script>
+	promptPwd("{{ .FileId}}");
+	function promptPwd(fileId){
+		mdui.prompt('这是一个受保护的文件夹，您需要提供访问密码才能查看。', "<i class=\"mdui-icon material-icons\">lock_outline</i>",
+				function (value) {
+					$.cookie("dir_pwd", value);
+					location.reload();
+				},
+				function (value) {
+					return;
+				},
+				{
+					"confirmText": "确认",
+					"cancelText": "取消",
+					"confirmOnEnter": true,
+					"history": false,
+					"modal": true
+				}
+		);
+	}
+</script>
+{{else}}
+<div class="mdui-container">
+	<div class="mdui-card">
+		<div class="mdui-card-content">
+			<div style="padding: 0px 5px 12px;">
+				<div class="mdui-chip" onclick="window.open('/','_self')">
+					<span class="mdui-chip-icon mdui-color-indigo"><i class="mdui-icon material-icons">home</i></span>
+					<span class="mdui-chip-title">Index of</span>
+				</div>
+				{{range .PrePaths}}
+					<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+					<div class="mdui-chip" onclick="window.open('{{.PathUrl}}','_self')">
+						<span class="mdui-chip-title">{{.PathName}}</span>
+					</div>
+				{{end}}
+			</div>
+			<ul class="mdui-list">
+				{{if .HasParent}}
+				<li class="mdui-list-item">
+					<div class="mdui-list-item-content">
+						<div class="mdui-list-item-title" onclick="window.open('{{.ParentPath}}','_self')">
+							<i class="mdui-icon material-icons">chevron_left</i> ...
+						</div>
+					</div>
+				</li>
+				{{else}}
+				{{end}}
+
+				{{range .List}}
+				<li class="mdui-list-item mdui-ripple">
+					<div class="mdui-list-item-content icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}">
+						<div class="mdui-list-item-title wordWrap">
+							{{if .IsFolder}}
+							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">folder_open</i> {{.FileName}}
+							{{if and (ne .FileId "0") (ne .FileId "-12") (ne .FileId "-14") (ne .FileId "-13") (ne .FileId "-15") (ne .FileId "-11") (ne .FileId "-16") ($SurportFolderDown)}}
+							<a class="folderDown mdui-float-right mdui-icon material-icons" data-file-id="{{.FileId}}" href="javascript:void(0);">file_download</a>
+							{{else}}
+							{{end}}
+							{{else}}
+							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">
+								{{if eq .MediaType 1}}
+								image
+								{{else if eq .MediaType 2}}
+								audiotrack
+								{{else if eq .MediaType 3}}
+								ondemand_video
+								{{else if eq .MediaType 4}}
+								description
+								{{else}}
+								insert_drive_file
+								{{end}}
+							</i> {{.FileName}}
+							<a href="{{.Path}}" class="mdui-float-right mdui-icon material-icons" style="color: rgba(0, 0, 0, 0.54);">file_download</a>
+							{{end}}
+						</div>
+						{{if .IsFolder}}
+						{{else}}
+						<div class="mdui-list-item-text mdui-list-item-one-line">
+							{{.SizeFmt}} / {{.LastOpTime}}
+						</div>
+						{{end}}
+					</div>
+				</li>
+				{{end}}
+			</ul>
+		</div>
+		<div class="mdui-text-center mdui-typo">
+			©2021 <a href="https://github.com/libsgh/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
+		</div>
+	</div>
+</div>
+
+<div id="aplayer"></div>
+{{end}}
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

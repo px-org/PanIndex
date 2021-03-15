@@ -1,6 +1,7 @@
 package Util
 
 import (
+	"bytes"
 	"mime"
 	"os"
 	"path/filepath"
@@ -51,4 +52,29 @@ func GetMimeType(fileInfo os.FileInfo) int {
 	} else {
 		return 0
 	}
+}
+
+func GetPrePath(path string) []map[string]string {
+	//path := "/a/b/c/d"
+	prePaths := []map[string]string{}
+	//result := make(map[string]interface{})
+	paths := strings.Split(path, "/")
+	for i, n := range paths {
+		item := make(map[string]string)
+		var buffer bytes.Buffer
+		for j := 0; j <= i; j++ {
+			if paths[j] == "" {
+				buffer.WriteString(paths[j])
+			} else {
+				buffer.WriteString("/")
+				buffer.WriteString(paths[j])
+			}
+		}
+		if buffer.String() != "" {
+			item["PathName"] = n
+			item["PathUrl"] = buffer.String()
+			prePaths = append(prePaths, item)
+		}
+	}
+	return prePaths
 }
