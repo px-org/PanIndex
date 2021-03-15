@@ -8,10 +8,13 @@ $(document).ready(function() {
             $(this).lightGallery({
                 fullScreen: true,
                 dynamic: true,
-                dynamicEl: [{
-                    "src": dURL,
-                    "subHtml": "<h4>"+title+"</h4>"
-                }]
+                thumbnail:true,
+                animateThumb: false,
+                showThumbByDefault: false,
+                dynamicEl: findDynamicEl(this),
+                share: false,
+                actualSize: false,
+                closable: false
             });
             return;
         }else if(dmt == 2){
@@ -32,18 +35,16 @@ $(document).ready(function() {
         }else if(dmt == 3){
             $(this).lightGallery({
                 dynamic: true,
+                thumbnail:false,
                 fullScreen: true,
-                dynamicEl: [{
-                    html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+dURL+'">Your browser does not support HTML5 video</video>\'',
-                    "subHtml": "<h4>"+title+"</h4>"
-                }]
-            })
+                dynamicEl: findDynamicEl(this),
+                share: false,
+                actualSize: false,
+                closable: false
+            });
             return;
         }
         var fullUrl = window.location.protocol+"//"+window.location.host + dURL;
-        if(HerokuappUrl != ""){
-             fullUrl = HerokuappUrl+dURL;
-        }
         if(fileType == "doc" || fileType == "docx" || fileType == "dotx"
             || fileType == "ppt" || fileType == "pptx" || fileType == "xls" || fileType == "xlsx"){
             window.open("https://view.officeapps.live.com/op/view.aspx?src="+fullUrl);
@@ -87,6 +88,48 @@ function sortTable(sort_order, data_type){
         let rt = data_a.localeCompare(data_b);
         return (sort_order === "down") ? 0-rt : rt;
     });
+}
+function findDynamicEl(obj) {
+    var dynamicEls = [];
+    var dataMediaType = $(obj).attr("data-media-type");
+    var oDURL = $(obj).attr("data-url");
+    var oTitle = $(obj).attr("data-title");
+    if(dataMediaType == 1){
+        dynamicEls.push({
+            src: oDURL,
+            thumb: oDURL,
+            subHtml: '<h4>'+oTitle+'</h4>',
+            downloadUrl:  oDURL
+        });
+    }else if(dataMediaType == 3){
+        dynamicEls.push({
+            html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+oDURL+'">Your browser does not support HTML5 video</video>',
+            subHtml: '<h4>'+oTitle+'</h4>',
+            downloadUrl:  oDURL
+        });
+    }
+    $(obj).parent().parent().find(".icon-file").each(function(i, d){
+        var dURL = $(d).attr("data-url");
+        var title = $(d).attr("data-title");
+        var dmt = $(d).attr("data-media-type");
+        if(dmt == dataMediaType && oTitle != title){
+            if(dataMediaType == 1){
+               dynamicEls.push({
+                   src: dURL,
+                   thumb: dURL,
+                   subHtml: '<h4>'+title+'</h4>',
+                   downloadUrl:  dURL
+               });
+            }else if(dataMediaType == 3){
+                dynamicEls.push({
+                    html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+dURL+'">Your browser does not support HTML5 video</video>',
+                    subHtml: '<h4>'+title+'</h4>',
+                    downloadUrl:  dURL
+                });
+            }
+        }
+    });
+    return dynamicEls;
 }
 $.fn.extend({
     sortElements: function (comparator, getSortable) {

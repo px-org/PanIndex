@@ -150,6 +150,7 @@ func index(c *gin.Context) {
 	result := service.GetFilesByPath(pathName, pwd)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = config.GloablConfig.Mode
+	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
