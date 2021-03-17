@@ -120,7 +120,19 @@
 								{{else if eq .MediaType 4}}
 								description
 								{{else}}
-								insert_drive_file
+									{{if eq .FileType "apk"}}
+										android
+									{{else if eq .FileType "exe"}}
+										apps
+									{{else if eq .FileType "zip"}}
+										archive
+									{{else if eq .FileType "gz"}}
+										archive
+									{{else if eq .FileType "7z"}}
+										archive
+									{{else}}
+										insert_drive_file
+									{{end}}
 								{{end}}
 							</i> {{.FileName}}
 							<a href="{{.Path}}" class="mdui-float-right mdui-icon material-icons" style="color: rgba(0, 0, 0, 0.54);">file_download</a>
@@ -137,6 +149,21 @@
 				{{end}}
 			</ul>
 		</div>
+		{{if .HasReadme}}
+		<div id="content" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">
+			<div class="mdui-chip">
+				<span class="mdui-chip-icon">M</span>
+				<span class="mdui-chip-title">README.md</span>
+			</div>
+			<hr />
+			<input id="readme" type="hidden" value="{{.ReadmeContent}}" />
+			<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+			<script>
+				$("#content").append(marked($("#readme").val()));
+			</script>
+		</div>
+		{{else}}
+		{{end}}
 		<div class="mdui-text-center mdui-typo">
 			©2021 <a href="https://github.com/libsgh/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
 		</div>

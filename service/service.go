@@ -5,6 +5,7 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"github.com/bluele/gcache"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -22,6 +23,7 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 			log.Errorln(p)
 		}
 	}()
+	result["HasReadme"] = false
 	if config.GloablConfig.Mode == "native" {
 		//列出文件夹相对路径
 		rootPath := config.GloablConfig.RootId
@@ -80,6 +82,10 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 							MediaType:  fileType,
 							LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 						}
+						if fileInfo.Name() == "README.md" {
+							result["HasReadme"] = true
+							result["ReadmeContent"] = Util.ReadStringByFile(fileId)
+						}
 						// 添加到切片中等待json序列化
 						list = append(list, file)
 					}
@@ -123,6 +129,14 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 		if len(list) == 0 {
 			result["isFile"] = true
 			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and hide = 0", path).Find(&list)
+		} else {
+			for _, fn := range list {
+				if !fn.IsFolder && fn.FileName == "README.md" {
+					result["HasReadme"] = true
+					result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(fn), fn.FileId)
+					break
+				}
+			}
 		}
 		result["HasPwd"] = false
 		fileNode := entity.FileNode{}
@@ -212,6 +226,7 @@ func GetTotalPage(totalCount, pageSize int) int {
 
 //刷新目录缓存
 func UpdateFolderCache() {
+	Util.GC = gcache.New(10).LRU().Build()
 	model.SqliteDb.Delete(entity.FileNode{})
 	if config.GloablConfig.Mode == "cloud189" {
 		Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)

@@ -5,6 +5,7 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"github.com/bluele/gcache"
 	"github.com/eddieivan01/nic"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
@@ -36,6 +37,7 @@ func Run() {
 		}
 	})
 	c.AddFunc(config.GloablConfig.CronExps.UpdateFolderCache, func() {
+		Util.GC = gcache.New(10).LRU().Build()
 		model.SqliteDb.Delete(entity.FileNode{})
 		if config.GloablConfig.Mode == "cloud189" {
 			Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)

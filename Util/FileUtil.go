@@ -2,11 +2,18 @@ package Util
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/bluele/gcache"
+	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"mime"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+var GC = gcache.New(10).LRU().Build()
 
 func FileExist(path string) bool {
 	_, err := os.Stat(path) //os.Stat获取文件信息
@@ -77,4 +84,40 @@ func GetPrePath(path string) []map[string]string {
 		}
 	}
 	return prePaths
+}
+func ReadStringByFile(filePth string) string {
+	f, err := os.Open(filePth)
+	if err != nil {
+		log.Errorln(err)
+		return ""
+	}
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Errorln(err)
+		return ""
+	}
+	return fmt.Sprintf("%s", b)
+}
+func ReadStringByUrl(url, fileId string) string {
+	content := ""
+	//为了提高效率，从缓存查询
+	value, _ := GC.Get(fileId)
+	if value != nil {
+		log.Debugf("从缓存中读取README.md内容{%s}", fileId)
+		return value.(string)
+	}
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Errorln(err)
+		return content
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorln(err)
+		return content
+	}
+	content = fmt.Sprintf("%s", data)
+	GC.Set(fileId, content)
+	return content
 }
