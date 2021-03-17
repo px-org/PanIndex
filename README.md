@@ -14,8 +14,8 @@
 - [x] heroku防止休眠（每5分钟访问一次应用）
 
 ## 示例
-- [https://pan-index.herokuapp.com](https://pan-index.herokuapp.com "https://pan-index.herokuapp.com")
 - [https://pan.noki.top](https://pan.noki.top "https://pan.noki.top")
-
+- [开发版-测试，演示](https://t1.netrss.cf "https://t1.netrss.cf")
+ 
 ## 文档
 [在线文档](https://libsgh.github.io/PanIndex/)
