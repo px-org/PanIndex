@@ -36,6 +36,25 @@
 		.mdui-card {
 			box-shadow: none;
 		}
+		.mdui-textfield-input {
+			border-bottom: none;
+		}
+
+		.mdui-textfield-focus .mdui-icon,
+		.mdui-textfield-focus .mdui-textfield-label {
+			color: rgba(0, 0, 0, .54);
+		}
+
+		.mdui-textfield-focus .mdui-textfield-input,
+		.mdui-textfield-focus .mdui-textfield-input:hover {
+			border-bottom: none;
+			box-shadow: none;
+		}
+
+		.mdui-textfield-input:not([disabled]):hover {
+			border-bottom: none;
+			box-shadow: none;
+		}
 		.wordWrap {
 			 /*这两行代码可以解决大部分场景下的换行问题*/
 			 word-break: break-all;
@@ -88,17 +107,26 @@
 				{{end}}
 			</div>
 			<ul class="mdui-list">
-				{{if .HasParent}}
 				<li class="mdui-list-item">
 					<div class="mdui-list-item-content">
-						<div class="mdui-list-item-title" onclick="window.open('{{.ParentPath}}','_self')">
-							<i class="mdui-icon material-icons">chevron_left</i> ...
+						<div class="mdui-list-item-title">
+							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right{{if .HasParent}}{{else}} mdui-textfield-expanded{{end}}">
+								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
+								<input type="text" placeholder="搜索当前内容" class="mdui-textfield-input">
+								{{if .HasParent}}
+								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
+								{{else}}
+								{{end}}
+							</div>
+							{{if .HasParent}}
+							<div onclick="window.open('{{.ParentPath}}','_self')">
+								<button class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">chevron_left</i></button> ...
+							</div>
+							{{else}}
+							{{end}}
 						</div>
 					</div>
 				</li>
-				{{else}}
-				{{end}}
-
 				{{range .List}}
 				<li class="mdui-list-item mdui-ripple">
 					<div class="mdui-list-item-content icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{.Path}}">
@@ -118,17 +146,17 @@
 								{{else if eq .MediaType 3}}
 								ondemand_video
 								{{else if eq .MediaType 4}}
-								description
+									{{if or (eq .FileType "sh") (eq .FileType "go") (eq .FileType "java") (eq .FileType "py")}}
+										code
+									{{else}}
+										description
+									{{end}}
 								{{else}}
 									{{if eq .FileType "apk"}}
 										android
 									{{else if eq .FileType "exe"}}
 										apps
-									{{else if eq .FileType "zip"}}
-										archive
-									{{else if eq .FileType "gz"}}
-										archive
-									{{else if eq .FileType "7z"}}
+									{{else if or (eq .FileType "zip") (eq .FileType "gz") (eq .FileType "7z")}}
 										archive
 									{{else}}
 										insert_drive_file
@@ -169,11 +197,23 @@
 		</div>
 	</div>
 </div>
-
 <div id="aplayer"></div>
 {{end}}
 <script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
 <script src="/static/js/main.js"></script>
+<script>
+	$(".mdui-textfield-input").keyup(function () {
+		var keyword = $(this).val();
+		$(".mdui-list").find("li").each(function (i, item) {
+			var title = $(this).find("div").attr("data-title");
+			if("undefined" == typeof title || reg.test(title)){
+				$(this).show();
+			}else{
+				$(this).hide();
+			}
+		});
+	});
+</script>
 </body>
 </html>
