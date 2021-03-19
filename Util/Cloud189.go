@@ -230,8 +230,8 @@ func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 			verifyCode := GetBetweenStr(resp.Text, "_verifyCode = '", "'")
 			url := fmt.Sprintf("https://cloud.189.cn/v2/listShareDirByShareIdAndFileId.action?"+
 				"shortCode=%s&accessCode=%s&verifyCode=%s&"+
-				"orderBy=1&order=ASC&pageNum=1&pageSize=60",
-				shortCode, passCode, verifyCode)
+				"orderBy=1&order=ASC&pageNum=1&pageSize=60&fileId=%s",
+				shortCode, passCode, verifyCode, fileId)
 			resp, _ = CLoud189Session.Get(url, nil)
 			return resp.Text
 		} else {
