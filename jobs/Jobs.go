@@ -32,7 +32,7 @@ func Run() {
 		}
 		if cookie != "" {
 			log.Infoln("[定时任务]cookie更新 >> 登录成功")
-		} else {
+		} else if cookie == "" && config.GloablConfig.Mode != "native" {
 			log.Infoln("[定时任务]cookie更新 >> 登录失败，请检查用户名和密码是否正确")
 		}
 	})
