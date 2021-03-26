@@ -5,6 +5,7 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"fmt"
 	"github.com/bluele/gcache"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -60,6 +61,10 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 						if Util.IsHiddenFile(fileInfo.Name()) {
 							continue
 						}
+						if fileInfo.Name() == "README.md" {
+							result["HasReadme"] = true
+							result["ReadmeContent"] = Util.ReadStringByFile(fileId)
+						}
 						//指定隐藏的文件或目录过滤
 						if config.GloablConfig.HideFileId != "" {
 							listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
@@ -82,10 +87,6 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 							MediaType:  fileType,
 							LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 						}
-						if fileInfo.Name() == "README.md" {
-							result["HasReadme"] = true
-							result["ReadmeContent"] = Util.ReadStringByFile(fileId)
-						}
 						// 添加到切片中等待json序列化
 						list = append(list, file)
 					}
@@ -93,7 +94,10 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 				result["isFile"] = false
 				result["HasPwd"] = false
 				PwdDirIds := config.GloablConfig.PwdDirId
+				fmt.Println(PwdDirIds)
 				for _, pdi := range PwdDirIds {
+					fmt.Println(pdi.Id)
+					fmt.Println(fullPath)
 					if pdi.Id == fullPath && pwd != pdi.Pwd {
 						result["HasPwd"] = true
 						result["FileId"] = fullPath
@@ -130,12 +134,11 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 			result["isFile"] = true
 			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and hide = 0", path).Find(&list)
 		} else {
-			for _, fn := range list {
-				if !fn.IsFolder && fn.FileName == "README.md" {
-					result["HasReadme"] = true
-					result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(fn), fn.FileId)
-					break
-				}
+			readmeFile := entity.FileNode{}
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=?", path, "README.md").Find(&readmeFile)
+			if !readmeFile.IsFolder && readmeFile.FileName == "README.md" {
+				result["HasReadme"] = true
+				result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(readmeFile), readmeFile.FileId)
 			}
 		}
 		result["HasPwd"] = false
