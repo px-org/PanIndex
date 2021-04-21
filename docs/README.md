@@ -244,6 +244,8 @@ PanIndex的设计初衷是简单高效，前后分离会增加部署的复杂度
 ### QQ
 - 359916450
 
+## 捐助
 
 
 
+<img src="_images/wechat.png" alt="wechat" style="zoom: 50%;" /><img src="_images/alipay.png" alt="wechat" style="zoom: 50%;" />
