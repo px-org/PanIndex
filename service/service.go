@@ -5,7 +5,6 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
-	"fmt"
 	"github.com/bluele/gcache"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -94,10 +93,7 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 				result["isFile"] = false
 				result["HasPwd"] = false
 				PwdDirIds := config.GloablConfig.PwdDirId
-				fmt.Println(PwdDirIds)
 				for _, pdi := range PwdDirIds {
-					fmt.Println(pdi.Id)
-					fmt.Println(fullPath)
 					if pdi.Id == fullPath && pwd != pdi.Pwd {
 						result["HasPwd"] = true
 						result["FileId"] = fullPath
@@ -263,4 +259,22 @@ func IsFile(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func GetConfig() entity.Config {
+	config := entity.Config{}
+	crons := entity.CronExps{}
+	pwdDirId := []entity.PwdDirId{}
+	accounts := []entity.Account{}
+	damagou := entity.Damagou{}
+	model.SqliteDb.Raw("select * from config where 1=1 limit 1").Find(&config)
+	model.SqliteDb.Raw("select * from cron_exps where 1=1 limit 1").Find(&crons)
+	model.SqliteDb.Raw("select * from pwd_dir_id where 1=1").Find(&pwdDirId)
+	model.SqliteDb.Raw("select * from account").Find(&accounts)
+	model.SqliteDb.Raw("select * from damagou where 1-1 limit 1").Find(&damagou)
+	config.PwdDirId = pwdDirId
+	config.Accounts = accounts
+	config.CronExps = crons
+	config.Damagou = damagou
+	return config
 }

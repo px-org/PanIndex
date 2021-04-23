@@ -29,7 +29,7 @@ func Start(path string) {
 	//打印版本信息
 	PrintVersion()
 	//检查新版本
-	CheckUpdate()
+	go CheckUpdate()
 	//初始化数据库
 	model.InitDb()
 	//初始化配置

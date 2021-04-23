@@ -8,17 +8,21 @@ import (
 	"PanIndex/service"
 	"flag"
 	"fmt"
+	"github.com/bluele/gcache"
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
+var GC = gcache.New(100).LRU().Build()
 
 func main() {
 	flag.Parse()
@@ -27,6 +31,7 @@ func main() {
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
 	r.SetHTMLTemplate(initTemplates())
+	//r.LoadHTMLGlob("templates/*	")
 	//	r.LoadHTMLFiles("templates/**")
 	//	r.Static("/static", "./static")
 	//	r.StaticFS("/static", staticBox)
@@ -75,6 +80,8 @@ func main() {
 			}
 		} else if method == "GET" && path == "/api/shareToDown" {
 			shareToDown(c)
+		} else if path == "/admin" {
+			admin(c)
 		} else {
 			isForbidden := true
 			host := c.Request.Host
@@ -122,6 +129,10 @@ func initTemplates() *template.Template {
 	}
 	tmpl := template.New(tmpFile)
 	tmpl.Parse(data)
+	data, _ = box.FindString("pan/admin/login.html")
+	tmpl.New("pan/admin/login.html").Parse(data)
+	data, _ = box.FindString("pan/admin/index.html")
+	tmpl.New("pan/admin/index.html").Parse(data)
 	return tmpl
 }
 func initStaticBox(r *gin.Engine) {
@@ -197,4 +208,38 @@ func shareToDown(c *gin.Context) {
 	subFileId := c.Query("subFileId")
 	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
 	c.String(http.StatusOK, downUrl)
+}
+
+func admin(c *gin.Context) {
+	logout := c.Query("logout")
+	sessionId, error := c.Cookie("sessionId")
+	if logout != "" && logout == "true" {
+		//退出登录
+		GC.Remove(sessionId)
+		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功"})
+	} else {
+		if c.Request.Method == "GET" {
+			if error == nil && sessionId != "" && GC.Has(sessionId) {
+				//登录状态跳转首页
+				config := service.GetConfig()
+				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+			} else {
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false})
+			}
+		} else {
+			//登录
+			password, _ := c.GetPostForm("password")
+			config := service.GetConfig()
+			if password == config.AdminPassword {
+				//登录成功
+				u1 := uuid.NewV4().String()
+				c.SetCookie("sessionId", u1, 7*24*60*60, "/admin", "", false, true)
+				GC.SetWithExpire(u1, u1, time.Hour*24*7)
+				config := service.GetConfig()
+				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+			} else {
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "密码错误，请重试！"})
+			}
+		}
+	}
 }
