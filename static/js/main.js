@@ -1,5 +1,6 @@
 $(document).ready(function() {
-    $('.icon-file').on('click', function() {
+    $('.icon-file').on('click', function(ev) {
+        if(ev.target.tagName == "A" && ev.target.text == "file_download") return;
         var dURL = $(this).attr("data-url");
         var title = $(this).attr("data-title");
         var dmt = $(this).attr("data-media-type");
