@@ -41,10 +41,11 @@ func main() {
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 		method := c.Request.Method
+		_, ad := c.GetQuery("admin")
 		if method == "POST" && path == "/api/downloadMultiFiles" {
 			//文件夹下载
 			downloadMultiFiles(c)
-		} else if method == "GET" && path == "/api/updateFolderCache" {
+		} else if method == http.MethodGet && path == "/api/updateFolderCache" {
 			requestToken := c.Query("token")
 			if requestToken == config.GloablConfig.ApiToken {
 				message := ""
@@ -61,7 +62,7 @@ func main() {
 				message := "Invalid api token"
 				c.String(http.StatusOK, message)
 			}
-		} else if method == "GET" && path == "/api/refreshCookie" {
+		} else if method == http.MethodGet && path == "/api/refreshCookie" {
 			requestToken := c.Query("token")
 			if requestToken == config.GloablConfig.ApiToken {
 				message := ""
@@ -78,9 +79,13 @@ func main() {
 				message := "Invalid api token"
 				c.String(http.StatusOK, message)
 			}
-		} else if method == "GET" && path == "/api/shareToDown" {
+		} else if method == http.MethodGet && path == "/api/shareToDown" {
 			shareToDown(c)
-		} else if path == "/admin" {
+		} else if method == http.MethodPost && path == "/api/admin/save" {
+			adminSave(c)
+		} else if path == "/api/admin/deleteAccount" {
+			adminDeleteAccount(c)
+		} else if ad {
 			admin(c)
 		} else {
 			isForbidden := true
@@ -233,7 +238,7 @@ func admin(c *gin.Context) {
 			if password == config.AdminPassword {
 				//登录成功
 				u1 := uuid.NewV4().String()
-				c.SetCookie("sessionId", u1, 7*24*60*60, "/admin", "", false, true)
+				c.SetCookie("sessionId", u1, 7*24*60*60, "/", "", false, true)
 				GC.SetWithExpire(u1, u1, time.Hour*24*7)
 				config := service.GetConfig()
 				c.HTML(http.StatusOK, "pan/admin/index.html", config)
@@ -242,4 +247,15 @@ func admin(c *gin.Context) {
 			}
 		}
 	}
+}
+func adminSave(c *gin.Context) {
+	config := entity.Config{}
+	c.BindJSON(&config)
+	service.SaveConfig(config)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置已更新"})
+}
+func adminDeleteAccount(c *gin.Context) {
+	id := c.Query("id")
+	service.DeleteAccount(id)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功"})
 }

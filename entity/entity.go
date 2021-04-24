@@ -1,6 +1,7 @@
 package entity
 
 type FileNode struct {
+	AccountId    string `json:"account_id"`
 	FileId       string `json:"fileId" gorm:"primary_key"`
 	FileIdDigest string `json:"fileIdDigest"`
 	FileName     string `json:"fileName"`

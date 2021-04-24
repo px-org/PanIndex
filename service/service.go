@@ -6,6 +6,7 @@ import (
 	"PanIndex/entity"
 	"PanIndex/model"
 	"github.com/bluele/gcache"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -277,4 +278,33 @@ func GetConfig() entity.Config {
 	config.CronExps = crons
 	config.Damagou = damagou
 	return config
+}
+
+func SaveConfig(config entity.Config) {
+	//基本配置
+	model.SqliteDb.Model(entity.Config{}).Where("1 = 1").Updates(&config)
+	//账号信息
+	if len(config.Accounts) > 0 {
+		for _, account := range config.Accounts {
+			if account.Id != "" {
+				//更新网盘账号
+				model.SqliteDb.Model(entity.Account{}).Where("id = ?", account.Id).Updates(&account)
+			} else {
+				//添加网盘账号
+				account.Id = uuid.NewV4().String()
+				model.SqliteDb.Model(entity.Account{}).Save(&account)
+			}
+		}
+	}
+	//定时任务
+	//密码目录
+	//其他（打码狗）
+}
+func DeleteAccount(id string) {
+	//删除账号对应节点数据
+	model.SqliteDb.Where("account_id = ?", id).Delete(entity.FileNode{})
+	//删除账号数据
+	var a entity.Account
+	a.Id = id
+	model.SqliteDb.Model(entity.Account{}).Delete(a)
 }

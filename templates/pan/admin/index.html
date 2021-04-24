@@ -52,12 +52,12 @@
 				<form>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">绑定Host</label>
-						<input class="mdui-textfield-input" type="text" name="Host" value="{{.Host}}" />
+						<input class="mdui-textfield-input" type="text" name="host" value="{{.Host}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">绑定端口</label>
-						<input class="mdui-textfield-input" type="text" name="Port" value="{{.Port}}" />
+						<input class="mdui-textfield-input" type="text" name="port" value="{{.Port}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">修改后需要重启生效</div>
 					</div>
 					<div>
@@ -109,23 +109,24 @@
 								<div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">message</i>
 									<label class="mdui-textfield-label">显示名称</label>
-									<input class="mdui-textfield-input" type="text" name="Name" value="Index of">
+									<input type="hidden" name="id" />
+									<input class="mdui-textfield-input" type="text" name="name" value="" required>
 								</div>
 								<div class="mdui-textfield">
 									<i class="mdui-icon material-icons">more_horiz</i>
 									<label class="mdui-textfield-label mdui-text-color-pink-300">网盘模式</label>
 									<label class="mdui-radio" style="margin-left: 50px">
-										<input type="radio" name="Mode" checked="checked" value="native" />
+										<input type="radio" name="mode" checked="checked" value="native" />
 										<i class="mdui-radio-icon"></i>
 										native
 									</label>
 									<label class="mdui-radio" style="margin-left: 15px">
-										<input type="radio" name="Mode" value="cloud189" />
+										<input type="radio" name="mode" value="cloud189" />
 										<i class="mdui-radio-icon"></i>
 										cloud189
 									</label>
 									<label class="mdui-radio" style="margin-left: 15px">
-										<input type="radio" name="Mode" value="teambition" />
+										<input type="radio" name="mode" value="teambition" />
 										<i class="mdui-radio-icon"></i>
 										teambition
 									</label>
@@ -133,36 +134,36 @@
 								<div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">account_circle</i>
 									<label class="mdui-textfield-label">用户名</label>
-									<input class="mdui-textfield-input" type="text" name="User">
+									<input class="mdui-textfield-input" type="text" name="user">
 								</div>
 								<div id="PasswordDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">lock</i>
 									<label class="mdui-textfield-label">密码</label>
-									<input class="mdui-textfield-input" type="password" name="Password">
+									<input class="mdui-textfield-input" type="password" name="password">
 								</div>
 								<div id="RefreshTokenDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">refresh</i>
 									<label class="mdui-textfield-label">刷新令牌</label>
-									<input class="mdui-textfield-input" type="text" name="RefreshToken">
+									<input class="mdui-textfield-input" type="text" name="refresh_token">
 								</div>
 								<div id="AccessTokenDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">beenhere</i>
 									<label class="mdui-textfield-label">访问令牌</label>
-									<input class="mdui-textfield-input" type="text" name="AccessToken">
+									<input class="mdui-textfield-input" type="text" name="access_token">
 								</div>
 								<div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">folder_open</i>
 									<label class="mdui-textfield-label">根目录ID(路径)</label>
-									<input class="mdui-textfield-input" type="text" name="RootId" required>
+									<input class="mdui-textfield-input" type="text" name="root_id" required>
 								</div>
 								<div class="mdui-row-xs-4">
 									<div class="mdui-col">
-										<button type="button" class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple"><i class="mdui-icon material-icons">add</i> 添加</button>
+										<button type="button" class="saveAccountBtn mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple" value="0"><i class="mdui-icon material-icons">add</i> 添加</button>
 									</div>
 									{{if not .Accounts}}
 									{{else}}
 										<div class="mdui-col">
-											<button type="submit" class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple"><i class="mdui-icon material-icons">edit</i>修改</button>
+											<button type="button" class="saveAccountBtn mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple" value="1			"><i class="mdui-icon material-icons">edit</i>修改</button>
 										</div>
 									{{end}}
 									<div class="mdui-col">
@@ -171,7 +172,7 @@
 									{{if not .Accounts}}
 									{{else}}
 										<div class="mdui-col">
-											<button type="button" class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple"><i class="mdui-icon material-icons">delete</i>删除</button>
+											<button id="deleteBtn" type="button" class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple"><i class="mdui-icon material-icons">delete</i>删除</button>
 										</div>
 									{{end}}
 								</div>
@@ -236,22 +237,23 @@ var bd = new mdui.Dialog("#account_dialog");
 function addAccount() {
 	bd.open();
 }
-/*$("#accountForm").find("radio").on(function () {
-	console.log($(this).val());
-});*/
+$("#accountForm").find("input[name=Mode]").on('change', function () {
+	var mode = $(this).val();
+	dynamicChgMode(mode);
+});
 $("#resetBtn").on('click', function () {
-	$("#accountForm").find("input[name=Name]").val("");
-	$("#accountForm").find("input[name=User]").val("");
-	$("#accountForm").find("input[name=Password]").val("");
-	$("#accountForm").find("input[name=RefreshToken]").val("");
-	$("#accountForm").find("input[name=AccessToken]").val("");
-	$("#accountForm").find("input[name=RootId]").val("");
-	$("#accountForm").find("input[name=Mode][value=native]").prop("checked", true);
+	$("#accountForm").find("input[name=name]").val("");
+	$("#accountForm").find("input[name=Uuer]").val("");
+	$("#accountForm").find("input[name=password]").val("");
+	$("#accountForm").find("input[name=refresh_token]").val("");
+	$("#accountForm").find("input[name=access_token]").val("");
+	$("#accountForm").find("input[name=root_id]").val("");
+	$("#accountForm").find("input[name=mode][value=native]").prop("checked", true);
 });
 var accounts = [
 	{{range .Accounts}}
-		{"Name":{{.Name}},"Id":{{.Id}},"Mode":{{.Mode}},"User":{{.User}},"Password":"",
-			"RefreshToken":{{.RefreshToken}},"AccessToken":{{.RootId}},"RootId":{{.RootId}}
+		{"name":{{.Name}},"id":{{.Id}},"mode":{{.Mode}},"user":{{.User}},"password":"",
+			"refresh_token":{{.RefreshToken}},"access_token":{{.AccessToken}},"root_id":{{.RootId}}
 		},
 	{{end}}
 	];
@@ -261,34 +263,102 @@ function fillAccount(index) {
 		mdui.snackbar({
 			message: '您还没有绑定网盘账号！'
 		});
+		dynamicChgMode("native");
+		var inst = new mdui.Tab('.mdui-tab');
+		inst.next();
 		return;
 	}
 	$("ul").find("li").removeClass("mdui-list-item-active");
 	$("ul").find("li").eq(index).addClass("mdui-list-item-active");
 	var account = accounts[index];
-	$("#accountForm").find("input[name=Name]").val(account.Name);
-	$("#accountForm").find("input[name=Mode][value="+account.Mode+"]").prop("checked", true);
-	if(account.Mode == "native"){
+	$("#accountForm").find("input[name=id]").val(account.id);
+	$("#accountForm").find("input[name=name]").val(account.name);
+	$("#accountForm").find("input[name=mode][value="+account.mode+"]").prop("checked", true);
+	dynamicChgMode(account.mode);
+	$("#accountForm").find("input[name=user]").val(account.user);
+	$("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
+	$("#accountForm").find("input[name=access_token]").val(account.access_token);
+	$("#accountForm").find("input[name=root_id]").val(account.root_id);
+}
+function dynamicChgMode(mode){
+	if(mode == "native"){
 		$("#AccessTokenDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").hide();
 		$("#PasswordDiv").hide();
-	}else if (account.Mode == "cloud189"){
+	}else if (mode == "cloud189"){
 		$("#AccessTokenDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
-	}else if (account.Mode == "teambition"){
+	}else if (mode == "teambition"){
 		$("#AccessTokenDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 	}
-	$("#accountForm").find("input[name=User]").val(account.User);
-	$("#accountForm").find("input[name=RefreshToken]").val(account.RefreshToken);
-	$("#accountForm").find("input[name=AccessToken]").val(account.AccessToken);
-	$("#accountForm").find("input[name=RootId]").val(account.RootId);
 }
+$(".saveAccountBtn").on("click", function () {
+	var account = $("#accountForm").serializeObject();
+	var type = $(this).val();
+	if (!$("#accountForm").valid()) {
+		return false;
+	}
+	if(type == 0){
+		account.id = "";
+	}
+	var config = {accounts:[account]};
+	$.ajax({
+		method: 'POST',
+		url: '/api/admin/save',
+		data: JSON.stringify(config),
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 2000,
+				onClose: function(){
+					location.reload();
+				}
+			});
+		}
+	});
+});
+$("#deleteBtn").on("click", function (){
+	var id = $("#accountForm").find("input[name=id]").val();
+	if(id != ""){
+		$.ajax({
+			method: 'POST',
+			url: '/api/admin/deleteAccount?id='+id,
+			success: function (data) {
+				var d = JSON.parse(data);
+				mdui.snackbar({
+					message: d.msg,
+					timeout: 2000,
+					onClose: function(){
+						location.reload();
+					}
+				});
+			}
+		});
+	}
+});
+$.fn.serializeObject = function()
+{
+	var o = {};
+	var a = this.serializeArray();
+	$.each(a, function() {
+		if (o[this.name]) {
+			if (!o[this.name].push) {
+				o[this.name] = [o[this.name]];
+			}
+			o[this.name].push(this.value || '');
+		} else {
+			o[this.name] = this.value || '';
+		}
+	});
+	return o;
+};
 </script>
 </body>
 </html>
