@@ -49,16 +49,16 @@
 				<a href="#cron" class="mdui-ripple"><i class="mdui-icon material-icons">access_alarms</i><label>定时任务</label></a>
 			</div>
 			<div id="base-config" class="mdui-p-a-2 mdui-typo">
-				<form>
+				<form id="configForm">
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">绑定Host</label>
-						<input class="mdui-textfield-input" type="text" name="host" value="{{.Host}}" />
+						<input class="mdui-textfield-input" type="text" name="host" value="{{.Host}}" required />
 						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">绑定端口</label>
-						<input class="mdui-textfield-input" type="text" name="port" value="{{.Port}}" />
-						<div class="mdui-textfield-helper mdui-text-color-purple">修改后需要重启生效</div>
+						<input class="mdui-textfield-input" type="text" name="port" value="{{.Port}}" required />
+						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
 					<div>
 						<label class="mdui-textfield-label">主题</label>
@@ -70,41 +70,60 @@
 						</select>
 					</div>
 					<div class="mdui-textfield">
-						<label class="mdui-textfield-label">管理员密码</label>
-						<input class="mdui-textfield-input" type="password" name="admin_password" />
+						<label class="mdui-textfield-label">后台登录密码</label>
+						<input class="mdui-textfield-input" type="text" name="admin_password" value="{{.AdminPassword}}" placeholder="默认密码：PanIndex" required />
+						<div class="mdui-textfield-helper mdui-text-color-purple">如果是第一次运行，请务必修改默认密码！</div>
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">接口 token</label>
-						<input class="mdui-textfield-input" type="text" name="api_token" value="{{.ApiToken}}" />
+						<input class="mdui-textfield-input" type="text" name="api_token" value="{{.ApiToken}}" placeholder="用于接口调用" />
+					</div>
+					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">密码文件（夹）</label>
+						<input class="mdui-textfield-input" name="pwd_dir_id" placeholder="id1:pwd1,id2:pwd2" value="{{.PwdDirId}}" />
+						<div class="mdui-textfield-helper mdui-text-color-purple">多个逗号分隔</div>
+					</div><div class="mdui-textfield">
+						<label class="mdui-textfield-label">隐藏目录ID（路径）</label>
+						<input class="mdui-textfield-input" name="hide_file_id" placeholder="多个逗号分隔" value="{{.HideFileId}}" />
+						<div class="mdui-textfield-helper mdui-text-color-purple">多个逗号分隔</div>
+					</div>
+					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">防盗链</label>
+						<input class="mdui-textfield-input" name="only_referrer" placeholder="允许的 Referrer，多个逗号分隔，例：baidu.com,google.com" value="{{.OnlyReferrer}}" />
+						<div class="mdui-textfield-helper mdui-text-color-purple">多个逗号分隔</div>
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">自定义底部信息</label>
-						<input class="mdui-textfield-input" type="text" name="footer" placeholder="支持html" value="{{.Footer}}" />
+						<input class="mdui-textfield-input" type="text" name="footer" placeholder="支持html代码" value="{{.Footer}}" />
 					</div>
-					<div class="mdui-textfield">
-						<label class="mdui-textfield-label">隐藏目录id</label>
-						<textarea class="mdui-textfield-input" name="hide_file_id" placeholder="一行一个"></textarea>
+					<div class="mdui-row-xs-2">
+						<div class="mdui-col">
+							<button type="button" class="saveConfigBtn mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple" value="1">保存</button>
+						</div>
+						<div class="mdui-col">
+							<a type="button" class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple" href="/?admin=&logout=true">退出登录</a>
+						</div>
 					</div>
 				</form>
 			</div>
 			<div id="bind-account">
 				<div class="mdui-container">
 					<div class="mdui-row">
-						<div class="mdui-col-xs-3">
+						<div class="mdui-col-sm-2 mdui-col-md-3">
 							<ul class="mdui-list">
 								{{range $i, $a := .Accounts}}
-									<li class="mdui-list-item mdui-ripple acli" onclick="fillAccount({{$i}})">
+									<li class="mdui-list-item mdui-ripple acli" data-index="{{$i}}">
 										<i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>
 										<div class="mdui-list-item-content">{{.Name}}</div>
 										<label class="mdui-switch">
-											<input type="checkbox" checked onchange="" />
+											<input class="defaultAccount" data-id="{{.Id}}" type="checkbox" {{if eq .Default 1}}checked{{end}}  />
 											<i class="mdui-switch-icon"></i>
 										</label>
 									</li>
 								{{end}}
 							</ul>
 						</div>
-						<div class="mdui-col-xs-9">
+						<div class="mdui-col-sm-10 mdui-col-md-9">
 							<form id="accountForm">
 								<div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">message</i>
@@ -115,28 +134,30 @@
 								<div class="mdui-textfield">
 									<i class="mdui-icon material-icons">more_horiz</i>
 									<label class="mdui-textfield-label mdui-text-color-pink-300">网盘模式</label>
-									<label class="mdui-radio" style="margin-left: 50px">
-										<input type="radio" name="mode" checked="checked" value="native" />
-										<i class="mdui-radio-icon"></i>
-										native
-									</label>
-									<label class="mdui-radio" style="margin-left: 15px">
-										<input type="radio" name="mode" value="cloud189" />
-										<i class="mdui-radio-icon"></i>
-										cloud189
-									</label>
-									<label class="mdui-radio" style="margin-left: 15px">
-										<input type="radio" name="mode" value="teambition" />
-										<i class="mdui-radio-icon"></i>
-										teambition
-									</label>
+									<div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
+										<label class="mdui-radio mdui-col">
+											<input type="radio" name="mode" checked="checked" value="native" />
+											<i class="mdui-radio-icon"></i>
+											native
+										</label>
+										<label class="mdui-radio mdui-col">
+											<input type="radio" name="mode" value="cloud189" />
+											<i class="mdui-radio-icon"></i>
+											cloud189
+										</label>
+										<label class="mdui-radio mdui-col">
+											<input type="radio" name="mode" value="teambition" />
+											<i class="mdui-radio-icon"></i>
+											teambition
+										</label>
+									</div>
 								</div>
-								<div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+								<div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
 									<i class="mdui-icon material-icons">account_circle</i>
 									<label class="mdui-textfield-label">用户名</label>
-									<input class="mdui-textfield-input" type="text" name="user">
+									<input class="mdui-textfield-input" type="text" name="user" required>
 								</div>
-								<div id="PasswordDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+								<div id="PasswordDiv" class="mdui-textfield mdui-textfield-has-bottom">
 									<i class="mdui-icon material-icons">lock</i>
 									<label class="mdui-textfield-label">密码</label>
 									<input class="mdui-textfield-input" type="password" name="password">
@@ -156,27 +177,27 @@
 									<label class="mdui-textfield-label">根目录ID(路径)</label>
 									<input class="mdui-textfield-input" type="text" name="root_id" required>
 								</div>
-								<div class="mdui-row-xs-4">
-									<div class="mdui-col">
-										<button type="button" class="saveAccountBtn mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple" value="0"><i class="mdui-icon material-icons">add</i> 添加</button>
-									</div>
-									{{if not .Accounts}}
-									{{else}}
-										<div class="mdui-col">
-											<button type="button" class="saveAccountBtn mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple" value="1			"><i class="mdui-icon material-icons">edit</i>修改</button>
-										</div>
-									{{end}}
-									<div class="mdui-col">
-										<button id="resetBtn" type="button" class="mdui-btn mdui-btn-block mdui-color-orange mdui-ripple"><i class="mdui-icon material-icons">autorenew</i>重置</button>
-									</div>
-									{{if not .Accounts}}
-									{{else}}
-										<div class="mdui-col">
-											<button id="deleteBtn" type="button" class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple"><i class="mdui-icon material-icons">delete</i>删除</button>
-										</div>
-									{{end}}
-								</div>
 							</form>
+							<div class="mdui-row-xs-4">
+								<div class="mdui-col">
+									<button type="button" class="saveAccountBtn mdui-btn-block mdui-btn mdui-color-theme-accent mdui-ripple" value="0">添加</button>
+								</div>
+								{{if not .Accounts}}
+								{{else}}
+									<div class="mdui-col">
+										<button type="button" class="saveAccountBtn mdui-btn-block mdui-btn mdui-color-teal mdui-ripple" value="1">修改</button>
+									</div>
+								{{end}}
+								<div class="mdui-col">
+									<button id="resetBtn" type="button" class="mdui-btn mdui-btn-block mdui-color-orange mdui-ripple">重置</button>
+								</div>
+								{{if not .Accounts}}
+								{{else}}
+									<div class="mdui-col">
+										<button id="deleteBtn" type="button" class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple">删除</button>
+									</div>
+								{{end}}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -187,11 +208,11 @@
 						<p><a href="https://cron.qqe2.com/" target="_blank">cron表达式在线生成</a>，可选项仅在heroku部署环境下需要配置</p>
 					</blockquote>
 				</div>
-				<form>
+				<form id="cronForm">
 					<div class="mdui-row">
 						<div class="mdui-col-xs-10 mdui-textfield">
 							<label class="mdui-textfield-label">定时任务-刷新登录cookie</label>
-							<input class="mdui-textfield-input" type="text" name="refresh_cookie" placeholder="0 0 8 1/1 * ?" value="{{.CronExps.RefreshCookie}}" />
+							<input class="mdui-textfield-input" type="text" name="refresh_cookie" placeholder="0 0 8 1/1 * ?" value="{{.RefreshCookie}}" required />
 							<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 						</div>
 						<div class="mdui-col-xs-2">
@@ -204,7 +225,7 @@
 					<div class="mdui-row">
 						<div class="mdui-col-xs-10 mdui-textfield">
 							<label class="mdui-textfield-label">定时任务-刷新目录缓存</label>
-							<input class="mdui-textfield-input" type="text" name="refresh_cookie" placeholder="0 0 0/1 * * ?" value="{{.CronExps.UpdateFolderCache}}" />
+							<input class="mdui-textfield-input" type="text" name="update_folder_cache" placeholder="0 0 0/1 * * ?" value="{{.UpdateFolderCache}}" />
 							<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 						</div>
 						<div class="mdui-col-xs-2">
@@ -216,12 +237,17 @@
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">定时任务-heroku防休眠（可选）</label>
-						<input class="mdui-textfield-input" type="text" name="heroku_keep_alive" placeholder="0 0/5 * * * ?" value="{{.CronExps.HerokuKeepAlive}}" />
+						<input class="mdui-textfield-input" type="text" name="heroku_keep_alive" placeholder="0 0/5 * * * ?" value="{{.HerokuKeepAlive}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">heroku防休眠地址（可选）</label>
 						<input class="mdui-textfield-input" type="text" name="heroku_app_url" placeholder="https://appname,herokuapp.com" value="{{.HerokuAppUrl}}" />
+					</div>
+					<div class="mdui-row-xs-12">
+						<div class="mdui-col">
+							<button type="button" class="saveCronBtn mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple">保存</button>
+						</div>
 					</div>
 				</form>
 			</div>
@@ -237,13 +263,13 @@ var bd = new mdui.Dialog("#account_dialog");
 function addAccount() {
 	bd.open();
 }
-$("#accountForm").find("input[name=Mode]").on('change', function () {
+$("#accountForm").find("input[name=mode]").on('change', function () {
 	var mode = $(this).val();
 	dynamicChgMode(mode);
 });
 $("#resetBtn").on('click', function () {
 	$("#accountForm").find("input[name=name]").val("");
-	$("#accountForm").find("input[name=Uuer]").val("");
+	$("#accountForm").find("input[name=user]").val("");
 	$("#accountForm").find("input[name=password]").val("");
 	$("#accountForm").find("input[name=refresh_token]").val("");
 	$("#accountForm").find("input[name=access_token]").val("");
@@ -252,8 +278,8 @@ $("#resetBtn").on('click', function () {
 });
 var accounts = [
 	{{range .Accounts}}
-		{"name":{{.Name}},"id":{{.Id}},"mode":{{.Mode}},"user":{{.User}},"password":"",
-			"refresh_token":{{.RefreshToken}},"access_token":{{.AccessToken}},"root_id":{{.RootId}}
+		{"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"",
+			"refresh_token":"{{.RefreshToken}}","access_token":"{{.AccessToken}}","root_id":"{{.RootId}}"
 		},
 	{{end}}
 	];
@@ -274,11 +300,11 @@ function fillAccount(index) {
 	$("#accountForm").find("input[name=id]").val(account.id);
 	$("#accountForm").find("input[name=name]").val(account.name);
 	$("#accountForm").find("input[name=mode][value="+account.mode+"]").prop("checked", true);
-	dynamicChgMode(account.mode);
 	$("#accountForm").find("input[name=user]").val(account.user);
 	$("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
 	$("#accountForm").find("input[name=access_token]").val(account.access_token);
 	$("#accountForm").find("input[name=root_id]").val(account.root_id);
+	dynamicChgMode(account.mode);
 }
 function dynamicChgMode(mode){
 	if(mode == "native"){
@@ -301,17 +327,22 @@ function dynamicChgMode(mode){
 $(".saveAccountBtn").on("click", function () {
 	var account = $("#accountForm").serializeObject();
 	var type = $(this).val();
-	if (!$("#accountForm").valid()) {
-		return false;
-	}
 	if(type == 0){
 		account.id = "";
+	}
+	if(!account.root_id){
+		mdui.snackbar({
+			message: "请输入根目录ID",
+			timeout: 2000
+		});
+		return false;
 	}
 	var config = {accounts:[account]};
 	$.ajax({
 		method: 'POST',
 		url: '/api/admin/save',
 		data: JSON.stringify(config),
+		contentType: 'application/json',
 		success: function (data) {
 			var d = JSON.parse(data);
 			mdui.snackbar({
@@ -342,6 +373,73 @@ $("#deleteBtn").on("click", function (){
 			}
 		});
 	}
+});
+$(".saveConfigBtn").on("click", function () {
+	var config = $("#configForm").serializeObject();
+	if(!config.host || !config.port || !config.admin_password){
+		mdui.snackbar({
+			message: "必填项不能为空",
+			timeout: 2000
+		});
+		return false;
+	}
+	config.port = Number(config.port);
+	$.ajax({
+		method: 'POST',
+		url: '/api/admin/save',
+		data: JSON.stringify(config),
+		contentType: 'application/json',
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 2000
+			});
+		}
+	});
+});
+$(".saveCronBtn").on("click", function () {
+	var config = $("#cronForm").serializeObject();
+	if(!config.refresh_cookie){
+		mdui.snackbar({
+			message: "必填项不能为空",
+			timeout: 2000
+		});
+		return false;
+	}
+	$.ajax({
+		method: 'POST',
+		url: '/api/admin/save',
+		data: JSON.stringify(config),
+		contentType: 'application/json',
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 2000
+			});
+		}
+	});
+});
+$(".defaultAccount").on('click', function (ev){
+	$(".defaultAccount").prop("checked", false);
+	$(this).prop("checked", true);
+	var id = $(this).attr("data-id");
+	$.ajax({
+		method: 'POST',
+		url: '/api/admin/setDefaultAccount?id='+id,
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 2000
+			});
+		}
+	});
+});
+$(".acli").on('click', function(e){
+	if(e.target.tagName == 'INPUT')return;
+	fillAccount($(this).attr('data-index'));
 });
 $.fn.serializeObject = function()
 {

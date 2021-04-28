@@ -26,7 +26,7 @@ import (
 var CLoud189Session nic.Session
 
 //获取文件列表
-func Cloud189GetFiles(rootId, fileId string) {
+func Cloud189GetFiles(accountId, rootId, fileId string) {
 	defer func() {
 		if p := recover(); p != nil {
 			log.Errorln(p)
@@ -69,6 +69,7 @@ func Cloud189GetFiles(rootId, fileId string) {
 			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
 			if err == nil {
 				for _, item := range m {
+					item.AccountId = accountId
 					if p == "/" {
 						item.Path = "/" + item.FileName
 					} else {
@@ -77,7 +78,7 @@ func Cloud189GetFiles(rootId, fileId string) {
 					item.ParentPath = p
 					item.SizeFmt = FormatFileSize(item.FileSize)
 					if item.IsFolder == true {
-						Cloud189GetFiles(rootId, item.FileId)
+						Cloud189GetFiles(accountId, rootId, item.FileId)
 					} else {
 						//如果是文件，解析下载直链
 						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
@@ -98,7 +99,7 @@ func Cloud189GetFiles(rootId, fileId string) {
 							item.Hide = 1
 						}
 					}
-					model.SqliteDb.Save(item)
+					model.SqliteDb.Create(item)
 				}
 			}
 		}
@@ -391,7 +392,7 @@ func FormatFileSize(fileSize int64) (size string) {
 	}
 }
 
-func GetBetweenStr(str, start, end string) string {
+func GetBetweenStr1(str, start, end string) string {
 	n := strings.Index(str, start)
 	if n == -1 {
 		return ""
@@ -401,6 +402,21 @@ func GetBetweenStr(str, start, end string) string {
 	m := strings.Index(str, end)
 	if m == -1 {
 		return ""
+	}
+	str = string([]byte(str)[:m])
+	return str
+}
+func GetBetweenStr(str, start, end string) string {
+	n := strings.Index(str, start)
+	if n == -1 {
+		n = 0
+	} else {
+		n = n + len(start)
+	}
+	str = string([]byte(str)[n:])
+	m := strings.Index(str, end)
+	if m == -1 {
+		m = len(str)
 	}
 	str = string([]byte(str)[:m])
 	return str

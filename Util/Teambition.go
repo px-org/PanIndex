@@ -108,7 +108,7 @@ func ProjectIdCheck(rootId string) string {
 }
 
 //获取个人文件列表
-func TeambitionGetFiles(rootId, fileId, p string) {
+func TeambitionGetFiles(accountId, rootId, fileId, p string) {
 	if rootId == "" {
 		//如果没有设置rootId,这里使用全局的rootId
 		rootId = GloablRootId
@@ -135,6 +135,7 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 		json.Unmarshal([]byte(d.ToString()), &m)
 		for _, item := range m {
 			fn := entity.FileNode{}
+			fn.AccountId = accountId
 			fn.FileId = item["nodeId"].(string)
 			fn.FileName = item["name"].(string)
 			fn.FileIdDigest = ""
@@ -192,9 +193,9 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 				fn.Path = p + "/" + fn.FileName
 			}
 			if fn.IsFolder == true {
-				TeambitionGetFiles(rootId, fn.FileId, fn.Path)
+				TeambitionGetFiles(accountId, rootId, fn.FileId, fn.Path)
 			}
-			model.SqliteDb.Save(fn)
+			model.SqliteDb.Create(fn)
 		}
 		if nextMarker != "" {
 			pageNum++
@@ -204,7 +205,7 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 	}
 }
 
-func TeambitionGetProjectFiles(rootId, p string) {
+func TeambitionGetProjectFiles(accountId, rootId, p string) {
 	defer func() {
 		if p := recover(); p != nil {
 			log.Warningln(p)
@@ -235,6 +236,7 @@ func TeambitionGetProjectFiles(rootId, p string) {
 		}
 		for _, item := range m {
 			fn := entity.FileNode{}
+			fn.AccountId = accountId
 			fn.FileId = item["_id"].(string)
 			fn.FileIdDigest = ""
 			fn.CreateTime = UTCTimeFormat(item["created"].(string))
@@ -291,9 +293,9 @@ func TeambitionGetProjectFiles(rootId, p string) {
 			} else {
 				fn.Path = p + "/" + fn.FileName
 			}
-			TeambitionGetProjectFiles(fn.FileId, fn.Path)
+			TeambitionGetProjectFiles(accountId, fn.FileId, fn.Path)
 			if fn.FileName != "" {
-				model.SqliteDb.Save(fn)
+				model.SqliteDb.Create(fn)
 			}
 		}
 		pageNum++

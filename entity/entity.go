@@ -16,14 +16,11 @@ type FileNode struct {
 	ParentPath   string `json:"parentPath"`
 	DownloadUrl  string `json:"downloadUrl"`
 	MediaType    int    `json:"mediaType"` //1图片，2音频，3视频，4文本文档，0其他类型
-	Icon         Icon   `json:"icon"`
+	LargeUrl     string `json:"largeUrl"`
+	SmallUrl     string `json:"smallUrl"`
 	CreateTime   string `json:"create_time"`
 	Delete       int    `json:"delete"`
 	Hide         int    `json:"hide"`
-}
-type Icon struct {
-	LargeUrl string `json:"largeUrl"`
-	SmallUrl string `json:"smallUrl"`
 }
 type Paths struct {
 	FileId    string `json:"fileId"`
@@ -31,19 +28,21 @@ type Paths struct {
 	IsCoShare int    `json:"isCoShare"`
 }
 type Config struct {
-	Host          string     `json:"host" gorm:"default:'0.0.0.0'"`
-	Port          int        `json:"port" gorm:"default:8080"`
-	Accounts      []Account  `json:"accounts" gorm:"-"`
-	PwdDirId      []PwdDirId `json:"pwd_dir_id" gorm:"-"`
-	HideFileId    string     `json:"hide_file_id"`
-	HerokuAppUrl  string     `json:"heroku_app_url"`
-	ApiToken      string     `json:"api_token"`
-	Theme         string     `json:"theme" gorm:"default:'mdui'"`
-	AdminPassword string     `json:"admin_password" gorm:"default:'PanIndex'"`
-	Damagou       Damagou    `json:"damagou" gorm:"-"`
-	OnlyReferer   []string   `json:"only_referrer" gorm:"-"`
-	CronExps      CronExps   `json:"cron_exps" gorm:"-"`
-	Footer        string     `json:"footer"` //网站底部信息
+	Host              string    `json:"host" gorm:"default:'0.0.0.0'"`
+	Port              int       `json:"port" gorm:"default:8080"`
+	Accounts          []Account `json:"accounts" gorm:"-"`
+	PwdDirId          string    `json:"pwd_dir_id"`
+	HideFileId        string    `json:"hide_file_id"`
+	HerokuAppUrl      string    `json:"heroku_app_url"`
+	ApiToken          string    `json:"api_token"`
+	Theme             string    `json:"theme" gorm:"default:'mdui'"`
+	AdminPassword     string    `json:"admin_password" gorm:"default:'PanIndex'"`
+	Damagou           Damagou   `json:"damagou" gorm:"-"`
+	OnlyReferrer      string    `json:"only_referrer"`
+	RefreshCookie     string    `json:"refresh_cookie" gorm:"default:'0 0 8 1/1 * ?'"`
+	UpdateFolderCache string    `json:"update_folder_cache" gorm:"default:'0 0 0/1 * * ?'"`
+	HerokuKeepAlive   string    `json:"heroku_keep_alive" gorm:"default:'0 0/5 * * * ?'"`
+	Footer            string    `json:"footer"` //网站底部信息
 }
 
 type Account struct {
@@ -57,15 +56,7 @@ type Account struct {
 	RootId       string `json:"root_id"`       //目录id
 	Default      int    `json:"default"`       //是否默认
 }
-type CronExps struct {
-	RefreshCookie     string `json:"refresh_cookie" gorm:"default:'0 0 8 1/1 * ?'"`
-	UpdateFolderCache string `json:"update_folder_cache" gorm:"default:'0 0 0/1 * * ?'"`
-	HerokuKeepAlive   string `json:"heroku_keep_alive" gorm:"default:'0 0/5 * * * ?'"`
-}
-type PwdDirId struct {
-	Id  string `json:"id"`
-	Pwd string `json:"pwd"`
-}
+
 type Damagou struct {
 	Username string `json:"username"`
 	Password string `json:"password"`

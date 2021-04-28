@@ -16,7 +16,10 @@ import (
 	"time"
 )
 
-func GetFilesByPath(path, pwd string) map[string]interface{} {
+func GetFilesByPath(account entity.Account, path, pwd string) map[string]interface{} {
+	if path == "" {
+		path = "/"
+	}
 	result := make(map[string]interface{})
 	list := []entity.FileNode{}
 	defer func() {
@@ -25,9 +28,9 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 		}
 	}()
 	result["HasReadme"] = false
-	if config.GloablConfig.Mode == "native" {
+	if account.Mode == "native" {
 		//列出文件夹相对路径
-		rootPath := config.GloablConfig.RootId
+		rootPath := account.RootId
 		fullPath := filepath.Join(rootPath, path)
 		if Util.FileExist(fullPath) {
 			if Util.IsDirectory(fullPath) {
@@ -94,8 +97,8 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 				result["isFile"] = false
 				result["HasPwd"] = false
 				PwdDirIds := config.GloablConfig.PwdDirId
-				for _, pdi := range PwdDirIds {
-					if pdi.Id == fullPath && pwd != pdi.Pwd {
+				for _, pdi := range strings.Split(PwdDirIds, ",") {
+					if strings.Split(pdi, ":")[0] == fullPath && pwd != strings.Split(pdi, ":")[1] {
 						result["HasPwd"] = true
 						result["FileId"] = fullPath
 					}
@@ -125,27 +128,29 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 			}
 		}
 	} else {
-		model.SqliteDb.Raw("select * from file_node where parent_path=? and hide = 0", path).Find(&list)
+		model.SqliteDb.Raw("select * from file_node where parent_path=? and hide = 0 and account_id=?", path, account.Id).Find(&list)
 		result["isFile"] = false
 		if len(list) == 0 {
 			result["isFile"] = true
-			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and hide = 0", path).Find(&list)
+			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and hide = 0 and account_id=?", path, account.Id).Find(&list)
 		} else {
 			readmeFile := entity.FileNode{}
-			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=?", path, "README.md").Find(&readmeFile)
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
 			if !readmeFile.IsFolder && readmeFile.FileName == "README.md" {
 				result["HasReadme"] = true
-				result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(readmeFile), readmeFile.FileId)
+				result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
 			}
 		}
 		result["HasPwd"] = false
 		fileNode := entity.FileNode{}
-		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1", path).First(&fileNode)
+		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1 and account_id = ?", path, account.Id).First(&fileNode)
 		PwdDirIds := config.GloablConfig.PwdDirId
-		for _, pdi := range PwdDirIds {
-			if pdi.Id == fileNode.FileId && pwd != pdi.Pwd {
-				result["HasPwd"] = true
-				result["FileId"] = fileNode.FileId
+		for _, pdi := range strings.Split(PwdDirIds, ",") {
+			if pdi != "" {
+				if strings.Split(pdi, ":")[0] == fileNode.FileId && pwd != strings.Split(pdi, ":")[1] {
+					result["HasPwd"] = true
+					result["FileId"] = fileNode.FileId
+				}
 			}
 		}
 	}
@@ -157,7 +162,7 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 		result["HasParent"] = true
 	}
 	result["ParentPath"] = PetParentPath(path)
-	if config.GloablConfig.Mode == "cloud189" {
+	if account.Mode == "cloud189" {
 		result["SurportFolderDown"] = true
 	} else {
 		result["SurportFolderDown"] = false
@@ -165,16 +170,16 @@ func GetFilesByPath(path, pwd string) map[string]interface{} {
 	return result
 }
 
-func GetDownlaodUrl(fileNode entity.FileNode) string {
-	if config.GloablConfig.Mode == "cloud189" {
+func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
+	if account.Mode == "cloud189" {
 		return Util.GetDownlaodUrl(fileNode.FileIdDigest)
-	} else if config.GloablConfig.Mode == "teambition" {
+	} else if account.Mode == "teambition" {
 		if Util.IsPorject {
 			return Util.GetTeambitionProDownUrl(fileNode.FileId)
 		} else {
 			return Util.GetTeambitionDownUrl(fileNode.FileId)
 		}
-	} else if config.GloablConfig.Mode == "native" {
+	} else if account.Mode == "native" {
 	}
 	return ""
 }
@@ -225,26 +230,25 @@ func GetTotalPage(totalCount, pageSize int) int {
 }
 
 //刷新目录缓存
-func UpdateFolderCache() {
+func UpdateFolderCache(account entity.Account) {
 	Util.GC = gcache.New(10).LRU().Build()
 	model.SqliteDb.Delete(entity.FileNode{})
-	if config.GloablConfig.Mode == "cloud189" {
-		Util.Cloud189GetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId)
-	} else if config.GloablConfig.Mode == "teambition" {
-		Util.TeambitionGetFiles(config.GloablConfig.RootId, config.GloablConfig.RootId, "/")
-	} else if config.GloablConfig.Mode == "native" {
+	if account.Mode == "cloud189" {
+		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId)
+	} else if account.Mode == "teambition" {
+		Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
+	} else if account.Mode == "native" {
 	}
 }
 
 //刷新登录cookie
-func RefreshCookie() {
-	if config.GloablConfig.Mode == "cloud189" {
-		Util.Cloud189Login(config.GloablConfig.User, config.GloablConfig.Password)
-	} else if config.GloablConfig.Mode == "teambition" {
-		Util.TeambitionLogin(config.GloablConfig.User, config.GloablConfig.Password)
-	} else if config.GloablConfig.Mode == "native" {
+func RefreshCookie(account entity.Account) {
+	if account.Mode == "cloud189" {
+		Util.Cloud189Login(account.User, account.Password)
+	} else if account.Mode == "teambition" {
+		Util.TeambitionLogin(account.User, account.Password)
+	} else if account.Mode == "native" {
 	}
-
 }
 func IsDirectory(filename string) bool {
 	info, err := os.Stat(filename)
@@ -263,41 +267,36 @@ func IsFile(filename string) bool {
 }
 
 func GetConfig() entity.Config {
-	config := entity.Config{}
-	crons := entity.CronExps{}
-	pwdDirId := []entity.PwdDirId{}
+	c := entity.Config{}
 	accounts := []entity.Account{}
 	damagou := entity.Damagou{}
-	model.SqliteDb.Raw("select * from config where 1=1 limit 1").Find(&config)
-	model.SqliteDb.Raw("select * from cron_exps where 1=1 limit 1").Find(&crons)
-	model.SqliteDb.Raw("select * from pwd_dir_id where 1=1").Find(&pwdDirId)
-	model.SqliteDb.Raw("select * from account").Find(&accounts)
+	model.SqliteDb.Raw("select * from config where 1=1 limit 1").Find(&c)
+	model.SqliteDb.Raw("select * from account order by `default`desc").Find(&accounts)
 	model.SqliteDb.Raw("select * from damagou where 1-1 limit 1").Find(&damagou)
-	config.PwdDirId = pwdDirId
-	config.Accounts = accounts
-	config.CronExps = crons
-	config.Damagou = damagou
-	return config
+	c.Accounts = accounts
+	c.Damagou = damagou
+	config.GloablConfig = c
+	return c
 }
 
-func SaveConfig(config entity.Config) {
-	//基本配置
-	model.SqliteDb.Model(entity.Config{}).Where("1 = 1").Updates(&config)
-	//账号信息
-	if len(config.Accounts) > 0 {
-		for _, account := range config.Accounts {
-			if account.Id != "" {
+func SaveConfig(config map[string]interface{}) {
+	if config["accounts"] == nil {
+		//基本配置
+		model.SqliteDb.Table("config").Where("1 = 1").Updates(config)
+	} else {
+		//账号信息
+		for _, account := range config["accounts"].([]interface{}) {
+			if account.(map[string]interface{})["id"] != nil && account.(map[string]interface{})["id"] != "" {
 				//更新网盘账号
-				model.SqliteDb.Model(entity.Account{}).Where("id = ?", account.Id).Updates(&account)
+				model.SqliteDb.Table("account").Where("id = ?", account.(map[string]interface{})["id"]).Updates(account.(map[string]interface{}))
 			} else {
 				//添加网盘账号
-				account.Id = uuid.NewV4().String()
-				model.SqliteDb.Model(entity.Account{}).Save(&account)
+				account.(map[string]interface{})["id"] = uuid.NewV4().String()
+				model.SqliteDb.Table("account").Create(account.(map[string]interface{}))
 			}
 		}
 	}
-	//定时任务
-	//密码目录
+	go GetConfig()
 	//其他（打码狗）
 }
 func DeleteAccount(id string) {
@@ -307,4 +306,13 @@ func DeleteAccount(id string) {
 	var a entity.Account
 	a.Id = id
 	model.SqliteDb.Model(entity.Account{}).Delete(a)
+	go GetConfig()
+}
+func SetDefaultAccount(id string) {
+	accountMap := make(map[string]interface{})
+	accountMap["default"] = 0
+	model.SqliteDb.Model(entity.Account{}).Where("1=1").Updates(accountMap)
+	accountMap["default"] = 1
+	model.SqliteDb.Table("account").Where("id=?", id).Updates(accountMap)
+	go GetConfig()
 }

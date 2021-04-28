@@ -17,16 +17,20 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
 
-var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
+//var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
+var Host = flag.String("host", "", "绑定host，默认为0.0.0.0")
+var Port = flag.String("port", "", "绑定port，默认为8080")
+var Debug = flag.Bool("debug", false, "调试模式，设置为true可以输出更多日志")
 var GC = gcache.New(100).LRU().Build()
 
 func main() {
 	flag.Parse()
-	boot.Start(*configPath)
+	boot.Start(*Host, *Port, *Debug)
 	r := gin.New()
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
@@ -49,14 +53,15 @@ func main() {
 			requestToken := c.Query("token")
 			if requestToken == config.GloablConfig.ApiToken {
 				message := ""
-				if config.GloablConfig.Mode == "native" {
-					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
-					message = "Native mode does not need to be refreshed"
-				} else {
-					go updateCaches()
-					log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
-					message = "Cache update successful"
+				for _, account := range config.GloablConfig.Accounts {
+					if account.Mode == "native" {
+						log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
+					} else {
+						go updateCaches(account)
+						log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
+					}
 				}
+				message = "Cache update successful"
 				c.String(http.StatusOK, message)
 			} else {
 				message := "Invalid api token"
@@ -66,14 +71,15 @@ func main() {
 			requestToken := c.Query("token")
 			if requestToken == config.GloablConfig.ApiToken {
 				message := ""
-				if config.GloablConfig.Mode == "native" {
-					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
-					message = "Native mode does not need to be refreshed"
-				} else {
-					go refreshCookie()
-					log.Infoln("[API请求]cookie刷新 >> 请求刷新")
-					message = "Cookie refresh successful"
+				for _, account := range config.GloablConfig.Accounts {
+					if account.Mode == "native" {
+						log.Infoln("[API请求]cookie刷新刷新 >> 当前为本地模式，无需刷新")
+					} else {
+						go refreshCookie(account)
+						log.Infoln("[API请求]cookie刷新 >> 请求刷新")
+					}
 				}
+				message = "Cookie refresh successful"
 				c.String(http.StatusOK, message)
 			} else {
 				message := "Invalid api token"
@@ -85,6 +91,8 @@ func main() {
 			adminSave(c)
 		} else if path == "/api/admin/deleteAccount" {
 			adminDeleteAccount(c)
+		} else if path == "/api/admin/setDefaultAccount" {
+			setDefaultAccount(c)
 		} else if ad {
 			admin(c)
 		} else {
@@ -98,9 +106,9 @@ func main() {
 				if referer.Host == host {
 					//站内，自动通过
 					isForbidden = false
-				} else if referer.Host != host && len(config.GloablConfig.OnlyReferer) > 0 {
+				} else if referer.Host != host && len(config.GloablConfig.OnlyReferrer) > 0 {
 					//外部引用，并且设置了防盗链，需要进行判断
-					for _, rf := range config.GloablConfig.OnlyReferer {
+					for _, rf := range strings.Split(config.GloablConfig.OnlyReferrer, ",") {
 						if rf == referer.Host {
 							isForbidden = false
 							break
@@ -133,11 +141,14 @@ func initTemplates() *template.Template {
 		data = string(s)
 	}
 	tmpl := template.New(tmpFile)
+	tmpl = tmpl.Funcs(template.FuncMap{"unescaped": unescaped})
 	tmpl.Parse(data)
 	data, _ = box.FindString("pan/admin/login.html")
 	tmpl.New("pan/admin/login.html").Parse(data)
+
 	data, _ = box.FindString("pan/admin/index.html")
 	tmpl.New("pan/admin/index.html").Parse(data)
+
 	return tmpl
 }
 func initStaticBox(r *gin.Engine) {
@@ -147,6 +158,19 @@ func initStaticBox(r *gin.Engine) {
 	} else {
 		r.StaticFS("/static", staticBox)
 	}
+}
+func GetBetweenStr(str, start, end string) string {
+	n := strings.Index(str, start)
+	if n == -1 {
+		n = 0
+	}
+	str = string([]byte(str)[n:])
+	m := strings.Index(str, end)
+	if m == -1 {
+		m = len(str)
+	}
+	str = string([]byte(str)[:m])
+	return str
 }
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
@@ -163,21 +187,36 @@ func index(c *gin.Context) {
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
 		pathName = pathName[0 : len(pathName)-1]
 	}
-	result := service.GetFilesByPath(pathName, pwd)
+	index := 0
+	DIndex := ""
+	if strings.HasPrefix(pathName, "/d_") {
+		iStr := Util.GetBetweenStr(pathName, "_", "/")
+		index, _ = strconv.Atoi(iStr)
+		pathName = strings.ReplaceAll(pathName, "/d_"+iStr, "")
+		DIndex = fmt.Sprintf("/d_%d", index)
+	} else {
+		DIndex = ""
+	}
+	account := config.GloablConfig.Accounts[index]
+	result := service.GetFilesByPath(account, pathName, pwd)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
-	result["Mode"] = config.GloablConfig.Mode
+	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
+	result["Title"] = account.Name
+	result["Accounts"] = config.GloablConfig.Accounts
+	result["DIndex"] = DIndex
+	result["Footer"] = config.GloablConfig.Footer
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
 			//文件
-			if config.GloablConfig.Mode == "native" {
+			if account.Mode == "native" {
 				c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
 				c.Writer.Header().Add("Content-Type", "application/octet-stream")
 				c.File(fs[0].FileId)
 				return
 			} else {
-				downUrl := service.GetDownlaodUrl(fs[0])
+				downUrl := service.GetDownlaodUrl(account, fs[0])
 				c.Redirect(http.StatusFound, downUrl)
 			}
 		}
@@ -191,13 +230,13 @@ func downloadMultiFiles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 }
 
-func updateCaches() {
-	service.UpdateFolderCache()
+func updateCaches(account entity.Account) {
+	service.UpdateFolderCache(account)
 	log.Infoln("[API请求]目录缓存刷新 >> 刷新成功")
 }
 
-func refreshCookie() {
-	service.RefreshCookie()
+func refreshCookie(account entity.Account) {
+	service.RefreshCookie(account)
 	log.Infoln("[API请求]cookie刷新 >> 刷新成功")
 }
 
@@ -248,14 +287,23 @@ func admin(c *gin.Context) {
 		}
 	}
 }
+
 func adminSave(c *gin.Context) {
-	config := entity.Config{}
-	c.BindJSON(&config)
-	service.SaveConfig(config)
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置已更新"})
+	configMap := make(map[string]interface{})
+	c.BindJSON(&configMap)
+	service.SaveConfig(configMap)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置已更新，部分配置重启后生效！"})
 }
+
 func adminDeleteAccount(c *gin.Context) {
 	id := c.Query("id")
 	service.DeleteAccount(id)
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功"})
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
 }
+
+func setDefaultAccount(c *gin.Context) {
+	id := c.Query("id")
+	service.SetDefaultAccount(id)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "默认账号设置成功！"})
+}
+func unescaped(x string) interface{} { return template.HTML(x) }

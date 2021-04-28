@@ -1,9 +1,9 @@
 package boot
 
 import (
-	"PanIndex/config"
 	"PanIndex/jobs"
 	"PanIndex/model"
+	"PanIndex/service"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -21,9 +21,9 @@ var (
 	GIT_COMMIT_SHA string
 )
 
-func Start(path string) {
+func Start(host, port string, debug bool) {
 	//初始化日志设置
-	InitLog()
+	InitLog(debug)
 	//打印asc
 	PrintAsc()
 	//打印版本信息
@@ -31,13 +31,13 @@ func Start(path string) {
 	//检查新版本
 	go CheckUpdate()
 	//初始化数据库
-	model.InitDb()
+	model.InitDb(host, port, debug)
 	//初始化配置
-	config.LoadConfig(path)
+	service.GetConfig()
 	//定时任务初始化
 	jobs.Run()
 	//刷新cookie和目录缓存
-	go jobs.StartInit()
+	//go jobs.StartInit()
 
 }
 
@@ -51,8 +51,8 @@ func PrintAsc() {
 }
 
 // boot logrus
-func InitLog() {
-	if config.Debug {
+func InitLog(debug bool) {
+	if debug {
 		log.SetLevel(log.DebugLevel)
 		gin.SetMode(gin.DebugMode)
 	} else {
