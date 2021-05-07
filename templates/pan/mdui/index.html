@@ -36,10 +36,9 @@
 		.mdui-card {
 			box-shadow: none;
 		}
-		.mdui-textfield-input {
+		.search-input {
 			border-bottom: none;
 		}
-
 		.mdui-textfield-focus .mdui-icon,
 		.mdui-textfield-focus .mdui-textfield-label {
 			color: rgba(0, 0, 0, .54);
@@ -66,7 +65,7 @@
 	<title>{{.Title}} {{ .Path }}</title>
 	{{ $SurportFolderDown := .SurportFolderDown }}
 </head>
-<body>
+<body class="mdui-theme-layout-auto">
 {{if .HasPwd}}
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
 <script>
@@ -119,7 +118,7 @@
 						<div class="mdui-list-item-title">
 							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right{{if .HasParent}}{{else}} mdui-textfield-expanded{{end}}">
 								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
-								<input type="text" placeholder="搜索当前内容" class="mdui-textfield-input">
+								<input type="text" placeholder="搜索当前内容" class="mdui-textfield-input search-input">
 								{{if .HasParent}}
 								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
 								{{else}}
@@ -134,6 +133,11 @@
 						</div>
 					</div>
 				</li>
+				{{if not .List}}
+				<div class="mdui-valign" style="min-height: 200px">
+					<p class="mdui-center">网盘空空如也，快去上传吧</p>
+				</div>
+				{{end}}
 				{{range .List}}
 				<li class="mdui-list-item mdui-ripple">
 					<div class="mdui-list-item-content icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}">
@@ -141,7 +145,7 @@
 							{{if .IsFolder}}
 							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">folder_open</i> {{.FileName}}
 							{{if and (ne .FileId "0") (ne .FileId "-12") (ne .FileId "-14") (ne .FileId "-13") (ne .FileId "-15") (ne .FileId "-11") (ne .FileId "-16") ($SurportFolderDown)}}
-							<a class="folderDown mdui-float-right mdui-icon material-icons" data-file-id="{{.FileId}}" href="javascript:void(0);">file_download</a>
+							<a class="folderDown mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon" data-account="{{$.AccountId}}" data-file-id="{{.FileId}}" href="javascript:void(0);">file_download</a>
 							{{else}}
 							{{end}}
 							{{else}}
@@ -170,7 +174,7 @@
 									{{end}}
 								{{end}}
 							</i> {{.FileName}}
-							<a href="{{$.DIndex}}{{.Path}}" class="mdui-float-right mdui-icon material-icons" style="color: rgba(0, 0, 0, 0.54);">file_download</a>
+							<a href="{{$.DIndex}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
 							{{end}}
 						</div>
 						{{if .IsFolder}}
@@ -213,19 +217,5 @@
 <script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
 <script src="/static/js/main.js"></script>
-<script>
-	$(".mdui-textfield-input").keyup(function () {
-		var keyword = $(this).val();
-		var reg =  new RegExp(keyword);
-		$(".mdui-list").find("li").each(function (i, item) {
-			var title = $(this).find("div").attr("data-title");
-			if("undefined" == typeof title || reg.test(title)){
-				$(this).show();
-			}else{
-				$(this).hide();
-			}
-		});
-	});
-</script>
 </body>
 </html>
