@@ -22,7 +22,7 @@ func InitDb(host, port string, debug bool) {
 		os.Mkdir(path, os.ModePerm)
 	}
 	var err error
-	LogLevel := logger.Warn
+	LogLevel := logger.Silent
 	if debug {
 		LogLevel = logger.Info
 	}
@@ -51,7 +51,7 @@ func InitDb(host, port string, debug bool) {
 	if c.Host == "" {
 		rand.Seed(time.Now().UnixNano())
 		ApiToken := strconv.Itoa(rand.Intn(10000))
-		SqliteDb.Create(&entity.Config{"0.0.0.0", 8080, nil, "", "", "", ApiToken, "mdui", "PanIndex", entity.Damagou{}, "", "0 0 8 1/1 * ?", "0 0 0/1 * * ?", "0 0/5 * * * ?", ""})
+		SqliteDb.Create(&entity.Config{"0.0.0.0", 8080, nil, "", "", "", ApiToken, "mdui", "PanIndex", entity.Damagou{}, "", "0 0 8 1/1 * ?", "", "", ""})
 	}
 	if host != "" || port != "" {
 		//启动时指定了host/port

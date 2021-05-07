@@ -9,6 +9,7 @@ import (
 	"github.com/eddieivan01/nic"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 func Run() {
@@ -27,41 +28,16 @@ func Run() {
 	}
 	if config.GloablConfig.RefreshCookie != "" {
 		c.AddFunc(config.GloablConfig.RefreshCookie, func() {
-			cookie := ""
 			for _, account := range config.GloablConfig.Accounts {
-				if account.Mode == "cloud189" {
-					cookie = Util.Cloud189Login(account.User, account.Password)
-				} else if account.Mode == "teambition" {
-					cookie = Util.TeambitionLogin(account.User, account.Password)
-				}
-				if cookie != "" {
-					log.Infoln("[定时任务][" + account.Name + "]cookie更新 >> 登录成功")
-				} else if cookie == "" && account.Mode != "native" {
-					log.Infoln("[定时任务][" + account.Name + "]cookie更新 >> 登录失败，请检查用户名和密码是否正确")
-				}
+				AccountLogin(account)
 			}
 		})
 	}
 	if config.GloablConfig.UpdateFolderCache != "" {
 		c.AddFunc(config.GloablConfig.UpdateFolderCache, func() {
 			Util.GC = gcache.New(10).LRU().Build()
-			model.SqliteDb.Where("1=1").Delete(entity.FileNode{})
 			for _, account := range config.GloablConfig.Accounts {
-				if account.Mode == "cloud189" {
-					Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId)
-				} else if account.Mode == "teambition" {
-					rootId := Util.ProjectIdCheck(account.RootId)
-					if Util.IsPorject {
-						Util.TeambitionGetProjectFiles(account.Id, rootId, "/")
-					} else {
-						Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
-					}
-				}
-				var fileNodeCount int64
-				model.SqliteDb.Model(&entity.FileNode{}).Where("1=1").Count(&fileNodeCount)
-				if fileNodeCount > 0 {
-					log.Infoln("[定时任务][" + account.Name + "]目录缓存刷新 >> 刷新成功")
-				}
+				SyncOneAccount(account)
 			}
 		})
 	}
@@ -69,34 +45,64 @@ func Run() {
 }
 func StartInit() {
 	for _, account := range config.GloablConfig.Accounts {
-		cookie := ""
-		model.SqliteDb.Where("account_id=?", account.Id).Delete(entity.FileNode{})
-		if account.Mode == "cloud189" {
-			log.Infoln("[网盘模式][" + account.Name + "] >> 天翼云网盘")
-			cookie = Util.Cloud189Login(account.User, account.Password)
-			Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId)
-		} else if account.Mode == "teambition" {
-			cookie = Util.TeambitionLogin(account.User, account.Password)
-			rootId := Util.ProjectIdCheck(account.RootId)
-			if Util.IsPorject {
-				log.Infoln("[网盘模式][" + account.Name + "] >> teambition网盘-项目")
-				Util.TeambitionGetProjectFiles(account.Id, rootId, "/")
-			} else {
-				log.Infoln("[网盘模式][" + account.Name + "] >> teambition网盘-个人")
-				Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
-			}
-		} else if account.Mode == "native" {
-			log.Infoln("[网盘模式][" + account.Name + "] >> 本地模式")
-		}
-		if cookie != "" {
-			log.Infoln("[程序启动][" + account.Name + "]cookie更新 >> 登录成功")
-		} else if cookie == "" && account.Mode != "native" {
-			log.Infoln("[程序启动][" + account.Name + "]cookie更新 >> 登录失败，请检查用户名和密码是否正确")
-		}
-		var fileNodeCount int64
-		model.SqliteDb.Model(&entity.FileNode{}).Where("1=1").Count(&fileNodeCount)
-		if fileNodeCount > 0 {
-			log.Infoln("[程序启动][" + account.Name + "]目录缓存刷新 >> 刷新成功")
-		}
+		AccountLogin(account)
+		SyncOneAccount(account)
 	}
+}
+func AccountLogin(account entity.Account) {
+	cookie := ""
+	msg := ""
+	if account.Mode == "cloud189" {
+		msg = "[网盘模式][" + account.Name + "] >> 天翼云网盘"
+		cookie = Util.Cloud189Login(account.Id, account.User, account.Password)
+	} else if account.Mode == "teambition" {
+		cookie = Util.TeambitionLogin(account.Id, account.User, account.Password)
+		Util.ProjectIdCheck(account.Id, account.RootId)
+		if Util.TeambitionSessions[account.Id].IsPorject {
+			msg = "[" + account.Name + "] >> teambition网盘-项目"
+		} else {
+			msg = "[" + account.Name + "] >> teambition网盘-个人"
+		}
+	} else if account.Mode == "native" {
+		msg = "[" + account.Name + "] >> 本地模式"
+	}
+	if cookie != "" {
+		log.Infoln(msg + " >> cookie更新 >> 登录成功")
+	} else if cookie == "" && account.Mode != "native" {
+		log.Infoln(msg + "cookie更新 >> 登录失败，请检查用户名和密码是否正确")
+	}
+}
+func SyncOneAccount(account entity.Account) {
+	t1 := time.Now()
+	if account.Mode == "cloud189" {
+		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId)
+	} else if account.Mode == "teambition" {
+		rootId := Util.ProjectIdCheck(account.Id, account.RootId)
+		if Util.TeambitionSessions[account.Id].IsPorject {
+			Util.TeambitionGetProjectFiles(account.Id, rootId, "/")
+		} else {
+			Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
+		}
+	} else if account.Mode == "native" {
+	}
+	//删除旧数据
+	model.SqliteDb.Where("account_id=? and `delete`=0", account.Id).Delete(entity.FileNode{})
+	//暴露新数据
+	model.SqliteDb.Table("file_node").Where("account_id=?", account.Id).Update("delete", 0)
+	var fileNodeCount int64
+	model.SqliteDb.Model(&entity.FileNode{}).Where("account_id=?", account.Id).Count(&fileNodeCount)
+	status := 3
+	if int(fileNodeCount) > 0 {
+		status = 2
+		log.Infoln("[目录缓存][" + account.Name + "]缓存刷新 >> 刷新成功")
+	}
+	t2 := time.Now()
+	d := t2.Sub(t1)
+	//timespan := fmt.Sprintf("%v分%v秒", d.Minutes(), d.Seconds())
+	now := time.Now().UTC().Add(8 * time.Hour)
+	//更新同步记录
+	model.SqliteDb.Table("account").Where("id=?", account.Id).Updates(map[string]interface{}{
+		"status": status, "files_count": int(fileNodeCount), "last_op_time": now.Format("2006-01-02 15:04:05"),
+		"time_span": Util.ShortDur(d),
+	})
 }

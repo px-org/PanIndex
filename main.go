@@ -5,6 +5,7 @@ import (
 	"PanIndex/boot"
 	"PanIndex/config"
 	"PanIndex/entity"
+	"PanIndex/jobs"
 	"PanIndex/service"
 	"flag"
 	"fmt"
@@ -46,53 +47,55 @@ func main() {
 		path := c.Request.URL.Path
 		method := c.Request.Method
 		_, ad := c.GetQuery("admin")
+		if strings.HasPrefix(path, "/api/") {
+			requestToken := c.Query("token")
+			if requestToken != config.GloablConfig.ApiToken {
+				message := "Invalid api token"
+				c.String(http.StatusOK, message)
+				return
+			}
+		}
 		if method == "POST" && path == "/api/downloadMultiFiles" {
 			//文件夹下载
 			downloadMultiFiles(c)
 		} else if method == http.MethodGet && path == "/api/updateFolderCache" {
-			requestToken := c.Query("token")
-			if requestToken == config.GloablConfig.ApiToken {
-				message := ""
-				for _, account := range config.GloablConfig.Accounts {
-					if account.Mode == "native" {
-						log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
-					} else {
-						go updateCaches(account)
-						log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
-					}
+			message := ""
+			for _, account := range config.GloablConfig.Accounts {
+				if account.Mode == "native" {
+					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
+				} else {
+					go updateCaches(account)
+					log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
 				}
-				message = "Cache update successful"
-				c.String(http.StatusOK, message)
-			} else {
-				message := "Invalid api token"
-				c.String(http.StatusOK, message)
 			}
+			message = "Cache update successful"
+			c.String(http.StatusOK, message)
 		} else if method == http.MethodGet && path == "/api/refreshCookie" {
-			requestToken := c.Query("token")
-			if requestToken == config.GloablConfig.ApiToken {
-				message := ""
-				for _, account := range config.GloablConfig.Accounts {
-					if account.Mode == "native" {
-						log.Infoln("[API请求]cookie刷新刷新 >> 当前为本地模式，无需刷新")
-					} else {
-						go refreshCookie(account)
-						log.Infoln("[API请求]cookie刷新 >> 请求刷新")
-					}
+			message := ""
+			for _, account := range config.GloablConfig.Accounts {
+				if account.Mode == "native" {
+					log.Infoln("[API请求]cookie刷新刷新 >> 当前为本地模式，无需刷新")
+				} else {
+					go refreshCookie(account)
+					log.Infoln("[API请求]cookie刷新 >> 请求刷新")
 				}
-				message = "Cookie refresh successful"
-				c.String(http.StatusOK, message)
-			} else {
-				message := "Invalid api token"
-				c.String(http.StatusOK, message)
 			}
+			message = "Cookie refresh successful"
+			c.String(http.StatusOK, message)
 		} else if method == http.MethodGet && path == "/api/shareToDown" {
 			shareToDown(c)
 		} else if method == http.MethodPost && path == "/api/admin/save" {
 			adminSave(c)
 		} else if path == "/api/admin/deleteAccount" {
 			adminDeleteAccount(c)
+		} else if path == "/api/admin/updateCache" {
+			updateCache(c)
+		} else if path == "/api/admin/updateCookie" {
+			updateCookie(c)
 		} else if path == "/api/admin/setDefaultAccount" {
 			setDefaultAccount(c)
+		} else if path == "/api/admin/config" {
+			getConfig(c)
 		} else if ad {
 			admin(c)
 		} else {
@@ -133,22 +136,22 @@ func main() {
 }
 
 func initTemplates() *template.Template {
-	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
+	themes := [4]string{"mdui", "classic", "bootstrap", "materialdesign"}
 	box := packr.New("templates", "./templates")
-	data, _ := box.FindString(tmpFile)
-	if Util.FileExist("./templates/" + tmpFile) {
-		s, _ := ioutil.ReadFile("./templates/" + tmpFile)
-		data = string(s)
-	}
-	tmpl := template.New(tmpFile)
-	tmpl = tmpl.Funcs(template.FuncMap{"unescaped": unescaped})
+	data, _ := box.FindString("pan/admin/login.html")
+	tmpl := template.New("pan/admin/login.html")
 	tmpl.Parse(data)
-	data, _ = box.FindString("pan/admin/login.html")
-	tmpl.New("pan/admin/login.html").Parse(data)
-
 	data, _ = box.FindString("pan/admin/index.html")
 	tmpl.New("pan/admin/index.html").Parse(data)
-
+	for _, theme := range themes {
+		tmpFile := strings.Join([]string{"pan/", "/index.html"}, theme)
+		data, _ = box.FindString(tmpFile)
+		if Util.FileExist("./templates/" + tmpFile) {
+			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
+			data = string(s)
+		}
+		tmpl.New(tmpFile).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+	}
 	return tmpl
 }
 func initStaticBox(r *gin.Engine) {
@@ -197,6 +200,11 @@ func index(c *gin.Context) {
 	} else {
 		DIndex = ""
 	}
+	if len(config.GloablConfig.Accounts) == 0 {
+		//未绑定任何账号，跳转到后台进行配置
+		c.Redirect(http.StatusFound, "/?admin")
+		return
+	}
 	account := config.GloablConfig.Accounts[index]
 	result := service.GetFilesByPath(account, pathName, pwd)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
@@ -205,6 +213,7 @@ func index(c *gin.Context) {
 	result["Title"] = account.Name
 	result["Accounts"] = config.GloablConfig.Accounts
 	result["DIndex"] = DIndex
+	result["AccountId"] = account.Id
 	result["Footer"] = config.GloablConfig.Footer
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
@@ -226,7 +235,8 @@ func index(c *gin.Context) {
 
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
-	downUrl := service.GetDownlaodMultiFiles(fileId)
+	accountId := c.Query("accountId")
+	downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
 	c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 }
 
@@ -299,6 +309,24 @@ func adminDeleteAccount(c *gin.Context) {
 	id := c.Query("id")
 	service.DeleteAccount(id)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
+}
+
+func getConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, service.GetConfig())
+}
+
+func updateCache(c *gin.Context) {
+	id := c.Query("id")
+	account := service.GetAccount(id)
+	go jobs.SyncOneAccount(account)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新缓存，请稍后刷新页面查看缓存结果！"})
+}
+
+func updateCookie(c *gin.Context) {
+	id := c.Query("id")
+	account := service.GetAccount(id)
+	go jobs.AccountLogin(account)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
 }
 
 func setDefaultAccount(c *gin.Context) {

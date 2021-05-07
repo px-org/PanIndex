@@ -6,6 +6,8 @@ import (
 	"PanIndex/entity"
 	"PanIndex/model"
 	"github.com/bluele/gcache"
+	"github.com/eddieivan01/nic"
+	jsoniter "github.com/json-iterator/go"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -128,14 +130,14 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 			}
 		}
 	} else {
-		model.SqliteDb.Raw("select * from file_node where parent_path=? and hide = 0 and account_id=?", path, account.Id).Find(&list)
+		model.SqliteDb.Raw("select * from file_node where parent_path=? and `delete`=0 and hide = 0 and account_id=?", path, account.Id).Find(&list)
 		result["isFile"] = false
 		if len(list) == 0 {
 			result["isFile"] = true
-			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and hide = 0 and account_id=?", path, account.Id).Find(&list)
+			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=?", path, account.Id).Find(&list)
 		} else {
 			readmeFile := entity.FileNode{}
-			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and `delete`=0 and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
 			if !readmeFile.IsFolder && readmeFile.FileName == "README.md" {
 				result["HasReadme"] = true
 				result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
@@ -143,7 +145,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 		}
 		result["HasPwd"] = false
 		fileNode := entity.FileNode{}
-		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1 and account_id = ?", path, account.Id).First(&fileNode)
+		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1 and `delete`=0 and account_id = ?", path, account.Id).First(&fileNode)
 		PwdDirIds := config.GloablConfig.PwdDirId
 		for _, pdi := range strings.Split(PwdDirIds, ",") {
 			if pdi != "" {
@@ -172,20 +174,20 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 
 func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
 	if account.Mode == "cloud189" {
-		return Util.GetDownlaodUrl(fileNode.FileIdDigest)
+		return Util.GetDownlaodUrl(account.Id, fileNode.FileIdDigest)
 	} else if account.Mode == "teambition" {
-		if Util.IsPorject {
-			return Util.GetTeambitionProDownUrl(fileNode.FileId)
+		if Util.TeambitionSessions[account.Id].IsPorject {
+			return Util.GetTeambitionProDownUrl(account.Id, fileNode.FileId)
 		} else {
-			return Util.GetTeambitionDownUrl(fileNode.FileId)
+			return Util.GetTeambitionDownUrl(account.Id, fileNode.FileId)
 		}
 	} else if account.Mode == "native" {
 	}
 	return ""
 }
 
-func GetDownlaodMultiFiles(fileId string) string {
-	return Util.GetDownlaodMultiFiles(fileId)
+func GetDownlaodMultiFiles(accountId, fileId string) string {
+	return Util.GetDownlaodMultiFiles(accountId, fileId)
 }
 
 func PetParentPath(p string) string {
@@ -244,9 +246,9 @@ func UpdateFolderCache(account entity.Account) {
 //刷新登录cookie
 func RefreshCookie(account entity.Account) {
 	if account.Mode == "cloud189" {
-		Util.Cloud189Login(account.User, account.Password)
+		Util.Cloud189Login(account.Id, account.User, account.Password)
 	} else if account.Mode == "teambition" {
-		Util.TeambitionLogin(account.User, account.Password)
+		Util.TeambitionLogin(account.Id, account.User, account.Password)
 	} else if account.Mode == "native" {
 	}
 }
@@ -283,16 +285,45 @@ func SaveConfig(config map[string]interface{}) {
 	if config["accounts"] == nil {
 		//基本配置
 		model.SqliteDb.Table("config").Where("1 = 1").Updates(config)
+		if config["hide_file_id"] != nil {
+			hideFiles := config["hide_file_id"].(string)
+			if hideFiles != "" {
+				model.SqliteDb.Table("file_node").Where("1 = 1").Update("hide", 0)
+				for _, hf := range strings.Split(hideFiles, ",") {
+					model.SqliteDb.Table("file_node").Where("file_id = ?", hf).Update("hide", 1)
+				}
+			}
+		}
 	} else {
 		//账号信息
 		for _, account := range config["accounts"].([]interface{}) {
+			mode := account.(map[string]interface{})["Mode"]
 			if account.(map[string]interface{})["id"] != nil && account.(map[string]interface{})["id"] != "" {
+				old := entity.Account{}
+				model.SqliteDb.Table("account").Where("id = ?", account.(map[string]interface{})["id"]).First(&old)
 				//更新网盘账号
 				model.SqliteDb.Table("account").Where("id = ?", account.(map[string]interface{})["id"]).Updates(account.(map[string]interface{}))
+				if mode != old.Mode {
+					delete(Util.CLoud189Sessions, old.Id)
+					delete(Util.TeambitionSessions, old.Id)
+					if mode == "cloud189" {
+						Util.CLoud189Sessions[old.Id] = nic.Session{}
+					} else if mode == "teambition" {
+						Util.TeambitionSessions[old.Id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
+					}
+				}
 			} else {
 				//添加网盘账号
-				account.(map[string]interface{})["id"] = uuid.NewV4().String()
+				id := uuid.NewV4().String()
+				account.(map[string]interface{})["id"] = id
+				account.(map[string]interface{})["status"] = 1
+				account.(map[string]interface{})["files_count"] = 0
 				model.SqliteDb.Table("account").Create(account.(map[string]interface{}))
+				if mode == "cloud189" {
+					Util.CLoud189Sessions[id] = nic.Session{}
+				} else if mode == "teambition" {
+					Util.TeambitionSessions[id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
+				}
 			}
 		}
 	}
@@ -307,6 +338,14 @@ func DeleteAccount(id string) {
 	a.Id = id
 	model.SqliteDb.Model(entity.Account{}).Delete(a)
 	go GetConfig()
+	delete(Util.CLoud189Sessions, id)
+	delete(Util.TeambitionSessions, id)
+}
+func GetAccount(id string) entity.Account {
+	//删除账号对应节点数据
+	account := entity.Account{}
+	model.SqliteDb.Where("id = ?", id).First(&account)
+	return account
 }
 func SetDefaultAccount(id string) {
 	accountMap := make(map[string]interface{})
@@ -315,4 +354,25 @@ func SetDefaultAccount(id string) {
 	accountMap["default"] = 1
 	model.SqliteDb.Table("account").Where("id=?", id).Updates(accountMap)
 	go GetConfig()
+}
+func EnvToConfig() {
+	config := os.Getenv("pan_config")
+	if config != "" {
+		//从环境变量写入数据库
+		c := make(map[string]interface{})
+		jsoniter.UnmarshalFromString(config, &c)
+		c["damagou"] = nil
+		delete(c, "damagou")
+		model.SqliteDb.Where("1 = 1").Delete(&entity.Damagou{})
+		model.SqliteDb.Where("1 = 1").Delete(&entity.Account{})
+		model.SqliteDb.Where("1 = 1").Delete(&entity.FileNode{})
+		for _, account := range c["accounts"].([]interface{}) {
+			//添加网盘账号
+			account.(map[string]interface{})["status"] = 1
+			account.(map[string]interface{})["files_count"] = 0
+			model.SqliteDb.Table("account").Create(account.(map[string]interface{}))
+		}
+		delete(c, "accounts")
+		SaveConfig(c)
+	}
 }

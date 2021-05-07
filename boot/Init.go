@@ -33,12 +33,13 @@ func Start(host, port string, debug bool) {
 	//初始化数据库
 	model.InitDb(host, port, debug)
 	//初始化配置
+	//从环境变量写入到config
+	service.EnvToConfig()
 	service.GetConfig()
 	//定时任务初始化
 	jobs.Run()
 	//刷新cookie和目录缓存
 	go jobs.StartInit()
-
 }
 
 func PrintAsc() {
@@ -108,9 +109,11 @@ func IsLastVersion(lasted string, now string) bool {
 	if now != "" {
 		lasted = strings.ReplaceAll(lasted, "v", "")
 		lasted = strings.ReplaceAll(lasted, ".", "")
+		lasted = strings.ReplaceAll(lasted, ".", "BETA")
 		lastedV, _ := strconv.Atoi(lasted)
 		now = strings.ReplaceAll(now, "v", "")
 		now = strings.ReplaceAll(now, ".", "")
+		now = strings.ReplaceAll(now, ".", "BETA")
 		nowV, _ := strconv.Atoi(now)
 		if lastedV > nowV {
 			return false

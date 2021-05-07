@@ -1,8 +1,11 @@
 package entity
 
+import "github.com/eddieivan01/nic"
+
 type FileNode struct {
+	Id           string `json:"id"`
 	AccountId    string `json:"account_id"`
-	FileId       string `json:"fileId" gorm:"primary_key"`
+	FileId       string `json:"fileId"`
 	FileIdDigest string `json:"fileIdDigest"`
 	FileName     string `json:"fileName"`
 	FileSize     int64  `json:"fileSize"`
@@ -44,7 +47,6 @@ type Config struct {
 	HerokuKeepAlive   string    `json:"heroku_keep_alive" gorm:"default:'0 0/5 * * * ?'"`
 	Footer            string    `json:"footer"` //网站底部信息
 }
-
 type Account struct {
 	Id           string `json:"id"`            //网盘空间id
 	Name         string `json:"name"`          //网盘空间名称
@@ -55,9 +57,21 @@ type Account struct {
 	AccessToken  string `json:"access_token"`  //授权token
 	RootId       string `json:"root_id"`       //目录id
 	Default      int    `json:"default"`       //是否默认
+	FilesCount   int    `json:"files_count"`   //文件总数
+	Status       int    `json:"status"`        //状态：1，未同步，2同步失败，3同步成功
+	TimeSpan     string `json:"time_span"`
+	LastOpTime   string `json:"last_op_time"` //最近一次更新时间
 }
-
 type Damagou struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+type Teambition struct {
+	TeambitionSession nic.Session
+	GloablOrgId       string
+	GloablDriveId     string
+	GloablSpaceId     string
+	GloablRootId      string
+	GloablProjectId   string
+	IsPorject         bool
 }
