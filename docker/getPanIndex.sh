@@ -1,5 +1,5 @@
 #!/bin/bash
-version="v1.0.6"
+version=$PAN_INDEX_VERSION
 if [ "$version" = "" ]
 then
     version=`curl --silent "https://api.github.com/repos/libsgh/PanIndex/releases/latest" \
