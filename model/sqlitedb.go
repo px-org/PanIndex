@@ -56,11 +56,12 @@ func InitDb(host, port string, debug bool) {
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
-	if host != "" || port != "" {
+	if host != "" {
 		//启动时指定了host/port
-		SqliteDb.Table("config").Where("1=1").Updates(map[string]interface{}{
-			"host": host,
-			"port": port,
-		})
+		SqliteDb.Table("config").Where("1=1").Update("host", host)
+	}
+	if port != "" {
+		//启动时指定了host/port
+		SqliteDb.Table("config").Where("1=1").Update("port", port)
 	}
 }
