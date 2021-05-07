@@ -117,11 +117,11 @@ func IsLastVersion(lasted string, now string) bool {
 	if now != "" {
 		lasted = strings.ReplaceAll(lasted, "v", "")
 		lasted = strings.ReplaceAll(lasted, ".", "")
-		lasted = strings.ReplaceAll(lasted, ".", "BETA")
+		lasted = strings.ReplaceAll(lasted, "BETA", "")
 		lastedV, _ := strconv.Atoi(lasted)
 		now = strings.ReplaceAll(now, "v", "")
 		now = strings.ReplaceAll(now, ".", "")
-		now = strings.ReplaceAll(now, ".", "BETA")
+		now = strings.ReplaceAll(now, "BETA", "")
 		nowV, _ := strconv.Atoi(now)
 		if lastedV > nowV {
 			return false
