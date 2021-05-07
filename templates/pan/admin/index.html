@@ -39,7 +39,7 @@
 	</style>
 	<title>PanIndex - 系统配置</title>
 </head>
-<body class="mdui-theme-primary-indigo mdui-theme-accent-blue">
+<body class="mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-auto">
 <div class="mdui-container">
 	<div class="mdui-card">
 		<div class="mdui-card-content">
@@ -76,14 +76,14 @@
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">接口 token</label>
-						<input class="mdui-textfield-input" type="text" name="api_token" value="{{.ApiToken}}" placeholder="用于接口调用" />
+						<input class="mdui-textfield-input" type="text" name="api_token" value="{{.ApiToken}}" placeholder="用于接口调用" required />
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">密码文件（夹）</label>
 						<input class="mdui-textfield-input" name="pwd_dir_id" placeholder="id1:pwd1,id2:pwd2" value="{{.PwdDirId}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">多个逗号分隔</div>
 					</div><div class="mdui-textfield">
-						<label class="mdui-textfield-label">隐藏目录ID（路径）</label>
+						<label class="mdui-textfield-label">隐藏文件ID（路径）</label>
 						<input class="mdui-textfield-input" name="hide_file_id" placeholder="多个逗号分隔" value="{{.HideFileId}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">多个逗号分隔</div>
 					</div>
@@ -96,9 +96,12 @@
 						<label class="mdui-textfield-label">自定义底部信息</label>
 						<input class="mdui-textfield-input" type="text" name="footer" placeholder="支持html代码" value="{{.Footer}}" />
 					</div>
-					<div class="mdui-row-xs-2">
+					<div class="mdui-row-xs-3">
 						<div class="mdui-col">
 							<button type="button" class="saveConfigBtn mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple" value="1">保存</button>
+						</div>
+						<div class="mdui-col">
+							<a type="button" class="mdui-btn mdui-btn-block mdui-color-teal mdui-ripple" target="_blank" href="/api/admin/config?token={{.ApiToken}}">查看完整配置（JSON）</a>
 						</div>
 						<div class="mdui-col">
 							<a type="button" class="mdui-btn mdui-btn-block mdui-color-red mdui-ripple" href="/?admin=&logout=true">退出登录</a>
@@ -124,6 +127,21 @@
 							</ul>
 						</div>
 						<div class="mdui-col-sm-10 mdui-col-md-9">
+							<div id="recordDiv" class="mdui-panel mdui-panel-gapless" mdui-panel style="width:300px;margin-left: 56px">
+								<div class="mdui-panel-item mdui-typo">
+									<div class="mdui-panel-item-header mdui-text-color-indigo">缓存记录</div>
+									<div class="mdui-panel-item-body">
+										<div id="cacheRecord">
+											<p>状态： 未缓存</p>
+											<p>最近一次缓存：-</p>
+											<p>耗时：0s</p>
+											<p>文件数：0</p>
+										</div>
+										<a href="javascript:updateCookie();">刷新cookie</a>
+										<a href="javascript:updateCache();">刷新缓存</a>
+									</div>
+								</div>
+							</div>
 							<form id="accountForm">
 								<div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">message</i>
@@ -178,7 +196,7 @@
 									<input class="mdui-textfield-input" type="text" name="root_id" required>
 								</div>
 							</form>
-							<div class="mdui-row-xs-4">
+							<div class="mdui-row-xs-5">
 								<div class="mdui-col">
 									<button type="button" class="saveAccountBtn mdui-btn-block mdui-btn mdui-color-theme-accent mdui-ripple" value="0">添加</button>
 								</div>
@@ -205,43 +223,28 @@
 			<div id="cron" class="mdui-p-a-2 mdui-typo">
 				<div class="mdui-typo">
 					<blockquote>
-						<p><a href="https://cron.qqe2.com/" target="_blank">cron表达式在线生成</a>，可选项仅在heroku部署环境下需要配置</p>
+						<p><a href="https://cron.qqe2.com/" target="_blank">cron表达式在线生成</a>
+						<p>留空将关闭相关定时任务</p>
 					</blockquote>
 				</div>
 				<form id="cronForm">
-					<div class="mdui-row">
-						<div class="mdui-col-xs-10 mdui-textfield">
-							<label class="mdui-textfield-label">定时任务-刷新登录cookie</label>
-							<input class="mdui-textfield-input" type="text" name="refresh_cookie" placeholder="0 0 8 1/1 * ?" value="{{.RefreshCookie}}" required />
-							<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
-						</div>
-						<div class="mdui-col-xs-2">
-							<br>
-							<button class="mdui-fab mdui-fab-mini mdui-ripple" title="手动执行一次">
-								<i class="mdui-icon material-icons">cached</i>
-							</button>
-						</div>
-					</div>
-					<div class="mdui-row">
-						<div class="mdui-col-xs-10 mdui-textfield">
-							<label class="mdui-textfield-label">定时任务-刷新目录缓存</label>
-							<input class="mdui-textfield-input" type="text" name="update_folder_cache" placeholder="0 0 0/1 * * ?" value="{{.UpdateFolderCache}}" />
-							<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
-						</div>
-						<div class="mdui-col-xs-2">
-							<br>
-							<button class="mdui-fab mdui-fab-mini mdui-ripple" title="手动执行一次">
-								<i class="mdui-icon material-icons">cached</i>
-							</button>
-						</div>
+					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">定时任务-刷新登录cookie</label>
+						<input class="mdui-textfield-input" type="text" name="refresh_cookie" placeholder="0 0 8 1/1 * ?" value="{{.RefreshCookie}}" required />
+						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效，时间间隔不要太短</div>
 					</div>
 					<div class="mdui-textfield">
-						<label class="mdui-textfield-label">定时任务-heroku防休眠（可选）</label>
+						<label class="mdui-textfield-label">定时任务-刷新目录缓存</label>
+						<input class="mdui-textfield-input" type="text" name="update_folder_cache" placeholder="0 0 0/1 * * ?" value="{{.UpdateFolderCache}}" />
+						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
+					</div>
+					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">定时任务-heroku防休眠（heroku可选）</label>
 						<input class="mdui-textfield-input" type="text" name="heroku_keep_alive" placeholder="0 0/5 * * * ?" value="{{.HerokuKeepAlive}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
 					<div class="mdui-textfield">
-						<label class="mdui-textfield-label">heroku防休眠地址（可选）</label>
+						<label class="mdui-textfield-label">heroku防休眠地址（heroku可选）</label>
 						<input class="mdui-textfield-input" type="text" name="heroku_app_url" placeholder="https://appname,herokuapp.com" value="{{.HerokuAppUrl}}" />
 					</div>
 					<div class="mdui-row-xs-12">
@@ -279,7 +282,8 @@ $("#resetBtn").on('click', function () {
 var accounts = [
 	{{range .Accounts}}
 		{"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"",
-			"refresh_token":"{{.RefreshToken}}","access_token":"{{.AccessToken}}","root_id":"{{.RootId}}"
+			"refresh_token":"{{.RefreshToken}}","access_token":"{{.AccessToken}}","root_id":"{{.RootId}}",
+			"status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}", "last_op_time":"{{.LastOpTime}}"
 		},
 	{{end}}
 	];
@@ -304,6 +308,7 @@ function fillAccount(index) {
 	$("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
 	$("#accountForm").find("input[name=access_token]").val(account.access_token);
 	$("#accountForm").find("input[name=root_id]").val(account.root_id);
+	fillCacheRecord(account)
 	dynamicChgMode(account.mode);
 }
 function dynamicChgMode(mode){
@@ -312,16 +317,19 @@ function dynamicChgMode(mode){
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").hide();
 		$("#PasswordDiv").hide();
+		$("#recordDiv").hide();
 	}else if (mode == "cloud189"){
 		$("#AccessTokenDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
+		$("#recordDiv").show();
 	}else if (mode == "teambition"){
 		$("#AccessTokenDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
+		$("#recordDiv").show();
 	}
 }
 $(".saveAccountBtn").on("click", function () {
@@ -340,7 +348,7 @@ $(".saveAccountBtn").on("click", function () {
 	var config = {accounts:[account]};
 	$.ajax({
 		method: 'POST',
-		url: '/api/admin/save',
+		url: '/api/admin/save?token={{.ApiToken}}',
 		data: JSON.stringify(config),
 		contentType: 'application/json',
 		success: function (data) {
@@ -360,7 +368,7 @@ $("#deleteBtn").on("click", function (){
 	if(id != ""){
 		$.ajax({
 			method: 'POST',
-			url: '/api/admin/deleteAccount?id='+id,
+			url: '/api/admin/deleteAccount?token={{.ApiToken}}&id='+id,
 			success: function (data) {
 				var d = JSON.parse(data);
 				mdui.snackbar({
@@ -386,7 +394,7 @@ $(".saveConfigBtn").on("click", function () {
 	config.port = Number(config.port);
 	$.ajax({
 		method: 'POST',
-		url: '/api/admin/save',
+		url: '/api/admin/save?token={{.ApiToken}}',
 		data: JSON.stringify(config),
 		contentType: 'application/json',
 		success: function (data) {
@@ -409,7 +417,7 @@ $(".saveCronBtn").on("click", function () {
 	}
 	$.ajax({
 		method: 'POST',
-		url: '/api/admin/save',
+		url: '/api/admin/save?token={{.ApiToken}}',
 		data: JSON.stringify(config),
 		contentType: 'application/json',
 		success: function (data) {
@@ -427,7 +435,7 @@ $(".defaultAccount").on('click', function (ev){
 	var id = $(this).attr("data-id");
 	$.ajax({
 		method: 'POST',
-		url: '/api/admin/setDefaultAccount?id='+id,
+		url: '/api/admin/setDefaultAccount?token={{.ApiToken}}&id='+id,
 		success: function (data) {
 			var d = JSON.parse(data);
 			mdui.snackbar({
@@ -437,6 +445,60 @@ $(".defaultAccount").on('click', function (ev){
 		}
 	});
 });
+function fillCacheRecord(account){
+	var text = "";
+	if(account.status == 1){
+		text += "<p>状态： 未缓存</p>";
+	}else if (account.status == 2){
+		text += "<p>状态： 缓存成功</p>";
+	}else if (account.status == 3){
+		text += "<p>状态： 缓存失败</p>";
+	}
+	if(account.files_count > 0){
+		text += "<p>文件数：" + account.files_count + "</p>";
+	}else{
+		text += "<p>文件数：-</p>";
+	}
+	if(account.time_span){
+		text += "<p>耗时：" + account.time_span + "</p>";
+	}else{
+		text += "<p>耗时：-</p>";
+	}
+	if(account.last_op_time){
+		text += "<p>最近一次缓存：" + account.last_op_time + "</p>";
+	}else{
+		text += "<p>最近一次缓存：-</p>";
+	}
+	$("#cacheRecord").html(text);
+}
+function updateCache(){
+	var id = $("#accountForm").find("input[name=id]").val();
+	$.ajax({
+		method: 'POST',
+		url: '/api/admin/updateCache?id='+id,
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 3000
+			});
+		}
+	});
+}
+function updateCookie(){
+	var id = $("#accountForm").find("input[name=id]").val();
+	$.ajax({
+		method: 'POST',
+		url: '/api/admin/updateCookie?token={{.ApiToken}}&id='+id,
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 3000
+			});
+		}
+	});
+}
 $(".acli").on('click', function(e){
 	if(e.target.tagName == 'INPUT')return;
 	fillAccount($(this).attr('data-index'));

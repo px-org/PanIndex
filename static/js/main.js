@@ -15,7 +15,7 @@ $(document).ready(function() {
                 dynamicEl: findDynamicEl(this),
                 share: false,
                 actualSize: false,
-                closable: false
+                closable: true
             });
             return;
         }else if(dmt == 2){
@@ -55,9 +55,10 @@ $(document).ready(function() {
     });
     $('.folderDown').on('click', function() {
         var fileId = $(this).attr("data-file-id");
+        var accountId = $(this).attr("data-account");
         $.ajax({
             type: 'POST',
-            url: "/api/downloadMultiFiles?fileId="+fileId,
+            url: "/api/downloadMultiFiles?fileId="+fileId+"&accountId="+accountId,
             async:false,
             success: function(data){
                 window.location.href = data.redirect_url;
@@ -109,7 +110,7 @@ function findDynamicEl(obj) {
             downloadUrl:  oDURL
         });
     }
-    $(obj).parent().parent().find(".icon-file").each(function(i, d){
+   /* $(obj).parent().parent().find(".icon-file").each(function(i, d){
         var dURL = $(d).attr("data-url");
         var title = $(d).attr("data-title");
         var dmt = $(d).attr("data-media-type");
@@ -130,6 +131,27 @@ function findDynamicEl(obj) {
             }
         }
     });
+    $(obj).parent().parent().parent().find(".icon-file").each(function(i, d){
+        var dURL = $(d).attr("data-url");
+        var title = $(d).attr("data-title");
+        var dmt = $(d).attr("data-media-type");
+        if(dmt == dataMediaType && oTitle != title){
+            if(dataMediaType == 1){
+                dynamicEls.push({
+                    src: dURL,
+                    thumb: dURL,
+                    subHtml: '<h4>'+title+'</h4>',
+                    downloadUrl:  dURL
+                });
+            }else if(dataMediaType == 3){
+                dynamicEls.push({
+                    html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+dURL+'">Your browser does not support HTML5 video</video>',
+                    subHtml: '<h4>'+title+'</h4>',
+                    downloadUrl:  dURL
+                });
+            }
+        }
+    });*/
     return dynamicEls;
 }
 $.fn.extend({
@@ -154,4 +176,28 @@ $.fn.extend({
             placements[i].call(getSortable.call(this));
         });
     }
+});
+$(".mdui-textfield-input").keyup(function () {
+    var keyword = $(this).val();
+    var reg =  new RegExp(keyword);
+    $(".mdui-list").find("li").each(function (i, item) {
+        var title = $(this).find("div").attr("data-title");
+        if("undefined" == typeof title || reg.test(title)){
+            $(this).show();
+        }else{
+            $(this).hide();
+        }
+    });
+});
+$(".search").keyup(function () {
+    var keyword = $(this).val();
+    var reg =  new RegExp(keyword);
+    $("tbody").find("tr").each(function (i, item) {
+        var title = $(this).find(".file-name").text();
+        if("undefined" == typeof title || reg.test(title)){
+            $(this).show();
+        }else{
+            $(this).hide();
+        }
+    });
 });
