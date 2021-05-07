@@ -53,6 +53,9 @@ func InitDb(host, port string, debug bool) {
 		ApiToken := strconv.Itoa(rand.Intn(10000))
 		SqliteDb.Create(&entity.Config{"0.0.0.0", 8080, nil, "", "", "", ApiToken, "mdui", "PanIndex", entity.Damagou{}, "", "0 0 8 1/1 * ?", "", "", ""})
 	}
+	if os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
+	}
 	if host != "" || port != "" {
 		//启动时指定了host/port
 		SqliteDb.Table("config").Updates(map[string]interface{}{
