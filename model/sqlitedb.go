@@ -58,7 +58,7 @@ func InitDb(host, port string, debug bool) {
 	}
 	if host != "" || port != "" {
 		//启动时指定了host/port
-		SqliteDb.Table("config").Updates(map[string]interface{}{
+		SqliteDb.Table("config").Where("1=1").Updates(map[string]interface{}{
 			"host": host,
 			"port": port,
 		})
