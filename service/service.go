@@ -356,7 +356,7 @@ func SetDefaultAccount(id string) {
 	go GetConfig()
 }
 func EnvToConfig() {
-	config := os.Getenv("pan_config")
+	config := os.Getenv("PAN_INDEX_CONFIG")
 	if config != "" {
 		//从环境变量写入数据库
 		c := make(map[string]interface{})
