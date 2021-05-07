@@ -20,6 +20,7 @@
     },
     "PAN_INDEX_CONFIG": {
       "description": "程序配置，json格式，从后台获取复制到这里",
+      "required": false,
       "value": ""
     },
     "PAN_INDEX_DEBUG": {

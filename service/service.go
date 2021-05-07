@@ -361,6 +361,9 @@ func EnvToConfig() {
 		//从环境变量写入数据库
 		c := make(map[string]interface{})
 		jsoniter.UnmarshalFromString(config, &c)
+		if os.Getenv("PORT") != "" {
+			c["port"] = os.Getenv("PORT")
+		}
 		c["damagou"] = nil
 		delete(c, "damagou")
 		model.SqliteDb.Where("1 = 1").Delete(&entity.Damagou{})

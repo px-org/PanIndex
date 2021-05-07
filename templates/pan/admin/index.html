@@ -475,7 +475,7 @@ function updateCache(){
 	var id = $("#accountForm").find("input[name=id]").val();
 	$.ajax({
 		method: 'POST',
-		url: '/api/admin/updateCache?id='+id,
+		url: '/api/admin/updateCache?token={{.ApiToken}}&id='+id,
 		success: function (data) {
 			var d = JSON.parse(data);
 			mdui.snackbar({
