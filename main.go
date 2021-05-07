@@ -5,28 +5,38 @@ import (
 	"PanIndex/boot"
 	"PanIndex/config"
 	"PanIndex/entity"
+	"PanIndex/jobs"
 	"PanIndex/service"
 	"flag"
 	"fmt"
+	"github.com/bluele/gcache"
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 )
 
-var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
+//var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
+var Host = flag.String("host", "", "绑定host，默认为0.0.0.0")
+var Port = flag.String("port", "", "绑定port，默认为8080")
+var Debug = flag.Bool("debug", false, "调试模式，设置为true可以输出更多日志")
+var GC = gcache.New(100).LRU().Build()
 
 func main() {
 	flag.Parse()
-	boot.Start(*configPath)
+	boot.Start(*Host, *Port, *Debug)
 	r := gin.New()
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
 	r.SetHTMLTemplate(initTemplates())
+	//r.LoadHTMLGlob("templates/*	")
 	//	r.LoadHTMLFiles("templates/**")
 	//	r.Static("/static", "./static")
 	//	r.StaticFS("/static", staticBox)
@@ -36,45 +46,58 @@ func main() {
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 		method := c.Request.Method
+		_, ad := c.GetQuery("admin")
+		if strings.HasPrefix(path, "/api/") {
+			requestToken := c.Query("token")
+			if requestToken != config.GloablConfig.ApiToken {
+				message := "Invalid api token"
+				c.String(http.StatusOK, message)
+				return
+			}
+		}
 		if method == "POST" && path == "/api/downloadMultiFiles" {
 			//文件夹下载
 			downloadMultiFiles(c)
-		} else if method == "GET" && path == "/api/updateFolderCache" {
-			requestToken := c.Query("token")
-			if requestToken == config.GloablConfig.ApiToken {
-				message := ""
-				if config.GloablConfig.Mode == "native" {
+		} else if method == http.MethodGet && path == "/api/updateFolderCache" {
+			message := ""
+			for _, account := range config.GloablConfig.Accounts {
+				if account.Mode == "native" {
 					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
-					message = "Native mode does not need to be refreshed"
 				} else {
-					go updateCaches()
+					go updateCaches(account)
 					log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
-					message = "Cache update successful"
 				}
-				c.String(http.StatusOK, message)
-			} else {
-				message := "Invalid api token"
-				c.String(http.StatusOK, message)
 			}
-		} else if method == "GET" && path == "/api/refreshCookie" {
-			requestToken := c.Query("token")
-			if requestToken == config.GloablConfig.ApiToken {
-				message := ""
-				if config.GloablConfig.Mode == "native" {
-					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
-					message = "Native mode does not need to be refreshed"
+			message = "Cache update successful"
+			c.String(http.StatusOK, message)
+		} else if method == http.MethodGet && path == "/api/refreshCookie" {
+			message := ""
+			for _, account := range config.GloablConfig.Accounts {
+				if account.Mode == "native" {
+					log.Infoln("[API请求]cookie刷新刷新 >> 当前为本地模式，无需刷新")
 				} else {
-					go refreshCookie()
+					go refreshCookie(account)
 					log.Infoln("[API请求]cookie刷新 >> 请求刷新")
-					message = "Cookie refresh successful"
 				}
-				c.String(http.StatusOK, message)
-			} else {
-				message := "Invalid api token"
-				c.String(http.StatusOK, message)
 			}
-		} else if method == "GET" && path == "/api/shareToDown" {
+			message = "Cookie refresh successful"
+			c.String(http.StatusOK, message)
+		} else if method == http.MethodGet && path == "/api/shareToDown" {
 			shareToDown(c)
+		} else if method == http.MethodPost && path == "/api/admin/save" {
+			adminSave(c)
+		} else if path == "/api/admin/deleteAccount" {
+			adminDeleteAccount(c)
+		} else if path == "/api/admin/updateCache" {
+			updateCache(c)
+		} else if path == "/api/admin/updateCookie" {
+			updateCookie(c)
+		} else if path == "/api/admin/setDefaultAccount" {
+			setDefaultAccount(c)
+		} else if path == "/api/admin/config" {
+			getConfig(c)
+		} else if ad {
+			admin(c)
 		} else {
 			isForbidden := true
 			host := c.Request.Host
@@ -86,9 +109,9 @@ func main() {
 				if referer.Host == host {
 					//站内，自动通过
 					isForbidden = false
-				} else if referer.Host != host && len(config.GloablConfig.OnlyReferer) > 0 {
+				} else if referer.Host != host && len(config.GloablConfig.OnlyReferrer) > 0 {
 					//外部引用，并且设置了防盗链，需要进行判断
-					for _, rf := range config.GloablConfig.OnlyReferer {
+					for _, rf := range strings.Split(config.GloablConfig.OnlyReferrer, ",") {
 						if rf == referer.Host {
 							isForbidden = false
 							break
@@ -113,15 +136,22 @@ func main() {
 }
 
 func initTemplates() *template.Template {
-	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
+	themes := [4]string{"mdui", "classic", "bootstrap", "materialdesign"}
 	box := packr.New("templates", "./templates")
-	data, _ := box.FindString(tmpFile)
-	if Util.FileExist("./templates/" + tmpFile) {
-		s, _ := ioutil.ReadFile("./templates/" + tmpFile)
-		data = string(s)
-	}
-	tmpl := template.New(tmpFile)
+	data, _ := box.FindString("pan/admin/login.html")
+	tmpl := template.New("pan/admin/login.html")
 	tmpl.Parse(data)
+	data, _ = box.FindString("pan/admin/index.html")
+	tmpl.New("pan/admin/index.html").Parse(data)
+	for _, theme := range themes {
+		tmpFile := strings.Join([]string{"pan/", "/index.html"}, theme)
+		data, _ = box.FindString(tmpFile)
+		if Util.FileExist("./templates/" + tmpFile) {
+			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
+			data = string(s)
+		}
+		tmpl.New(tmpFile).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+	}
 	return tmpl
 }
 func initStaticBox(r *gin.Engine) {
@@ -131,6 +161,19 @@ func initStaticBox(r *gin.Engine) {
 	} else {
 		r.StaticFS("/static", staticBox)
 	}
+}
+func GetBetweenStr(str, start, end string) string {
+	n := strings.Index(str, start)
+	if n == -1 {
+		n = 0
+	}
+	str = string([]byte(str)[n:])
+	m := strings.Index(str, end)
+	if m == -1 {
+		m = len(str)
+	}
+	str = string([]byte(str)[:m])
+	return str
 }
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
@@ -147,21 +190,42 @@ func index(c *gin.Context) {
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
 		pathName = pathName[0 : len(pathName)-1]
 	}
-	result := service.GetFilesByPath(pathName, pwd)
+	index := 0
+	DIndex := ""
+	if strings.HasPrefix(pathName, "/d_") {
+		iStr := Util.GetBetweenStr(pathName, "_", "/")
+		index, _ = strconv.Atoi(iStr)
+		pathName = strings.ReplaceAll(pathName, "/d_"+iStr, "")
+		DIndex = fmt.Sprintf("/d_%d", index)
+	} else {
+		DIndex = ""
+	}
+	if len(config.GloablConfig.Accounts) == 0 {
+		//未绑定任何账号，跳转到后台进行配置
+		c.Redirect(http.StatusFound, "/?admin")
+		return
+	}
+	account := config.GloablConfig.Accounts[index]
+	result := service.GetFilesByPath(account, pathName, pwd)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
-	result["Mode"] = config.GloablConfig.Mode
+	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
+	result["Title"] = account.Name
+	result["Accounts"] = config.GloablConfig.Accounts
+	result["DIndex"] = DIndex
+	result["AccountId"] = account.Id
+	result["Footer"] = config.GloablConfig.Footer
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
 			//文件
-			if config.GloablConfig.Mode == "native" {
+			if account.Mode == "native" {
 				c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
 				c.Writer.Header().Add("Content-Type", "application/octet-stream")
 				c.File(fs[0].FileId)
 				return
 			} else {
-				downUrl := service.GetDownlaodUrl(fs[0])
+				downUrl := service.GetDownlaodUrl(account, fs[0])
 				c.Redirect(http.StatusFound, downUrl)
 			}
 		}
@@ -171,17 +235,18 @@ func index(c *gin.Context) {
 
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
-	downUrl := service.GetDownlaodMultiFiles(fileId)
+	accountId := c.Query("accountId")
+	downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
 	c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 }
 
-func updateCaches() {
-	service.UpdateFolderCache()
+func updateCaches(account entity.Account) {
+	service.UpdateFolderCache(account)
 	log.Infoln("[API请求]目录缓存刷新 >> 刷新成功")
 }
 
-func refreshCookie() {
-	service.RefreshCookie()
+func refreshCookie(account entity.Account) {
+	service.RefreshCookie(account)
 	log.Infoln("[API请求]cookie刷新 >> 刷新成功")
 }
 
@@ -198,3 +263,75 @@ func shareToDown(c *gin.Context) {
 	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
 	c.String(http.StatusOK, downUrl)
 }
+
+func admin(c *gin.Context) {
+	logout := c.Query("logout")
+	sessionId, error := c.Cookie("sessionId")
+	if logout != "" && logout == "true" {
+		//退出登录
+		GC.Remove(sessionId)
+		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功"})
+	} else {
+		if c.Request.Method == "GET" {
+			if error == nil && sessionId != "" && GC.Has(sessionId) {
+				//登录状态跳转首页
+				config := service.GetConfig()
+				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+			} else {
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false})
+			}
+		} else {
+			//登录
+			password, _ := c.GetPostForm("password")
+			config := service.GetConfig()
+			if password == config.AdminPassword {
+				//登录成功
+				u1 := uuid.NewV4().String()
+				c.SetCookie("sessionId", u1, 7*24*60*60, "/", "", false, true)
+				GC.SetWithExpire(u1, u1, time.Hour*24*7)
+				config := service.GetConfig()
+				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+			} else {
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "密码错误，请重试！"})
+			}
+		}
+	}
+}
+
+func adminSave(c *gin.Context) {
+	configMap := make(map[string]interface{})
+	c.BindJSON(&configMap)
+	service.SaveConfig(configMap)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置已更新，部分配置重启后生效！"})
+}
+
+func adminDeleteAccount(c *gin.Context) {
+	id := c.Query("id")
+	service.DeleteAccount(id)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
+}
+
+func getConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, service.GetConfig())
+}
+
+func updateCache(c *gin.Context) {
+	id := c.Query("id")
+	account := service.GetAccount(id)
+	go jobs.SyncOneAccount(account)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新缓存，请稍后刷新页面查看缓存结果！"})
+}
+
+func updateCookie(c *gin.Context) {
+	id := c.Query("id")
+	account := service.GetAccount(id)
+	go jobs.AccountLogin(account)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+}
+
+func setDefaultAccount(c *gin.Context) {
+	id := c.Query("id")
+	service.SetDefaultAccount(id)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "默认账号设置成功！"})
+}
+func unescaped(x string) interface{} { return template.HTML(x) }

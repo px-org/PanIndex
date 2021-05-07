@@ -13,6 +13,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	math_rand "math/rand"
 	"os"
@@ -23,10 +24,12 @@ import (
 	"time"
 )
 
-var CLoud189Session nic.Session
+//var CLoud189Session nic.Session
+var CLoud189Sessions = map[string]nic.Session{}
 
 //获取文件列表
-func Cloud189GetFiles(rootId, fileId string) {
+func Cloud189GetFiles(accountId, rootId, fileId string) {
+	CLoud189Session := CLoud189Sessions[accountId]
 	defer func() {
 		if p := recover(); p != nil {
 			log.Errorln(p)
@@ -69,15 +72,18 @@ func Cloud189GetFiles(rootId, fileId string) {
 			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
 			if err == nil {
 				for _, item := range m {
+					item.AccountId = accountId
 					if p == "/" {
 						item.Path = "/" + item.FileName
 					} else {
 						item.Path = p + "/" + item.FileName
 					}
+					item.Id = uuid.NewV4().String()
+					item.Delete = 1
 					item.ParentPath = p
 					item.SizeFmt = FormatFileSize(item.FileSize)
 					if item.IsFolder == true {
-						Cloud189GetFiles(rootId, item.FileId)
+						Cloud189GetFiles(accountId, rootId, item.FileId)
 					} else {
 						//如果是文件，解析下载直链
 						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
@@ -89,7 +95,6 @@ func Cloud189GetFiles(rootId, fileId string) {
 						})
 						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
 					}
-					item.Delete = 0
 					if config.GloablConfig.HideFileId != "" {
 						listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
 						sort.Strings(listSTring)
@@ -98,7 +103,7 @@ func Cloud189GetFiles(rootId, fileId string) {
 							item.Hide = 1
 						}
 					}
-					model.SqliteDb.Save(item)
+					model.SqliteDb.Create(item)
 				}
 			}
 		}
@@ -109,7 +114,8 @@ func Cloud189GetFiles(rootId, fileId string) {
 		}
 	}
 }
-func GetDownlaodUrl(fileIdDigest string) string {
+func GetDownlaodUrl(accountId, fileIdDigest string) string {
+	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
 		AllowRedirect: false,
 	})
@@ -119,7 +125,8 @@ func GetDownlaodUrl(fileIdDigest string) string {
 	})
 	return dRedirectRep.Header.Get("Location")
 }
-func GetDownlaodMultiFiles(fileId string) string {
+func GetDownlaodMultiFiles(accountId, fileId string) string {
+	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/downloadMultiFiles.action?fileIdS=%s&downloadType=1&recursive=1", fileId), nic.H{
 		AllowRedirect: false,
 	})
@@ -128,8 +135,8 @@ func GetDownlaodMultiFiles(fileId string) string {
 }
 
 //天翼云网盘登录
-func Cloud189Login(user, password string) string {
-	CLoud189Session = nic.Session{}
+func Cloud189Login(accountId, user, password string) string {
+	CLoud189Session := CLoud189Sessions[accountId]
 	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
@@ -142,7 +149,7 @@ func Cloud189Login(user, password string) string {
 	vCodeRS := ""
 	if config.GloablConfig.Damagou.Username != "" {
 		vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
-		vCodeRS = GetValidateCode(vCodeID)
+		vCodeRS = GetValidateCode(accountId, vCodeID)
 		log.Warningln("[登录接口]得到验证码：" + vCodeRS)
 	}
 	userRsa := RsaEncode([]byte(user), jRsakey)
@@ -175,6 +182,7 @@ func Cloud189Login(user, password string) string {
 	if restCode == 0 {
 		toUrl := jsoniter.Get([]byte(loginResp.Text), "toUrl").ToString()
 		res, _ := CLoud189Session.Get(toUrl, nil)
+		CLoud189Sessions[accountId] = CLoud189Session
 		return res.Cookies()[0].Value
 	}
 	errorReason := jsoniter.Get([]byte(loginResp.Text), "msg").ToString()
@@ -194,6 +202,11 @@ func Cloud189Login(user, password string) string {
 
 //分享链接跳转下载
 func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
+	CLoud189Session := nic.Session{}
+	for _, v := range CLoud189Sessions {
+		CLoud189Session = v
+		break
+	}
 	subIndex := strings.LastIndex(url, "/") + 1
 	shortCode := url[subIndex:]
 	defer func() {
@@ -275,7 +288,8 @@ func RsaEncode(origData []byte, j_rsakey string) string {
 }
 
 // 打码狗平台登录
-func LoginDamagou() string {
+func LoginDamagou(accountId string) string {
+	CLoud189Session := CLoud189Sessions[accountId]
 	url := "http://www.damagou.top/apiv1/login.html?username=" + config.GloablConfig.Damagou.Username + "&password=" + config.GloablConfig.Damagou.Password
 	res, _ := CLoud189Session.Get(url, nil)
 	rsText := regexp.MustCompile(`([A-Za-z0-9]+)`).FindStringSubmatch(res.Text)[1]
@@ -283,7 +297,8 @@ func LoginDamagou() string {
 }
 
 // 调用打码狗获取验证码结果
-func GetValidateCode(params string) string {
+func GetValidateCode(accountId, params string) string {
+	CLoud189Session := CLoud189Sessions[accountId]
 	timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
 	url := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + params + timeStamp
 	log.Warningln("[登录接口]正在尝试获取验证码")
@@ -310,7 +325,7 @@ func GetValidateCode(params string) string {
 		}
 		defer f.Close()
 		f.Write(res.Bytes)
-		damagouKey := LoginDamagou()
+		damagouKey := LoginDamagou(accountId)
 		base64Str := base64.StdEncoding.EncodeToString(res.Bytes)
 		base64Str = "data:image/png;base64," + base64Str
 		url := "http://www.damagou.top/apiv1/recognize.html"
@@ -391,7 +406,7 @@ func FormatFileSize(fileSize int64) (size string) {
 	}
 }
 
-func GetBetweenStr(str, start, end string) string {
+func GetBetweenStr1(str, start, end string) string {
 	n := strings.Index(str, start)
 	if n == -1 {
 		return ""
@@ -401,6 +416,21 @@ func GetBetweenStr(str, start, end string) string {
 	m := strings.Index(str, end)
 	if m == -1 {
 		return ""
+	}
+	str = string([]byte(str)[:m])
+	return str
+}
+func GetBetweenStr(str, start, end string) string {
+	n := strings.Index(str, start)
+	if n == -1 {
+		n = 0
+	} else {
+		n = n + len(start)
+	}
+	str = string([]byte(str)[n:])
+	m := strings.Index(str, end)
+	if m == -1 {
+		m = len(str)
 	}
 	str = string([]byte(str)[:m])
 	return str

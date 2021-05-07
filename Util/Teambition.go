@@ -8,22 +8,26 @@ import (
 	"fmt"
 	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"sort"
 	"strings"
 	"time"
 )
 
-var GloablOrgId string
-var GloablDriveId string
-var GloablSpaceId string
-var GloablRootId string
-var GloablProjectId string
-var IsPorject bool = false
-var TeambitionSession nic.Session
+//var GloablOrgId string
+//var GloablDriveId string
+//var GloablSpaceId string
+//var GloablRootId string
+//var GloablProjectId string
+//var IsPorject bool = false
+//var TeambitionSession nic.Session
+var TeambitionSessions = map[string]entity.Teambition{}
 
 //Teambition网盘登录
-func TeambitionLogin(user, password string) string {
+func TeambitionLogin(accountId, user, password string) string {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
 	defer func() {
 		if p := recover(); p != nil {
 			log.Errorln(p)
@@ -68,25 +72,29 @@ func TeambitionLogin(user, password string) string {
 	if err != nil {
 		panic(err.Error())
 	}
-	GloablOrgId = jsoniter.Get(resp.Bytes, "_id").ToString()
+	Teambition.GloablOrgId = jsoniter.Get(resp.Bytes, "_id").ToString()
 	memberId := jsoniter.Get(resp.Bytes, "_creatorId").ToString()
 	//3.获取rootId、spaceId
-	resp, err = TeambitionSession.Get(fmt.Sprintf("https://pan.teambition.com/pan/api/spaces?orgId=%s&memberId=%s", GloablOrgId, memberId), nil)
+	resp, err = TeambitionSession.Get(fmt.Sprintf("https://pan.teambition.com/pan/api/spaces?orgId=%s&memberId=%s", Teambition.GloablOrgId, memberId), nil)
 	if err != nil {
 		panic(err.Error())
 	}
-	GloablRootId = jsoniter.Get(resp.Bytes, 0, "rootId").ToString()
-	GloablSpaceId = jsoniter.Get(resp.Bytes, 0, "spaceId").ToString()
+	Teambition.GloablRootId = jsoniter.Get(resp.Bytes, 0, "rootId").ToString()
+	Teambition.GloablSpaceId = jsoniter.Get(resp.Bytes, 0, "spaceId").ToString()
 	//4.获取driverId
-	resp, err = TeambitionSession.Get(fmt.Sprintf("https://pan.teambition.com/pan/api/orgs/%s?orgId=%s", GloablOrgId, GloablOrgId), nil)
+	resp, err = TeambitionSession.Get(fmt.Sprintf("https://pan.teambition.com/pan/api/orgs/%s?orgId=%s", Teambition.GloablOrgId, Teambition.GloablOrgId), nil)
 	if err != nil {
 		panic(err.Error())
 	}
-	GloablDriveId = jsoniter.Get(resp.Bytes, "data.driveId").ToString()
+	Teambition.GloablDriveId = jsoniter.Get(resp.Bytes, "data.driveId").ToString()
+	Teambition.TeambitionSession = TeambitionSession
+	TeambitionSessions[accountId] = Teambition
 	return "success"
 }
 
-func ProjectIdCheck(rootId string) string {
+func ProjectIdCheck(accountId, rootId string) string {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
 	defer func() {
 		if p := recover(); p != nil {
 			log.Errorln(p)
@@ -98,21 +106,25 @@ func ProjectIdCheck(rootId string) string {
 	}
 	if resp.StatusCode == 404 {
 		//项目id查询失败，可能是个人文件
-		IsPorject = false
+		Teambition.IsPorject = false
 		return ""
 	}
-	IsPorject = true
-	GloablRootId = jsoniter.Get(resp.Bytes, "_rootCollectionId").ToString()
-	GloablProjectId = rootId
-	return GloablRootId
+	Teambition.IsPorject = true
+	Teambition.GloablRootId = jsoniter.Get(resp.Bytes, "_rootCollectionId").ToString()
+	Teambition.GloablProjectId = rootId
+	Teambition.TeambitionSession = TeambitionSession
+	TeambitionSessions[accountId] = Teambition
+	return Teambition.GloablRootId
 }
 
 //获取个人文件列表
-func TeambitionGetFiles(rootId, fileId, p string) {
+func TeambitionGetFiles(accountId, rootId, fileId, p string) {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
 	if rootId == "" {
 		//如果没有设置rootId,这里使用全局的rootId
-		rootId = GloablRootId
-		fileId = GloablRootId
+		rootId = Teambition.GloablRootId
+		fileId = Teambition.GloablRootId
 	}
 	defer func() {
 		if p := recover(); p != nil {
@@ -123,7 +135,7 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 	pageNum := 0
 	for {
 		offset := pageNum * limit
-		url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes?orgId=%s&offset=%d&limit=%d&orderBy=updateTime&orderDirection=desc&driveId=%s&spaceId=%s&parentId=%s", GloablOrgId, offset, limit, GloablDriveId, GloablSpaceId, fileId)
+		url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes?orgId=%s&offset=%d&limit=%d&orderBy=updateTime&orderDirection=desc&driveId=%s&spaceId=%s&parentId=%s", Teambition.GloablOrgId, offset, limit, Teambition.GloablDriveId, Teambition.GloablSpaceId, fileId)
 		resp, err := TeambitionSession.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
@@ -135,11 +147,13 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 		json.Unmarshal([]byte(d.ToString()), &m)
 		for _, item := range m {
 			fn := entity.FileNode{}
+			fn.AccountId = accountId
 			fn.FileId = item["nodeId"].(string)
 			fn.FileName = item["name"].(string)
 			fn.FileIdDigest = ""
 			fn.CreateTime = UTCTimeFormat(item["created"].(string))
 			fn.LastOpTime = UTCTimeFormat(item["updated"].(string))
+			fn.Delete = 1
 			kind := item["kind"].(string)
 			if kind == "file" {
 				fn.FileType = item["ext"].(string)
@@ -172,7 +186,6 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 				fn.MediaType = 0
 				fn.DownloadUrl = ""
 			}
-			fn.Delete = 0
 			//天翼云网盘独有，这里随便定义一个
 			fn.IsStarred = true
 			fn.ParentId = item["parentId"].(string)
@@ -192,9 +205,10 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 				fn.Path = p + "/" + fn.FileName
 			}
 			if fn.IsFolder == true {
-				TeambitionGetFiles(rootId, fn.FileId, fn.Path)
+				TeambitionGetFiles(accountId, rootId, fn.FileId, fn.Path)
 			}
-			model.SqliteDb.Save(fn)
+			fn.Id = uuid.NewV4().String()
+			model.SqliteDb.Create(fn)
 		}
 		if nextMarker != "" {
 			pageNum++
@@ -204,7 +218,9 @@ func TeambitionGetFiles(rootId, fileId, p string) {
 	}
 }
 
-func TeambitionGetProjectFiles(rootId, p string) {
+func TeambitionGetProjectFiles(accountId, rootId, p string) {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
 	defer func() {
 		if p := recover(); p != nil {
 			log.Warningln(p)
@@ -216,13 +232,13 @@ func TeambitionGetProjectFiles(rootId, p string) {
 		var m []map[string]interface{}
 		var n []map[string]interface{}
 		//先查询目录
-		url := fmt.Sprintf("https://www.teambition.com/api/collections?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", rootId, GloablProjectId, limit, pageNum)
+		url := fmt.Sprintf("https://www.teambition.com/api/collections?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", rootId, Teambition.GloablProjectId, limit, pageNum)
 		resp, err := TeambitionSession.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
 		}
 		json.Unmarshal(resp.Bytes, &m)
-		url = fmt.Sprintf("https://www.teambition.com/api/works?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", rootId, GloablProjectId, limit, pageNum)
+		url = fmt.Sprintf("https://www.teambition.com/api/works?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", rootId, Teambition.GloablProjectId, limit, pageNum)
 		resp, err = TeambitionSession.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
@@ -235,10 +251,12 @@ func TeambitionGetProjectFiles(rootId, p string) {
 		}
 		for _, item := range m {
 			fn := entity.FileNode{}
+			fn.AccountId = accountId
 			fn.FileId = item["_id"].(string)
 			fn.FileIdDigest = ""
 			fn.CreateTime = UTCTimeFormat(item["created"].(string))
 			fn.LastOpTime = UTCTimeFormat(item["updated"].(string))
+			fn.Delete = 1
 			if item["title"] == nil {
 				fn.FileName = item["fileName"].(string)
 				fn.FileType = item["fileType"].(string)
@@ -272,7 +290,6 @@ func TeambitionGetProjectFiles(rootId, p string) {
 				fn.MediaType = 0
 				fn.DownloadUrl = ""
 			}
-			fn.Delete = 0
 			//天翼云网盘独有，这里随便定义一个
 			fn.IsStarred = true
 			fn.ParentId = item["_parentId"].(string)
@@ -291,17 +308,20 @@ func TeambitionGetProjectFiles(rootId, p string) {
 			} else {
 				fn.Path = p + "/" + fn.FileName
 			}
-			TeambitionGetProjectFiles(fn.FileId, fn.Path)
+			TeambitionGetProjectFiles(accountId, fn.FileId, fn.Path)
 			if fn.FileName != "" {
-				model.SqliteDb.Save(fn)
+				fn.Id = uuid.NewV4().String()
+				model.SqliteDb.Create(fn)
 			}
 		}
 		pageNum++
 	}
 }
 
-func GetTeambitionDownUrl(nodeId string) string {
-	url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes/%s?orgId=%s&driveId=%s", nodeId, GloablOrgId, GloablDriveId)
+func GetTeambitionDownUrl(accountId, nodeId string) string {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
+	url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes/%s?orgId=%s&driveId=%s", nodeId, Teambition.GloablOrgId, Teambition.GloablDriveId)
 	resp, err := TeambitionSession.Get(url, nil)
 	defer func() {
 		if p := recover(); p != nil {
@@ -317,7 +337,9 @@ func GetTeambitionDownUrl(nodeId string) string {
 	}
 	return downUrl
 }
-func GetTeambitionProDownUrl(nodeId string) string {
+func GetTeambitionProDownUrl(accountId, nodeId string) string {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
 	url := fmt.Sprintf("https://www.teambition.com/api/works/%s", nodeId)
 	resp, err := TeambitionSession.Get(url, nil)
 	defer func() {

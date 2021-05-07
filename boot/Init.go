@@ -1,15 +1,16 @@
 package boot
 
 import (
-	"PanIndex/config"
 	"PanIndex/jobs"
 	"PanIndex/model"
+	"PanIndex/service"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -21,24 +22,25 @@ var (
 	GIT_COMMIT_SHA string
 )
 
-func Start(path string) {
+func Start(host, port string, debug bool) {
 	//初始化日志设置
-	InitLog()
+	InitLog(debug)
 	//打印asc
 	PrintAsc()
 	//打印版本信息
 	PrintVersion()
 	//检查新版本
-	CheckUpdate()
+	go CheckUpdate()
 	//初始化数据库
-	model.InitDb()
+	model.InitDb(host, port, debug)
 	//初始化配置
-	config.LoadConfig(path)
+	//从环境变量写入到config
+	service.EnvToConfig()
+	service.GetConfig()
 	//定时任务初始化
 	jobs.Run()
 	//刷新cookie和目录缓存
 	go jobs.StartInit()
-
 }
 
 func PrintAsc() {
@@ -51,8 +53,15 @@ func PrintAsc() {
 }
 
 // boot logrus
-func InitLog() {
-	if config.Debug {
+func InitLog(debug bool) {
+	if os.Getenv("PAN_INDEX_DEBUG") != "" {
+		if os.Getenv("PAN_INDEX_DEBUG") == "true" {
+			debug = true
+		} else if os.Getenv("PAN_INDEX_DEBUG") == "false" {
+			debug = false
+		}
+	}
+	if debug {
 		log.SetLevel(log.DebugLevel)
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -108,9 +117,11 @@ func IsLastVersion(lasted string, now string) bool {
 	if now != "" {
 		lasted = strings.ReplaceAll(lasted, "v", "")
 		lasted = strings.ReplaceAll(lasted, ".", "")
+		lasted = strings.ReplaceAll(lasted, "BETA", "")
 		lastedV, _ := strconv.Atoi(lasted)
 		now = strings.ReplaceAll(now, "v", "")
 		now = strings.ReplaceAll(now, ".", "")
+		now = strings.ReplaceAll(now, "BETA", "")
 		nowV, _ := strconv.Atoi(now)
 		if lastedV > nowV {
 			return false
