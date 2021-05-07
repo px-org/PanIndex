@@ -5,6 +5,7 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"PanIndex/service"
 	"github.com/bluele/gcache"
 	"github.com/eddieivan01/nic"
 	"github.com/robfig/cron"
@@ -31,6 +32,7 @@ func Run() {
 			for _, account := range config.GloablConfig.Accounts {
 				AccountLogin(account)
 			}
+			service.EnvToConfig()
 		})
 	}
 	if config.GloablConfig.UpdateFolderCache != "" {
