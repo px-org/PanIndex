@@ -39,7 +39,7 @@
 	</style>
 	<title>PanIndex - 系统配置</title>
 </head>
-<body class="mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-auto">
+<body class="mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}}">
 <div class="mdui-container">
 	<div class="mdui-card">
 		<div class="mdui-card-content">
@@ -64,8 +64,10 @@
 						<label class="mdui-textfield-label">主题</label>
 						<select id="theme" name="theme" class="mdui-select" mdui-select>
 							<option value='mdui' {{if eq .Theme "mdui"}}selected{{else}}{{end}}>mdui</option>
-							<option value='classic' {{if eq .Theme "classic"}}selected{{else}}{{end}}>classic</option>
+							<option value='mdui-light' {{if eq .Theme "mdui-light"}}selected{{else}}{{end}}>mdui-light</option>
+							<option value='mdui-dark' {{if eq .Theme "mdui-dark"}}selected{{else}}{{end}}>mdui-dark</option>
 							<option value='bootstrap' {{if eq .Theme "bootstrap"}}selected{{else}}{{end}}>bootstrap</option>
+							<option value='classic' {{if eq .Theme "classic"}}selected{{else}}{{end}}>classic</option>
 							<option value='materialdesign' {{if eq .Theme "materialdesign"}}selected{{else}}{{end}}>materialdesign</option>
 						</select>
 					</div>
@@ -132,6 +134,7 @@
 									<div class="mdui-panel-item-header mdui-text-color-indigo">缓存记录</div>
 									<div class="mdui-panel-item-body">
 										<div id="cacheRecord">
+											<p>cookie： 未刷新</p>
 											<p>状态： 未缓存</p>
 											<p>最近一次缓存：-</p>
 											<p>耗时：0s</p>
@@ -235,7 +238,7 @@
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">定时任务-刷新目录缓存</label>
-						<input class="mdui-textfield-input" type="text" name="update_folder_cache" placeholder="0 0 0/1 * * ?" value="{{.UpdateFolderCache}}" />
+						<input class="mdui-textfield-input" type="text" name="update_folder_cache" placeholder="0 0 4 1/1 * ?" value="{{.UpdateFolderCache}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
 					<div class="mdui-textfield">
@@ -245,7 +248,7 @@
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">heroku防休眠地址（heroku可选）</label>
-						<input class="mdui-textfield-input" type="text" name="heroku_app_url" placeholder="https://appname,herokuapp.com" value="{{.HerokuAppUrl}}" />
+						<input class="mdui-textfield-input" type="text" name="heroku_app_url" placeholder="https://appname.herokuapp.com" value="{{.HerokuAppUrl}}" />
 					</div>
 					<div class="mdui-row-xs-12">
 						<div class="mdui-col">
@@ -283,7 +286,8 @@ var accounts = [
 	{{range .Accounts}}
 		{"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"",
 			"refresh_token":"{{.RefreshToken}}","access_token":"{{.AccessToken}}","root_id":"{{.RootId}}",
-			"status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}", "last_op_time":"{{.LastOpTime}}"
+			"cookie_status":"{{.CookieStatus}}","status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}",
+			"last_op_time":"{{.LastOpTime}}"
 		},
 	{{end}}
 	];
@@ -447,12 +451,23 @@ $(".defaultAccount").on('click', function (ev){
 });
 function fillCacheRecord(account){
 	var text = "";
+	if(account.cookie_status == 1){
+		text += "<p>cookie： 未刷新</p>";
+	}else if (account.cookie_status == 2){
+		text += "<p>cookie： 正常</p>";
+	}else if (account.cookie_status == 3){
+		text += "<p>cookie： 失效</p>";
+	}else if (account.cookie_status == -1){
+		text += "<p>cookie： 刷新中</p>";
+	}
 	if(account.status == 1){
 		text += "<p>状态： 未缓存</p>";
 	}else if (account.status == 2){
 		text += "<p>状态： 缓存成功</p>";
 	}else if (account.status == 3){
 		text += "<p>状态： 缓存失败</p>";
+	}else if (account.status == -1){
+		text += "<p>状态： 缓存中</p>";
 	}
 	if(account.files_count > 0){
 		text += "<p>文件数：" + account.files_count + "</p>";
