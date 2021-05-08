@@ -96,6 +96,8 @@ func main() {
 			setDefaultAccount(c)
 		} else if path == "/api/admin/config" {
 			getConfig(c)
+		} else if path == "/api/admin/envToConfig" {
+			envToConfig(c)
 		} else if ad {
 			admin(c)
 		} else {
@@ -136,7 +138,7 @@ func main() {
 }
 
 func initTemplates() *template.Template {
-	themes := [4]string{"mdui", "classic", "bootstrap", "materialdesign"}
+	themes := [6]string{"mdui", "mdui-light", "mdui-dark", "classic", "bootstrap", "materialdesign"}
 	box := packr.New("templates", "./templates")
 	data, _ := box.FindString("pan/admin/login.html")
 	tmpl := template.New("pan/admin/login.html")
@@ -144,13 +146,15 @@ func initTemplates() *template.Template {
 	data, _ = box.FindString("pan/admin/index.html")
 	tmpl.New("pan/admin/index.html").Parse(data)
 	for _, theme := range themes {
-		tmpFile := strings.Join([]string{"pan/", "/index.html"}, theme)
+		tmpName := strings.Join([]string{"pan/", "/index.html"}, theme)
+		tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
+		tmpFile = strings.ReplaceAll(tmpFile, "-light", "")
 		data, _ = box.FindString(tmpFile)
 		if Util.FileExist("./templates/" + tmpFile) {
 			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
 			data = string(s)
 		}
-		tmpl.New(tmpFile).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
 	return tmpl
 }
@@ -215,6 +219,7 @@ func index(c *gin.Context) {
 	result["DIndex"] = DIndex
 	result["AccountId"] = account.Id
 	result["Footer"] = config.GloablConfig.Footer
+	result["Theme"] = config.GloablConfig.Theme
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
@@ -270,7 +275,7 @@ func admin(c *gin.Context) {
 	if logout != "" && logout == "true" {
 		//退出登录
 		GC.Remove(sessionId)
-		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功"})
+		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功", "Theme": config.GloablConfig.Theme})
 	} else {
 		if c.Request.Method == "GET" {
 			if error == nil && sessionId != "" && GC.Has(sessionId) {
@@ -278,7 +283,7 @@ func admin(c *gin.Context) {
 				config := service.GetConfig()
 				c.HTML(http.StatusOK, "pan/admin/index.html", config)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false, "Theme": config.GloablConfig.Theme})
 			}
 		} else {
 			//登录
@@ -292,7 +297,7 @@ func admin(c *gin.Context) {
 				config := service.GetConfig()
 				c.HTML(http.StatusOK, "pan/admin/index.html", config)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "密码错误，请重试！"})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Theme": config.Theme, "Msg": "密码错误，请重试！"})
 			}
 		}
 	}
@@ -318,20 +323,32 @@ func getConfig(c *gin.Context) {
 func updateCache(c *gin.Context) {
 	id := c.Query("id")
 	account := service.GetAccount(id)
-	go jobs.SyncOneAccount(account)
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新缓存，请稍后刷新页面查看缓存结果！"})
+	if account.Status == -1 {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "目录缓存中，请勿重复操作！"})
+	} else {
+		go jobs.SyncOneAccount(account)
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在缓存目录，请稍后刷新页面查看缓存结果！"})
+	}
 }
 
 func updateCookie(c *gin.Context) {
 	id := c.Query("id")
 	account := service.GetAccount(id)
-	go jobs.AccountLogin(account)
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+	if account.CookieStatus == -1 {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "cookie刷新中，请勿重复操作！"})
+	} else {
+		go jobs.AccountLogin(account)
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+	}
 }
 
 func setDefaultAccount(c *gin.Context) {
 	id := c.Query("id")
 	service.SetDefaultAccount(id)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "默认账号设置成功！"})
+}
+func envToConfig(c *gin.Context) {
+	service.EnvToConfig()
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "同步配置"})
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

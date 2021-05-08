@@ -5,7 +5,6 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
-	"PanIndex/service"
 	"github.com/bluele/gcache"
 	"github.com/eddieivan01/nic"
 	"github.com/robfig/cron"
@@ -28,11 +27,20 @@ func Run() {
 		})
 	}
 	if config.GloablConfig.RefreshCookie != "" {
+		c.AddFunc(config.GloablConfig.HerokuKeepAlive, func() {
+			if config.GloablConfig.HerokuAppUrl != "" {
+				resp, err := nic.Get(config.GloablConfig.HerokuAppUrl+"/api/admin/envToConfig?token="+config.GloablConfig.ApiToken, nil)
+				if err != nil {
+					log.Infoln(err.Error())
+				} else {
+					log.Infoln("[定时任务]heroku配置防丢失 >> " + resp.Status)
+				}
+			}
+		})
 		c.AddFunc(config.GloablConfig.RefreshCookie, func() {
 			for _, account := range config.GloablConfig.Accounts {
 				AccountLogin(account)
 			}
-			service.EnvToConfig()
 		})
 	}
 	if config.GloablConfig.UpdateFolderCache != "" {
@@ -51,9 +59,16 @@ func StartInit() {
 		SyncOneAccount(account)
 	}
 }
+
+func SyncInit(account entity.Account) {
+	AccountLogin(account)
+	SyncOneAccount(account)
+}
+
 func AccountLogin(account entity.Account) {
 	cookie := ""
 	msg := ""
+	model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", -1)
 	if account.Mode == "cloud189" {
 		msg = "[网盘模式][" + account.Name + "] >> 天翼云网盘"
 		cookie = Util.Cloud189Login(account.Id, account.User, account.Password)
@@ -70,12 +85,15 @@ func AccountLogin(account entity.Account) {
 	}
 	if cookie != "" {
 		log.Infoln(msg + " >> cookie更新 >> 登录成功")
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 2)
 	} else if cookie == "" && account.Mode != "native" {
 		log.Infoln(msg + "cookie更新 >> 登录失败，请检查用户名和密码是否正确")
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 3)
 	}
 }
 func SyncOneAccount(account entity.Account) {
 	t1 := time.Now()
+	model.SqliteDb.Table("account").Where("id=?", account.Id).Update("status", -1)
 	if account.Mode == "cloud189" {
 		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId)
 	} else if account.Mode == "teambition" {

@@ -58,7 +58,8 @@ type Account struct {
 	RootId       string `json:"root_id"`       //目录id
 	Default      int    `json:"default"`       //是否默认
 	FilesCount   int    `json:"files_count"`   //文件总数
-	Status       int    `json:"status"`        //状态：1，未同步，2同步失败，3同步成功
+	Status       int    `json:"status"`        //状态：-1，缓存中 1，未缓存，2缓存成功，3缓存失败
+	CookieStatus int    `json:"cookie_status"` //cookie状态：-1刷新中， 1未刷新，2正常，3失效
 	TimeSpan     string `json:"time_span"`
 	LastOpTime   string `json:"last_op_time"` //最近一次更新时间
 }

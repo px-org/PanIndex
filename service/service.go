@@ -4,6 +4,7 @@ import (
 	"PanIndex/Util"
 	"PanIndex/config"
 	"PanIndex/entity"
+	"PanIndex/jobs"
 	"PanIndex/model"
 	"github.com/bluele/gcache"
 	"github.com/eddieivan01/nic"
@@ -298,9 +299,13 @@ func SaveConfig(config map[string]interface{}) {
 		//账号信息
 		for _, account := range config["accounts"].([]interface{}) {
 			mode := account.(map[string]interface{})["Mode"]
+			ID := ""
 			if account.(map[string]interface{})["id"] != nil && account.(map[string]interface{})["id"] != "" {
 				old := entity.Account{}
 				model.SqliteDb.Table("account").Where("id = ?", account.(map[string]interface{})["id"]).First(&old)
+				if account.(map[string]interface{})["password"] == "" {
+					delete(account.(map[string]interface{}), "password")
+				}
 				//更新网盘账号
 				model.SqliteDb.Table("account").Where("id = ?", account.(map[string]interface{})["id"]).Updates(account.(map[string]interface{}))
 				if mode != old.Mode {
@@ -312,11 +317,14 @@ func SaveConfig(config map[string]interface{}) {
 						Util.TeambitionSessions[old.Id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 					}
 				}
+				ID = old.Id
 			} else {
 				//添加网盘账号
 				id := uuid.NewV4().String()
+				ID = id
 				account.(map[string]interface{})["id"] = id
 				account.(map[string]interface{})["status"] = 1
+				account.(map[string]interface{})["cookie_status"] = 1
 				account.(map[string]interface{})["files_count"] = 0
 				model.SqliteDb.Table("account").Create(account.(map[string]interface{}))
 				if mode == "cloud189" {
@@ -325,6 +333,9 @@ func SaveConfig(config map[string]interface{}) {
 					Util.TeambitionSessions[id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 				}
 			}
+			ac := entity.Account{}
+			model.SqliteDb.Table("account").Where("id=?", ID).Take(&ac)
+			go jobs.SyncInit(ac)
 		}
 	}
 	go GetConfig()
