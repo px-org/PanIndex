@@ -27,7 +27,7 @@ func Run() {
 		})
 	}
 	if config.GloablConfig.RefreshCookie != "" {
-		c.AddFunc(config.GloablConfig.HerokuKeepAlive, func() {
+		c.AddFunc(config.GloablConfig.RefreshCookie, func() {
 			if config.GloablConfig.HerokuAppUrl != "" {
 				resp, err := nic.Get(config.GloablConfig.HerokuAppUrl+"/api/admin/envToConfig?token="+config.GloablConfig.ApiToken, nil)
 				if err != nil {
@@ -36,8 +36,6 @@ func Run() {
 					log.Infoln("[定时任务]heroku配置防丢失 >> " + resp.Status)
 				}
 			}
-		})
-		c.AddFunc(config.GloablConfig.RefreshCookie, func() {
 			for _, account := range config.GloablConfig.Accounts {
 				AccountLogin(account)
 			}
