@@ -379,7 +379,7 @@ func EnvToConfig() {
 		delete(c, "damagou")
 		model.SqliteDb.Where("1 = 1").Delete(&entity.Damagou{})
 		model.SqliteDb.Where("1 = 1").Delete(&entity.Account{})
-		model.SqliteDb.Where("1 = 1").Delete(&entity.FileNode{})
+		//model.SqliteDb.Where("1 = 1").Delete(&entity.FileNode{})
 		for _, account := range c["accounts"].([]interface{}) {
 			//添加网盘账号
 			account.(map[string]interface{})["status"] = 1
