@@ -32,7 +32,7 @@ type Paths struct {
 }
 type Config struct {
 	Host              string    `json:"host" gorm:"default:'0.0.0.0'"`
-	Port              int       `json:"port" gorm:"default:8080"`
+	Port              int       `json:"port" gorm:"default:5238"`
 	Accounts          []Account `json:"accounts" gorm:"-"`
 	PwdDirId          string    `json:"pwd_dir_id"`
 	HideFileId        string    `json:"hide_file_id"`
