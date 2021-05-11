@@ -43,8 +43,8 @@ type Config struct {
 	Damagou           Damagou   `json:"damagou" gorm:"-"`
 	OnlyReferrer      string    `json:"only_referrer"`
 	RefreshCookie     string    `json:"refresh_cookie" gorm:"default:'0 0 8 1/1 * ?'"`
-	UpdateFolderCache string    `json:"update_folder_cache" gorm:"default:'0 0 0/1 * * ?'"`
-	HerokuKeepAlive   string    `json:"heroku_keep_alive" gorm:"default:'0 0/5 * * * ?'"`
+	UpdateFolderCache string    `json:"update_folder_cache"`
+	HerokuKeepAlive   string    `json:"heroku_keep_alive"`
 	Footer            string    `json:"footer"` //网站底部信息
 }
 type Account struct {
