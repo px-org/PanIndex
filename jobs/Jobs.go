@@ -54,7 +54,7 @@ func Run() {
 func StartInit() {
 	for _, account := range config.GloablConfig.Accounts {
 		AccountLogin(account)
-		SyncOneAccount(account)
+		//SyncOneAccount(account)
 	}
 }
 
