@@ -40,7 +40,7 @@ func Start(host, port string, debug bool) {
 	//定时任务初始化
 	jobs.Run()
 	//刷新cookie和目录缓存
-	go jobs.StartInit()
+	//go jobs.StartInit()
 }
 
 func PrintAsc() {
@@ -95,6 +95,10 @@ func CheckUpdate() {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Warnf("读取更新内容失败:%s", err.Error())
+		return
+	}
+	if strings.Contains(string(body), "API rate limit") {
+		log.Warnf("检查更新失败: API rate limit")
 		return
 	}
 	var release GithubRelease
