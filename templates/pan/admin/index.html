@@ -47,6 +47,7 @@
 				<a href="#base-config" class="mdui-ripple"><i class="mdui-icon material-icons">settings</i><label>基础配置</label></a>
 				<a href="#bind-account" class="mdui-ripple"><i class="mdui-icon material-icons">account_circle</i><label>账号绑定</label></a>
 				<a href="#cron" class="mdui-ripple"><i class="mdui-icon material-icons">access_alarms</i><label>定时任务</label></a>
+				<a href="#upload" class="mdui-ripple"><i class="mdui-icon material-icons">cloud_upload</i><label>上传同步</label></a>
 			</div>
 			<div id="base-config" class="mdui-p-a-2 mdui-typo">
 				<form id="configForm">
@@ -258,6 +259,78 @@
 				</form>
 			</div>
 		</div>
+        <div id="upload" class="mdui-p-a-2 mdui-typo">
+			<div class="mdui-row">
+				<form id="uploadForm">
+					<div class="mdui-typo">
+						<h5>手动上传</h5>
+					</div>
+					<div class="mdui-col-xs-2">
+						<div class="mdui-textfield">
+							<label class="mdui-textfield-label">账户</label>
+							<select id="uploadAccount" class="mdui-select">
+								{{range $i, $a := .Accounts}}
+									<option value="{{.Id}}">{{.Name}}</option>
+								{{end}}
+							</select>
+						</div>
+					</div>
+					<div class="mdui-col-xs-5">
+						<div class="mdui-textfield">
+							<label class="mdui-textfield-label">选择文件</label>
+							<input id="uploadFile" type="file" class="mdui-textfield-input"
+								   placeholder="本地上传" multiple/>
+						</div>
+					</div>
+					<div class="mdui-col-xs-3">
+						<div class="mdui-textfield">
+							<label class="mdui-textfield-label">远程目录{PanIndex路径}</label>
+							<input id="uploadPath" class="mdui-textfield-input" type="text" value="" placeholder="/upload" required="required"/>
+						</div>
+					</div>
+					<div class="mdui-col-xs-2" style="margin-top: 40px;">
+						<button type="button" id="uploadBtn" value="1" class="mdui-btn mdui-btn-icon mdui-color-theme">
+							<i class="mdui-icon material-icons">&#xe2c3;</i>
+						</button>
+					</div>
+				</form>
+			</div>
+           {{/* <div class="mdui-row">
+                <form action="" method="post">
+                    <div class="mdui-typo">
+                        <h5>自动上传 <small>服务器目录中的文件自动上传至网盘，上传成功会删除原文件</small></h5>
+                    </div>
+					<div class="mdui-col-xs-2">
+						<div class="mdui-textfield">
+							<label class="mdui-textfield-label">账户</label>
+							<select name="upload_accounts" class="mdui-select">
+								{{range $i, $a := .Accounts}}
+									<option value="{{.Id}}">{{.Name}}</option>
+								{{end}}
+							</select>
+						</div>
+					</div>
+                    <div class="mdui-col-xs-5">
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">服务器文件/文件夹</label>
+                            <input name="local_path" class="mdui-textfield-input" type="text" required="required" value=""/>
+                        </div>
+                    </div>
+                    <div class="mdui-col-xs-3">
+                        <div class="mdui-textfield">
+                            <label class="mdui-textfield-label">远程目录</label>
+                            <input name="upload_path" class="mdui-textfield-input" type="text" required="required" value=""/>
+                        </div>
+                    </div>
+                    <div class="mdui-col-xs-2" style="margin-top: 40px;">
+                        <button type="submit" name="upload" value="1" class="mdui-btn mdui-btn-icon mdui-color-theme mdui-ripple">
+                            <i class="mdui-icon material-icons">&#xe161;</i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>*/}}
+    </div>
 	</div>
 	<div class="mdui-text-center mdui-typo">
 		©2021 <a href="https://github.com/libsgh/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
@@ -517,6 +590,30 @@ function updateCookie(){
 $(".acli").on('click', function(e){
 	if(e.target.tagName == 'INPUT')return;
 	fillAccount($(this).attr('data-index'));
+});
+$('#uploadBtn').on('click', function () {
+	var fileObjs = document.getElementById('uploadFile').files;
+	var formData = new FormData();
+	formData.append("uploadAccount", $('#uploadAccount').val());
+	formData.append("uploadPath", $('#uploadPath').val());
+	$.each(fileObjs, function (i, f) {
+		formData.append("uploadFile", f);
+	});
+	$.ajax({
+		method: 'POST',
+		url: "/api/admin/upload?token={{.ApiToken}}", //上传文件的请求路径必须是绝对路劲
+		data: formData,
+		cache: false,
+		contentType: false,
+		processData: false,
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 3000
+			});
+		}
+	});
 });
 $.fn.serializeObject = function()
 {
