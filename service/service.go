@@ -6,11 +6,14 @@ import (
 	"PanIndex/entity"
 	"PanIndex/jobs"
 	"PanIndex/model"
+	"errors"
 	"github.com/bluele/gcache"
 	"github.com/eddieivan01/nic"
+	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -388,5 +391,51 @@ func EnvToConfig() {
 		}
 		delete(c, "accounts")
 		SaveConfig(c)
+	}
+}
+func Upload(accountId, path string, c *gin.Context) string {
+	form, _ := c.MultipartForm()
+	files := form.File["uploadFile"]
+	dbFile := entity.FileNode{}
+	account := entity.Account{}
+	result := model.SqliteDb.Raw("select * from account where id=?", accountId).Take(&account)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return "指定的账号不存在"
+	}
+	p := filepath.FromSlash(account.RootId + path)
+	if !Util.FileExist(p) {
+		return "指定的目录不存在"
+	}
+	if account.Mode == "native" {
+		//服务器本地模式
+		for _, file := range files {
+			log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
+			t1 := time.Now()
+			c.SaveUploadedFile(file, p)
+			log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, Util.ShortDur(time.Now().Sub(t1)))
+		}
+		return "上传成功"
+	} else {
+		if path == "/" {
+			result = model.SqliteDb.Raw("select * from file_node where parent_path=? and `delete`=0 and account_id=? limit 1", path, accountId).Take(&dbFile)
+		} else {
+			result = model.SqliteDb.Raw("select * from file_node where path=? and `delete`=0 and account_id=?", path, accountId).Take(&dbFile)
+		}
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return "指定的目录不存在"
+		} else {
+			fileId := dbFile.FileId
+			if path == "/" {
+				fileId = dbFile.ParentId
+			}
+			if account.Mode == "teambition" && !Util.TeambitionSessions[accountId].IsPorject {
+				//teambition 个人文件上传
+				Util.TeambitionUpload(accountId, fileId, files)
+			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
+				//teambition 项目文件上传
+				Util.TeambitionProUpload(accountId, fileId, files)
+			}
+			return "上传成功"
+		}
 	}
 }

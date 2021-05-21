@@ -6,6 +6,7 @@ import (
 	"PanIndex/service"
 	"encoding/json"
 	"fmt"
+	"github.com/banzaicloud/logrus-runtime-formatter"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -67,12 +68,14 @@ func InitLog(debug bool) {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	log.SetFormatter(&log.TextFormatter{
+	formatter := runtime.Formatter{ChildFormatter: &log.TextFormatter{
 		ForceColors:               true,
 		EnvironmentOverrideColors: true,
 		TimestampFormat:           "2006-01-02 15:04:05",
 		FullTimestamp:             true,
-	})
+	}}
+	formatter.Line = true
+	log.SetFormatter(&formatter)
 }
 
 func PrintVersion() {

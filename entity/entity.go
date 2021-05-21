@@ -76,3 +76,7 @@ type Teambition struct {
 	GloablProjectId   string
 	IsPorject         bool
 }
+type PartInfo struct {
+	PartNumber int    `json:"partNumber"`
+	UploadUrl  string `json:"uploadUrl"`
+}

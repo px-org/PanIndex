@@ -98,6 +98,8 @@ func main() {
 			getConfig(c)
 		} else if path == "/api/admin/envToConfig" {
 			envToConfig(c)
+		} else if path == "/api/admin/upload" {
+			upload(c)
 		} else if ad {
 			admin(c)
 		} else {
@@ -133,8 +135,8 @@ func main() {
 			}
 		}
 	})
-	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port)) // 监听并在 0.0.0.0:8080 上启动服务
-
+	log.Infoln("程序启动成功")
+	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port))
 }
 
 func initTemplates() *template.Template {
@@ -166,19 +168,7 @@ func initStaticBox(r *gin.Engine) {
 		r.StaticFS("/static", staticBox)
 	}
 }
-func GetBetweenStr(str, start, end string) string {
-	n := strings.Index(str, start)
-	if n == -1 {
-		n = 0
-	}
-	str = string([]byte(str)[n:])
-	m := strings.Index(str, end)
-	if m == -1 {
-		m = len(str)
-	}
-	str = string([]byte(str)[:m])
-	return str
-}
+
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
@@ -347,8 +337,16 @@ func setDefaultAccount(c *gin.Context) {
 	service.SetDefaultAccount(id)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "默认账号设置成功！"})
 }
+
 func envToConfig(c *gin.Context) {
 	service.EnvToConfig()
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "同步配置"})
 }
+
+func upload(c *gin.Context) {
+	accountId := c.PostForm("uploadAccount")
+	path := c.PostForm("uploadPath")
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": service.Upload(accountId, path, c)})
+}
+
 func unescaped(x string) interface{} { return template.HTML(x) }
