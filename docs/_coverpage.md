@@ -1,15 +1,15 @@
 ![logo](_media/index.png)
 
-# PanIndex <small>v1.0.6</small>
+# PanIndex <small>v2.0.0</small>
 
 > 一个简易的网盘目录列表.
-
-- 多种模式
+>
+- 跨平台、部署简单
+- 多网盘模式
 - 多种主题
 - 下载直链
 - 定时缓存
-- 部署方便
 
 [GitHub](https://github.com/libsgh/PanIndex/)
-[Getting Started](#快速开始)
+[Getting Started](quickstart.md)
 
