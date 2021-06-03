@@ -417,7 +417,7 @@ func TeambitionUpload(accountId, parentId string, files []*multipart.FileHeader)
 			}
 			client.Do(req)
 		}
-		TeambitionSession.Post("https://pan.teambition.com/pan/api/nodes/complete", nic.H{
+		resp, _ = TeambitionSession.Post("https://pan.teambition.com/pan/api/nodes/complete", nic.H{
 			JSON: nic.KV{
 				"orgId":     Teambition.GloablOrgId,
 				"driveId":   Teambition.GloablDriveId,
@@ -426,6 +426,7 @@ func TeambitionUpload(accountId, parentId string, files []*multipart.FileHeader)
 				"ccpFileId": fileId,
 			},
 		})
+		log.Debugf("上传接口返回：%s", resp.Text)
 		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
 	}
 	return true
@@ -444,6 +445,7 @@ func TeambitionProUpload(accountId, parentId string, files []*multipart.FileHead
 		//1.获取jwt
 		jwt := GetCurBetweenStr(resp.Text, "strikerAuth&quot;:&quot;", "&quot;,&quot;phoneForLogin")
 		//2.上传文件
+		fmt.Println(file.Header.Get("Content-Type"))
 		resp, _ = nic.Post("https://tcs.teambition.net/upload", nic.H{
 			Files: nic.KV{
 				"file": nic.File(
@@ -453,15 +455,16 @@ func TeambitionProUpload(accountId, parentId string, files []*multipart.FileHead
 				"Authorization": jwt,
 			},
 		})
+		fmt.Println(resp.Text)
 		fileKey := jsoniter.Get(resp.Bytes, "fileKey").ToString()
 		fileName := jsoniter.Get(resp.Bytes, "fileName").ToString()
 		fileType := jsoniter.Get(resp.Bytes, "fileType").ToString()
 		fileSize := jsoniter.Get(resp.Bytes, "fileSize").ToInt64()
 		fileCategory := jsoniter.Get(resp.Bytes, "fileCategory").ToString()
-		imageWidth := jsoniter.Get(resp.Bytes, "imageWidth").ToString()
-		imageHeight := jsoniter.Get(resp.Bytes, "imageHeight").ToString()
+		//imageWidth := jsoniter.Get(resp.Bytes, "imageWidth").ToString()
+		//imageHeight := jsoniter.Get(resp.Bytes, "imageHeight").ToString()
 		//3.完成上传
-		TeambitionSession.Post("https://www.teambition.com/api/works", nic.H{
+		resp, _ = TeambitionSession.Post("https://www.teambition.com/api/works", nic.H{
 			JSON: nic.KV{
 				"works": []nic.KV{nic.KV{
 					"fileKey":      fileKey,
@@ -469,15 +472,16 @@ func TeambitionProUpload(accountId, parentId string, files []*multipart.FileHead
 					"fileType":     fileType,
 					"fileSize":     fileSize,
 					"fileCategory": fileCategory,
-					"imageWidth":   imageWidth,
-					"imageHeight":  imageHeight,
-					"source":       "tcs",
-					"visible":      "members",
-					"_parentId":    parentId,
+					/*"imageWidth":   imageWidth,
+					"imageHeight":  imageHeight,*/
+					"source":    "tcs",
+					"visible":   "members",
+					"_parentId": parentId,
 				}},
 				"_parentId": parentId,
 			},
 		})
+		log.Debugf("上传接口返回：%s", resp.Text)
 		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
 	}
 	return true

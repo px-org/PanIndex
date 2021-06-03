@@ -346,7 +346,19 @@ func envToConfig(c *gin.Context) {
 func upload(c *gin.Context) {
 	accountId := c.PostForm("uploadAccount")
 	path := c.PostForm("uploadPath")
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": service.Upload(accountId, path, c)})
+	t := c.PostForm("type")
+	msg := ""
+	if t == "0" {
+		msg = service.Upload(accountId, path, c)
+	} else if t == "1" {
+		service.Async(accountId, path)
+		msg = "刷新缓存成功"
+	} else if t == "2" {
+		service.Upload(accountId, path, c)
+		service.Async(accountId, path)
+		msg = "上传并刷新成功"
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
 
 func unescaped(x string) interface{} { return template.HTML(x) }

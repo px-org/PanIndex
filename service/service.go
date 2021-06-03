@@ -240,7 +240,7 @@ func UpdateFolderCache(account entity.Account) {
 	Util.GC = gcache.New(10).LRU().Build()
 	model.SqliteDb.Delete(entity.FileNode{})
 	if account.Mode == "cloud189" {
-		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId)
+		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "")
 	} else if account.Mode == "teambition" {
 		Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
 	} else if account.Mode == "native" {
@@ -402,15 +402,16 @@ func Upload(accountId, path string, c *gin.Context) string {
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return "指定的账号不存在"
 	}
-	p := filepath.FromSlash(account.RootId + path)
-	if !Util.FileExist(p) {
-		return "指定的目录不存在"
-	}
 	if account.Mode == "native" {
+		p := filepath.FromSlash(account.RootId + path)
+		if !Util.FileExist(p) {
+			return "指定的目录不存在"
+		}
 		//服务器本地模式
 		for _, file := range files {
 			log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
 			t1 := time.Now()
+			p = filepath.FromSlash(account.RootId + path + "/" + file.Filename)
 			c.SaveUploadedFile(file, p)
 			log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, Util.ShortDur(time.Now().Sub(t1)))
 		}
@@ -434,8 +435,69 @@ func Upload(accountId, path string, c *gin.Context) string {
 			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 项目文件上传
 				Util.TeambitionProUpload(accountId, fileId, files)
+			} else if account.Mode == "cloud189" {
+				//teambition 项目文件上传
+				Util.Cloud189UploadFiles(accountId, fileId, files)
 			}
 			return "上传成功"
+		}
+	}
+}
+
+func Async(accountId, path string) string {
+	account := entity.Account{}
+	result := model.SqliteDb.Raw("select * from account where id=?", accountId).Take(&account)
+	dbFile := entity.FileNode{}
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return "指定的账号不存在"
+	}
+	if account.Mode == "native" {
+		return "无需刷新"
+	} else {
+		if path == "/" {
+			result = model.SqliteDb.Raw("select * from file_node where parent_path=? and `delete`=0 and account_id=? limit 1", path, accountId).Take(&dbFile)
+		} else {
+			result = model.SqliteDb.Raw("select * from file_node where path=? and `delete`=0 and account_id=?", path, accountId).Take(&dbFile)
+		}
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return "指定的目录不存在"
+		} else {
+			fileId := dbFile.FileId
+			if path == "/" {
+				fileId = dbFile.ParentId
+			}
+			if account.Mode == "teambition" && !Util.TeambitionSessions[accountId].IsPorject {
+				//teambition 个人文件
+				Util.TeambitionGetFiles(account.Id, fileId, fileId, path)
+			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
+				//teambition 项目文件
+				Util.TeambitionGetProjectFiles(account.Id, fileId, path)
+			} else if account.Mode == "cloud189" {
+				Util.Cloud189GetFiles(account.Id, fileId, fileId, path)
+			}
+			refreshFileNodes(account.Id, fileId)
+			return "刷新成功"
+		}
+	}
+}
+func refreshFileNodes(accountId, fileId string) {
+	tmpList := []entity.FileNode{}
+	list := []entity.FileNode{}
+	model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0 and account_id=?", fileId, accountId).Find(&tmpList)
+	getAllNodes(&tmpList, &list)
+	for _, fn := range list {
+		model.SqliteDb.Where("id=?", fn.Id).Delete(entity.FileNode{})
+	}
+	model.SqliteDb.Table("file_node").Where("account_id=?", accountId).Update("delete", 0)
+}
+
+func getAllNodes(tmpList, list *[]entity.FileNode) {
+	for _, fn := range *tmpList {
+		tmpList = &[]entity.FileNode{}
+		model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0", fn.FileId).Find(&tmpList)
+		*list = append(*list, fn)
+		if len(*tmpList) != 0 {
+			getAllNodes(tmpList, list)
 		}
 	}
 }

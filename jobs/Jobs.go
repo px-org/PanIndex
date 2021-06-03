@@ -93,7 +93,7 @@ func SyncOneAccount(account entity.Account) {
 	t1 := time.Now()
 	model.SqliteDb.Table("account").Where("id=?", account.Id).Update("status", -1)
 	if account.Mode == "cloud189" {
-		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId)
+		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "")
 	} else if account.Mode == "teambition" {
 		rootId := Util.ProjectIdCheck(account.Id, account.RootId)
 		if Util.TeambitionSessions[account.Id].IsPorject {
