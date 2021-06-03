@@ -54,18 +54,22 @@
 		</script>
 		{{else}}
 		<nav id="heading" class="navbar navbar-expand-md bg-secondary navbar-dark">
-			<ul class="nav navbar-nav">
-				<li class="dropdown">
-					<a class="dropdown-toggle navbar-brand" href="#" id="navbardrop" data-toggle="dropdown">
-						{{.Title}}
-					</a>
-					<div class="dropdown-menu">
-						{{range $i, $a := .Accounts}}
-						<a class="dropdown-item" href="/d_{{$i}}">{{.Name}}</a>
-						{{end}}
-					</div>
-				</li>
-			</ul>
+			{{ if gt (len .Accounts) 1 }}
+				<ul class="nav navbar-nav">
+					<li class="dropdown">
+						<a class="dropdown-toggle navbar-brand" href="#" id="navbardrop" data-toggle="dropdown">
+							{{.Title}}
+						</a>
+						<div class="dropdown-menu">
+							{{range $i, $a := .Accounts}}
+								<a class="dropdown-item" href="/d_{{$i}}">{{.Name}}</a>
+							{{end}}
+						</div>
+					</li>
+				</ul>
+			{{else}}
+				<a class="navbar-brand" href="/">{{.Title}}</a>
+			{{end}}
 			<!-- Toggler/collapsibe Button -->
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
 				<span class="navbar-toggler-icon"></span>
@@ -161,6 +165,25 @@
 						</tbody>
 					</table>
 				</div>
+				{{if .HasReadme}}
+					<div class="col-sm-12">
+						<div class="card" style="width: 100%">
+							<div class="card-header">
+								README.md
+							</div>
+							<div class="card-body">
+								<input id="readme" type="hidden" value="{{.ReadmeContent}}" />
+								<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+								<p id="content" class="card-text">
+								</p>
+								<script>
+									$("#content").html(marked($("#readme").val()));
+								</script>
+							</div>
+						</div>
+					</div>
+				{{else}}
+				{{end}}
 				<div class="col-sm-12">
 					<div class="text-center">
 						{{if eq $.Footer ""}}

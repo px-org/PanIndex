@@ -95,14 +95,16 @@
 		<div class="mdui-card-content">
 			<div style="padding: 0px 5px 12px;">
 				<div class="mdui-chip">
-					<span class="mdui-chip-icon mdui-color-indigo" mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#example-1'}"><i class="mdui-icon material-icons">home</i></span>
-					<ul class="mdui-menu" id="example-1">
-						{{range $i, $a := .Accounts}}
-						<li class="mdui-menu-item">
-							<a href="/d_{{$i}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>{{.Name}}</a>
-						</li>
-						{{end}}
-					</ul>
+					<span class="mdui-chip-icon mdui-color-indigo" {{ if gt (len .Accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#example-1'}"{{end}}><i class="mdui-icon material-icons">home</i></span>
+					{{ if gt (len .Accounts) 1 }}
+						<ul class="mdui-menu" id="example-1">
+							{{range $i, $a := .Accounts}}
+								<li class="mdui-menu-item">
+									<a href="/d_{{$i}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>{{.Name}}</a>
+								</li>
+							{{end}}
+						</ul>
+					{{end}}
 					<span class="mdui-chip-title" onclick="window.open('{{$.DIndex}}/','_self')">{{.Title}}</span>
 				</div>
 				{{range .PrePaths}}
