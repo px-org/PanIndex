@@ -110,7 +110,11 @@ function findDynamicEl(obj) {
             downloadUrl:  oDURL
         });
     }
-   /* $(obj).parent().parent().find(".icon-file").each(function(i, d){
+   var ofs = $(obj).parent().parent().find(".icon-file");
+    if($(obj).parent().get(0).tagName == "TD"){
+        ofs = $(obj).parent().parent().parent().find(".icon-file");
+    }
+    ofs.each(function(i, d){
         var dURL = $(d).attr("data-url");
         var title = $(d).attr("data-title");
         var dmt = $(d).attr("data-media-type");
@@ -122,16 +126,16 @@ function findDynamicEl(obj) {
                    subHtml: '<h4>'+title+'</h4>',
                    downloadUrl:  dURL
                });
-            }else if(dataMediaType == 3){
+            }/*else if(dataMediaType == 3){
                 dynamicEls.push({
                     html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+dURL+'">Your browser does not support HTML5 video</video>',
                     subHtml: '<h4>'+title+'</h4>',
                     downloadUrl:  dURL
                 });
-            }
+            }*/
         }
     });
-    $(obj).parent().parent().parent().find(".icon-file").each(function(i, d){
+   /* $(obj).parent().parent().parent().find(".icon-file").each(function(i, d){
         var dURL = $(d).attr("data-url");
         var title = $(d).attr("data-title");
         var dmt = $(d).attr("data-media-type");
@@ -143,13 +147,13 @@ function findDynamicEl(obj) {
                     subHtml: '<h4>'+title+'</h4>',
                     downloadUrl:  dURL
                 });
-            }else if(dataMediaType == 3){
+            }/!*else if(dataMediaType == 3){
                 dynamicEls.push({
                     html: '<video class="lg-video-object lg-html5" controls preload="none"><source src="'+dURL+'">Your browser does not support HTML5 video</video>',
                     subHtml: '<h4>'+title+'</h4>',
                     downloadUrl:  dURL
                 });
-            }
+            }*!/
         }
     });*/
     return dynamicEls;
