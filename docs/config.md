@@ -22,7 +22,6 @@
   * mdui（跟随系统切换暗黑、明亮）
   * mdui-light（明亮模式）
   * mdui-dark（暗黑模式）
-  * mdui-dark（暗黑模式）
   * classic（经典主题，不支持账号前端切换及搜索，适用于单账号）
   * bootstrap
   * materialdesign
@@ -31,6 +30,8 @@
 * 密码文件（夹）：格式`id1:pwd1,path1:pwd2`
 * 隐藏文件ID（路径）:id1,path1
 * 防盗链：允许的 Referrer，多个逗号分隔，例：`baidu.com,google.com`
+* 自定义网站图标链接
+ * 可以将自定义图标`favicon.ico`上传至网盘，填入图片直链
 * 自定义底部信息
 
 ```html
@@ -44,10 +45,14 @@
  * native： 本地模式，服务器某一目录的文件列表，因为实时获取所以无需更新cookie和目录缓存
  * cloud189：天翼云网盘
  * teambition：阿里teambition盘，包括个人网盘和项目文件，依据根目录ID设定自动判断
+ * teambitionguo国际版：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
 * 用户名：部分模式必需，一般是手机号或邮箱
 * 密码
 * 根目录ID(路径)：native为绝对路径，teambition为项目ID，其他为目录ID
 
 ### 文件上传
 * 手动上传
-* 自动同步
+ * 支持多文件上传，远程目录请填写网盘的相对路径，例如：
+ 我想上传1这个目录，就填写/1
+ ![](_images/upload-remote-dir.jpg)
+* 自动同步（待实现）
