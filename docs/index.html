@@ -17,12 +17,31 @@
       name: 'PanIndex',
       repo: 'libsgh/PanIndex',
       coverpage: true,
-      auto2top: true
+      auto2top: true,
+      loadNavbar: true,
+      homepage: 'quickstart.md',
+      relativePath: true
     }
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
+  <script>
+    const gitalk = new Gitalk({
+      clientID: 'e1db5cc4fbcf2a57a3bb',
+      clientSecret: '84f876c491be67fcdbad3f675c8ec4c6b3867f72',
+      repo: 'libsgh/PanIndex',
+      owner: 'libsgh',
+      admin: ['libsgh'],
+      // facebook-like distraction free mode
+      distractionFreeMode: false,
+      language: 'zh-CN'
+    });
+  </script>
 </body>
 </html>

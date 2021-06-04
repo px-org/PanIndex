@@ -4,6 +4,7 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -15,7 +16,11 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"io/ioutil"
 	math_rand "math/rand"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"regexp"
 	"sort"
@@ -28,7 +33,7 @@ import (
 var CLoud189Sessions = map[string]nic.Session{}
 
 //获取文件列表
-func Cloud189GetFiles(accountId, rootId, fileId string) {
+func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 	CLoud189Session := CLoud189Sessions[accountId]
 	defer func() {
 		if p := recover(); p != nil {
@@ -67,6 +72,12 @@ func Cloud189GetFiles(accountId, rootId, fileId string) {
 				}
 			}
 		}
+		if p == "/" && prefix != "" {
+			p = prefix
+		} else if p != "/" && prefix != "" {
+			p = prefix + p
+		}
+		fmt.Println(p)
 		if d != nil {
 			m := []entity.FileNode{}
 			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
@@ -83,7 +94,7 @@ func Cloud189GetFiles(accountId, rootId, fileId string) {
 					item.ParentPath = p
 					item.SizeFmt = FormatFileSize(item.FileSize)
 					if item.IsFolder == true {
-						Cloud189GetFiles(accountId, rootId, item.FileId)
+						Cloud189GetFiles(accountId, rootId, item.FileId, prefix)
 					} else {
 						//如果是文件，解析下载直链
 						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
@@ -340,6 +351,37 @@ func GetValidateCode(accountId, params string) string {
 	return ""
 }
 
+func Cloud189UploadFiles(accountId, parentId string, files []*multipart.FileHeader) bool {
+	CLoud189Session := CLoud189Sessions[accountId]
+	response, _ := CLoud189Session.Get("https://cloud.189.cn/main.action#home", nil)
+	sessionKey := GetCurBetweenStr(response.Text, "window.edrive.sessionKey = '", "';")
+	log.Debug(sessionKey)
+	for _, file := range files {
+		t1 := time.Now()
+		log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
+		fileContent, _ := file.Open()
+		byteContent, _ := ioutil.ReadAll(fileContent)
+		reader := bytes.NewReader(byteContent)
+		b := &bytes.Buffer{}
+		writer := multipart.NewWriter(b)
+		writer.WriteField("parentId", parentId)
+		writer.WriteField("sessionKey", sessionKey)
+		writer.WriteField("opertype", "1")
+		writer.WriteField("fname", file.Filename)
+		part, _ := writer.CreateFormFile("Filedata", file.Filename)
+		io.Copy(part, reader)
+		writer.Close()
+		r, _ := http.NewRequest("POST", "https://hb02.upload.cloud.189.cn/v1/DCIWebUploadAction", b)
+		r.Header.Add("Content-Type", writer.FormDataContentType())
+		res, _ := http.DefaultClient.Do(r)
+		defer res.Body.Close()
+		body, _ := ioutil.ReadAll(res.Body)
+		log.Debugf("上传接口返回：%s", string(body))
+		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
+	}
+	return true
+}
+
 var b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 var BI_RM = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -406,20 +448,6 @@ func FormatFileSize(fileSize int64) (size string) {
 	}
 }
 
-func GetBetweenStr1(str, start, end string) string {
-	n := strings.Index(str, start)
-	if n == -1 {
-		return ""
-	}
-	n = n + len(start)
-	str = string([]byte(str)[n:])
-	m := strings.Index(str, end)
-	if m == -1 {
-		return ""
-	}
-	str = string([]byte(str)[:m])
-	return str
-}
 func GetBetweenStr(str, start, end string) string {
 	n := strings.Index(str, start)
 	if n == -1 {

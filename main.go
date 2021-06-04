@@ -96,6 +96,10 @@ func main() {
 			setDefaultAccount(c)
 		} else if path == "/api/admin/config" {
 			getConfig(c)
+		} else if path == "/api/admin/envToConfig" {
+			envToConfig(c)
+		} else if path == "/api/admin/upload" {
+			upload(c)
 		} else if ad {
 			admin(c)
 		} else {
@@ -131,12 +135,12 @@ func main() {
 			}
 		}
 	})
-	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port)) // 监听并在 0.0.0.0:8080 上启动服务
-
+	log.Infoln("程序启动成功")
+	r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port))
 }
 
 func initTemplates() *template.Template {
-	themes := [4]string{"mdui", "classic", "bootstrap", "materialdesign"}
+	themes := [6]string{"mdui", "mdui-light", "mdui-dark", "classic", "bootstrap", "materialdesign"}
 	box := packr.New("templates", "./templates")
 	data, _ := box.FindString("pan/admin/login.html")
 	tmpl := template.New("pan/admin/login.html")
@@ -144,13 +148,15 @@ func initTemplates() *template.Template {
 	data, _ = box.FindString("pan/admin/index.html")
 	tmpl.New("pan/admin/index.html").Parse(data)
 	for _, theme := range themes {
-		tmpFile := strings.Join([]string{"pan/", "/index.html"}, theme)
+		tmpName := strings.Join([]string{"pan/", "/index.html"}, theme)
+		tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
+		tmpFile = strings.ReplaceAll(tmpFile, "-light", "")
 		data, _ = box.FindString(tmpFile)
 		if Util.FileExist("./templates/" + tmpFile) {
 			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
 			data = string(s)
 		}
-		tmpl.New(tmpFile).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
 	return tmpl
 }
@@ -162,19 +168,7 @@ func initStaticBox(r *gin.Engine) {
 		r.StaticFS("/static", staticBox)
 	}
 }
-func GetBetweenStr(str, start, end string) string {
-	n := strings.Index(str, start)
-	if n == -1 {
-		n = 0
-	}
-	str = string([]byte(str)[n:])
-	m := strings.Index(str, end)
-	if m == -1 {
-		m = len(str)
-	}
-	str = string([]byte(str)[:m])
-	return str
-}
+
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
@@ -215,6 +209,8 @@ func index(c *gin.Context) {
 	result["DIndex"] = DIndex
 	result["AccountId"] = account.Id
 	result["Footer"] = config.GloablConfig.Footer
+	result["Theme"] = config.GloablConfig.Theme
+	result["FaviconUrl"] = config.GloablConfig.FaviconUrl
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
@@ -270,7 +266,7 @@ func admin(c *gin.Context) {
 	if logout != "" && logout == "true" {
 		//退出登录
 		GC.Remove(sessionId)
-		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功"})
+		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功", "Theme": config.GloablConfig.Theme})
 	} else {
 		if c.Request.Method == "GET" {
 			if error == nil && sessionId != "" && GC.Has(sessionId) {
@@ -278,7 +274,7 @@ func admin(c *gin.Context) {
 				config := service.GetConfig()
 				c.HTML(http.StatusOK, "pan/admin/index.html", config)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false, "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 			}
 		} else {
 			//登录
@@ -292,7 +288,7 @@ func admin(c *gin.Context) {
 				config := service.GetConfig()
 				c.HTML(http.StatusOK, "pan/admin/index.html", config)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "密码错误，请重试！"})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Theme": config.Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
 			}
 		}
 	}
@@ -318,15 +314,23 @@ func getConfig(c *gin.Context) {
 func updateCache(c *gin.Context) {
 	id := c.Query("id")
 	account := service.GetAccount(id)
-	go jobs.SyncOneAccount(account)
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新缓存，请稍后刷新页面查看缓存结果！"})
+	if account.Status == -1 {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "目录缓存中，请勿重复操作！"})
+	} else {
+		go jobs.SyncOneAccount(account)
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在缓存目录，请稍后刷新页面查看缓存结果！"})
+	}
 }
 
 func updateCookie(c *gin.Context) {
 	id := c.Query("id")
 	account := service.GetAccount(id)
-	go jobs.AccountLogin(account)
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+	if account.CookieStatus == -1 {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "cookie刷新中，请勿重复操作！"})
+	} else {
+		go jobs.AccountLogin(account)
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+	}
 }
 
 func setDefaultAccount(c *gin.Context) {
@@ -334,4 +338,28 @@ func setDefaultAccount(c *gin.Context) {
 	service.SetDefaultAccount(id)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "默认账号设置成功！"})
 }
+
+func envToConfig(c *gin.Context) {
+	service.EnvToConfig()
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "同步配置"})
+}
+
+func upload(c *gin.Context) {
+	accountId := c.PostForm("uploadAccount")
+	path := c.PostForm("uploadPath")
+	t := c.PostForm("type")
+	msg := ""
+	if t == "0" {
+		msg = service.Upload(accountId, path, c)
+	} else if t == "1" {
+		service.Async(accountId, path)
+		msg = "刷新缓存成功"
+	} else if t == "2" {
+		service.Upload(accountId, path, c)
+		service.Async(accountId, path)
+		msg = "上传并刷新成功"
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
+}
+
 func unescaped(x string) interface{} { return template.HTML(x) }

@@ -32,7 +32,7 @@ type Paths struct {
 }
 type Config struct {
 	Host              string    `json:"host" gorm:"default:'0.0.0.0'"`
-	Port              int       `json:"port" gorm:"default:8080"`
+	Port              int       `json:"port" gorm:"default:5238"`
 	Accounts          []Account `json:"accounts" gorm:"-"`
 	PwdDirId          string    `json:"pwd_dir_id"`
 	HideFileId        string    `json:"hide_file_id"`
@@ -43,9 +43,10 @@ type Config struct {
 	Damagou           Damagou   `json:"damagou" gorm:"-"`
 	OnlyReferrer      string    `json:"only_referrer"`
 	RefreshCookie     string    `json:"refresh_cookie" gorm:"default:'0 0 8 1/1 * ?'"`
-	UpdateFolderCache string    `json:"update_folder_cache" gorm:"default:'0 0 0/1 * * ?'"`
-	HerokuKeepAlive   string    `json:"heroku_keep_alive" gorm:"default:'0 0/5 * * * ?'"`
-	Footer            string    `json:"footer"` //网站底部信息
+	UpdateFolderCache string    `json:"update_folder_cache"`
+	HerokuKeepAlive   string    `json:"heroku_keep_alive"`
+	FaviconUrl        string    `json:"favicon_url"` //网站图标
+	Footer            string    `json:"footer"`      //网站底部信息
 }
 type Account struct {
 	Id           string `json:"id"`            //网盘空间id
@@ -58,7 +59,8 @@ type Account struct {
 	RootId       string `json:"root_id"`       //目录id
 	Default      int    `json:"default"`       //是否默认
 	FilesCount   int    `json:"files_count"`   //文件总数
-	Status       int    `json:"status"`        //状态：1，未同步，2同步失败，3同步成功
+	Status       int    `json:"status"`        //状态：-1，缓存中 1，未缓存，2缓存成功，3缓存失败
+	CookieStatus int    `json:"cookie_status"` //cookie状态：-1刷新中， 1未刷新，2正常，3失效
 	TimeSpan     string `json:"time_span"`
 	LastOpTime   string `json:"last_op_time"` //最近一次更新时间
 }
@@ -74,4 +76,8 @@ type Teambition struct {
 	GloablRootId      string
 	GloablProjectId   string
 	IsPorject         bool
+}
+type PartInfo struct {
+	PartNumber int    `json:"partNumber"`
+	UploadUrl  string `json:"uploadUrl"`
 }

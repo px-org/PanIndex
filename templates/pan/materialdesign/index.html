@@ -4,12 +4,18 @@
 		<title>{{.Title}} {{ .Path }}</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	{{if ne .FaviconUrl ""}}
+		<link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+		<link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+	{{else}}
 		<link rel="icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
 		<link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
+	{{end}}
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/css/lightgallery.min.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">
+		<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.css">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+		<link href="https://cdn.bootcdn.net/ajax/libs/material-design-icons/3.0.2/iconfont/material-icons.min.css" rel="stylesheet">
 		<style type="text/css">
 		body {
 			/*background: #F5F5F5;*/
@@ -45,6 +51,10 @@
 			margin-top: 32px;
 			margin-bottom: 32px;
 		}
+		[type="checkbox"]:not(:checked), [type="checkbox"]:checked {
+			position: relative;
+			opacity: 1;
+		}
 		</style>
 		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 	</head>
@@ -63,9 +73,37 @@
 		{{else}}
 		<div class="container">
 			<div class="row">
-				<div class="col s12">
+				{{/*<div class="col s12">
 					<h2 id="heading">{{.Title}} {{ .Path }}</h2>
-				</div>
+				</div>*/}}
+				<ul id="Accounts" class="dropdown-content">
+					{{range $i, $a := .Accounts}}
+						<li><a href="/d_{{$i}}">{{.Name}}</a></li>
+					{{end}}
+				</ul>
+				<nav class="grey darken-3">
+					<div class="nav-wrapper">
+						<div class="col s12">
+							<a href="/" class="breadcrumb">{{.Title}}</a>
+							{{range .PrePaths}}
+								<a href="javascript:void(0)" class="breadcrumb"></a>
+								{{if eq .PathUrl $.Path}}
+									<a href="javascript:void(0)">{{.PathName}}</a>
+								{{else}}
+									<a href="{{.PathUrl}}">{{.PathName}}</a>
+								{{end}}
+							{{end}}
+							<ul class="right hide-on-med-and-down">
+								<li>
+									<input class="search" type="search" placeholder="搜索当前内容">
+								</li>
+								{{ if gt (len .Accounts) 1 }}
+									<li><a class="dropdown-trigger" href="javascript:void(0)" data-target="Accounts"><i class="material-icons">face</i></a></li>
+								{{end}}
+							</ul>
+						</div>
+					</div>
+				</nav>
 			</div>
 			<div class="row">
 				<div class="col s12">
@@ -137,6 +175,20 @@
 						</tbody>
 					</table>
 				</div>
+				{{if .HasReadme}}
+					<div class="row">
+						<div class="col s12">
+							<div class="card-panel">
+								<input id="readme" type="hidden" value="{{.ReadmeContent}}" />
+								<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+								<div id="content"></div>
+								<script>
+									$("#content").html(marked($("#readme").val()));
+								</script>
+							</div>
+						</div>
+					</div>
+				{{end}}
 				<div class="col s12 footer">
 					<div class="center-align">
 						{{if eq $.Footer ""}}
@@ -152,7 +204,10 @@
 		<div id="aplayer"></div>
 	</body>
 	<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
 	<script src="/static/js/main.js"></script>
+	<script>
+		$(".dropdown-trigger").dropdown();
+	</script>
 </html>

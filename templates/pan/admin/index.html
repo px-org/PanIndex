@@ -6,8 +6,13 @@
 	<meta name="renderer" content="webkit"/>
 	<meta name="force-rendering" content="webkit"/>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+{{if ne .FaviconUrl ""}}
+	<link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+	<link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+{{else}}
 	<link rel="icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
 	<link rel="shortcut icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+{{end}}
 	<!-- MDUI CSS -->
 	<link
 			rel="stylesheet"
@@ -39,7 +44,7 @@
 	</style>
 	<title>PanIndex - 系统配置</title>
 </head>
-<body class="mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-auto">
+<body class="mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}}">
 <div class="mdui-container">
 	<div class="mdui-card">
 		<div class="mdui-card-content">
@@ -47,6 +52,7 @@
 				<a href="#base-config" class="mdui-ripple"><i class="mdui-icon material-icons">settings</i><label>基础配置</label></a>
 				<a href="#bind-account" class="mdui-ripple"><i class="mdui-icon material-icons">account_circle</i><label>账号绑定</label></a>
 				<a href="#cron" class="mdui-ripple"><i class="mdui-icon material-icons">access_alarms</i><label>定时任务</label></a>
+				<a href="#upload" class="mdui-ripple"><i class="mdui-icon material-icons">cloud_upload</i><label>上传同步</label></a>
 			</div>
 			<div id="base-config" class="mdui-p-a-2 mdui-typo">
 				<form id="configForm">
@@ -64,8 +70,10 @@
 						<label class="mdui-textfield-label">主题</label>
 						<select id="theme" name="theme" class="mdui-select" mdui-select>
 							<option value='mdui' {{if eq .Theme "mdui"}}selected{{else}}{{end}}>mdui</option>
-							<option value='classic' {{if eq .Theme "classic"}}selected{{else}}{{end}}>classic</option>
+							<option value='mdui-light' {{if eq .Theme "mdui-light"}}selected{{else}}{{end}}>mdui-light</option>
+							<option value='mdui-dark' {{if eq .Theme "mdui-dark"}}selected{{else}}{{end}}>mdui-dark</option>
 							<option value='bootstrap' {{if eq .Theme "bootstrap"}}selected{{else}}{{end}}>bootstrap</option>
+							<option value='classic' {{if eq .Theme "classic"}}selected{{else}}{{end}}>classic</option>
 							<option value='materialdesign' {{if eq .Theme "materialdesign"}}selected{{else}}{{end}}>materialdesign</option>
 						</select>
 					</div>
@@ -93,6 +101,10 @@
 						<div class="mdui-textfield-helper mdui-text-color-purple">多个逗号分隔</div>
 					</div>
 					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">网站图标</label>
+						<input class="mdui-textfield-input" type="text" name="favicon_url" placeholder="网站图标Url" value="{{.FaviconUrl}}" />
+					</div>
+					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">自定义底部信息</label>
 						<input class="mdui-textfield-input" type="text" name="footer" placeholder="支持html代码" value="{{.Footer}}" />
 					</div>
@@ -116,7 +128,7 @@
 							<ul class="mdui-list">
 								{{range $i, $a := .Accounts}}
 									<li class="mdui-list-item mdui-ripple acli" data-index="{{$i}}">
-										<i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>
+										<i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition-us"}}blue{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>
 										<div class="mdui-list-item-content">{{.Name}}</div>
 										<label class="mdui-switch">
 											<input class="defaultAccount" data-id="{{.Id}}" type="checkbox" {{if eq .Default 1}}checked{{end}}  />
@@ -132,6 +144,7 @@
 									<div class="mdui-panel-item-header mdui-text-color-indigo">缓存记录</div>
 									<div class="mdui-panel-item-body">
 										<div id="cacheRecord">
+											<p>cookie： 未刷新</p>
 											<p>状态： 未缓存</p>
 											<p>最近一次缓存：-</p>
 											<p>耗时：0s</p>
@@ -167,6 +180,11 @@
 											<input type="radio" name="mode" value="teambition" />
 											<i class="mdui-radio-icon"></i>
 											teambition
+										</label>
+										<label class="mdui-radio mdui-col">
+											<input type="radio" name="mode" value="teambition-us" />
+											<i class="mdui-radio-icon"></i>
+											teambition国际版
 										</label>
 									</div>
 								</div>
@@ -235,7 +253,7 @@
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">定时任务-刷新目录缓存</label>
-						<input class="mdui-textfield-input" type="text" name="update_folder_cache" placeholder="0 0 0/1 * * ?" value="{{.UpdateFolderCache}}" />
+						<input class="mdui-textfield-input" type="text" name="update_folder_cache" placeholder="0 0 4 1/1 * ?" value="{{.UpdateFolderCache}}" />
 						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
 					<div class="mdui-textfield">
@@ -245,7 +263,7 @@
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">heroku防休眠地址（heroku可选）</label>
-						<input class="mdui-textfield-input" type="text" name="heroku_app_url" placeholder="https://appname,herokuapp.com" value="{{.HerokuAppUrl}}" />
+						<input class="mdui-textfield-input" type="text" name="heroku_app_url" placeholder="https://appname.herokuapp.com" value="{{.HerokuAppUrl}}" />
 					</div>
 					<div class="mdui-row-xs-12">
 						<div class="mdui-col">
@@ -255,6 +273,56 @@
 				</form>
 			</div>
 		</div>
+        <div id="upload" class="mdui-p-a-2 mdui-typo">
+			<div class="mdui-row">
+				<div class="mdui-col-sm-2 mdui-col-md-3">
+					<ul class="mdui-list">
+						<li class="mdui-list-item mdui-list-item-active mdui-ripple">
+							<i class="mdui-list-item-icon mdui-icon material-icons">cloud_upload</i>
+							<div class="mdui-list-item-content">手动上传</div>
+						</li>
+						{{/*<li class="mdui-list-item mdui-ripple">
+							<i class="mdui-list-item-icon mdui-icon material-icons">sync</i>
+							<div class="mdui-list-item-content">同步</div>
+						</li>
+						<li class="mdui-list-item mdui-ripple">
+							<i class="mdui-list-item-icon mdui-icon material-icons">history</i>
+							<div class="mdui-list-item-content">上传记录</div>
+						</li>*/}}
+					</ul>
+				</div>
+				<div class="mdui-col-sm-10 mdui-col-md-9">
+					<form id="uploadForm">
+						<label class="mdui-textfield-label">账户</label>
+						<select id="uploadAccount" class="mdui-select" mdui-select>
+							{{range $i, $a := .Accounts}}
+								<option value="{{.Id}}">{{.Name}}</option>
+							{{end}}
+						</select>
+						<div class="mdui-textfield">
+							<label class="mdui-textfield-label">选择文件</label>
+							<input id="uploadFile" type="file" class="mdui-textfield-input"
+								   placeholder="本地上传" multiple/>
+						</div>
+						<div class="mdui-textfield">
+							<label class="mdui-textfield-label">远程目录(PanIndex路径)</label>
+							<input id="uploadPath" class="mdui-textfield-input" type="text" value="" placeholder="/upload" required="required"/>
+						</div>
+					</form>
+					<div class="mdui-row-xs-3">
+						<div class="mdui-col">
+							<button type="button" class="uploadBtn mdui-btn-block mdui-btn mdui-color-theme mdui-ripple" value="0">上传</button>
+						</div>
+						<div class="mdui-col">
+							<button type="button" class="uploadBtn mdui-btn-block mdui-btn mdui-color-theme mdui-ripple" value="1">缓存刷新</button>
+						</div>
+						<div class="mdui-col">
+							<button type="button" class="uploadBtn mdui-btn-block mdui-btn mdui-color-theme mdui-ripple" value="2">上传并刷新</button>
+						</div>
+					</div>
+				</div>
+			</div>
+    	</div>
 	</div>
 	<div class="mdui-text-center mdui-typo">
 		©2021 <a href="https://github.com/libsgh/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
@@ -281,9 +349,10 @@ $("#resetBtn").on('click', function () {
 });
 var accounts = [
 	{{range .Accounts}}
-		{"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"",
+		{"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"{{.Password}}",
 			"refresh_token":"{{.RefreshToken}}","access_token":"{{.AccessToken}}","root_id":"{{.RootId}}",
-			"status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}", "last_op_time":"{{.LastOpTime}}"
+			"cookie_status":"{{.CookieStatus}}","status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}",
+			"last_op_time":"{{.LastOpTime}}"
 		},
 	{{end}}
 	];
@@ -303,6 +372,7 @@ function fillAccount(index) {
 	var account = accounts[index];
 	$("#accountForm").find("input[name=id]").val(account.id);
 	$("#accountForm").find("input[name=name]").val(account.name);
+	$("#accountForm").find("input[name=password]").val(account.password);
 	$("#accountForm").find("input[name=mode][value="+account.mode+"]").prop("checked", true);
 	$("#accountForm").find("input[name=user]").val(account.user);
 	$("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
@@ -325,6 +395,12 @@ function dynamicChgMode(mode){
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
 	}else if (mode == "teambition"){
+		$("#AccessTokenDiv").hide();
+		$("#RefreshTokenDiv").hide();
+		$("#UserDiv").show();
+		$("#PasswordDiv").show();
+		$("#recordDiv").show();
+	}else if (mode == "teambition-us"){
 		$("#AccessTokenDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
@@ -447,12 +523,23 @@ $(".defaultAccount").on('click', function (ev){
 });
 function fillCacheRecord(account){
 	var text = "";
+	if(account.cookie_status == 1){
+		text += "<p>cookie： 未刷新</p>";
+	}else if (account.cookie_status == 2){
+		text += "<p>cookie： 正常</p>";
+	}else if (account.cookie_status == 3){
+		text += "<p>cookie： 失效</p>";
+	}else if (account.cookie_status == -1){
+		text += "<p>cookie： 刷新中</p>";
+	}
 	if(account.status == 1){
 		text += "<p>状态： 未缓存</p>";
 	}else if (account.status == 2){
 		text += "<p>状态： 缓存成功</p>";
 	}else if (account.status == 3){
 		text += "<p>状态： 缓存失败</p>";
+	}else if (account.status == -1){
+		text += "<p>状态： 缓存中</p>";
 	}
 	if(account.files_count > 0){
 		text += "<p>文件数：" + account.files_count + "</p>";
@@ -502,6 +589,32 @@ function updateCookie(){
 $(".acli").on('click', function(e){
 	if(e.target.tagName == 'INPUT')return;
 	fillAccount($(this).attr('data-index'));
+});
+$('.uploadBtn').on('click', function () {
+	var type = $(this).val();
+	var fileObjs = document.getElementById('uploadFile').files;
+	var formData = new FormData();
+	formData.append("uploadAccount", $('#uploadAccount').val());
+	formData.append("uploadPath", $('#uploadPath').val());
+	formData.append("type", type);
+	$.each(fileObjs, function (i, f) {
+		formData.append("uploadFile", f);
+	});
+	$.ajax({
+		method: 'POST',
+		url: "/api/admin/upload?token={{.ApiToken}}", //上传文件的请求路径必须是绝对路劲
+		data: formData,
+		cache: false,
+		contentType: false,
+		processData: false,
+		success: function (data) {
+			var d = JSON.parse(data);
+			mdui.snackbar({
+				message: d.msg,
+				timeout: 3000
+			});
+		}
+	});
 });
 $.fn.serializeObject = function()
 {

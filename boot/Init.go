@@ -6,6 +6,7 @@ import (
 	"PanIndex/service"
 	"encoding/json"
 	"fmt"
+	"github.com/banzaicloud/logrus-runtime-formatter"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -40,7 +41,7 @@ func Start(host, port string, debug bool) {
 	//定时任务初始化
 	jobs.Run()
 	//刷新cookie和目录缓存
-	go jobs.StartInit()
+	//go jobs.StartInit()
 }
 
 func PrintAsc() {
@@ -67,12 +68,14 @@ func InitLog(debug bool) {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	log.SetFormatter(&log.TextFormatter{
+	formatter := runtime.Formatter{ChildFormatter: &log.TextFormatter{
 		ForceColors:               true,
 		EnvironmentOverrideColors: true,
 		TimestampFormat:           "2006-01-02 15:04:05",
 		FullTimestamp:             true,
-	})
+	}}
+	formatter.Line = true
+	log.SetFormatter(&formatter)
 }
 
 func PrintVersion() {
@@ -95,6 +98,10 @@ func CheckUpdate() {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Warnf("读取更新内容失败:%s", err.Error())
+		return
+	}
+	if strings.Contains(string(body), "API rate limit") {
+		log.Warnf("检查更新失败: API rate limit")
 		return
 	}
 	var release GithubRelease

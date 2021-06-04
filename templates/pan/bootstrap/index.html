@@ -4,8 +4,13 @@
 		<title>{{.Title}} {{ .Path }}</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	{{if ne .FaviconUrl ""}}
+		<link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+		<link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+	{{else}}
 		<link rel="icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
 		<link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
+	{{end}}
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/css/lightgallery.min.css">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.css">
@@ -54,18 +59,22 @@
 		</script>
 		{{else}}
 		<nav id="heading" class="navbar navbar-expand-md bg-secondary navbar-dark">
-			<ul class="nav navbar-nav">
-				<li class="dropdown">
-					<a class="dropdown-toggle navbar-brand" href="#" id="navbardrop" data-toggle="dropdown">
-						{{.Title}}
-					</a>
-					<div class="dropdown-menu">
-						{{range $i, $a := .Accounts}}
-						<a class="dropdown-item" href="/d_{{$i}}">{{.Name}}</a>
-						{{end}}
-					</div>
-				</li>
-			</ul>
+			{{ if gt (len .Accounts) 1 }}
+				<ul class="nav navbar-nav">
+					<li class="dropdown">
+						<a class="dropdown-toggle navbar-brand" href="#" id="navbardrop" data-toggle="dropdown">
+							{{.Title}}
+						</a>
+						<div class="dropdown-menu">
+							{{range $i, $a := .Accounts}}
+								<a class="dropdown-item" href="/d_{{$i}}">{{.Name}}</a>
+							{{end}}
+						</div>
+					</li>
+				</ul>
+			{{else}}
+				<a class="navbar-brand" href="/">{{.Title}}</a>
+			{{end}}
 			<!-- Toggler/collapsibe Button -->
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
 				<span class="navbar-toggler-icon"></span>
@@ -161,6 +170,25 @@
 						</tbody>
 					</table>
 				</div>
+				{{if .HasReadme}}
+					<div class="col-sm-12">
+						<div class="card" style="width: 100%">
+							<div class="card-header">
+								README.md
+							</div>
+							<div class="card-body">
+								<input id="readme" type="hidden" value="{{.ReadmeContent}}" />
+								<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+								<p id="content" class="card-text">
+								</p>
+								<script>
+									$("#content").html(marked($("#readme").val()));
+								</script>
+							</div>
+						</div>
+					</div>
+				{{else}}
+				{{end}}
 				<div class="col-sm-12">
 					<div class="text-center">
 						{{if eq $.Footer ""}}

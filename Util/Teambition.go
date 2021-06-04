@@ -4,12 +4,16 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"mime/multipart"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -67,6 +71,7 @@ func TeambitionLogin(accountId, user, password string) string {
 			panic(err.Error())
 		}
 	}
+	fmt.Println(resp.Text)
 	//2. 获orgId, memberId
 	resp, err = TeambitionSession.Get("https://www.teambition.com/api/organizations/personal", nil)
 	if err != nil {
@@ -86,13 +91,14 @@ func TeambitionLogin(accountId, user, password string) string {
 	if err != nil {
 		panic(err.Error())
 	}
-	Teambition.GloablDriveId = jsoniter.Get(resp.Bytes, "data.driveId").ToString()
+	Teambition.GloablDriveId = jsoniter.Get(resp.Bytes, "data").Get("driveId").ToString()
 	Teambition.TeambitionSession = TeambitionSession
 	TeambitionSessions[accountId] = Teambition
 	return "success"
 }
 
-func ProjectIdCheck(accountId, rootId string) string {
+//Teambition网盘登录
+func TeambitionUSLogin(accountId, user, password string) string {
 	Teambition := TeambitionSessions[accountId]
 	TeambitionSession := Teambition.TeambitionSession
 	defer func() {
@@ -100,7 +106,59 @@ func ProjectIdCheck(accountId, rootId string) string {
 			log.Errorln(p)
 		}
 	}()
-	resp, err := TeambitionSession.Get("https://www.teambition.com/api/projects/"+rootId, nil)
+	//0.登录-获取token
+	resp, err := TeambitionSession.Get("https://us-account.teambition.com/login/password", nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	token := GetBetweenStr(resp.Text, "TOKEN\":\"", "\"")
+	clientId := GetBetweenStr(resp.Text, "CLIENT_ID\":\"", "\"")
+	param := nic.KV{
+		"client_id":     clientId,
+		"token":         token,
+		"password":      password,
+		"response_type": "session",
+	}
+	//1.登录-用户名密码登录,获取cookie
+	if strings.Contains(user, "@") {
+		//邮箱登录
+		param["email"] = user
+		resp, err = TeambitionSession.Post("https://us-account.teambition.com/api/login/email", nic.H{
+			JSON:          param,
+			AllowRedirect: false,
+		})
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		//手机号登录
+		param["phone"] = user
+		resp, err = TeambitionSession.Post("https://us-account.teambition.com/api/login/phone", nic.H{
+			JSON: param,
+		})
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	u := jsoniter.Get(resp.Bytes, "user")
+	if u != nil && u.Get("_id").ToString() != "" {
+		//登录成功
+		Teambition.TeambitionSession = TeambitionSession
+		TeambitionSessions[accountId] = Teambition
+		return "success"
+	}
+	return ""
+}
+
+func ProjectIdCheck(server, accountId, rootId string) string {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
+	defer func() {
+		if p := recover(); p != nil {
+			log.Errorln(p)
+		}
+	}()
+	resp, err := TeambitionSession.Get(fmt.Sprintf("https://%s.teambition.com/api/projects/%s", server, rootId), nil)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -132,17 +190,16 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string) {
 		}
 	}()
 	limit := 100
-	pageNum := 0
+	nextMarker := ""
 	for {
-		offset := pageNum * limit
-		url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes?orgId=%s&offset=%d&limit=%d&orderBy=updateTime&orderDirection=desc&driveId=%s&spaceId=%s&parentId=%s", Teambition.GloablOrgId, offset, limit, Teambition.GloablDriveId, Teambition.GloablSpaceId, fileId)
+		url := fmt.Sprintf("https://pan.teambition.com/pan/api/nodes?orgId=%s&from=%s&limit=%d&orderBy=updated_at&orderDirection=DESC&driveId=%s&parentId=%s", Teambition.GloablOrgId, nextMarker, limit, Teambition.GloablDriveId, fileId)
 		resp, err := TeambitionSession.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
 		}
 		byteFiles := []byte(resp.Text)
 		d := jsoniter.Get(byteFiles, "data")
-		nextMarker := jsoniter.Get(byteFiles, "nextMarker").ToString()
+		nextMarker = jsoniter.Get(byteFiles, "nextMarker").ToString()
 		var m []map[string]interface{}
 		json.Unmarshal([]byte(d.ToString()), &m)
 		for _, item := range m {
@@ -156,7 +213,11 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string) {
 			fn.Delete = 1
 			kind := item["kind"].(string)
 			if kind == "file" {
-				fn.FileType = item["ext"].(string)
+				if item["ext"] == nil {
+					fn.FileType = ""
+				} else {
+					fn.FileType = item["ext"].(string)
+				}
 				fn.IsFolder = false
 				fn.FileSize = int64(item["size"].(float64))
 				fn.SizeFmt = FormatFileSize(fn.FileSize)
@@ -210,15 +271,13 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string) {
 			fn.Id = uuid.NewV4().String()
 			model.SqliteDb.Create(fn)
 		}
-		if nextMarker != "" {
-			pageNum++
-		} else {
+		if nextMarker == "" {
 			break
 		}
 	}
 }
 
-func TeambitionGetProjectFiles(accountId, rootId, p string) {
+func TeambitionGetProjectFiles(server, accountId, rootId, p string) {
 	Teambition := TeambitionSessions[accountId]
 	TeambitionSession := Teambition.TeambitionSession
 	defer func() {
@@ -232,13 +291,13 @@ func TeambitionGetProjectFiles(accountId, rootId, p string) {
 		var m []map[string]interface{}
 		var n []map[string]interface{}
 		//先查询目录
-		url := fmt.Sprintf("https://www.teambition.com/api/collections?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", rootId, Teambition.GloablProjectId, limit, pageNum)
+		url := fmt.Sprintf("https://%s.teambition.com/api/collections?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", server, rootId, Teambition.GloablProjectId, limit, pageNum)
 		resp, err := TeambitionSession.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
 		}
 		json.Unmarshal(resp.Bytes, &m)
-		url = fmt.Sprintf("https://www.teambition.com/api/works?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", rootId, Teambition.GloablProjectId, limit, pageNum)
+		url = fmt.Sprintf("https://%s.teambition.com/api/works?_parentId=%s&_projectId=%s&order=updatedDesc&count=%d&page=%d", server, rootId, Teambition.GloablProjectId, limit, pageNum)
 		resp, err = TeambitionSession.Get(url, nil)
 		if err != nil {
 			panic(err.Error())
@@ -303,12 +362,12 @@ func TeambitionGetProjectFiles(accountId, rootId, p string) {
 				}
 			}
 			fn.ParentPath = p
-			if fn.ParentId == rootId {
+			if fn.ParentId == Teambition.GloablRootId {
 				fn.Path = p + fn.FileName
 			} else {
 				fn.Path = p + "/" + fn.FileName
 			}
-			TeambitionGetProjectFiles(accountId, fn.FileId, fn.Path)
+			TeambitionGetProjectFiles(server, accountId, fn.FileId, fn.Path)
 			if fn.FileName != "" {
 				fn.Id = uuid.NewV4().String()
 				model.SqliteDb.Create(fn)
@@ -337,10 +396,10 @@ func GetTeambitionDownUrl(accountId, nodeId string) string {
 	}
 	return downUrl
 }
-func GetTeambitionProDownUrl(accountId, nodeId string) string {
+func GetTeambitionProDownUrl(server, accountId, nodeId string) string {
 	Teambition := TeambitionSessions[accountId]
 	TeambitionSession := Teambition.TeambitionSession
-	url := fmt.Sprintf("https://www.teambition.com/api/works/%s", nodeId)
+	url := fmt.Sprintf("https://%s.teambition.com/api/works/%s", server, nodeId)
 	resp, err := TeambitionSession.Get(url, nil)
 	defer func() {
 		if p := recover(); p != nil {
@@ -359,6 +418,142 @@ func GetTeambitionProDownUrl(accountId, nodeId string) string {
 		AllowRedirect: false,
 	})
 	return rs.Header.Get("Location")
+}
+
+func TeambitionUpload(accountId, parentId string, files []*multipart.FileHeader) bool {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
+	for _, file := range files {
+		t1 := time.Now()
+		log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
+		fs := []nic.KV{nic.KV{
+			"driveId":     Teambition.GloablDriveId,
+			"chunkCount":  1,
+			"name":        file.Filename,
+			"ccpParentId": parentId,
+			"contentType": "",
+			"size":        file.Size,
+			"type":        "file",
+		}}
+		resp, _ := TeambitionSession.Post("https://pan.teambition.com/pan/api/nodes/file", nic.H{
+			JSON: nic.KV{
+				"orgId":         Teambition.GloablOrgId,
+				"spaceId":       Teambition.GloablSpaceId,
+				"parentId":      parentId,
+				"checkNameMode": "autoRename",
+				"infos":         fs,
+			},
+		})
+		nodeId := jsoniter.Get(resp.Bytes, 0).Get("nodeId").ToString()
+		uploadId := jsoniter.Get(resp.Bytes, 0).Get("uploadId").ToString()
+		resp, _ = TeambitionSession.Post(fmt.Sprintf("https://pan.teambition.com/pan/api/nodes/%s/uploadUrl", nodeId), nic.H{
+			JSON: nic.KV{
+				"orgId":           Teambition.GloablOrgId,
+				"driveId":         Teambition.GloablDriveId,
+				"uploadId":        uploadId,
+				"startPartNumber": 1,
+				"endPartNumber":   1,
+			},
+		})
+		fileId := jsoniter.Get(resp.Bytes, "fileId").ToString()
+		partInfoListString := jsoniter.Get(resp.Bytes, "partInfoList").ToString()
+		partInfoList := []entity.PartInfo{}
+		jsoniter.UnmarshalFromString(partInfoListString, &partInfoList)
+		log.Debugf("文件分片数：%d", len(partInfoList))
+		for _, partInfo := range partInfoList {
+			fileContent, _ := file.Open()
+			byteContent, _ := ioutil.ReadAll(fileContent)
+			client := &http.Client{}
+			req, err := http.NewRequest(http.MethodPut, partInfo.UploadUrl, bytes.NewBuffer(byteContent))
+			if err != nil {
+				log.Error("上传失败")
+				return false
+			}
+			client.Do(req)
+		}
+		resp, _ = TeambitionSession.Post("https://pan.teambition.com/pan/api/nodes/complete", nic.H{
+			JSON: nic.KV{
+				"orgId":     Teambition.GloablOrgId,
+				"driveId":   Teambition.GloablDriveId,
+				"uploadId":  uploadId,
+				"nodeId":    nodeId,
+				"ccpFileId": fileId,
+			},
+		})
+		log.Debugf("上传接口返回：%s", resp.Text)
+		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
+	}
+	return true
+}
+
+func TeambitionProUpload(server, accountId, parentId string, files []*multipart.FileHeader) bool {
+	Teambition := TeambitionSessions[accountId]
+	TeambitionSession := Teambition.TeambitionSession
+	prefix := ""
+	if server == "us" {
+		prefix = "us"
+	} else {
+		prefix = "www"
+	}
+	for _, file := range files {
+		t1 := time.Now()
+		log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
+		resp, _ := TeambitionSession.Get(fmt.Sprintf("https://%s.teambition.com/projects", prefix), nil)
+		//0.准备文件
+		fileContent, _ := file.Open()
+		byteContent, _ := ioutil.ReadAll(fileContent)
+		//1.获取jwt
+		jwt := GetCurBetweenStr(resp.Text, "strikerAuth&quot;:&quot;", "&quot;,&quot;phoneForLogin")
+		//2.上传文件
+		if server == "us" {
+			prefix = "us-"
+		} else {
+			prefix = ""
+		}
+		resp, _ = nic.Post(fmt.Sprintf("https://%stcs.teambition.net/upload", prefix), nic.H{
+			Files: nic.KV{
+				"file": nic.File(
+					file.Filename, byteContent),
+			},
+			Headers: nic.KV{
+				"Authorization": jwt,
+			},
+		})
+		fmt.Println(resp.Text)
+		fileKey := jsoniter.Get(resp.Bytes, "fileKey").ToString()
+		fileName := jsoniter.Get(resp.Bytes, "fileName").ToString()
+		fileType := jsoniter.Get(resp.Bytes, "fileType").ToString()
+		fileSize := jsoniter.Get(resp.Bytes, "fileSize").ToInt64()
+		fileCategory := jsoniter.Get(resp.Bytes, "fileCategory").ToString()
+		//imageWidth := jsoniter.Get(resp.Bytes, "imageWidth").ToString()
+		//imageHeight := jsoniter.Get(resp.Bytes, "imageHeight").ToString()
+		//3.完成上传
+		if server == "us" {
+			prefix = "us"
+		} else {
+			prefix = "www"
+		}
+		resp, _ = TeambitionSession.Post(fmt.Sprintf("https://%s.teambition.com/api/works", prefix), nic.H{
+			JSON: nic.KV{
+				"works": []nic.KV{nic.KV{
+					"fileKey":      fileKey,
+					"fileName":     fileName,
+					"fileType":     fileType,
+					"fileSize":     fileSize,
+					"fileCategory": fileCategory,
+					/*"imageWidth":   imageWidth,
+					"imageHeight":  imageHeight,*/
+					"source":    "tcs",
+					"visible":   "members",
+					"_parentId": parentId,
+				}},
+				"_parentId": parentId,
+			},
+		})
+		log.Debugf("上传接口返回：%s", resp.Text)
+		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
+	}
+	return true
 }
 
 func UTCTimeFormat(timeStr string) string {
