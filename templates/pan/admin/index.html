@@ -6,8 +6,13 @@
 	<meta name="renderer" content="webkit"/>
 	<meta name="force-rendering" content="webkit"/>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+{{if ne .FaviconUrl ""}}
+	<link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+	<link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+{{else}}
 	<link rel="icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
 	<link rel="shortcut icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+{{end}}
 	<!-- MDUI CSS -->
 	<link
 			rel="stylesheet"
@@ -96,6 +101,10 @@
 						<div class="mdui-textfield-helper mdui-text-color-purple">多个逗号分隔</div>
 					</div>
 					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">网站图标</label>
+						<input class="mdui-textfield-input" type="text" name="favicon_url" placeholder="网站图标Url" value="{{.FaviconUrl}}" />
+					</div>
+					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">自定义底部信息</label>
 						<input class="mdui-textfield-input" type="text" name="footer" placeholder="支持html代码" value="{{.Footer}}" />
 					</div>
@@ -119,7 +128,7 @@
 							<ul class="mdui-list">
 								{{range $i, $a := .Accounts}}
 									<li class="mdui-list-item mdui-ripple acli" data-index="{{$i}}">
-										<i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>
+										<i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition-us"}}blue{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>
 										<div class="mdui-list-item-content">{{.Name}}</div>
 										<label class="mdui-switch">
 											<input class="defaultAccount" data-id="{{.Id}}" type="checkbox" {{if eq .Default 1}}checked{{end}}  />
@@ -171,6 +180,11 @@
 											<input type="radio" name="mode" value="teambition" />
 											<i class="mdui-radio-icon"></i>
 											teambition
+										</label>
+										<label class="mdui-radio mdui-col">
+											<input type="radio" name="mode" value="teambition-us" />
+											<i class="mdui-radio-icon"></i>
+											teambition国际版
 										</label>
 									</div>
 								</div>
@@ -381,6 +395,12 @@ function dynamicChgMode(mode){
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
 	}else if (mode == "teambition"){
+		$("#AccessTokenDiv").hide();
+		$("#RefreshTokenDiv").hide();
+		$("#UserDiv").show();
+		$("#PasswordDiv").show();
+		$("#recordDiv").show();
+	}else if (mode == "teambition-us"){
 		$("#AccessTokenDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();

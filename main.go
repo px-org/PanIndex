@@ -210,6 +210,7 @@ func index(c *gin.Context) {
 	result["AccountId"] = account.Id
 	result["Footer"] = config.GloablConfig.Footer
 	result["Theme"] = config.GloablConfig.Theme
+	result["FaviconUrl"] = config.GloablConfig.FaviconUrl
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
@@ -273,7 +274,7 @@ func admin(c *gin.Context) {
 				config := service.GetConfig()
 				c.HTML(http.StatusOK, "pan/admin/index.html", config)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false, "Theme": config.GloablConfig.Theme})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false, "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 			}
 		} else {
 			//登录
@@ -287,7 +288,7 @@ func admin(c *gin.Context) {
 				config := service.GetConfig()
 				c.HTML(http.StatusOK, "pan/admin/index.html", config)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Theme": config.Theme, "Msg": "密码错误，请重试！"})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Theme": config.Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
 			}
 		}
 	}

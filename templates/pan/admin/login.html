@@ -6,8 +6,13 @@
     <meta name="renderer" content="webkit"/>
     <meta name="force-rendering" content="webkit"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+{{if ne .FaviconUrl ""}}
+    <link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+{{else}}
     <link rel="icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+{{end}}
     <!-- MDUI CSS -->
     <link
             rel="stylesheet"

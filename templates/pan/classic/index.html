@@ -11,8 +11,13 @@
             text-align: center;
         }
     </style>
+{{if ne .FaviconUrl ""}}
+    <link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+{{else}}
     <link rel="icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
+{{end}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/css/lightgallery.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">

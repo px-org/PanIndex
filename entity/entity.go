@@ -45,7 +45,8 @@ type Config struct {
 	RefreshCookie     string    `json:"refresh_cookie" gorm:"default:'0 0 8 1/1 * ?'"`
 	UpdateFolderCache string    `json:"update_folder_cache"`
 	HerokuKeepAlive   string    `json:"heroku_keep_alive"`
-	Footer            string    `json:"footer"` //网站底部信息
+	FaviconUrl        string    `json:"favicon_url"` //网站图标
+	Footer            string    `json:"footer"`      //网站底部信息
 }
 type Account struct {
 	Id           string `json:"id"`            //网盘空间id
