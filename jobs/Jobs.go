@@ -72,11 +72,17 @@ func AccountLogin(account entity.Account) {
 		cookie = Util.Cloud189Login(account.Id, account.User, account.Password)
 	} else if account.Mode == "teambition" {
 		cookie = Util.TeambitionLogin(account.Id, account.User, account.Password)
-		Util.ProjectIdCheck(account.Id, account.RootId)
+		Util.ProjectIdCheck("www", account.Id, account.RootId)
 		if Util.TeambitionSessions[account.Id].IsPorject {
 			msg = "[" + account.Name + "] >> teambition网盘-项目"
 		} else {
 			msg = "[" + account.Name + "] >> teambition网盘-个人"
+		}
+	} else if account.Mode == "teambition-us" {
+		cookie = Util.TeambitionUSLogin(account.Id, account.User, account.Password)
+		Util.ProjectIdCheck("us", account.Id, account.RootId)
+		if Util.TeambitionSessions[account.Id].IsPorject {
+			msg = "[" + account.Name + "] >> teambition国际盘-项目"
 		}
 	} else if account.Mode == "native" {
 		msg = "[" + account.Name + "] >> 本地模式"
@@ -95,11 +101,17 @@ func SyncOneAccount(account entity.Account) {
 	if account.Mode == "cloud189" {
 		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "")
 	} else if account.Mode == "teambition" {
-		rootId := Util.ProjectIdCheck(account.Id, account.RootId)
+		rootId := Util.ProjectIdCheck("www", account.Id, account.RootId)
 		if Util.TeambitionSessions[account.Id].IsPorject {
-			Util.TeambitionGetProjectFiles(account.Id, rootId, "/")
+			Util.TeambitionGetProjectFiles("www", account.Id, rootId, "/")
 		} else {
 			Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
+		}
+	} else if account.Mode == "teambition-us" {
+		rootId := Util.ProjectIdCheck("us", account.Id, account.RootId)
+		if Util.TeambitionSessions[account.Id].IsPorject {
+			Util.TeambitionGetProjectFiles("us", account.Id, rootId, "/")
+		} else {
 		}
 	} else if account.Mode == "native" {
 	}

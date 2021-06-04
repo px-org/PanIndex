@@ -181,9 +181,15 @@ func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
 		return Util.GetDownlaodUrl(account.Id, fileNode.FileIdDigest)
 	} else if account.Mode == "teambition" {
 		if Util.TeambitionSessions[account.Id].IsPorject {
-			return Util.GetTeambitionProDownUrl(account.Id, fileNode.FileId)
+			return Util.GetTeambitionProDownUrl("www", account.Id, fileNode.FileId)
 		} else {
 			return Util.GetTeambitionDownUrl(account.Id, fileNode.FileId)
+		}
+	} else if account.Mode == "teambition-us" {
+		if Util.TeambitionSessions[account.Id].IsPorject {
+			return Util.GetTeambitionProDownUrl("us", account.Id, fileNode.FileId)
+		} else {
+			//国际版暂时没有个人文件
 		}
 	} else if account.Mode == "native" {
 	}
@@ -318,6 +324,8 @@ func SaveConfig(config map[string]interface{}) {
 						Util.CLoud189Sessions[old.Id] = nic.Session{}
 					} else if mode == "teambition" {
 						Util.TeambitionSessions[old.Id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
+					} else if mode == "teambition-us" {
+						Util.TeambitionSessions[old.Id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 					}
 				}
 				ID = old.Id
@@ -333,6 +341,8 @@ func SaveConfig(config map[string]interface{}) {
 				if mode == "cloud189" {
 					Util.CLoud189Sessions[id] = nic.Session{}
 				} else if mode == "teambition" {
+					Util.TeambitionSessions[id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
+				} else if mode == "teambition-us" {
 					Util.TeambitionSessions[id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 				}
 			}
@@ -434,7 +444,10 @@ func Upload(accountId, path string, c *gin.Context) string {
 				Util.TeambitionUpload(accountId, fileId, files)
 			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 项目文件上传
-				Util.TeambitionProUpload(accountId, fileId, files)
+				Util.TeambitionProUpload("", accountId, fileId, files)
+			} else if account.Mode == "teambition-us" && Util.TeambitionSessions[accountId].IsPorject {
+				//teambition-us 项目文件上传
+				Util.TeambitionProUpload("us", accountId, fileId, files)
 			} else if account.Mode == "cloud189" {
 				//teambition 项目文件上传
 				Util.Cloud189UploadFiles(accountId, fileId, files)
@@ -471,7 +484,10 @@ func Async(accountId, path string) string {
 				Util.TeambitionGetFiles(account.Id, fileId, fileId, path)
 			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 项目文件
-				Util.TeambitionGetProjectFiles(account.Id, fileId, path)
+				Util.TeambitionGetProjectFiles("www", account.Id, fileId, path)
+			} else if account.Mode == "teambition-us" && Util.TeambitionSessions[accountId].IsPorject {
+				//teambition-us 项目文件
+				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path)
 			} else if account.Mode == "cloud189" {
 				Util.Cloud189GetFiles(account.Id, fileId, fileId, path)
 			}

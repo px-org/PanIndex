@@ -41,7 +41,7 @@ func Start(host, port string, debug bool) {
 	//定时任务初始化
 	jobs.Run()
 	//刷新cookie和目录缓存
-	go jobs.StartInit()
+	//go jobs.StartInit()
 }
 
 func PrintAsc() {
