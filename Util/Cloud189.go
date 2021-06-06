@@ -125,16 +125,36 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 		}
 	}
 }
+func GetDownlaodUrlOld(accountId, fileIdDigest string) string {
+	CLoud189Session := CLoud189Sessions[accountId]
+	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
+		AllowRedirect: false,
+	})
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	redirectUrl := dRedirectRep.Header.Get("Location")
+	dRedirectRep, err = CLoud189Session.Get(redirectUrl, nic.H{
+		AllowRedirect: false,
+	})
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	return dRedirectRep.Header.Get("Location")
+}
 func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
-	dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
+	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/v2/getPhotoOriginalUrl.action?fileIdDigest="+fileIdDigest+"&directDownload=true", nic.H{
 		AllowRedirect: false,
 	})
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
 	redirectUrl := dRedirectRep.Header.Get("Location")
-	dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
-		AllowRedirect: false,
-	})
-	return dRedirectRep.Header.Get("Location")
+	return redirectUrl
 }
 func GetDownlaodMultiFiles(accountId, fileId string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
