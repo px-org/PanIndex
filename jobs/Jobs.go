@@ -49,6 +49,15 @@ func Run() {
 			}
 		})
 	}
+	//阿里云盘 accesstoken过期时间为2小时，这里采取固定cron刷新的方式
+	c.AddFunc("0 0 0/1 * * ?", func() {
+		for k, v := range Util.Alis {
+			account := entity.Account{}
+			account.Id = k
+			account.RefreshToken = v.RefreshToken
+			Util.AliRefreshToken(account)
+		}
+	})
 	c.Start()
 }
 func StartInit() {
@@ -84,6 +93,9 @@ func AccountLogin(account entity.Account) {
 		if Util.TeambitionSessions[account.Id].IsPorject {
 			msg = "[" + account.Name + "] >> teambition国际盘-项目"
 		}
+	} else if account.Mode == "aliyundrive" {
+		cookie = Util.AliRefreshToken(account)
+		msg = "[" + account.Name + "] >> 阿里云盘"
 	} else if account.Mode == "native" {
 		msg = "[" + account.Name + "] >> 本地模式"
 	}
@@ -91,7 +103,7 @@ func AccountLogin(account entity.Account) {
 		log.Infoln(msg + " >> cookie更新 >> 登录成功")
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 2)
 	} else if cookie == "" && account.Mode != "native" {
-		log.Infoln(msg + "cookie更新 >> 登录失败，请检查用户名和密码是否正确")
+		log.Infoln(msg + "cookie更新 >> 登录失败，请检查用户名,密码(token)是否正确")
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 3)
 	}
 }
@@ -113,6 +125,8 @@ func SyncOneAccount(account entity.Account) {
 			Util.TeambitionGetProjectFiles("us", account.Id, rootId, "/")
 		} else {
 		}
+	} else if account.Mode == "aliyundrive" {
+		Util.AliGetFiles(account.Id, account.RootId, account.RootId, "/")
 	} else if account.Mode == "native" {
 	}
 	//删除旧数据

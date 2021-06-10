@@ -77,7 +77,6 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 		} else if p != "/" && prefix != "" {
 			p = prefix + p
 		}
-		fmt.Println(p)
 		if d != nil {
 			m := []entity.FileNode{}
 			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
@@ -125,7 +124,7 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 		}
 	}
 }
-func GetDownlaodUrlOld(accountId, fileIdDigest string) string {
+func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
 		AllowRedirect: false,
@@ -142,9 +141,12 @@ func GetDownlaodUrlOld(accountId, fileIdDigest string) string {
 		log.Error(err)
 		return ""
 	}
+	if dRedirectRep == nil || dRedirectRep.Header == nil {
+		return ""
+	}
 	return dRedirectRep.Header.Get("Location")
 }
-func GetDownlaodUrl(accountId, fileIdDigest string) string {
+func GetDownlaodUrlNew(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/v2/getPhotoOriginalUrl.action?fileIdDigest="+fileIdDigest+"&directDownload=true", nic.H{
 		AllowRedirect: false,

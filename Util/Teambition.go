@@ -71,7 +71,13 @@ func TeambitionLogin(accountId, user, password string) string {
 			panic(err.Error())
 		}
 	}
-	fmt.Println(resp.Text)
+	u := jsoniter.Get(resp.Bytes, "user")
+	if u == nil || u.Get("_id").ToString() == "" {
+		//登录成功
+		Teambition.TeambitionSession = TeambitionSession
+		TeambitionSessions[accountId] = Teambition
+		return ""
+	}
 	//2. 获orgId, memberId
 	resp, err = TeambitionSession.Get("https://www.teambition.com/api/organizations/personal", nil)
 	if err != nil {
@@ -260,7 +266,7 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string) {
 				}
 			}
 			fn.ParentPath = p
-			if fn.ParentId == rootId {
+			if p == "/" {
 				fn.Path = p + fn.FileName
 			} else {
 				fn.Path = p + "/" + fn.FileName
@@ -362,7 +368,7 @@ func TeambitionGetProjectFiles(server, accountId, rootId, p string) {
 				}
 			}
 			fn.ParentPath = p
-			if fn.ParentId == Teambition.GloablRootId {
+			if p == "/" {
 				fn.Path = p + fn.FileName
 			} else {
 				fn.Path = p + "/" + fn.FileName

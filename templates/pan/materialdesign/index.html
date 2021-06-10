@@ -4,6 +4,9 @@
 		<title>{{.Title}} {{ .Path }}</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	{{if eq .Mode "aliyundrive"}}
+		<meta name="referrer" content="no-referrer">
+	{{end}}
 	{{if ne .FaviconUrl ""}}
 		<link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
 		<link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
@@ -206,6 +209,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
 	<script src="https://cdn.bootcdn.net/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
 	<script src="/static/js/main.js"></script>
 	<script>
 		$(".dropdown-trigger").dropdown();

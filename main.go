@@ -18,6 +18,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -27,11 +29,12 @@ import (
 var Host = flag.String("host", "", "绑定host，默认为0.0.0.0")
 var Port = flag.String("port", "", "绑定port，默认为8080")
 var Debug = flag.Bool("debug", false, "调试模式，设置为true可以输出更多日志")
+var DataPath = flag.String("data_path", "data", "数据存储目录，默认程序同级目录")
 var GC = gcache.New(100).LRU().Build()
 
 func main() {
 	flag.Parse()
-	boot.Start(*Host, *Port, *Debug)
+	boot.Start(*Host, *Port, *Debug, *DataPath)
 	r := gin.New()
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
@@ -47,7 +50,7 @@ func main() {
 		path := c.Request.URL.Path
 		method := c.Request.Method
 		_, ad := c.GetQuery("admin")
-		if strings.HasPrefix(path, "/api/") {
+		if strings.HasPrefix(path, "/api/") && !strings.HasPrefix(path, "/api/public") {
 			requestToken := c.Query("token")
 			if requestToken != config.GloablConfig.ApiToken {
 				message := "Invalid api token"
@@ -55,7 +58,7 @@ func main() {
 				return
 			}
 		}
-		if method == "POST" && path == "/api/downloadMultiFiles" {
+		if path == "/api/public/downloadMultiFiles" {
 			//文件夹下载
 			downloadMultiFiles(c)
 		} else if method == http.MethodGet && path == "/api/updateFolderCache" {
@@ -232,8 +235,27 @@ func index(c *gin.Context) {
 func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
 	accountId := c.Query("accountId")
-	downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
-	c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
+	account := service.GetAccount(accountId)
+	if account.Mode == "native" {
+		dp := *DataPath
+		if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
+			dp = os.Getenv("PAN_INDEX_DATA_PATH")
+		}
+		if dp == "" {
+			dp = "data"
+		}
+		//src := service.GetPath(accountId, accountId)
+		t := time.Now().Format("20060102150405")
+		dst := dp + string(filepath.Separator) + t + ".zip"
+		Util.Zip(dp+string(filepath.Separator)+t+".zip", fileId)
+		c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", t+".zip"))
+		c.Writer.Header().Add("Content-Type", "application/octet-stream")
+		c.File(dst)
+		return
+	} else if account.Mode == "cloud189" {
+		downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
+		c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
+	}
 }
 
 func updateCaches(account entity.Account) {

@@ -4,11 +4,12 @@
 
 > 一个简易的网盘目录列表.
 >
-- 跨平台、部署简单
-- 多网盘模式
-- 多种主题
+- 跨平台、易部署
+- 多模式，多账户
+- 多主题
 - 下载直链
-- 定时缓存
+- 防盗链
+
 
 [GitHub](https://github.com/libsgh/PanIndex/)
 [Getting Started](quickstart.md)
