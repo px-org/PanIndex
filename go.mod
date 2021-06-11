@@ -13,6 +13,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.0
+	github.com/unrolled/secure v1.0.9
 	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
 	gorm.io/driver/sqlite v1.1.4
