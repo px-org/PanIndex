@@ -176,6 +176,31 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 	return result
 }
 
+func SearchFilesByKey(account entity.Account, key string) map[string]interface{} {
+	result := make(map[string]interface{})
+	list := []entity.FileNode{}
+	defer func() {
+		if p := recover(); p != nil {
+			log.Errorln(p)
+		}
+	}()
+	if account.Mode == "native" {
+		list = Util.FileSearch(account.RootId, "", key)
+	} else {
+		model.SqliteDb.Raw("select * from file_node where file_name like ? and `delete`=0 and hide = 0 and account_id=?", "%"+key+"%", account.Id).Find(&list)
+	}
+	result["List"] = list
+	result["Path"] = "/"
+	result["HasParent"] = false
+	result["ParentPath"] = PetParentPath("/")
+	if account.Mode == "cloud189" || account.Mode == "native" {
+		result["SurportFolderDown"] = true
+	} else {
+		result["SurportFolderDown"] = false
+	}
+	return result
+}
+
 func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
 	if account.Mode == "cloud189" {
 		return Util.GetDownlaodUrl(account.Id, fileNode.FileIdDigest)

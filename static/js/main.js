@@ -206,7 +206,7 @@ $.fn.extend({
         });
     }
 });
-$(".mdui-textfield-input").keyup(function () {
+/*$(".mdui-textfield-input").keyup(function () {
     var keyword = $(this).val();
     var reg =  new RegExp(keyword);
     $(".mdui-list").find("li").each(function (i, item) {
@@ -217,6 +217,18 @@ $(".mdui-textfield-input").keyup(function () {
             $(this).hide();
         }
     });
+});*/
+$('.mdui-textfield-input').bind('keydown', function(event) {
+    var dIndex = $(this).attr("data-index");
+    var key = $(this).val();
+    key = key.replace(/(^\s*)|(\s*$)/g,"")
+    if (event.key === "Enter") {
+        if( $(this).val() != ""){
+            window.location.href = dIndex + "?search=" + key;
+        }else{
+            window.location.href = dIndex;
+        }
+    }
 });
 $(".search").keyup(function () {
     var keyword = $(this).val();

@@ -131,7 +131,7 @@
 						<div class="mdui-list-item-title">
 							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right{{if .HasParent}}{{else}} mdui-textfield-expanded{{end}}">
 								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
-								<input type="text" placeholder="搜索当前内容" class="mdui-textfield-input search-input">
+								<input type="text" placeholder="搜索文件（夹）" class="mdui-textfield-input search-input" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
 								{{if .HasParent}}
 								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
 								{{else}}
@@ -186,7 +186,7 @@
 										insert_drive_file
 									{{end}}
 								{{end}}
-							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{$.DIndex}}{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
+							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
 							<a href="{{$.DIndex}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
 							{{end}}
 						</div>
@@ -196,6 +196,11 @@
 							{{.SizeFmt}} / {{.LastOpTime}}
 						</div>
 						{{end}}
+					{{if $.SearchKey}}
+						<div class="mdui-list-item-text mdui-list-item-one-line">
+							{{$.DIndex}}{{.Path}}
+						</div>
+					{{end}}
 					</div>
 				</li>
 				{{end}}

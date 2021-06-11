@@ -1,6 +1,8 @@
 package Util
 
 import (
+	"PanIndex/config"
+	"PanIndex/entity"
 	"archive/zip"
 	"bytes"
 	"fmt"
@@ -12,7 +14,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
 )
 
 var GC = gcache.New(10).LRU().Build()
@@ -122,6 +126,91 @@ func ReadStringByUrl(url, fileId string) string {
 	content = fmt.Sprintf("%s", data)
 	GC.Set(fileId, content)
 	return content
+}
+func FileSearch(rootPath, path, key string) []entity.FileNode {
+	if path == "" {
+		path = "/"
+	}
+	list := []entity.FileNode{}
+	//列出文件夹相对路径
+	fullPath := filepath.Join(rootPath, path)
+	if FileExist(fullPath) {
+		//是目录
+		// 读取该文件夹下所有文件
+		fileInfos, err := ioutil.ReadDir(fullPath)
+		//默认按照目录，时间倒序排列
+		sort.Slice(fileInfos, func(i, j int) bool {
+			d1 := 0
+			if fileInfos[i].IsDir() {
+				d1 = 1
+			}
+			d2 := 0
+			if fileInfos[j].IsDir() {
+				d2 = 1
+			}
+			if d1 > d2 {
+				return true
+			} else if d1 == d2 {
+				return fileInfos[i].ModTime().After(fileInfos[j].ModTime())
+			} else {
+				return false
+			}
+		})
+		if err != nil {
+			panic(err.Error())
+		} else {
+			for _, fileInfo := range fileInfos {
+				fileId := filepath.Join(fullPath, fileInfo.Name())
+				// 按照文件名过滤
+				if !fileInfo.IsDir() && !strings.Contains(fileInfo.Name(), key) {
+					continue
+				}
+				// 当前文件是隐藏文件(以.开头)则不显示
+				if IsHiddenFile(fileInfo.Name()) {
+					continue
+				}
+				//指定隐藏的文件或目录过滤
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fileId)
+					if i < len(listSTring) && listSTring[i] == fileId {
+						continue
+					}
+				}
+				fileType := GetMimeType(fileInfo)
+				// 实例化FileNode
+				file := entity.FileNode{
+					FileId:     fileId,
+					IsFolder:   fileInfo.IsDir(),
+					FileName:   fileInfo.Name(),
+					FileSize:   int64(fileInfo.Size()),
+					SizeFmt:    FormatFileSize(int64(fileInfo.Size())),
+					FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
+					Path:       filepath.Join(path, fileInfo.Name()),
+					MediaType:  fileType,
+					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
+				}
+				if fileInfo.IsDir() {
+					childList := FileSearch(rootPath, file.Path, key)
+					if len(childList) == 0 && !strings.Contains(fileInfo.Name(), key) {
+						continue
+					}
+					for _, fn := range childList {
+						list = append(list, fn)
+					}
+
+				}
+				// 添加到切片中等待json序列化
+				if fileInfo.IsDir() && !strings.Contains(fileInfo.Name(), key) {
+					continue
+				}
+				list = append(list, file)
+
+			}
+		}
+	}
+	return list
 }
 func Zip(dst, src string) (err error) {
 	// 创建准备写入的文件
