@@ -96,6 +96,7 @@ func AccountLogin(account entity.Account) {
 	} else if account.Mode == "aliyundrive" {
 		cookie = Util.AliRefreshToken(account)
 		msg = "[" + account.Name + "] >> 阿里云盘"
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 	} else if account.Mode == "native" {
 		msg = "[" + account.Name + "] >> 本地模式"
 	}

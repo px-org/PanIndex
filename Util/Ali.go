@@ -43,7 +43,7 @@ func AliRefreshToken(account entity.Account) string {
 		return ""
 	}
 	Alis[account.Id] = tokenResp
-	return tokenResp.AccessToken
+	return tokenResp.RefreshToken
 }
 
 func AliGetFiles(accountId, rootId, fileId, p string) {
