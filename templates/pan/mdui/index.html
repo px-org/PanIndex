@@ -186,7 +186,7 @@
 										insert_drive_file
 									{{end}}
 								{{end}}
-							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
+							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{$.DIndex}}{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
 							<a href="{{$.DIndex}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
 							{{end}}
 						</div>
