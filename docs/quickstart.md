@@ -15,13 +15,13 @@
 ### 一键脚本
 未完成
 ### 直接运行
-启动参数
--host=0.0.0.0 #绑定host，默认0.0.0.0
--port=5238 #绑定端口号，默认5238
--debug=false #调试模式，默认false
--data_path=/path/to/data #数据目录（配置、目录信息、临时文件目录）
--cert_file=/path/to/fullchain.pem # 开启ssl，证书文件
--key_file=/path/to/privkey.pem # 开启ssl，证书文件密钥
+启动参数<br>
+-host=0.0.0.0 #绑定host，默认0.0.0.0<br>
+-port=5238 #绑定端口号，默认5238<br>
+-debug=false #调试模式，默认false<br>
+-data_path=/path/to/data #数据目录（配置、目录信息、临时文件目录）<br>
+-cert_file=/path/to/fullchain.pem # 开启ssl，证书文件<br>
+-key_file=/path/to/privkey.pem # 开启ssl，证书文件密钥<br>
 ```bash
 $ tar -xvf PanIndex-v1.0.0-linux-amd64.tar.gz
 #nohup ./PanIndex -host=0.0.0.0 -port=5238 -debug=false > PanIndex.log &
