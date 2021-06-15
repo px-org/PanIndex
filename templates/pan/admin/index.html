@@ -449,7 +449,7 @@ $(".saveAccountBtn").on("click", function () {
 		success: function (data) {
 			var d = JSON.parse(data);
 			mdui.snackbar({
-				message: d.msg,
+				message: "账号保存成功，正在进行目录缓存，请稍后刷新页面查看缓存结果...在此期间请勿重启，以免造成数据重叠！",
 				timeout: 2000,
 				onClose: function(){
 					accountStatus = 0;

@@ -1,3 +1,4 @@
+
 var clipboard = new ClipboardJS('.copyBtn', {
     text: function(trigger) {
         var path = $(trigger).data("path");
@@ -10,6 +11,8 @@ clipboard.on('success', function(e) {
         mdui.snackbar({
             message: "链接已复制到剪切板"
         });
+    }else if(typeof(M) != "undefined"){
+        M.toast({html: '链接已复制到剪切板'});
     }else{
         if ($("#liveToast").length > 0) {
             $("#liveToast").toast("show");
@@ -230,7 +233,19 @@ $('.mdui-textfield-input').bind('keydown', function(event) {
         }
     }
 });
-$(".search").keyup(function () {
+$(".search").bind('keydown', function(event) {
+    var dIndex = $(this).attr("data-index");
+    var key = $(this).val();
+    key = key.replace(/(^\s*)|(\s*$)/g,"")
+    if (event.key === "Enter") {
+        if( $(this).val() != ""){
+            window.location.href = dIndex + "?search=" + key;
+        }else{
+            window.location.href = dIndex;
+        }
+    }
+});
+/*$(".search").keyup(function () {
     var keyword = $(this).val();
     var reg =  new RegExp(keyword);
     $("tbody").find("tr").each(function (i, item) {
@@ -241,4 +256,4 @@ $(".search").keyup(function () {
             $(this).hide();
         }
     });
-});
+});*/
