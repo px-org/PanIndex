@@ -173,7 +173,14 @@ func Cloud189Login(accountId, user, password string) string {
 	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
-	lt := regexp.MustCompile(`lt = "(.+?)"`).FindStringSubmatch(b)[1]
+	lt := ""
+	ltText := regexp.MustCompile(`lt = "(.+?)"`)
+	ltTextArr := ltText.FindStringSubmatch(b)
+	if len(ltTextArr) > 0 {
+		lt = ltTextArr[1]
+	} else {
+		return ""
+	}
 	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
 	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
 	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]
