@@ -45,8 +45,9 @@ docker pull iicm/pan-index:latest
 docker stop PanIndex
 docker rm PanIndex
 docker run -itd \
+ --restart=always \
  --name PanIndex \
- -d -p 5238:5238 \
+ -p 5238:5238 \
  -v /home/single/data/docker/data/PanIndex/data:/app/data \
  -e PORT="5238" \
  iicm/pan-index:latest
