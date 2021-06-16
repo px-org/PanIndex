@@ -1,6 +1,29 @@
+
+var clipboard = new ClipboardJS('.copyBtn', {
+    text: function(trigger) {
+        var path = $(trigger).data("path");
+        var fullUrl = window.location.protocol + "//"+window.location.host + path;
+        return fullUrl;
+    }
+});
+clipboard.on('success', function(e) {
+    if(typeof(mdui) != "undefined"){
+        mdui.snackbar({
+            message: "链接已复制到剪切板"
+        });
+    }else if(typeof(M) != "undefined"){
+        M.toast({html: '链接已复制到剪切板'});
+    }else{
+        if ($("#liveToast").length > 0) {
+            $("#liveToast").toast("show");
+        }
+    }
+    e.clearSelection();
+});
 $(document).ready(function() {
     $('.icon-file').on('click', function(ev) {
-        if(ev.target.tagName == "A" && ev.target.text == "file_download") return;
+        if(ev.target.tagName == "A" && (ev.target.text == "file_download" ||
+            ev.target.text == "content_copy") || ev.target.title == "复制链接") return;
         var dURL = $(this).attr("data-url");
         var title = $(this).attr("data-title");
         var dmt = $(this).attr("data-media-type");
@@ -9,7 +32,7 @@ $(document).ready(function() {
             $(this).lightGallery({
                 fullScreen: true,
                 dynamic: true,
-                thumbnail:true,
+                thumbnail:false,
                 animateThumb: false,
                 showThumbByDefault: false,
                 dynamicEl: findDynamicEl(this),
@@ -56,14 +79,19 @@ $(document).ready(function() {
     $('.folderDown').on('click', function() {
         var fileId = $(this).attr("data-file-id");
         var accountId = $(this).attr("data-account");
-        $.ajax({
-            type: 'POST',
-            url: "/api/downloadMultiFiles?fileId="+fileId+"&accountId="+accountId,
-            async:false,
-            success: function(data){
-                window.location.href = data.redirect_url;
-            }
-        });
+        var url =  "/api/public/downloadMultiFiles?fileId="+fileId+"&accountId="+accountId;
+        if (fileId.startsWith("/")){
+            window.location.href = url;
+        }else{
+            $.ajax({
+                type: 'POST',
+                url: url,
+                async:false,
+                success: function(data){
+                    window.location.href = data.redirect_url;
+                }
+            });
+        }
     });
     $('.table-head').on('click', function() {
         var orderColumn = $(this).text();
@@ -181,7 +209,7 @@ $.fn.extend({
         });
     }
 });
-$(".mdui-textfield-input").keyup(function () {
+/*$(".mdui-textfield-input").keyup(function () {
     var keyword = $(this).val();
     var reg =  new RegExp(keyword);
     $(".mdui-list").find("li").each(function (i, item) {
@@ -192,8 +220,32 @@ $(".mdui-textfield-input").keyup(function () {
             $(this).hide();
         }
     });
+});*/
+$('.mdui-textfield-input').bind('keydown', function(event) {
+    var dIndex = $(this).attr("data-index");
+    var key = $(this).val();
+    key = key.replace(/(^\s*)|(\s*$)/g,"")
+    if (event.key === "Enter") {
+        if( $(this).val() != ""){
+            window.location.href = dIndex + "?search=" + key;
+        }else{
+            window.location.href = dIndex;
+        }
+    }
 });
-$(".search").keyup(function () {
+$(".search").bind('keydown', function(event) {
+    var dIndex = $(this).attr("data-index");
+    var key = $(this).val();
+    key = key.replace(/(^\s*)|(\s*$)/g,"")
+    if (event.key === "Enter") {
+        if( $(this).val() != ""){
+            window.location.href = dIndex + "?search=" + key;
+        }else{
+            window.location.href = dIndex;
+        }
+    }
+});
+/*$(".search").keyup(function () {
     var keyword = $(this).val();
     var reg =  new RegExp(keyword);
     $("tbody").find("tr").each(function (i, item) {
@@ -204,4 +256,4 @@ $(".search").keyup(function () {
             $(this).hide();
         }
     });
-});
+});*/

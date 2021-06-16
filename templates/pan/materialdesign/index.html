@@ -4,6 +4,9 @@
 		<title>{{.Title}} {{ .Path }}</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	{{if eq .Mode "aliyundrive"}}
+		<meta name="referrer" content="no-referrer">
+	{{end}}
 	{{if ne .FaviconUrl ""}}
 		<link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
 		<link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
@@ -95,7 +98,7 @@
 							{{end}}
 							<ul class="right hide-on-med-and-down">
 								<li>
-									<input class="search" type="search" placeholder="搜索当前内容">
+									<input class="search" type="search" placeholder="搜索文件（夹）" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
 								</li>
 								{{ if gt (len .Accounts) 1 }}
 									<li><a class="dropdown-trigger" href="javascript:void(0)" data-target="Accounts"><i class="material-icons">face</i></a></li>
@@ -131,7 +134,12 @@
 							{{range .List}}
 								<tr>
 									{{if .IsFolder}}
-										<td class="file-name"><a class="icon icon-dir" href="{{$.DIndex}}{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a></td>
+										<td class="file-name">
+											<a class="icon icon-dir" href="{{$.DIndex}}{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a>
+										{{if $.SearchKey}}
+											<br><p style="margin-left: 45px">{{$.DIndex}}{{.Path}}</p>
+										{{end}}
+										</td>
 									{{else}}
 										<td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}" href="javascript:void(0);">
 												{{if eq .MediaType 1}}
@@ -157,7 +165,11 @@
 														<i class="fa fa-file" aria-hidden="true"></i>
 													{{end}}
 												{{end}}
-												&nbsp;&nbsp;{{.FileName}}</a></td>
+												&nbsp;&nbsp;{{.FileName}} <i class="fa fa-copy copyBtn" data-path="{{$.DIndex}}{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" title="复制链接" style="font-size: x-small" aria-hidden="true"></i></a>
+												{{if $.SearchKey}}
+													<br><p style="margin-left: 45px">{{$.DIndex}}{{.Path}}</p>
+												{{end}}
+										</td>
 									{{end}}
 									<td class="file-size">{{.SizeFmt}}</td>
 									<td class="file-date-modified">{{.LastOpTime}}</td>
@@ -206,6 +218,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
 	<script src="https://cdn.bootcdn.net/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
 	<script src="/static/js/main.js"></script>
 	<script>
 		$(".dropdown-trigger").dropdown();

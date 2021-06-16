@@ -138,7 +138,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 		result["isFile"] = false
 		if len(list) == 0 {
 			result["isFile"] = true
-			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=?", path, account.Id).Find(&list)
+			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=? limit 1", path, account.Id).Find(&list)
 		} else {
 			readmeFile := entity.FileNode{}
 			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and `delete`=0 and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
@@ -168,7 +168,32 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 		result["HasParent"] = true
 	}
 	result["ParentPath"] = PetParentPath(path)
-	if account.Mode == "cloud189" {
+	if account.Mode == "cloud189" || account.Mode == "native" {
+		result["SurportFolderDown"] = true
+	} else {
+		result["SurportFolderDown"] = false
+	}
+	return result
+}
+
+func SearchFilesByKey(account entity.Account, key string) map[string]interface{} {
+	result := make(map[string]interface{})
+	list := []entity.FileNode{}
+	defer func() {
+		if p := recover(); p != nil {
+			log.Errorln(p)
+		}
+	}()
+	if account.Mode == "native" {
+		list = Util.FileSearch(account.RootId, "", key)
+	} else {
+		model.SqliteDb.Raw("select * from file_node where file_name like ? and `delete`=0 and hide = 0 and account_id=?", "%"+key+"%", account.Id).Find(&list)
+	}
+	result["List"] = list
+	result["Path"] = "/"
+	result["HasParent"] = false
+	result["ParentPath"] = PetParentPath("/")
+	if account.Mode == "cloud189" || account.Mode == "native" {
 		result["SurportFolderDown"] = true
 	} else {
 		result["SurportFolderDown"] = false
@@ -191,6 +216,8 @@ func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
 		} else {
 			//国际版暂时没有个人文件
 		}
+	} else if account.Mode == "aliyundrive" {
+		return Util.AliGetDownloadUrl(account.Id, fileNode.FileId)
 	} else if account.Mode == "native" {
 	}
 	return ""
@@ -198,6 +225,12 @@ func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
 
 func GetDownlaodMultiFiles(accountId, fileId string) string {
 	return Util.GetDownlaodMultiFiles(accountId, fileId)
+}
+
+func GetPath(accountId, fileId string) string {
+	fileNode := entity.FileNode{}
+	model.SqliteDb.Raw("select * from file_node where account_id = ? and file_id = ? and delete = 0 limit 1", accountId, fileId).Find(&fileNode)
+	return fileNode.Path
 }
 
 func PetParentPath(p string) string {
@@ -366,7 +399,6 @@ func DeleteAccount(id string) {
 	delete(Util.TeambitionSessions, id)
 }
 func GetAccount(id string) entity.Account {
-	//删除账号对应节点数据
 	account := entity.Account{}
 	model.SqliteDb.Where("id = ?", id).First(&account)
 	return account
@@ -449,8 +481,11 @@ func Upload(accountId, path string, c *gin.Context) string {
 				//teambition-us 项目文件上传
 				Util.TeambitionProUpload("us", accountId, fileId, files)
 			} else if account.Mode == "cloud189" {
-				//teambition 项目文件上传
+				//天翼云盘文件上传
 				Util.Cloud189UploadFiles(accountId, fileId, files)
+			} else if account.Mode == "aliyundrive" {
+				//阿里云盘文件上传
+				Util.AliUpload(accountId, fileId, files)
 			}
 			return "上传成功"
 		}
@@ -490,6 +525,8 @@ func Async(accountId, path string) string {
 				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path)
 			} else if account.Mode == "cloud189" {
 				Util.Cloud189GetFiles(account.Id, fileId, fileId, path)
+			} else if account.Mode == "aliyundrive" {
+				Util.AliGetFiles(account.Id, fileId, fileId, path)
 			}
 			refreshFileNodes(account.Id, fileId)
 			return "刷新成功"

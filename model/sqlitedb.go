@@ -16,17 +16,22 @@ import (
 
 var SqliteDb *gorm.DB
 
-func InitDb(host, port string, debug bool) {
-	path := "data"
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, os.ModePerm)
+func InitDb(host, port, dataPath string, debug bool) {
+	if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
+		dataPath = os.Getenv("PAN_INDEX_DATA_PATH")
+	}
+	if dataPath == "" {
+		dataPath = "data"
+	}
+	if _, err := os.Stat(dataPath); os.IsNotExist(err) {
+		os.Mkdir(dataPath, os.ModePerm)
 	}
 	var err error
 	LogLevel := logger.Silent
 	if debug {
 		LogLevel = logger.Info
 	}
-	SqliteDb, err = gorm.Open(sqlite.Open("data/data.db"), &gorm.Config{
+	SqliteDb, err = gorm.Open(sqlite.Open(dataPath+"/data.db"), &gorm.Config{
 		Logger: logger.Default.LogMode(LogLevel),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,

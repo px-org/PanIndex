@@ -23,7 +23,7 @@ var (
 	GIT_COMMIT_SHA string
 )
 
-func Start(host, port string, debug bool) {
+func Start(host, port string, debug bool, dataPath string) {
 	//初始化日志设置
 	InitLog(debug)
 	//打印asc
@@ -33,7 +33,7 @@ func Start(host, port string, debug bool) {
 	//检查新版本
 	go CheckUpdate()
 	//初始化数据库
-	model.InitDb(host, port, debug)
+	model.InitDb(host, port, dataPath, debug)
 	//初始化配置
 	//从环境变量写入到config
 	service.EnvToConfig()

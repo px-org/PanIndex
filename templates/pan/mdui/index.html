@@ -4,6 +4,9 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
 	<meta name="renderer" content="webkit"/>
+{{if eq .Mode "aliyundrive"}}
+	<meta name="referrer" content="no-referrer">
+{{end}}
 	<meta name="force-rendering" content="webkit"/>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
 {{if ne .FaviconUrl ""}}
@@ -105,7 +108,7 @@
 						<ul class="mdui-menu" id="example-1">
 							{{range $i, $a := .Accounts}}
 								<li class="mdui-menu-item">
-									<a href="/d_{{$i}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "ali"}}orange{{else}}{{end}}">face</i>{{.Name}}</a>
+									<a href="/d_{{$i}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "teambition-us"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>
 								</li>
 							{{end}}
 						</ul>
@@ -118,6 +121,9 @@
 						<span class="mdui-chip-title">{{.PathName}}</span>
 					</div>
 				{{end}}
+				<div class="right-icon mdui-float-right">
+					<button class="mdui-btn mdui-btn-icon" id="theme-toggle"><i class="mdui-icon material-icons">brightness_4</i></button>
+				</div>
 			</div>
 			<ul class="mdui-list">
 				<li class="mdui-list-item">
@@ -125,7 +131,7 @@
 						<div class="mdui-list-item-title">
 							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right{{if .HasParent}}{{else}} mdui-textfield-expanded{{end}}">
 								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
-								<input type="text" placeholder="搜索当前内容" class="mdui-textfield-input search-input">
+								<input type="text" placeholder="搜索文件（夹）" class="mdui-textfield-input search-input" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
 								{{if .HasParent}}
 								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
 								{{else}}
@@ -180,7 +186,7 @@
 										insert_drive_file
 									{{end}}
 								{{end}}
-							</i> {{.FileName}}
+							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{$.DIndex}}{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
 							<a href="{{$.DIndex}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
 							{{end}}
 						</div>
@@ -190,6 +196,11 @@
 							{{.SizeFmt}} / {{.LastOpTime}}
 						</div>
 						{{end}}
+					{{if $.SearchKey}}
+						<div class="mdui-list-item-text mdui-list-item-one-line">
+							{{$.DIndex}}{{.Path}}
+						</div>
+					{{end}}
 					</div>
 				</li>
 				{{end}}
@@ -223,6 +234,24 @@
 {{end}}
 <script src="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/js/lightgallery-all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
 <script src="/static/js/main.js"></script>
+<script>
+	if(localStorage.getItem('dark') == 'true'){
+		$('body').addClass('mdui-theme-layout-dark');
+		$('#theme-toggle i').text('brightness_5');
+	}
+	$('#theme-toggle').click(function(){
+		if($('body').hasClass('mdui-theme-layout-dark')){
+			$('body').removeClass('mdui-theme-layout-dark');
+			$('#theme-toggle i').text('brightness_4');
+			localStorage.setItem('dark',false);
+		}else{
+			$('body').addClass('mdui-theme-layout-dark');
+			$('#theme-toggle i').text('brightness_5');
+			localStorage.setItem('dark',true);
+		}
+	});
+</script>
 </body>
 </html>

@@ -77,7 +77,6 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 		} else if p != "/" && prefix != "" {
 			p = prefix + p
 		}
-		fmt.Println(p)
 		if d != nil {
 			m := []entity.FileNode{}
 			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
@@ -127,14 +126,37 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 }
 func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
-	dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
+	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
 		AllowRedirect: false,
 	})
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
 	redirectUrl := dRedirectRep.Header.Get("Location")
-	dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
+	dRedirectRep, err = CLoud189Session.Get(redirectUrl, nic.H{
 		AllowRedirect: false,
 	})
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	if dRedirectRep == nil || dRedirectRep.Header == nil {
+		return ""
+	}
 	return dRedirectRep.Header.Get("Location")
+}
+func GetDownlaodUrlNew(accountId, fileIdDigest string) string {
+	CLoud189Session := CLoud189Sessions[accountId]
+	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/v2/getPhotoOriginalUrl.action?fileIdDigest="+fileIdDigest+"&directDownload=true", nic.H{
+		AllowRedirect: false,
+	})
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	redirectUrl := dRedirectRep.Header.Get("Location")
+	return redirectUrl
 }
 func GetDownlaodMultiFiles(accountId, fileId string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
@@ -151,7 +173,14 @@ func Cloud189Login(accountId, user, password string) string {
 	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
-	lt := regexp.MustCompile(`lt = "(.+?)"`).FindStringSubmatch(b)[1]
+	lt := ""
+	ltText := regexp.MustCompile(`lt = "(.+?)"`)
+	ltTextArr := ltText.FindStringSubmatch(b)
+	if len(ltTextArr) > 0 {
+		lt = ltTextArr[1]
+	} else {
+		return ""
+	}
 	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
 	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
 	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]

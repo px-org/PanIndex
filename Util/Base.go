@@ -2,6 +2,7 @@ package Util
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -24,4 +25,10 @@ func GetCurBetweenStr(str, start, end string) string {
 	}
 	str = string([]byte(str)[:m])
 	return str
+}
+
+func GetRandomString(n int) string {
+	randBytes := make([]byte, n/2)
+	rand.Read(randBytes)
+	return fmt.Sprintf("%x", randBytes)
 }

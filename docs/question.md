@@ -3,9 +3,13 @@
 ### 如何获取目录ID？
 正常访问官方网盘页面，进入到你想分享目录的页面，浏览器里地址栏最后面的就是目录ID
 
+以天翼云为例
+
+![image-cloud189-rootId](_images/cloud189-rootId.png)
+
 若要使用teambition项目版：rootId，请使用**项目id**
 
-![image-20210312180742254](_images/teambition-project.png)
+![image-teambition-project](_images/teambition-project.png)
 
 **注**：当网盘启用本地模式，目录ID为分享目录的绝对路径，比如我想分享本地的`/opt`目录，`root_id`为`/opt`，密码目录同理
 
@@ -22,6 +26,10 @@ PanIndex的设计初衷是简单高效，前后分离会增加部署的复杂度
 计划任务修改配置中cron表达式，[cron在线生成](https://cron.qqe2.com/)
 
 如果你更新了网盘文件想要立刻生效，可以手动刷新目录缓存
+
+## 网盘目录空白
+
+由于PanIndex使用了SQLite来做数据存储，Heroku会定期清理本地文件，请每天至少执行一次同步缓存的任务，时间可以设置为cookie刷新之后，且尽量选择闲时来同步
 
 ### 天翼云出现验证码登录，如何解决？
 2.x关闭了打码狗的使用，若出现验证登录，请等一小时后再尝试。

@@ -1,16 +1,22 @@
 package Util
 
 import (
+	"PanIndex/config"
+	"PanIndex/entity"
+	"archive/zip"
 	"bytes"
 	"fmt"
 	"github.com/bluele/gcache"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
 )
 
 var GC = gcache.New(10).LRU().Build()
@@ -120,4 +126,153 @@ func ReadStringByUrl(url, fileId string) string {
 	content = fmt.Sprintf("%s", data)
 	GC.Set(fileId, content)
 	return content
+}
+func FileSearch(rootPath, path, key string) []entity.FileNode {
+	if path == "" {
+		path = "/"
+	}
+	list := []entity.FileNode{}
+	//列出文件夹相对路径
+	fullPath := filepath.Join(rootPath, path)
+	if FileExist(fullPath) {
+		//是目录
+		// 读取该文件夹下所有文件
+		fileInfos, err := ioutil.ReadDir(fullPath)
+		//默认按照目录，时间倒序排列
+		sort.Slice(fileInfos, func(i, j int) bool {
+			d1 := 0
+			if fileInfos[i].IsDir() {
+				d1 = 1
+			}
+			d2 := 0
+			if fileInfos[j].IsDir() {
+				d2 = 1
+			}
+			if d1 > d2 {
+				return true
+			} else if d1 == d2 {
+				return fileInfos[i].ModTime().After(fileInfos[j].ModTime())
+			} else {
+				return false
+			}
+		})
+		if err != nil {
+			panic(err.Error())
+		} else {
+			for _, fileInfo := range fileInfos {
+				fileId := filepath.Join(fullPath, fileInfo.Name())
+				// 按照文件名过滤
+				if !fileInfo.IsDir() && !strings.Contains(fileInfo.Name(), key) {
+					continue
+				}
+				// 当前文件是隐藏文件(以.开头)则不显示
+				if IsHiddenFile(fileInfo.Name()) {
+					continue
+				}
+				//指定隐藏的文件或目录过滤
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fileId)
+					if i < len(listSTring) && listSTring[i] == fileId {
+						continue
+					}
+				}
+				fileType := GetMimeType(fileInfo)
+				// 实例化FileNode
+				file := entity.FileNode{
+					FileId:     fileId,
+					IsFolder:   fileInfo.IsDir(),
+					FileName:   fileInfo.Name(),
+					FileSize:   int64(fileInfo.Size()),
+					SizeFmt:    FormatFileSize(int64(fileInfo.Size())),
+					FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
+					Path:       filepath.Join(path, fileInfo.Name()),
+					MediaType:  fileType,
+					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
+				}
+				if fileInfo.IsDir() {
+					childList := FileSearch(rootPath, file.Path, key)
+					if len(childList) == 0 && !strings.Contains(fileInfo.Name(), key) {
+						continue
+					}
+					for _, fn := range childList {
+						list = append(list, fn)
+					}
+
+				}
+				// 添加到切片中等待json序列化
+				if fileInfo.IsDir() && !strings.Contains(fileInfo.Name(), key) {
+					continue
+				}
+				list = append(list, file)
+
+			}
+		}
+	}
+	return list
+}
+func Zip(dst, src string) (err error) {
+	// 创建准备写入的文件
+	fw, err := os.Create(dst)
+	defer fw.Close()
+	if err != nil {
+		return err
+	}
+
+	// 通过 fw 来创建 zip.Write
+	zw := zip.NewWriter(fw)
+	defer func() {
+		// 检测一下是否成功关闭
+		if err := zw.Close(); err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	// 下面来将文件写入 zw ，因为有可能会有很多个目录及文件，所以递归处理
+	return filepath.Walk(src, func(path string, fi os.FileInfo, errBack error) (err error) {
+		if errBack != nil {
+			return errBack
+		}
+
+		// 通过文件信息，创建 zip 的文件信息
+		fh, err := zip.FileInfoHeader(fi)
+		if err != nil {
+			return
+		}
+
+		// 替换文件信息中的文件名
+		fh.Name = strings.TrimPrefix(path, filepath.Dir(src)+string(filepath.Separator))
+		// 这步开始没有加，会发现解压的时候说它不是个目录
+		if fi.IsDir() {
+			fh.Name += "/"
+		}
+		// 写入文件信息，并返回一个 Write 结构
+		w, err := zw.CreateHeader(fh)
+		if err != nil {
+			return
+		}
+
+		// 检测，如果不是标准文件就只写入头信息，不写入文件数据到 w
+		// 如目录，也没有数据需要写
+		if !fh.Mode().IsRegular() {
+			return nil
+		}
+
+		// 打开要压缩的文件
+		fr, err := os.Open(path)
+		defer fr.Close()
+		if err != nil {
+			return
+		}
+
+		// 将打开的文件 Copy 到 w
+		n, err := io.Copy(w, fr)
+		if err != nil {
+			return
+		}
+		// 输出压缩的内容
+		log.Debugf("成功压缩文件： %s, 共写入了 %d 个字符的数据\n", path, n)
+		return nil
+	})
 }
