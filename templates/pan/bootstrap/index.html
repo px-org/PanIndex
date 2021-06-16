@@ -91,7 +91,7 @@
 							{{if eq .PathUrl $.Path}}
 								<a class="nav-link disabled" href="#">{{.PathName}}</a>
 							{{else}}
-								<a class="nav-link" href="{{.PathUrl}}">{{.PathName}}</a>
+								<a class="nav-link" href="{{$.DIndex}}{{.PathUrl}}">{{.PathName}}</a>
 							{{end}}
 						</li>
 					{{end}}

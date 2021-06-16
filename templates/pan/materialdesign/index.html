@@ -93,7 +93,7 @@
 								{{if eq .PathUrl $.Path}}
 									<a href="javascript:void(0)">{{.PathName}}</a>
 								{{else}}
-									<a href="{{.PathUrl}}">{{.PathName}}</a>
+									<a href="{{$.DIndex}}{{.PathUrl}}">{{.PathName}}</a>
 								{{end}}
 							{{end}}
 							<ul class="right hide-on-med-and-down">
