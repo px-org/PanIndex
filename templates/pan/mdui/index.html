@@ -131,7 +131,7 @@
 						<div class="mdui-list-item-title">
 							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right{{if .HasParent}}{{else}} mdui-textfield-expanded{{end}}">
 								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
-								<input type="text" placeholder="搜索文件（夹）" class="mdui-textfield-input search-input" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
+								<input type="text" placeholder="搜索文件（夹）" class="search mdui-textfield-input search-input" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
 								{{if .HasParent}}
 								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
 								{{else}}

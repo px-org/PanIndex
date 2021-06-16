@@ -221,7 +221,7 @@ $.fn.extend({
         }
     });
 });*/
-$('.mdui-textfield-input').bind('keydown', function(event) {
+/*$('.mdui-textfield-input').bind('keydown', function(event) {
     var dIndex = $(this).attr("data-index");
     var key = $(this).val();
     key = key.replace(/(^\s*)|(\s*$)/g,"")
@@ -232,7 +232,7 @@ $('.mdui-textfield-input').bind('keydown', function(event) {
             window.location.href = dIndex;
         }
     }
-});
+});*/
 $(".search").bind('keydown', function(event) {
     var dIndex = $(this).attr("data-index");
     var key = $(this).val();
