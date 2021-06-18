@@ -6,7 +6,7 @@ import (
 	"PanIndex/entity"
 	"PanIndex/model"
 	"github.com/bluele/gcache"
-	"github.com/eddieivan01/nic"
+	"github.com/libsgh/nic"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 	"time"
