@@ -61,7 +61,7 @@ func Run() {
 	//cookie有效性检测
 	c.AddFunc("0 0/1 * * * ?", func() {
 		for _, account := range config.GloablConfig.Accounts {
-			if account.Mode != "native" || account.Mode != "aliyundrive" {
+			if account.Mode != "native" && account.Mode != "aliyundrive" {
 				cookieValid := true
 				if account.Mode == "cloud189" {
 					if _, ok := Util.CLoud189Sessions[account.Id]; ok {
