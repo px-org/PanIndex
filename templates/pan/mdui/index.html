@@ -105,7 +105,7 @@
 				<div class="mdui-chip">
 					<span class="mdui-chip-icon mdui-color-indigo" {{ if gt (len .Accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#example-1'}"{{end}}><i class="mdui-icon material-icons">home</i></span>
 					{{ if gt (len .Accounts) 1 }}
-						<ul class="mdui-menu" id="example-1">
+						<ul class="mdui-menu" id="example-1" style="max-height: 500px">
 							{{range $i, $a := .Accounts}}
 								<li class="mdui-menu-item">
 									<a href="/d_{{$i}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "teambition-us"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>
