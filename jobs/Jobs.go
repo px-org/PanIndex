@@ -64,13 +64,17 @@ func Run() {
 			if account.Mode != "native" || account.Mode != "aliyundrive" {
 				cookieValid := true
 				if account.Mode == "cloud189" {
-					cookieValid = Util.Cloud189IsLogin(account.Id)
+					if _, ok := Util.CLoud189Sessions[account.Id]; ok {
+						cookieValid = Util.Cloud189IsLogin(account.Id)
+					}
 				}
-				if account.Mode == "teambition" {
-					cookieValid = Util.TeambitionIsLogin(account.Id, false)
-				}
-				if account.Mode == "teambition-us" {
-					cookieValid = Util.TeambitionIsLogin(account.Id, true)
+				if _, ok := Util.TeambitionSessions[account.Id]; ok {
+					if account.Mode == "teambition" {
+						cookieValid = Util.TeambitionIsLogin(account.Id, false)
+					}
+					if account.Mode == "teambition-us" {
+						cookieValid = Util.TeambitionIsLogin(account.Id, true)
+					}
 				}
 				if cookieValid == false {
 					log.Infof("[COOKIE定时检查][%s]>>%s>>失效", account.Name, account.Mode)
