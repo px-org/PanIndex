@@ -241,7 +241,12 @@ func index(c *gin.Context) {
 	result["DIndex"] = DIndex
 	result["AccountId"] = account.Id
 	result["Footer"] = config.GloablConfig.Footer
-	result["Theme"] = config.GloablConfig.Theme
+	cookieTheme, error := c.Cookie("Theme")
+	if error != nil {
+		result["Theme"] = config.GloablConfig.Theme
+	} else {
+		result["Theme"] = cookieTheme
+	}
 	result["FaviconUrl"] = config.GloablConfig.FaviconUrl
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {

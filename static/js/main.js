@@ -1,9 +1,8 @@
-
 var clipboard = new ClipboardJS('.copyBtn', {
     text: function(trigger) {
         var path = $(trigger).data("path");
         var fullUrl = window.location.protocol + "//"+window.location.host + path;
-        return fullUrl;
+        return encodeURI(fullUrl);
     }
 });
 clipboard.on('success', function(e) {
@@ -21,6 +20,18 @@ clipboard.on('success', function(e) {
     e.clearSelection();
 });
 $(document).ready(function() {
+    $('#theme-toggle').on('click', function(){
+        $('body').removeClass('mdui-theme-layout-auto');
+        if($('body').hasClass('mdui-theme-layout-dark')){
+            $('body').removeClass('mdui-theme-layout-dark');
+            $('#theme-toggle i').text('brightness_4');
+            $.cookie("Theme", "mdui-light");
+        }else{
+            $('body').addClass('mdui-theme-layout-dark');
+            $('#theme-toggle i').text('brightness_5');
+            $.cookie("Theme", "mdui-dark");
+        }
+    });
     $('.icon-file').on('click', function(ev) {
         if(ev.target.tagName == "A" && (ev.target.text == "file_download" ||
             ev.target.text == "content_copy") || ev.target.title == "复制链接") return;

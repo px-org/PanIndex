@@ -32,6 +32,7 @@
 			crossorigin="anonymous"
 	></script>
 	<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
 	<style>
 		.mdui-list-item,
 		.mdui-list-item:hover {
@@ -75,7 +76,6 @@
 </head>
 <body class="mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}}">
 {{if .HasPwd}}
-<script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
 <script>
 	promptPwd("{{ .FileId}}");
 	function promptPwd(fileId){
@@ -122,7 +122,7 @@
 					</div>
 				{{end}}
 				<div class="right-icon mdui-float-right">
-					<button class="mdui-btn mdui-btn-icon" id="theme-toggle"><i class="mdui-icon material-icons">brightness_4</i></button>
+					<button class="mdui-btn mdui-btn-icon" id="theme-toggle"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
 				</div>
 			</div>
 			<ul class="mdui-list">
@@ -131,7 +131,7 @@
 						<div class="mdui-list-item-title">
 							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right{{if .HasParent}}{{else}} mdui-textfield-expanded{{end}}">
 								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
-								<input type="text" placeholder="搜索文件（夹）" class="search mdui-textfield-input search-input" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
+								<input type="text" placeholder="搜索文件（夹）" class="search 	mdui-textfield-input search-input" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
 								{{if .HasParent}}
 								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
 								{{else}}
@@ -236,22 +236,5 @@
 <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
 <script src="/static/js/main.js"></script>
-<script>
-	if(localStorage.getItem('dark') == 'true'){
-		$('body').addClass('mdui-theme-layout-dark');
-		$('#theme-toggle i').text('brightness_5');
-	}
-	$('#theme-toggle').click(function(){
-		if($('body').hasClass('mdui-theme-layout-dark')){
-			$('body').removeClass('mdui-theme-layout-dark');
-			$('#theme-toggle i').text('brightness_4');
-			localStorage.setItem('dark',false);
-		}else{
-			$('body').addClass('mdui-theme-layout-dark');
-			$('#theme-toggle i').text('brightness_5');
-			localStorage.setItem('dark',true);
-		}
-	});
-</script>
 </body>
 </html>
