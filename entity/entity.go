@@ -54,7 +54,7 @@ type Config struct {
 type Account struct {
 	Id           string `json:"id"`            //网盘空间id
 	Name         string `json:"name"`          //网盘空间名称
-	Mode         string `json:"mode"`          //网盘模式，native（本地模式），cloud189(默认，天翼云网盘)，teambition（阿里teambition网盘）
+	Mode         string `json:"mode"`          //网盘模式，native（本地模式），cloud189(默认，天翼云网盘)，teambition（阿里teambition网盘），aliyundrive
 	User         string `json:"user"`          //网盘账号用户名，邮箱或手机号
 	Password     string `json:"password"`      //网盘账号密码
 	RefreshToken string `json:"refresh_token"` //刷新token

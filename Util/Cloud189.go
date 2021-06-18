@@ -240,6 +240,19 @@ func Cloud189Login(accountId, user, password string) string {
 	return ""
 }
 
+func Cloud189IsLogin(accountId string) bool {
+	CLoud189Session := CLoud189Sessions[accountId]
+	if _, ok := CLoud189Sessions[accountId]; ok {
+		resp, err := CLoud189Session.Get("https://cloud.189.cn/v2/getLoginedInfos.action?showPC=true", nil)
+		if err == nil && resp.Text != "" && jsoniter.Valid(resp.Bytes) && jsoniter.Get(resp.Bytes, "errorMsg").ToString() == "" {
+			return true
+		} else {
+			log.Debug(resp.Text)
+		}
+	}
+	return false
+}
+
 //分享链接跳转下载
 func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
 	CLoud189Session := nic.Session{}
