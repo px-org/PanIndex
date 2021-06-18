@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/eddieivan01/nic"
+	"github.com/libsgh/nic"
 	"time"
 )
 
