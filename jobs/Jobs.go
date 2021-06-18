@@ -6,7 +6,7 @@ import (
 	"PanIndex/entity"
 	"PanIndex/model"
 	"github.com/bluele/gcache"
-	"github.com/eddieivan01/nic"
+	"github.com/libsgh/nic"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -58,6 +58,34 @@ func Run() {
 			Util.AliRefreshToken(account)
 		}
 	})
+	//cookie有效性检测
+	c.AddFunc("0 0/1 * * * ?", func() {
+		for _, account := range config.GloablConfig.Accounts {
+			if account.Mode != "native" && account.Mode != "aliyundrive" {
+				cookieValid := true
+				if account.Mode == "cloud189" {
+					if _, ok := Util.CLoud189Sessions[account.Id]; ok {
+						cookieValid = Util.Cloud189IsLogin(account.Id)
+					}
+				}
+				if _, ok := Util.TeambitionSessions[account.Id]; ok {
+					if account.Mode == "teambition" {
+						cookieValid = Util.TeambitionIsLogin(account.Id, false)
+					}
+					if account.Mode == "teambition-us" {
+						cookieValid = Util.TeambitionIsLogin(account.Id, true)
+					}
+				}
+				if cookieValid == false {
+					log.Infof("[COOKIE定时检查][%s]>>%s>>失效", account.Name, account.Mode)
+					log.Infof("开始刷新[%s]的COOKIE...", account.Name)
+					AccountLogin(account)
+				} else {
+					log.Debugf("[COOKIE定时检查][%s]>>%s>>有效", account.Name, account.Mode)
+				}
+			}
+		}
+	})
 	c.Start()
 }
 func StartInit() {
@@ -101,10 +129,10 @@ func AccountLogin(account entity.Account) {
 		msg = "[" + account.Name + "] >> 本地模式"
 	}
 	if cookie != "" {
-		log.Infoln(msg + " >> cookie更新 >> 登录成功")
+		log.Infoln(msg + " >> COOKIE更新 >> 登录成功")
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 2)
 	} else if cookie == "" && account.Mode != "native" {
-		log.Infoln(msg + "cookie更新 >> 登录失败，请检查用户名,密码(token)是否正确")
+		log.Infoln(msg + "COOKIE更新 >> 登录失败，请检查用户名,密码(token)是否正确")
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 3)
 	}
 }

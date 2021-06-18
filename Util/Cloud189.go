@@ -12,8 +12,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -169,7 +169,7 @@ func GetDownlaodMultiFiles(accountId, fileId string) string {
 
 //天翼云网盘登录
 func Cloud189Login(accountId, user, password string) string {
-	CLoud189Session := CLoud189Sessions[accountId]
+	CLoud189Session := nic.Session{}
 	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
@@ -238,6 +238,19 @@ func Cloud189Login(accountId, user, password string) string {
 	}
 	log.Warningln("[登录接口]登录失败，错误代码：" + strconv.Itoa(restCode) + " (" + errorReason + ")")
 	return ""
+}
+
+func Cloud189IsLogin(accountId string) bool {
+	CLoud189Session := CLoud189Sessions[accountId]
+	if _, ok := CLoud189Sessions[accountId]; ok {
+		resp, err := CLoud189Session.Get("https://cloud.189.cn/v2/getLoginedInfos.action?showPC=true", nil)
+		if err == nil && resp.Text != "" && jsoniter.Valid(resp.Bytes) && jsoniter.Get(resp.Bytes, "errorMsg").ToString() == "" {
+			return true
+		} else {
+			log.Debug(resp.Text)
+		}
+	}
+	return false
 }
 
 //分享链接跳转下载

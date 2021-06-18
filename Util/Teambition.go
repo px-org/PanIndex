@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -561,7 +561,25 @@ func TeambitionProUpload(server, accountId, parentId string, files []*multipart.
 	}
 	return true
 }
-
+func TeambitionIsLogin(accountId string, isUs bool) bool {
+	if _, ok := TeambitionSessions[accountId]; ok {
+		TeambitionSession := TeambitionSessions[accountId].TeambitionSession
+		d := ""
+		if isUs {
+			d = "us-"
+		}
+		resp, _ := TeambitionSession.Get(fmt.Sprintf("https://%saccount.teambition.com/api/account", d), nil)
+		if resp.StatusCode == 401 {
+			return false
+		} else if resp.StatusCode == 200 {
+			id := jsoniter.Get(resp.Bytes, "_id").ToString()
+			if id != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
 func UTCTimeFormat(timeStr string) string {
 	t, _ := time.Parse(time.RFC3339, timeStr)
 	timeUint := t.In(time.Local).Unix()

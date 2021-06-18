@@ -48,10 +48,11 @@
     - teambition国际版：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
     - aliyundrive：阿里云盘，需要填入有效的`refresh_token`，在[此处登录](https://passport.aliyundrive.com/mini_login.htm?lang=zh_cn&appName=aliyun_drive&appEntrance=web&styleType=auto&bizParams=&notLoadSsoView=false&notKeepLogin=false&isMobile=true&hidePhoneCode=true&rnd=0.9186864872885723)后抓包获取，[详细教程](https://woriqq.com/archives/75.html)
     
-    由于阿里云的`refresh_token`和`access_token`有效期为2小时，第一次填入后，系统会定时刷新，所以refresh_token会更新，但是可以保持始终有效。
+    由于阿里云的`refresh_token`和`access_token`有效期为2小时，第一次填入后，系统会定时刷新，所以`refresh_token`会更新，但是可以保持始终有效。
 - 用户名：部分模式必需，一般是手机号或邮箱
 - 密码
 - 根目录ID(路径)：native为绝对路径，teambition为项目ID，其他为目录ID，[如何获取？](https://libsgh.github.io/PanIndex/#/question?id=%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e7%9b%ae%e5%bd%95id%ef%bc%9f)
+> 这里填写你要分享的目录ID，如果你想分享网盘的根目录，天翼云为`-11`，阿里云盘为`root`
 
 ### 文件上传
 * 手动上传

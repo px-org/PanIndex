@@ -6,8 +6,8 @@ import (
 	"PanIndex/model"
 	"bytes"
 	"encoding/json"
-	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -68,6 +68,7 @@ func AliGetFiles(accountId, rootId, fileId, p string) {
 				"image_thumbnail_process": "image/resize,w_400/format,jpeg",
 				"image_url_process":       "image/resize,w_1920/format,jpeg",
 				"limit":                   limit,
+				"marker":                  nextMarker,
 				"order_by":                "updated_at",
 				"order_direction":         "DESC",
 				"parent_file_id":          fileId,
@@ -79,7 +80,7 @@ func AliGetFiles(accountId, rootId, fileId, p string) {
 		}
 		byteFiles := []byte(resp.Text)
 		d := jsoniter.Get(byteFiles, "items")
-		nextMarker = jsoniter.Get(byteFiles, "nextMarker").ToString()
+		nextMarker = jsoniter.Get(byteFiles, "next_marker").ToString()
 		var m []map[string]interface{}
 		json.Unmarshal([]byte(d.ToString()), &m)
 		for _, item := range m {
