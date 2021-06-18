@@ -12,8 +12,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/eddieivan01/nic"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -169,7 +169,7 @@ func GetDownlaodMultiFiles(accountId, fileId string) string {
 
 //天翼云网盘登录
 func Cloud189Login(accountId, user, password string) string {
-	CLoud189Session := CLoud189Sessions[accountId]
+	CLoud189Session := nic.Session{}
 	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
