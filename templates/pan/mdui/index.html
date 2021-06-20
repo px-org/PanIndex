@@ -153,7 +153,7 @@
 				{{end}}
 				{{range .List}}
 				<li class="mdui-list-item mdui-ripple">
-					<div class="mdui-list-item-content icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}">
+					<div class="mdui-list-item-content icon-file" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}">
 						<div class="mdui-list-item-title wordWrap">
 							{{if .IsFolder}}
 							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">folder_open</i> {{.FileName}}
