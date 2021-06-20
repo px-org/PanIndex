@@ -218,6 +218,8 @@ func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
 		}
 	} else if account.Mode == "aliyundrive" {
 		return Util.AliGetDownloadUrl(account.Id, fileNode.FileId)
+	} else if account.Mode == "onedrive" {
+		return Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
 	} else if account.Mode == "native" {
 	}
 	return ""
@@ -486,6 +488,9 @@ func Upload(accountId, path string, c *gin.Context) string {
 			} else if account.Mode == "aliyundrive" {
 				//阿里云盘文件上传
 				Util.AliUpload(accountId, fileId, files)
+			} else if account.Mode == "onedrive" {
+				//微软云盘文件上传
+				Util.OneDriveUpload(accountId, fileId, files)
 			}
 			return "上传成功"
 		}

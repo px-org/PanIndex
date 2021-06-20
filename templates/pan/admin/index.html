@@ -129,7 +129,7 @@
 							<ul class="mdui-list">
 								{{range $i, $a := .Accounts}}
 									<li class="mdui-list-item mdui-ripple acli" data-index="{{$i}}">
-										<i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition-us"}}blue{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>
+										<i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "teambition-us"}}blue{{else}}{{end}}{{if eq .Mode "onedrive"}}blue-200{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>
 										<div class="mdui-list-item-content">{{.Name}}</div>
 										<label class="mdui-switch">
 											<input class="defaultAccount" data-id="{{.Id}}" type="checkbox" {{if eq .Default 1}}checked{{end}}  />
@@ -192,6 +192,11 @@
 											<i class="mdui-radio-icon"></i>
 											teambition国际版
 										</label>
+										<label class="mdui-radio mdui-col">
+											<input type="radio" name="mode" value="onedrive" />
+											<i class="mdui-radio-icon"></i>
+											OneDrive
+										</label>
 									</div>
 								</div>
 								<div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
@@ -209,10 +214,10 @@
 									<label class="mdui-textfield-label">刷新令牌</label>
 									<input class="mdui-textfield-input" type="text" name="refresh_token">
 								</div>
-								<div id="AccessTokenDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
-									<i class="mdui-icon material-icons">beenhere</i>
-									<label class="mdui-textfield-label">访问令牌</label>
-									<input class="mdui-textfield-input" type="text" name="access_token">
+								<div id="RedirectUriDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+									<i class="mdui-icon material-icons">insert_link</i>
+									<label class="mdui-textfield-label">重定向地址</label>
+									<input class="mdui-textfield-input" type="text" name="redirect_uri">
 								</div>
 								<div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">folder_open</i>
@@ -349,14 +354,14 @@ $("#resetBtn").on('click', function () {
 	$("#accountForm").find("input[name=user]").val("");
 	$("#accountForm").find("input[name=password]").val("");
 	$("#accountForm").find("input[name=refresh_token]").val("");
-	$("#accountForm").find("input[name=access_token]").val("");
+	$("#accountForm").find("input[name=redirect_uri]").val("");
 	$("#accountForm").find("input[name=root_id]").val("");
 	$("#accountForm").find("input[name=mode][value=native]").prop("checked", true);
 });
 var accounts = [
 	{{range .Accounts}}
 		{"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"{{.Password}}",
-			"refresh_token":"{{.RefreshToken}}","access_token":"{{.AccessToken}}","root_id":"{{.RootId}}",
+			"refresh_token":"{{.RefreshToken}}","redirect_uri":"{{.RedirectUri}}","root_id":"{{.RootId}}",
 			"cookie_status":"{{.CookieStatus}}","status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}",
 			"last_op_time":"{{.LastOpTime}}"
 		},
@@ -382,41 +387,47 @@ function fillAccount(index) {
 	$("#accountForm").find("input[name=mode][value="+account.mode+"]").prop("checked", true);
 	$("#accountForm").find("input[name=user]").val(account.user);
 	$("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
-	$("#accountForm").find("input[name=access_token]").val(account.access_token);
+	$("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
 	$("#accountForm").find("input[name=root_id]").val(account.root_id);
 	fillCacheRecord(account)
 	dynamicChgMode(account.mode);
 }
 function dynamicChgMode(mode){
 	if(mode == "native"){
-		$("#AccessTokenDiv").hide();
+		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").hide();
 		$("#PasswordDiv").hide();
 		$("#recordDiv").hide();
 	}else if (mode == "cloud189"){
-		$("#AccessTokenDiv").hide();
+		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
 	}else if (mode == "teambition"){
-		$("#AccessTokenDiv").hide();
+		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
 	}else if (mode == "teambition-us"){
-		$("#AccessTokenDiv").hide();
+		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
 	}else if (mode == "aliyundrive"){
-		$("#AccessTokenDiv").hide();
+		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").show();
 		$("#UserDiv").hide();
 		$("#PasswordDiv").hide();
+		$("#recordDiv").show();
+	}else if (mode == "onedrive"){
+		$("#RedirectUriDiv").show();
+		$("#RefreshTokenDiv").show();
+		$("#UserDiv").show();
+		$("#PasswordDiv").show();
 		$("#recordDiv").show();
 	}
 }

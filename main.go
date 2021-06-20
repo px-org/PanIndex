@@ -64,6 +64,10 @@ func main() {
 		if path == "/api/public/downloadMultiFiles" {
 			//文件夹下载
 			downloadMultiFiles(c)
+		} else if path == "/api/public/onedrive/exchangeToken" {
+			oneExchangeToken(c)
+		} else if path == "/api/public/onedrive/refreshToken" {
+			oneRefreshToken(c)
 		} else if method == http.MethodGet && path == "/api/updateFolderCache" {
 			message := ""
 			for _, account := range config.GloablConfig.Accounts {
@@ -454,5 +458,20 @@ func upload(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
-
+func oneExchangeToken(c *gin.Context) {
+	clientId := c.PostForm("client_id")
+	clientSecret := c.PostForm("client_secret")
+	code := c.PostForm("code")
+	redirectUri := c.PostForm("redirect_uri")
+	tokenInfo := Util.OneExchangeToken(clientId, redirectUri, clientSecret, code)
+	c.String(http.StatusOK, tokenInfo)
+}
+func oneRefreshToken(c *gin.Context) {
+	clientId := c.PostForm("client_id")
+	clientSecret := c.PostForm("client_secret")
+	refreshToken := c.PostForm("refresh_token")
+	redirectUri := c.PostForm("redirect_uri")
+	tokenInfo := Util.OneGetRefreshToken(clientId, redirectUri, clientSecret, refreshToken)
+	c.String(http.StatusOK, tokenInfo)
+}
 func unescaped(x string) interface{} { return template.HTML(x) }

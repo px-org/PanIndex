@@ -57,11 +57,17 @@ func Run() {
 			account.RefreshToken = v.RefreshToken
 			Util.AliRefreshToken(account)
 		}
+		for k, v := range Util.OneDrives {
+			account := entity.Account{}
+			model.SqliteDb.Raw("select * from account where id=?", k).First(&account)
+			account.RefreshToken = v.RefreshToken
+			Util.OneDriveRefreshToken(account)
+		}
 	})
 	//cookie有效性检测
 	c.AddFunc("0 0/1 * * * ?", func() {
 		for _, account := range config.GloablConfig.Accounts {
-			if account.Mode != "native" && account.Mode != "aliyundrive" {
+			if account.Mode != "native" && account.Mode != "aliyundrive" && account.Mode != "onedrive" {
 				cookieValid := true
 				if account.Mode == "cloud189" {
 					if _, ok := Util.CLoud189Sessions[account.Id]; ok {
@@ -125,6 +131,10 @@ func AccountLogin(account entity.Account) {
 		cookie = Util.AliRefreshToken(account)
 		msg = "[" + account.Name + "] >> 阿里云盘"
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
+	} else if account.Mode == "onedrive" {
+		cookie = Util.OneDriveRefreshToken(account)
+		msg = "[" + account.Name + "] >> 微软云盘"
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 	} else if account.Mode == "native" {
 		msg = "[" + account.Name + "] >> 本地模式"
 	}
@@ -156,6 +166,8 @@ func SyncOneAccount(account entity.Account) {
 		}
 	} else if account.Mode == "aliyundrive" {
 		Util.AliGetFiles(account.Id, account.RootId, account.RootId, "/")
+	} else if account.Mode == "onedrive" {
+		Util.OndriveGetFiles("", account.Id, account.RootId, "/")
 	} else if account.Mode == "native" {
 	}
 	//删除旧数据
