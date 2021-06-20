@@ -191,6 +191,7 @@ func Cloud189Login(accountId, user, password string) string {
 		vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
 		vCodeRS = GetValidateCode(accountId, vCodeID)
 		log.Warningln("[登录接口]得到验证码：" + vCodeRS)
+		return "4"
 	}
 	userRsa := RsaEncode([]byte(user), jRsakey)
 	passwordRsa := RsaEncode([]byte(password), jRsakey)
@@ -237,7 +238,7 @@ func Cloud189Login(accountId, user, password string) string {
 		}
 	}
 	log.Warningln("[登录接口]登录失败，错误代码：" + strconv.Itoa(restCode) + " (" + errorReason + ")")
-	return ""
+	return "4"
 }
 
 func Cloud189IsLogin(accountId string) bool {

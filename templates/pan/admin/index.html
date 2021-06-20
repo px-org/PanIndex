@@ -560,6 +560,8 @@ function fillCacheRecord(account){
 		text += "<p>cookie： 正常</p>";
 	}else if (account.cookie_status == 3){
 		text += "<p>cookie： 失效</p>";
+	}else if (account.cookie_status == 4){
+		text += "<p>cookie： 登录失败</p>";
 	}else if (account.cookie_status == -1){
 		text += "<p>cookie： 刷新中</p>";
 	}

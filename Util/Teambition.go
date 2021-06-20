@@ -73,10 +73,10 @@ func TeambitionLogin(accountId, user, password string) string {
 	}
 	u := jsoniter.Get(resp.Bytes, "user")
 	if u == nil || u.Get("_id").ToString() == "" {
-		//登录成功
+		//登录失败
 		Teambition.TeambitionSession = TeambitionSession
 		TeambitionSessions[accountId] = Teambition
-		return ""
+		return "4"
 	}
 	//2. 获orgId, memberId
 	resp, err = TeambitionSession.Get("https://www.teambition.com/api/organizations/personal", nil)
