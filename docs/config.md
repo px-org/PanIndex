@@ -47,6 +47,10 @@
     - teambition：阿里teambition盘，包括个人网盘和项目文件，依据根目录ID设定自动判断
     - teambition国际版：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
     - aliyundrive：阿里云盘，需要填入有效的`refresh_token`，在[此处登录](https://passport.aliyundrive.com/mini_login.htm?lang=zh_cn&appName=aliyun_drive&appEntrance=web&styleType=auto&bizParams=&notLoadSsoView=false&notKeepLogin=false&isMobile=true&hidePhoneCode=true&rnd=0.9186864872885723)后抓包获取，[详细教程](https://woriqq.com/archives/75.html)
+    - onedrive：微软云盘，用户填写`client_id`，密码填写`client_secret`，重定向地址`redirect_uri`及最重要的刷新令牌`refresh_token`
+        - [在线工具](https://mgaa.noki.workers.dev/)
+        - 创建应用
+        - 获取onedrive api权限
     
     由于阿里云的`refresh_token`和`access_token`有效期为2小时，第一次填入后，系统会定时刷新，所以`refresh_token`会更新，但是可以保持始终有效。
 - 用户名：部分模式必需，一般是手机号或邮箱
