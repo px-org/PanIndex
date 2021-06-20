@@ -73,7 +73,6 @@ func OndriveGetFiles(url, accountId, fileId, p string) {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Text)
 	byteFiles := []byte(resp.Text)
 	d := jsoniter.Get(byteFiles, "value")
 	//nextMarker = jsoniter.Get(byteFiles, "next_marker").ToString()

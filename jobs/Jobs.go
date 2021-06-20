@@ -180,7 +180,7 @@ func SyncOneAccount(account entity.Account) {
 	} else if account.Mode == "native" {
 	}
 	var fileNodeCount int64
-	model.SqliteDb.Model(&entity.FileNode{}).Where("account_id=? and delete=1", account.Id).Count(&fileNodeCount)
+	model.SqliteDb.Model(&entity.FileNode{}).Where("account_id=? and `delete`=1", account.Id).Count(&fileNodeCount)
 	status := 3
 	if int(fileNodeCount) > 0 {
 		status = 2
