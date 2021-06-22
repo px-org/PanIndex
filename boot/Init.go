@@ -24,6 +24,13 @@ var (
 )
 
 func Start(host, port string, debug bool, dataPath string) {
+	if os.Getenv("PAN_INDEX_DEBUG") != "" {
+		if os.Getenv("PAN_INDEX_DEBUG") == "true" {
+			debug = true
+		} else if os.Getenv("PAN_INDEX_DEBUG") == "false" {
+			debug = false
+		}
+	}
 	//初始化日志设置
 	InitLog(debug)
 	//打印asc
@@ -55,13 +62,6 @@ func PrintAsc() {
 
 // boot logrus
 func InitLog(debug bool) {
-	if os.Getenv("PAN_INDEX_DEBUG") != "" {
-		if os.Getenv("PAN_INDEX_DEBUG") == "true" {
-			debug = true
-		} else if os.Getenv("PAN_INDEX_DEBUG") == "false" {
-			debug = false
-		}
-	}
 	if debug {
 		log.SetLevel(log.DebugLevel)
 		gin.SetMode(gin.DebugMode)
