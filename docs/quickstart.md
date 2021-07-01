@@ -27,6 +27,59 @@ $ tar -xvf PanIndex-v1.0.0-linux-amd64.tar.gz
 #nohup ./PanIndex -host=0.0.0.0 -port=5238 -debug=false > PanIndex.log &
 $ nohup ./PanIndex > PanIndex.log &
 ```
+### 在Systemd下运行
+> 以下命令请切换到root下执行
+
+1. 下载PanIndex并解压
+```
+$ mkdir /usr/local/etc/PanIndex
+$ cd /usr/local/etc/PanIndex
+$ wget https://github.com/libsgh/PanIndex/releases/download/v2.0.3/PanIndex-v2.0.3-linux-amd64.tar.gz
+$ tar -xvf PanIndex-v2.0.3-linux-arm64.tar.gz
+$ cp PanIndex /usr/local/bin/
+```
+2. 编写PanIndex.service文件
+```
+$ vim /etc/systemd/system/PanIndex.service
+```
+3. service内容参考
+```
+[Unit]
+Description=PanIndex Service
+Documentation=https://libsgh.github.io/PanIndex/
+After=network.target
+[Service]
+User=root
+WorkingDirectory=/usr/local/etc/PanIndex
+ExecStart=/usr/local/bin/PanIndex
+Environment="PAN_INDEX_DATA_PATH=/usr/local/etc/PanIndex"
+Restart=on-failure
+RestartPreventExitStatus=23
+LimitNPROC=10000
+LimitNOFILE=1000000
+[Install]
+WantedBy=multi-user.target
+```
+
+4. Systemd常用命令
+```
+$ systemctl daemon-reload #PanIndex.service有修改重新加载
+$ systemctl restart PanIndex #重启PanIndex
+$ systemctl enable PanIndex #设置开机启动
+$ systemctl disable PanIndex #关闭开机启动
+$ systemctl status PanIndex #查询服务状态
+$ journalctl -u PanIndex.service -f #滚动查看PanIndex日志
+```
+
+### 在Supervisor下运行
+
+1. 启动命令那里，要填PanIndex的绝对路径
+![](_images/Supervisor.png)
+2. 如果需要配置环境变量在子配置文件中添加才能生效
+
+```
+environment=a="1",b="2"
+```
 
 ### heroku部署
 
