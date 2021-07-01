@@ -4,14 +4,20 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"math"
 	"mime/multipart"
+	"net/http"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -173,16 +179,84 @@ func GetOneDriveDownloadUrl(accountId, fileId string) string {
 	})
 	return jsoniter.Get(resp.Bytes, "@microsoft.graph.downloadUrl").ToString()
 }
+
 func OneDriveUpload(accountId, parentId string, files []*multipart.FileHeader) bool {
-	//od := OneDrives[accountId]
-	//auth := od.TokenType + " " + od.AccessToken
 	for _, file := range files {
 		t1 := time.Now()
+		//bfs := ReadBlock(file, 16384000)327680
+		bfs := ReadBlock(file)
+		uploadUrl := CreateUploadSession(accountId, filepath.Join(parentId, file.Filename))
+		for _, bf := range bfs {
+			r, _ := http.NewRequest("PUT", uploadUrl, bytes.NewReader(bf.Content))
+			r.Header.Add("Content-Length", strconv.FormatInt(file.Size, 10))
+			r.Header.Add("Content-Range", bf.Name)
+			res, _ := http.DefaultClient.Do(r)
+			defer res.Body.Close()
+			body, _ := ioutil.ReadAll(res.Body)
+			log.Debugf("上传接口返回：%s", body)
+		}
 		log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
-		log.Debugf("上传接口返回：%s", "1")
 		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
 	}
 	return false
+}
+
+func ReadBlock(file *multipart.FileHeader) []BlockFile {
+	bfs := []BlockFile{}
+	FileHandle, err := file.Open()
+	if err != nil {
+		log.Error(err)
+		return bfs
+	}
+	defer FileHandle.Close()
+	const fileChunk = 16384000 //15.625MB
+	totalPartsNum := uint64(math.Ceil(float64(file.Size) / float64(fileChunk)))
+	log.Debugf("Spliting to %d pieces.\n", totalPartsNum)
+	totalSize := file.Size
+	off := int64(0) //起始点
+	for i := uint64(0); i < totalPartsNum; i++ {
+		partSize := int64(math.Min(fileChunk, float64(file.Size-int64(i*fileChunk))))
+		contentRange := fmt.Sprintf("bytes %d-%d/%d", off, off+partSize-1, totalSize)
+		partBuffer := make([]byte, partSize)
+		FileHandle.Read(partBuffer)
+		bfs = append(bfs, BlockFile{partBuffer, contentRange})
+		off += partSize
+	}
+	return bfs
+}
+
+type BlockFile struct {
+	Content []byte
+	Name    string
+}
+type SplitFile struct {
+	File      *multipart.FileHeader
+	FileName  string
+	Length    int64
+	Size      int64
+	BlockSize int64
+	blockpath []string
+}
+
+func CreateUploadSession(accountId, filePath string) string {
+	od := OneDrives[accountId]
+	auth := od.TokenType + " " + od.AccessToken
+	resp, err := nic.Post("https://graph.microsoft.com/v1.0/me/drive/root:"+filePath+":/createUploadSession", nic.H{
+		Headers: nic.KV{
+			"Authorization": auth,
+			"Host":          "graph.microsoft.com",
+		},
+	})
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	if resp.StatusCode == 409 {
+		log.Debugf("被请求的资源的当前状态之间存在冲突，请求无法完成，重新提交上传请求")
+		return ""
+	}
+	log.Debugf("[OneDrive]获取上传url:%s", resp.Text)
+	return jsoniter.Get(resp.Bytes, "uploadUrl").ToString()
 }
 func OneExchangeToken(clientId, redirectUri, clientSecret, code string) string {
 	resp, err := nic.Post("https://login.microsoftonline.com/common/oauth2/v2.0/token", nic.H{

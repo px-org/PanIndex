@@ -532,6 +532,8 @@ func Async(accountId, path string) string {
 				Util.Cloud189GetFiles(account.Id, fileId, fileId, path)
 			} else if account.Mode == "aliyundrive" {
 				Util.AliGetFiles(account.Id, fileId, fileId, path)
+			} else if account.Mode == "onedrive" {
+				Util.OndriveGetFiles("", account.Id, fileId, path)
 			}
 			refreshFileNodes(account.Id, fileId)
 			return "刷新成功"
