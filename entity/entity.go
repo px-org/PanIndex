@@ -59,6 +59,7 @@ type Account struct {
 	Password     string `json:"password"`      //网盘账号密码
 	RefreshToken string `json:"refresh_token"` //刷新token
 	AccessToken  string `json:"access_token"`  //授权token
+	RedirectUri  string `json:"redirect_uri"`  //重定向url（onedrive）
 	RootId       string `json:"root_id"`       //目录id
 	Default      int    `json:"default"`       //是否默认
 	FilesCount   int    `json:"files_count"`   //文件总数
@@ -133,4 +134,12 @@ type AliPartInfo struct {
 	UploadUrl         string `json:"upload_url"`
 	InternalUploadUrl string `json:"internal_upload_url"`
 	ContentType       string `json:"content_type"`
+}
+type OneDriveAuthInfo struct {
+	TokenType    string `json:"token_type"`
+	Scope        string `json:"scope"`
+	ExpiresIn    int    `json:"expires_in"`
+	ExtExpiresIn int    `json:"ext_expires_in"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }

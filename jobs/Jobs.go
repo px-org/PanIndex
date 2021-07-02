@@ -36,7 +36,7 @@ func Run() {
 					log.Infoln("[定时任务]heroku配置防丢失 >> " + resp.Status)
 				}
 			}
-			for _, account := range config.GloablConfig.Accounts {
+			for _, account := range SelectAllAccounts() {
 				AccountLogin(account)
 			}
 		})
@@ -44,7 +44,7 @@ func Run() {
 	if config.GloablConfig.UpdateFolderCache != "" {
 		c.AddFunc(config.GloablConfig.UpdateFolderCache, func() {
 			Util.GC = gcache.New(10).LRU().Build()
-			for _, account := range config.GloablConfig.Accounts {
+			for _, account := range SelectAllAccounts() {
 				SyncOneAccount(account)
 			}
 		})
@@ -57,11 +57,23 @@ func Run() {
 			account.RefreshToken = v.RefreshToken
 			Util.AliRefreshToken(account)
 		}
+		for k, v := range Util.OneDrives {
+			account := entity.Account{}
+			model.SqliteDb.Raw("select * from account where id=?", k).First(&account)
+			account.RefreshToken = v.RefreshToken
+			Util.OneDriveRefreshToken(account)
+		}
 	})
 	//cookie有效性检测
 	c.AddFunc("0 0/1 * * * ?", func() {
-		for _, account := range config.GloablConfig.Accounts {
-			if account.Mode != "native" && account.Mode != "aliyundrive" {
+		for _, account := range SelectAllAccounts() {
+			if account.Mode != "native" && account.Mode != "aliyundrive" && account.Mode != "onedrive" {
+				if account.CookieStatus == 4 {
+					//频繁登录或用户名密码错误导致的失败
+					//跳过验证
+					log.Infof("[COOKIE定时检查][%s]>>%s>>由频繁登录或用户名密码错误导致的失败不再检测", account.Name, account.Mode)
+					continue
+				}
 				cookieValid := true
 				if account.Mode == "cloud189" {
 					if _, ok := Util.CLoud189Sessions[account.Id]; ok {
@@ -125,14 +137,21 @@ func AccountLogin(account entity.Account) {
 		cookie = Util.AliRefreshToken(account)
 		msg = "[" + account.Name + "] >> 阿里云盘"
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
+	} else if account.Mode == "onedrive" {
+		cookie = Util.OneDriveRefreshToken(account)
+		msg = "[" + account.Name + "] >> 微软云盘"
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 	} else if account.Mode == "native" {
 		msg = "[" + account.Name + "] >> 本地模式"
 	}
-	if cookie != "" {
+	if cookie != "" && cookie != "4" {
 		log.Infoln(msg + " >> COOKIE更新 >> 登录成功")
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 2)
-	} else if cookie == "" && account.Mode != "native" {
+	} else if cookie == "4" && account.Mode != "native" {
 		log.Infoln(msg + "COOKIE更新 >> 登录失败，请检查用户名,密码(token)是否正确")
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 4)
+	} else if cookie == "" && account.Mode != "native" {
+		log.Infoln(msg + "COOKIE更新 >> 登录失败，原因未知")
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("cookie_status", 3)
 	}
 }
@@ -156,17 +175,19 @@ func SyncOneAccount(account entity.Account) {
 		}
 	} else if account.Mode == "aliyundrive" {
 		Util.AliGetFiles(account.Id, account.RootId, account.RootId, "/")
+	} else if account.Mode == "onedrive" {
+		Util.OndriveGetFiles("", account.Id, account.RootId, "/")
 	} else if account.Mode == "native" {
 	}
-	//删除旧数据
-	model.SqliteDb.Where("account_id=? and `delete`=0", account.Id).Delete(entity.FileNode{})
-	//暴露新数据
-	model.SqliteDb.Table("file_node").Where("account_id=?", account.Id).Update("delete", 0)
 	var fileNodeCount int64
-	model.SqliteDb.Model(&entity.FileNode{}).Where("account_id=?", account.Id).Count(&fileNodeCount)
+	model.SqliteDb.Model(&entity.FileNode{}).Where("account_id=? and `delete`=1", account.Id).Count(&fileNodeCount)
 	status := 3
 	if int(fileNodeCount) > 0 {
 		status = 2
+		//删除旧数据
+		model.SqliteDb.Where("account_id=? and `delete`=0", account.Id).Delete(entity.FileNode{})
+		//暴露新数据
+		model.SqliteDb.Table("file_node").Where("account_id=?", account.Id).Update("delete", 0)
 		log.Infoln("[目录缓存][" + account.Name + "]缓存刷新 >> 刷新成功")
 	}
 	t2 := time.Now()
@@ -178,4 +199,9 @@ func SyncOneAccount(account entity.Account) {
 		"status": status, "files_count": int(fileNodeCount), "last_op_time": now.Format("2006-01-02 15:04:05"),
 		"time_span": Util.ShortDur(d),
 	})
+}
+func SelectAllAccounts() []entity.Account {
+	var list []entity.Account
+	model.SqliteDb.Where("1=1").Find(&list)
+	return list
 }

@@ -13,6 +13,7 @@
 - 天翼云网盘
 - teambition盘（个人、项目、国际服）
 - 阿里云盘
+- OneDrive国际版
 
 ## 示例
 - [在线演示](https://t1.netrss.cf "https://t1.netrss.cf")

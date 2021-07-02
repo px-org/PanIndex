@@ -40,7 +40,7 @@ func InitDb(host, port, dataPath string, debug bool) {
 	if err != nil {
 		panic(fmt.Sprintf("Got error when connect database, the error is '%v'", err))
 	} else {
-		log.Println("[程序启动]Sqlite数据库 >> 连接成功")
+		log.Info("[程序启动]Sqlite数据库 >> 连接成功")
 	}
 	//SqliteDb.SingularTable(true)
 	//打印sql语句
