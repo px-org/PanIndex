@@ -259,8 +259,8 @@
 				<form id="cronForm">
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">定时任务-刷新登录cookie</label>
-						<input class="mdui-textfield-input" type="text" name="refresh_cookie" placeholder="0 0 8 1/1 * ?" value="{{.RefreshCookie}}" required />
-						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效，时间间隔不要太短</div>
+						<input class="mdui-textfield-input" type="text" name="refresh_cookie" placeholder="0 0 5 31 2 ?" value="{{.RefreshCookie}}" required />
+						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效，已改为主动检测刷新，即将弃用</div>
 					</div>
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">定时任务-刷新目录缓存</label>

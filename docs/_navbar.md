@@ -8,5 +8,5 @@
   * [常见问题](/question.md)
   * [意见反馈](/ask.md)
   * [捐助](/donate.md)
-* Changelog
+* [Changelog](/changelog.md)
 * [1.x](/v1/)
