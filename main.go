@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bluele/gcache"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
 	uuid "github.com/satori/go.uuid"
@@ -39,6 +40,7 @@ func main() {
 	flag.Parse()
 	boot.Start(*Host, *Port, *Debug, *DataPath)
 	r := gin.New()
+	pprof.Register(r)
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
 	r.SetHTMLTemplate(initTemplates())
