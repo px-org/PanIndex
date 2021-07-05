@@ -201,28 +201,29 @@
 								</div>
 								<div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
 									<i class="mdui-icon material-icons">account_circle</i>
-									<label class="mdui-textfield-label">用户名</label>
+									<label class="mdui-textfield-label" id="user_label">用户名</label>
 									<input class="mdui-textfield-input" type="text" name="user" required>
 								</div>
 								<div id="PasswordDiv" class="mdui-textfield mdui-textfield-has-bottom">
 									<i class="mdui-icon material-icons">lock</i>
-									<label class="mdui-textfield-label">密码</label>
-									<input class="mdui-textfield-input" type="password" name="password">
+									<label class="mdui-textfield-label" id="password_label">密码</label>
+									<input class="mdui-textfield-input" type="text" name="password">
 								</div>
-								<div id="RefreshTokenDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+								<div id="RefreshTokenDiv" class="mdui-textfield mdui-textfield-has-bottom">
 									<i class="mdui-icon material-icons">refresh</i>
-									<label class="mdui-textfield-label">刷新令牌</label>
+									<label class="mdui-textfield-label">刷新令牌（Refresh Token）</label>
 									<input class="mdui-textfield-input" type="text" name="refresh_token">
 								</div>
-								<div id="RedirectUriDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+								<div id="RedirectUriDiv" class="mdui-textfield mdui-textfield-has-bottom">
 									<i class="mdui-icon material-icons">insert_link</i>
 									<label class="mdui-textfield-label">重定向地址</label>
-									<input class="mdui-textfield-input" type="text" name="redirect_uri">
+									<input class="mdui-textfield-input" type="text" name="redirect_uri" placeholder="https://mgaa.noki.workers.dev">
 								</div>
 								<div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">folder_open</i>
 									<label class="mdui-textfield-label">根目录ID(路径)</label>
 									<input class="mdui-textfield-input" type="text" name="root_id" required>
+									<div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
 								</div>
 							</form>
 							<div class="mdui-row-xs-5">
@@ -405,18 +406,24 @@ function dynamicChgMode(mode){
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$("#user_label").text("用户名");
+		$("#password_label").text("密码");
 	}else if (mode == "teambition"){
 		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$("#user_label").text("用户名");
+		$("#password_label").text("密码");
 	}else if (mode == "teambition-us"){
 		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$("#user_label").text("用户名");
+		$("#password_label").text("密码");
 	}else if (mode == "aliyundrive"){
 		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").show();
@@ -429,6 +436,8 @@ function dynamicChgMode(mode){
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$("#user_label").text("客户端ID（Client ID）");
+		$("#password_label").text("客户端密码（Client Secret）");
 	}
 }
 var accountStatus = 0;
