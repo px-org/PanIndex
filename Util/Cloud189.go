@@ -133,6 +133,9 @@ func GetDownlaodUrl(accountId, fileIdDigest string) string {
 		log.Error(err)
 		return ""
 	}
+	if dRedirectRep != nil {
+		defer dRedirectRep.Body.Close()
+	}
 	redirectUrl := dRedirectRep.Header.Get("Location")
 	dRedirectRep, err = CLoud189Session.Get(redirectUrl, nic.H{
 		AllowRedirect: false,
@@ -248,7 +251,11 @@ func Cloud189IsLogin(accountId string) bool {
 		if err == nil && resp.Text != "" && jsoniter.Valid(resp.Bytes) && jsoniter.Get(resp.Bytes, "errorMsg").ToString() == "" {
 			return true
 		} else {
-			log.Debug(resp.Text)
+			if resp != nil {
+				defer resp.Body.Close()
+			} else {
+				log.Debug(resp.Text)
+			}
 		}
 	}
 	return false
