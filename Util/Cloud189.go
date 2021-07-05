@@ -260,7 +260,6 @@ func Cloud189IsLogin(accountId string) bool {
 		} else {
 			if resp != nil {
 				defer resp.Body.Close()
-			} else {
 				log.Debug(resp.Text)
 			}
 		}
