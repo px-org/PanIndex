@@ -266,6 +266,7 @@ func index(c *gin.Context) {
 			} else {
 				downUrl := service.GetDownlaodUrl(account, fs[0])
 				c.Redirect(http.StatusFound, downUrl)
+				return
 			}
 		}
 	}

@@ -127,7 +127,9 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
-		AllowRedirect: false,
+		AllowRedirect:     false,
+		Timeout:           10,
+		DisableKeepAlives: true,
 	})
 	if err != nil {
 		log.Error(err)
@@ -138,7 +140,9 @@ func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	}
 	redirectUrl := dRedirectRep.Header.Get("Location")
 	dRedirectRep, err = CLoud189Session.Get(redirectUrl, nic.H{
-		AllowRedirect: false,
+		AllowRedirect:     false,
+		Timeout:           10,
+		DisableKeepAlives: true,
 	})
 	if err != nil {
 		log.Error(err)
@@ -247,7 +251,10 @@ func Cloud189Login(accountId, user, password string) string {
 func Cloud189IsLogin(accountId string) bool {
 	CLoud189Session := CLoud189Sessions[accountId]
 	if _, ok := CLoud189Sessions[accountId]; ok {
-		resp, err := CLoud189Session.Get("https://cloud.189.cn/v2/getLoginedInfos.action?showPC=true", nil)
+		resp, err := CLoud189Session.Get("https://cloud.189.cn/v2/getLoginedInfos.action?showPC=true", nic.H{
+			Timeout:           10,
+			DisableKeepAlives: true,
+		})
 		if err == nil && resp.Text != "" && jsoniter.Valid(resp.Bytes) && jsoniter.Get(resp.Bytes, "errorMsg").ToString() == "" {
 			return true
 		} else {
