@@ -53,7 +53,7 @@ func OneDriveRefreshToken(account entity.Account) string {
 }
 func BuildODRequestUrl(path, query string) string {
 	if path != "" && path != "/" {
-		path = fmt.Sprintf(":/%s:/", path)
+		path = fmt.Sprintf(":%s:/", path)
 	}
 	return "https://graph.microsoft.com/v1.0" + "/me/drive/root" + path + query
 }
@@ -79,6 +79,7 @@ func OndriveGetFiles(url, accountId, fileId, p string) {
 	if err != nil {
 		panic(err.Error())
 	}
+	fmt.Println(resp.Text)
 	byteFiles := []byte(resp.Text)
 	d := jsoniter.Get(byteFiles, "value")
 	//nextMarker = jsoniter.Get(byteFiles, "next_marker").ToString()
