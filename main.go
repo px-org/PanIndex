@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -207,6 +208,9 @@ func initStaticBox(r *gin.Engine) {
 	}
 }
 
+var dls = sync.Map{}
+
+//var dl = service.DownLock{}
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
@@ -264,7 +268,17 @@ func index(c *gin.Context) {
 				c.File(fs[0].FileId)
 				return
 			} else {
-				downUrl := service.GetDownlaodUrl(account, fs[0])
+				var dl = service.DownLock{}
+				/*dls.LoadOrStore(fs[0].FileId, dl)*/
+				if _, ok := dls.Load(fs[0].FileId); ok {
+					ss, _ := dls.Load(fs[0].FileId)
+					dl = ss.(service.DownLock)
+				} else {
+					dl.FileId = fs[0].FileId
+					dl.L = new(sync.Mutex)
+					dls.LoadOrStore(fs[0].FileId, dl)
+				}
+				downUrl := dl.GetDownlaodUrl(account, fs[0])
 				c.Redirect(http.StatusFound, downUrl)
 				return
 			}

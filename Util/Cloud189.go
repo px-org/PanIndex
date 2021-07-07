@@ -128,21 +128,24 @@ func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
 		AllowRedirect:     false,
-		Timeout:           30,
+		Timeout:           20,
 		DisableKeepAlives: true,
+		SkipVerifyTLS:     true,
 	})
+	fmt.Println(len(dRedirectRep.Bytes))
+	if dRedirectRep != nil {
+		defer dRedirectRep.Body.Close()
+	}
 	if err != nil {
 		log.Error(err)
 		return ""
 	}
-	if dRedirectRep != nil {
-		defer dRedirectRep.Body.Close()
-	}
 	redirectUrl := dRedirectRep.Header.Get("Location")
 	dRedirectRep, err = CLoud189Session.Get(redirectUrl, nic.H{
 		AllowRedirect:     false,
-		Timeout:           30,
+		Timeout:           20,
 		DisableKeepAlives: true,
+		SkipVerifyTLS:     true,
 	})
 	if err != nil {
 		log.Error(err)
@@ -151,19 +154,44 @@ func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	if dRedirectRep == nil || dRedirectRep.Header == nil {
 		return ""
 	}
+	fmt.Println(len(dRedirectRep.Bytes))
 	return dRedirectRep.Header.Get("Location")
 }
-func GetDownlaodUrlNew(accountId, fileIdDigest string) string {
+
+func GetDownlaodUrlNew(accountId, fileId string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
-	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/v2/getPhotoOriginalUrl.action?fileIdDigest="+fileIdDigest+"&directDownload=true", nic.H{
-		AllowRedirect: false,
+	defer CLoud189Session.Client.CloseIdleConnections()
+	dRedirectRep, err := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action?noCache=%s&fileId=%s", random(), fileId), nic.H{
+		Headers: nic.KV{
+			"accept": "application/json;charset=UTF-8	",
+		},
 	})
+	if dRedirectRep != nil {
+		defer dRedirectRep.Body.Close()
+	}
 	if err != nil {
 		log.Error(err)
 		return ""
 	}
-	redirectUrl := dRedirectRep.Header.Get("Location")
-	return redirectUrl
+	resCode := jsoniter.Get(dRedirectRep.Bytes, "res_code").ToInt()
+	if resCode == 0 {
+		fileDownloadUrl := jsoniter.Get(dRedirectRep.Bytes, "fileDownloadUrl").ToString()
+		dRedirectRep, err = CLoud189Session.Get(fileDownloadUrl, nic.H{
+			AllowRedirect:     false,
+			Timeout:           20,
+			DisableKeepAlives: true,
+		})
+		if dRedirectRep != nil {
+			defer dRedirectRep.Body.Close()
+		}
+		if err != nil {
+			log.Error(err)
+			return ""
+		}
+		return dRedirectRep.Header.Get("location")
+	} else {
+		return ""
+	}
 }
 func GetDownlaodMultiFiles(accountId, fileId string) string {
 	CLoud189Session := CLoud189Sessions[accountId]

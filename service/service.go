@@ -19,8 +19,12 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
+
+var UrlCache = gcache.New(100).LRU().Build()
+var dl = DownLock{}
 
 func GetFilesByPath(account entity.Account, path, pwd string) map[string]interface{} {
 	if path == "" {
@@ -144,7 +148,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and `delete`=0 and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
 			if !readmeFile.IsFolder && readmeFile.FileName == "README.md" {
 				result["HasReadme"] = true
-				result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
+				result["ReadmeContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
 			}
 		}
 		result["HasPwd"] = false
@@ -201,28 +205,53 @@ func SearchFilesByKey(account entity.Account, key string) map[string]interface{}
 	return result
 }
 
-func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
-	if account.Mode == "cloud189" {
-		return Util.GetDownlaodUrl(account.Id, fileNode.FileIdDigest)
-	} else if account.Mode == "teambition" {
-		if Util.TeambitionSessions[account.Id].IsPorject {
-			return Util.GetTeambitionProDownUrl("www", account.Id, fileNode.FileId)
-		} else {
-			return Util.GetTeambitionDownUrl(account.Id, fileNode.FileId)
+type DownLock struct {
+	FileId string
+	L      *sync.Mutex
+}
+
+func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
+	var downloadUrl = ""
+	var err error
+	dl.L.Lock()
+	defer func() {
+		if err == nil {
+			dl.L.Unlock()
 		}
-	} else if account.Mode == "teambition-us" {
-		if Util.TeambitionSessions[account.Id].IsPorject {
-			return Util.GetTeambitionProDownUrl("us", account.Id, fileNode.FileId)
-		} else {
-			//国际版暂时没有个人文件
+	}()
+	if UrlCache.Has(fileNode.FileId) {
+		cachUrl, err := UrlCache.Get(fileNode.FileId)
+		if err == nil {
+			downloadUrl = cachUrl.(string)
+			log.Debugf("从缓存中获取下载地址:" + downloadUrl)
 		}
-	} else if account.Mode == "aliyundrive" {
-		return Util.AliGetDownloadUrl(account.Id, fileNode.FileId)
-	} else if account.Mode == "onedrive" {
-		return Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
-	} else if account.Mode == "native" {
+	} else {
+		if account.Mode == "cloud189" {
+			downloadUrl = Util.GetDownlaodUrlNew(account.Id, fileNode.FileId)
+		} else if account.Mode == "teambition" {
+			if Util.TeambitionSessions[account.Id].IsPorject {
+				downloadUrl = Util.GetTeambitionProDownUrl("www", account.Id, fileNode.FileId)
+			} else {
+				return Util.GetTeambitionDownUrl(account.Id, fileNode.FileId)
+			}
+		} else if account.Mode == "teambition-us" {
+			if Util.TeambitionSessions[account.Id].IsPorject {
+				downloadUrl = Util.GetTeambitionProDownUrl("us", account.Id, fileNode.FileId)
+			} else {
+				//国际版暂时没有个人文件
+			}
+		} else if account.Mode == "aliyundrive" {
+			downloadUrl = Util.AliGetDownloadUrl(account.Id, fileNode.FileId)
+		} else if account.Mode == "onedrive" {
+			downloadUrl = Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
+		} else if account.Mode == "native" {
+		}
+		if downloadUrl != "" {
+			UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Second*30)
+		}
+		log.Debugf("调用api获取下载地址:" + downloadUrl)
 	}
-	return ""
+	return downloadUrl
 }
 
 func GetDownlaodMultiFiles(accountId, fileId string) string {
