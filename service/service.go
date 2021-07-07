@@ -24,7 +24,6 @@ import (
 )
 
 var UrlCache = gcache.New(100).LRU().Build()
-var dl = DownLock{}
 
 func GetFilesByPath(account entity.Account, path, pwd string) map[string]interface{} {
 	if path == "" {
@@ -148,6 +147,9 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and `delete`=0 and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
 			if !readmeFile.IsFolder && readmeFile.FileName == "README.md" {
 				result["HasReadme"] = true
+				dl := DownLock{}
+				dl.FileId = readmeFile.FileId
+				dl.L = new(sync.Mutex)
 				result["ReadmeContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
 			}
 		}
