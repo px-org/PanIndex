@@ -33,7 +33,7 @@ import (
 var CLoud189Sessions = map[string]nic.Session{}
 
 //获取文件列表
-func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
+func Cloud189GetFiles(accountId, rootId, fileId, prefix string, syncChild bool) {
 	CLoud189Session := CLoud189Sessions[accountId]
 	defer func() {
 		if p := recover(); p != nil {
@@ -93,7 +93,9 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 					item.ParentPath = p
 					item.SizeFmt = FormatFileSize(item.FileSize)
 					if item.IsFolder == true {
-						Cloud189GetFiles(accountId, rootId, item.FileId, prefix)
+						if syncChild {
+							Cloud189GetFiles(accountId, rootId, item.FileId, prefix, syncChild)
+						}
 					} else {
 						//如果是文件，解析下载直链
 						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{

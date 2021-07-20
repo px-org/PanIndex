@@ -312,9 +312,9 @@ func UpdateFolderCache(account entity.Account) {
 	Util.GC = gcache.New(10).LRU().Build()
 	model.SqliteDb.Delete(entity.FileNode{})
 	if account.Mode == "cloud189" {
-		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "")
+		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "", true)
 	} else if account.Mode == "teambition" {
-		Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
+		Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/", true)
 	} else if account.Mode == "native" {
 	}
 }
@@ -414,6 +414,8 @@ func SaveConfig(config map[string]interface{}) {
 			}
 			ac := entity.Account{}
 			model.SqliteDb.Table("account").Where("id=?", ID).Take(&ac)
+			ac.SyncDir = "/"
+			ac.SyncChild = 0
 			go jobs.SyncInit(ac)
 		}
 	}
@@ -552,43 +554,22 @@ func Async(accountId, path string) string {
 			}
 			if account.Mode == "teambition" && !Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 个人文件
-				Util.TeambitionGetFiles(account.Id, fileId, fileId, path)
+				Util.TeambitionGetFiles(account.Id, fileId, fileId, path, true)
 			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 项目文件
-				Util.TeambitionGetProjectFiles("www", account.Id, fileId, path)
+				Util.TeambitionGetProjectFiles("www", account.Id, fileId, path, true)
 			} else if account.Mode == "teambition-us" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition-us 项目文件
-				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path)
+				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path, true)
 			} else if account.Mode == "cloud189" {
-				Util.Cloud189GetFiles(account.Id, fileId, fileId, path)
+				Util.Cloud189GetFiles(account.Id, fileId, fileId, path, true)
 			} else if account.Mode == "aliyundrive" {
-				Util.AliGetFiles(account.Id, fileId, fileId, path)
+				Util.AliGetFiles(account.Id, fileId, fileId, path, true)
 			} else if account.Mode == "onedrive" {
-				Util.OndriveGetFiles("", account.Id, fileId, path)
+				Util.OndriveGetFiles("", account.Id, fileId, path, true)
 			}
-			refreshFileNodes(account.Id, fileId)
+			jobs.RefreshFileNodes(account.Id, fileId)
 			return "刷新成功"
-		}
-	}
-}
-func refreshFileNodes(accountId, fileId string) {
-	tmpList := []entity.FileNode{}
-	list := []entity.FileNode{}
-	model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0 and account_id=?", fileId, accountId).Find(&tmpList)
-	getAllNodes(&tmpList, &list)
-	for _, fn := range list {
-		model.SqliteDb.Where("id=?", fn.Id).Delete(entity.FileNode{})
-	}
-	model.SqliteDb.Table("file_node").Where("account_id=?", accountId).Update("delete", 0)
-}
-
-func getAllNodes(tmpList, list *[]entity.FileNode) {
-	for _, fn := range *tmpList {
-		tmpList = &[]entity.FileNode{}
-		model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0", fn.FileId).Find(&tmpList)
-		*list = append(*list, fn)
-		if len(*tmpList) != 0 {
-			getAllNodes(tmpList, list)
 		}
 	}
 }

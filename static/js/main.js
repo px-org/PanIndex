@@ -39,6 +39,7 @@ $(document).ready(function() {
         var title = $(this).attr("data-title");
         var dmt = $(this).attr("data-media-type");
         var fileType = $(this).attr("data-file-type");
+        window.location.href = dURL + "?v";
         if(dmt == 1){
             $(this).lightGallery({
                 fullScreen: true,
@@ -84,7 +85,7 @@ $(document).ready(function() {
             || fileType == "ppt" || fileType == "pptx" || fileType == "xls" || fileType == "xlsx"){
             window.open("https://view.officeapps.live.com/op/view.aspx?src="+fullUrl);
         }else{
-            window.location.href = dURL;
+            window.location.href = dURL+"?v";
         }
     });
     $('.folderDown').on('click', function() {

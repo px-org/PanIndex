@@ -57,7 +57,7 @@ func BuildODRequestUrl(path, query string) string {
 	}
 	return "https://graph.microsoft.com/v1.0" + "/me/drive/root" + path + query
 }
-func OndriveGetFiles(url, accountId, fileId, p string) {
+func OndriveGetFiles(url, accountId, fileId, p string, syncChild bool) {
 	od := OneDrives[accountId]
 	auth := od.TokenType + " " + od.AccessToken
 	defer func() {
@@ -79,7 +79,6 @@ func OndriveGetFiles(url, accountId, fileId, p string) {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Text)
 	byteFiles := []byte(resp.Text)
 	d := jsoniter.Get(byteFiles, "value")
 	//nextMarker = jsoniter.Get(byteFiles, "next_marker").ToString()
@@ -147,14 +146,16 @@ func OndriveGetFiles(url, accountId, fileId, p string) {
 			fn.Path = p + "/" + fn.FileName
 		}
 		if fn.IsFolder == true {
-			OndriveGetFiles("", accountId, fn.FileId, fn.Path)
+			if syncChild {
+				OndriveGetFiles("", accountId, fn.FileId, fn.Path, syncChild)
+			}
 		}
 		fn.Id = uuid.NewV4().String()
 		model.SqliteDb.Create(fn)
 	}
 	nextLink := jsoniter.Get(byteFiles, "@odata").Get("nextLink").ToString()
 	if nextLink != "" {
-		OndriveGetFiles(url, accountId, fileId, p)
+		OndriveGetFiles(url, accountId, fileId, p, syncChild)
 	}
 }
 func GetFileType(name string) string {

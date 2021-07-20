@@ -182,7 +182,7 @@ func ProjectIdCheck(server, accountId, rootId string) string {
 }
 
 //获取个人文件列表
-func TeambitionGetFiles(accountId, rootId, fileId, p string) {
+func TeambitionGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 	Teambition := TeambitionSessions[accountId]
 	TeambitionSession := Teambition.TeambitionSession
 	if rootId == "" {
@@ -272,7 +272,9 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string) {
 				fn.Path = p + "/" + fn.FileName
 			}
 			if fn.IsFolder == true {
-				TeambitionGetFiles(accountId, rootId, fn.FileId, fn.Path)
+				if syncChild {
+					TeambitionGetFiles(accountId, rootId, fn.FileId, fn.Path, syncChild)
+				}
 			}
 			fn.Id = uuid.NewV4().String()
 			model.SqliteDb.Create(fn)
@@ -283,7 +285,7 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string) {
 	}
 }
 
-func TeambitionGetProjectFiles(server, accountId, rootId, p string) {
+func TeambitionGetProjectFiles(server, accountId, rootId, p string, syncChild bool) {
 	Teambition := TeambitionSessions[accountId]
 	TeambitionSession := Teambition.TeambitionSession
 	defer func() {
@@ -373,7 +375,9 @@ func TeambitionGetProjectFiles(server, accountId, rootId, p string) {
 			} else {
 				fn.Path = p + "/" + fn.FileName
 			}
-			TeambitionGetProjectFiles(server, accountId, fn.FileId, fn.Path)
+			if syncChild {
+				TeambitionGetProjectFiles(server, accountId, fn.FileId, fn.Path, syncChild)
+			}
 			if fn.FileName != "" {
 				fn.Id = uuid.NewV4().String()
 				model.SqliteDb.Create(fn)

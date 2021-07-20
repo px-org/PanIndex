@@ -226,6 +226,19 @@
 									<input class="mdui-textfield-input" type="text" name="root_id" required>
 									<div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
 								</div>
+								<div class="sync-div mdui-textfield mdui-textfield-has-bottom">
+									<i class="mdui-icon material-icons">folder_open</i>
+									<label class="mdui-textfield-label">定时缓存目录</label>
+									<input class="mdui-textfield-input" type="text" name="sync_dir" value="/" placeholder="/">
+									<div class="mdui-textfield-helper">定时任务只更新某个目录的缓存， 默认缓存全部</div>
+								</div>
+								<div class="sync-div" style="margin-left: 50px;margin-top: 10px;margin-bottom: 10px">
+									<label class="mdui-checkbox">
+										<input type="checkbox" name="sync_child" value="0" checked/>
+										<i class="mdui-checkbox-icon"></i>
+										缓存是否包含子目录
+									</label>
+								</div>
 							</form>
 							<div class="mdui-row-xs-5">
 								<div class="mdui-col">
@@ -359,13 +372,15 @@ $("#resetBtn").on('click', function () {
 	$("#accountForm").find("input[name=redirect_uri]").val("");
 	$("#accountForm").find("input[name=root_id]").val("");
 	$("#accountForm").find("input[name=mode][value=native]").prop("checked", true);
+	$("#accountForm").find("input[name=sync_dir]").val("/");
+	$("#accountForm").find("input[name=sync_child]").prop("checked",true);
 });
 var accounts = [
 	{{range .Accounts}}
 		{"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"{{.Password}}",
 			"refresh_token":"{{.RefreshToken}}","redirect_uri":"{{.RedirectUri}}","root_id":"{{.RootId}}",
 			"cookie_status":"{{.CookieStatus}}","status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}",
-			"last_op_time":"{{.LastOpTime}}"
+			"last_op_time":"{{.LastOpTime}}", "sync_dir":"{{.SyncDir}}", "sync_child": "{{.SyncChild}}"
 		},
 	{{end}}
 	];
@@ -391,6 +406,17 @@ function fillAccount(index) {
 	$("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
 	$("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
 	$("#accountForm").find("input[name=root_id]").val(account.root_id);
+	if(account.sync_dir == ""){
+		$("#accountForm").find("input[name=sync_dir]").val("/");
+	}else{
+		$("#accountForm").find("input[name=sync_dir]").val(account.sync_dir);
+	}
+	console.log(account.sync_child);
+	if(account.sync_child == "0"){
+		$("#accountForm").find("input[name=sync_child]").prop("checked",true);
+	}else{
+		$("#accountForm").find("input[name=sync_child]").prop("checked",false);
+	}
 	fillCacheRecord(account)
 	dynamicChgMode(account.mode);
 }
@@ -401,12 +427,14 @@ function dynamicChgMode(mode){
 		$("#UserDiv").hide();
 		$("#PasswordDiv").hide();
 		$("#recordDiv").hide();
+		$(".sync-div").hide();
 	}else if (mode == "cloud189"){
 		$("#RedirectUriDiv").hide();
 		$("#RefreshTokenDiv").hide();
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$(".sync-div").show();
 		$("#user_label").text("用户名");
 		$("#password_label").text("密码");
 	}else if (mode == "teambition"){
@@ -415,6 +443,7 @@ function dynamicChgMode(mode){
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$(".sync-div").show();
 		$("#user_label").text("用户名");
 		$("#password_label").text("密码");
 	}else if (mode == "teambition-us"){
@@ -423,6 +452,7 @@ function dynamicChgMode(mode){
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$(".sync-div").show();
 		$("#user_label").text("用户名");
 		$("#password_label").text("密码");
 	}else if (mode == "aliyundrive"){
@@ -430,6 +460,7 @@ function dynamicChgMode(mode){
 		$("#RefreshTokenDiv").show();
 		$("#UserDiv").hide();
 		$("#PasswordDiv").hide();
+		$(".sync-div").show();
 		$("#recordDiv").show();
 	}else if (mode == "onedrive"){
 		$("#RedirectUriDiv").show();
@@ -437,6 +468,7 @@ function dynamicChgMode(mode){
 		$("#UserDiv").show();
 		$("#PasswordDiv").show();
 		$("#recordDiv").show();
+		$(".sync-div").show();
 		$("#user_label").text("客户端ID（Client ID）");
 		$("#password_label").text("客户端密码（Client Secret）");
 	}
@@ -461,6 +493,13 @@ $(".saveAccountBtn").on("click", function () {
 	accountStatus = 1;
 	var btn = $(this);
 	btn.toggleClass("running");
+	var syncChild = $("#accountForm").find("input[name=sync_child]").prop("checked");
+	var syncDir = $("#accountForm").find("input[name=sync_dir]").val();
+	if(syncChild){
+		account.sync_child = 0;
+	}else{
+		account.sync_child = 1;
+	}
 	var config = {accounts:[account]};
 	$.ajax({
 		method: 'POST',
