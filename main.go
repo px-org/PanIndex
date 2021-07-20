@@ -10,7 +10,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bluele/gcache"
-	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/gobuffalo/packr/v2"
 	uuid "github.com/satori/go.uuid"
@@ -41,7 +40,6 @@ func main() {
 	flag.Parse()
 	boot.Start(*Host, *Port, *Debug, *DataPath)
 	r := gin.New()
-	pprof.Register(r)
 	r.Use(gin.Logger())
 	//	staticBox := packr.NewBox("./static")
 	r.SetHTMLTemplate(initTemplates())
@@ -197,8 +195,18 @@ func initTemplates() *template.Template {
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
+	tmpName := strings.Join([]string{"pan/", "/view.html"}, "mdui")
+	tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
+	tmpFile = strings.ReplaceAll(tmpFile, "-light", "")
+	data, _ = box.FindString(tmpFile)
+	if Util.FileExist("./templates/" + tmpFile) {
+		s, _ := ioutil.ReadFile("./templates/" + tmpFile)
+		data = string(s)
+	}
+	tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	return tmpl
 }
+
 func initStaticBox(r *gin.Engine) {
 	staticBox := packr.New("static", "./static")
 	if Util.FileExist("./static") {
@@ -261,26 +269,49 @@ func index(c *gin.Context) {
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
-			//文件
-			if account.Mode == "native" {
-				c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
-				c.Writer.Header().Add("Content-Type", "application/octet-stream")
-				c.File(fs[0].FileId)
+			_, has := c.GetQuery("v")
+			if has {
+				//跳转文件预览页面
+				if account.Mode == "native" {
+					result["downloadUrl"] = ""
+				} else {
+					var dl = service.DownLock{}
+					/*dls.LoadOrStore(fs[0].FileId, dl)*/
+					if _, ok := dls.Load(fs[0].FileId); ok {
+						ss, _ := dls.Load(fs[0].FileId)
+						dl = ss.(service.DownLock)
+					} else {
+						dl.FileId = fs[0].FileId
+						dl.L = new(sync.Mutex)
+						dls.LoadOrStore(fs[0].FileId, dl)
+					}
+					result["DownloadUrl"] = dl.GetDownlaodUrl(account, fs[0])
+				}
+				tmpFile = strings.Join([]string{"pan/", "/view.html"}, config.GloablConfig.Theme)
+				c.HTML(http.StatusOK, tmpFile, result)
 				return
 			} else {
-				var dl = service.DownLock{}
-				/*dls.LoadOrStore(fs[0].FileId, dl)*/
-				if _, ok := dls.Load(fs[0].FileId); ok {
-					ss, _ := dls.Load(fs[0].FileId)
-					dl = ss.(service.DownLock)
+				//文件
+				if account.Mode == "native" {
+					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
+					c.Writer.Header().Add("Content-Type", "application/octet-stream")
+					c.File(fs[0].FileId)
+					return
 				} else {
-					dl.FileId = fs[0].FileId
-					dl.L = new(sync.Mutex)
-					dls.LoadOrStore(fs[0].FileId, dl)
+					var dl = service.DownLock{}
+					/*dls.LoadOrStore(fs[0].FileId, dl)*/
+					if _, ok := dls.Load(fs[0].FileId); ok {
+						ss, _ := dls.Load(fs[0].FileId)
+						dl = ss.(service.DownLock)
+					} else {
+						dl.FileId = fs[0].FileId
+						dl.L = new(sync.Mutex)
+						dls.LoadOrStore(fs[0].FileId, dl)
+					}
+					downUrl := dl.GetDownlaodUrl(account, fs[0])
+					c.Redirect(http.StatusFound, downUrl)
+					return
 				}
-				downUrl := dl.GetDownlaodUrl(account, fs[0])
-				c.Redirect(http.StatusFound, downUrl)
-				return
 			}
 		}
 	}
@@ -431,6 +462,8 @@ func updateCache(c *gin.Context) {
 	if account.Status == -1 {
 		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "目录缓存中，请勿重复操作！"})
 	} else {
+		account.SyncDir = "/"
+		account.SyncChild = 0
 		go jobs.SyncOneAccount(account)
 		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在缓存目录，请稍后刷新页面查看缓存结果！"})
 	}

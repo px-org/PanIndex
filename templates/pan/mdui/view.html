@@ -122,27 +122,13 @@
 					</div>
 				{{end}}
 				<div class="right-icon mdui-float-right">
-					<a class="mdui-btn mdui-btn-icon" href="/?admin" target="_blank" mdui-tooltip="{content: '配置'}"><i class="mdui-icon material-icons">settings</i></a>
-				</div>
-				<div class="right-icon mdui-float-right">
-					<button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '排序'}"><i class="mdui-icon material-icons">sort</i></button>
-				</div>
-				<div class="right-icon mdui-float-right">
-					<button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
+					<button class="mdui-btn mdui-btn-icon" id="theme-toggle"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
 				</div>
 			</div>
 			<ul class="mdui-list">
 				<li class="mdui-list-item">
 					<div class="mdui-list-item-content">
 						<div class="mdui-list-item-title">
-							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right{{if .HasParent}}{{else}} mdui-textfield-expanded{{end}}">
-								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
-								<input type="text" placeholder="搜索文件（夹）" class="search 	mdui-textfield-input search-input" data-index="{{$.DIndex}}/" value="{{$.SearchKey}}">
-								{{if .HasParent}}
-								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
-								{{else}}
-								{{end}}
-							</div>
 							{{if .HasParent}}
 							<div onclick="window.open('{{$.DIndex}}{{.ParentPath}}','_self')">
 								<button class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">chevron_left</i></button> ...
@@ -152,65 +138,26 @@
 						</div>
 					</div>
 				</li>
-				{{if not .List}}
-				<div class="mdui-valign" style="min-height: 200px">
-					<p class="mdui-center">网盘空空如也，快去上传吧</p>
-				</div>
-				{{end}}
-				{{range .List}}
-				<li class="mdui-list-item mdui-ripple">
-					<div class="mdui-list-item-content icon-file" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}">
-						<div class="mdui-list-item-title wordWrap">
-							{{if .IsFolder}}
-							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">folder_open</i> {{.FileName}}
-							{{if and (ne .FileId "0") (ne .FileId "-12") (ne .FileId "-14") (ne .FileId "-13") (ne .FileId "-15") (ne .FileId "-11") (ne .FileId "-16") ($SurportFolderDown)}}
-							<a class="folderDown mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon" data-account="{{$.AccountId}}" data-file-id="{{.FileId}}" href="javascript:void(0);">file_download</a>
-							{{else}}
-							{{end}}
-							{{else}}
-							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">
-								{{if eq .MediaType 1}}
-								image
-								{{else if eq .MediaType 2}}
-								audiotrack
-								{{else if eq .MediaType 3}}
-								ondemand_video
-								{{else if eq .MediaType 4}}
-									{{if or (eq .FileType "sh") (eq .FileType "go") (eq .FileType "java") (eq .FileType "py")}}
-										code
-									{{else}}
-										description
-									{{end}}
-								{{else}}
-									{{if eq .FileType "apk"}}
-										android
-									{{else if eq .FileType "exe"}}
-										apps
-									{{else if or (eq .FileType "zip") (eq .FileType "gz") (eq .FileType "7z")}}
-										archive
-									{{else}}
-										insert_drive_file
-									{{end}}
-								{{end}}
-							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{$.DIndex}}{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
-							<a href="{{$.DIndex}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
-							{{end}}
-						</div>
-						{{if .IsFolder}}
-						{{else}}
-						<div class="mdui-list-item-text mdui-list-item-one-line">
-							{{.SizeFmt}} / {{.LastOpTime}}
-						</div>
-						{{end}}
-					{{if $.SearchKey}}
-						<div class="mdui-list-item-text mdui-list-item-one-line">
-							{{$.DIndex}}{{.Path}}
-						</div>
-					{{end}}
-					</div>
-				</li>
-				{{end}}
 			</ul>
+			<div class="mdui-card">
+				<div class="mdui-textfield mdui-textfield-not-empty mdui-center">
+					<label class="mdui-textfield-label">文件名</label>
+					Goose house - 光るなら.jpg
+				</div>
+				<div class="mdui-textfield mdui-textfield-not-empty mdui-center">
+					<label class="mdui-textfield-label">大小</label>
+					155.15K
+				</div>
+				<div class="mdui-textfield mdui-textfield-not-empty ">
+					<label class="mdui-textfield-label">时间</label>
+					2021-07-06 10:40:35
+				</div>
+				<div class="mdui-textfield mdui-textfield-not-empty mdui-center">
+					<label class="mdui-textfield-label">下载地址</label>
+					<a href="http://10.2.1.177:8080/Goose%20house%20-%20%E5%85%89%E3%82%8B%E3%81%AA%E3%82%89.jpg" class="mdui-typo">http://10.2.1.177:8080/Goose%20house%20-%20%E5%85%89%E3%82%8B%E3%81%AA%E3%82%89.jpg</a>
+				</div>
+				<img class="mdui-img-fluid mdui-center" src="http://10.2.1.177:8080/Goose%20house%20-%20%E5%85%89%E3%82%8B%E3%81%AA%E3%82%89.jpg">
+			</div>
 		</div>
 		{{if .HasReadme}}
 		<div id="content" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">
