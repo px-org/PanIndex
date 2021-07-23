@@ -35,7 +35,7 @@ $ nohup ./PanIndex > PanIndex.log &
 $ mkdir /usr/local/etc/PanIndex
 $ cd /usr/local/etc/PanIndex
 $ wget https://github.com/libsgh/PanIndex/releases/download/v2.0.3/PanIndex-v2.0.3-linux-amd64.tar.gz
-$ tar -xvf PanIndex-v2.0.3-linux-arm64.tar.gz
+$ tar -xvf PanIndex-v2.0.3-linux-amd64.tar.gz
 $ cp PanIndex /usr/local/bin/
 ```
 2. 编写PanIndex.service文件
