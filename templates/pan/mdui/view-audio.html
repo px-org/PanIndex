@@ -1,0 +1,27 @@
+{{define "pan/mdui/view-audio.html"}}
+    {{template "pan/mdui/view-base.html" .}}
+{{end}}
+{{define "content-audio"}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+    <div class="mdui-valign" style="min-height: 300px">
+        <div id="aplayer" class="mdui-center"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+    <script>
+        var path = $("#file_link").attr("data-path");
+        var mode = $("#file_link").attr("data-mode");
+        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
+        var url = "{{.DownloadUrl}}";
+        if(mode == "native"){
+            url = fullUrl;
+        }
+        const ap = new APlayer({
+            container: document.getElementById('aplayer'),
+            autoplay: true,
+            audio: [{
+                url:  url,
+                name: '{{ (index .List 0).FileName }}',
+            }]
+        });
+    </script>
+{{end}}

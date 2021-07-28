@@ -152,6 +152,7 @@ func AliGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 				}
 			}
 			fn.Id = uuid.NewV4().String()
+			fn.CacheTime = time.Now().UnixNano()
 			model.SqliteDb.Create(fn)
 		}
 		if nextMarker == "" {

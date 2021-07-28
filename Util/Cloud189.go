@@ -115,6 +115,7 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string, syncChild bool) 
 							item.Hide = 1
 						}
 					}
+					item.CacheTime = time.Now().UnixNano()
 					model.SqliteDb.Create(item)
 				}
 			}

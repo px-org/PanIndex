@@ -195,15 +195,16 @@ func initTemplates() *template.Template {
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
-	tmpName := strings.Join([]string{"pan/", "/view.html"}, "mdui")
-	tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
-	tmpFile = strings.ReplaceAll(tmpFile, "-light", "")
-	data, _ = box.FindString(tmpFile)
-	if Util.FileExist("./templates/" + tmpFile) {
-		s, _ := ioutil.ReadFile("./templates/" + tmpFile)
-		data = string(s)
+	viewTemplates := [7]string{"base", "img", "audio", "video", "code", "office", "ns"}
+	for _, vt := range viewTemplates {
+		tmpName := fmt.Sprintf("pan/%s/view-%s.html", "mdui", vt)
+		data, _ = box.FindString(tmpName)
+		if Util.FileExist("./templates/" + tmpName) {
+			s, _ := ioutil.ReadFile("./templates/" + tmpName)
+			data = string(s)
+		}
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
-	tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	return tmpl
 }
 
@@ -287,7 +288,8 @@ func index(c *gin.Context) {
 					}
 					result["DownloadUrl"] = dl.GetDownlaodUrl(account, fs[0])
 				}
-				tmpFile = strings.Join([]string{"pan/", "/view.html"}, config.GloablConfig.Theme)
+				t := service.GetViewTemplate(account.Mode, fs[0], result)
+				tmpFile = fmt.Sprintf("pan/%s/view-%s.html", config.GloablConfig.Theme, t)
 				c.HTML(http.StatusOK, tmpFile, result)
 				return
 			} else {

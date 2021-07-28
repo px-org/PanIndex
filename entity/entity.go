@@ -27,6 +27,7 @@ type FileNode struct {
 	CreateTime   string `json:"create_time"`
 	Delete       int    `json:"delete"`
 	Hide         int    `json:"hide"`
+	CacheTime    int64  `json:"cache_time"`
 }
 type Paths struct {
 	FileId    string `json:"fileId"`

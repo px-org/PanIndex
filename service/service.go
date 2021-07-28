@@ -113,11 +113,26 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 					}
 				}
 			} else {
-				//是文件
 				fileInfo, err := os.Stat(fullPath)
 				if err != nil {
 					panic(err.Error())
 				} else {
+					dir := filepath.Dir(fullPath)
+					p := filepath.Dir(path)
+					fileInfos, _ := ioutil.ReadDir(dir)
+					fileInfos = Util.FilterFiles(fileInfos)
+					last := Util.GetNextOrPrevious(fileInfos, fileInfo, -1)
+					next := Util.GetNextOrPrevious(fileInfos, fileInfo, 1)
+					if last != nil {
+						result["LastFile"] = filepath.Join(p, last.Name())
+					} else {
+						result["LastFile"] = nil
+					}
+					if next != nil {
+						result["NextFile"] = filepath.Join(p, next.Name())
+					} else {
+						result["NextFile"] = nil
+					}
 					fileType := Util.GetMimeType(fileInfo)
 					file := entity.FileNode{
 						FileId:     fullPath,
@@ -126,7 +141,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 						FileSize:   int64(fileInfo.Size()),
 						SizeFmt:    Util.FormatFileSize(int64(fileInfo.Size())),
 						FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
-						Path:       filepath.Join(path, fileInfo.Name()),
+						Path:       path,
 						MediaType:  fileType,
 						LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 					}
@@ -142,6 +157,14 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 		if len(list) == 0 {
 			result["isFile"] = true
 			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=? limit 1", path, account.Id).Find(&list)
+			next := entity.FileNode{}
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and cache_time >? order by cache_time asc limit 1",
+				list[0].ParentPath, account.Id, list[0].CacheTime).First(&next)
+			result["NextFile"] = next.Path
+			last := entity.FileNode{}
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and cache_time < ? order by cache_time desc limit 1",
+				list[0].ParentPath, account.Id, list[0].CacheTime).First(&last)
+			result["LastFile"] = last.Path
 		} else {
 			readmeFile := entity.FileNode{}
 			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and `delete`=0 and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
@@ -572,4 +595,59 @@ func Async(accountId, path string) string {
 			return "刷新成功"
 		}
 	}
+}
+func GetViewTemplate(mode string, fn entity.FileNode, result map[string]interface{}) string {
+	t := "ns"
+	if fn.MediaType == 1 {
+		//图片
+		t = "img"
+	} else if fn.MediaType == 2 {
+		//音频
+		t = "audio"
+	} else if fn.MediaType == 3 {
+		//视频
+		t = "video"
+	} else if fn.MediaType == 4 {
+		//文本类
+		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
+			//
+			t = "office"
+		} else {
+			//获取代码类型
+			result["CodeType"] = "text"
+			if fn.FileType == "go" {
+				result["CodeType"] = "golang"
+			} else if fn.FileType == "html" {
+				result["CodeType"] = "html"
+			} else if fn.FileType == "js" {
+				result["CodeType"] = "javascript"
+			} else if fn.FileType == "java" {
+				result["CodeType"] = "java"
+			} else if fn.FileType == "json" {
+				result["CodeType"] = "json"
+			} else if fn.FileType == "css" {
+				result["CodeType"] = "css"
+			} else if fn.FileType == "lua" {
+				result["CodeType"] = "lua"
+			} else if fn.FileType == "sh" {
+				result["CodeType"] = "sh"
+			} else if fn.FileType == "sql" {
+				result["CodeType"] = "sql"
+			} else if fn.FileType == "py" {
+				result["CodeType"] = "python"
+			}
+			//获取文本内容
+			if mode == "native" {
+				result["Content"] = Util.ReadStringByFile(fn.FileId)
+			} else {
+				result["Content"] = Util.ReadStringByUrl(result["DownloadUrl"].(string), fn.FileId)
+			}
+		}
+	} else {
+		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
+			//
+			t = "office"
+		}
+	}
+	return t
 }

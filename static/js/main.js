@@ -19,6 +19,12 @@ clipboard.on('success', function(e) {
     }
     e.clearSelection();
 });
+$('.icon-file-mdui').on('click', function(ev) {
+    if(ev.target.tagName == "A" && (ev.target.text == "file_download" ||
+        ev.target.text == "content_copy") || ev.target.title == "复制链接") return;
+    var dURL = $(this).attr("data-url");
+    window.location.href = dURL+"?v";
+});
 $(document).ready(function() {
     $('#theme-toggle').on('click', function(){
         $('body').removeClass('mdui-theme-layout-auto');
@@ -39,7 +45,6 @@ $(document).ready(function() {
         var title = $(this).attr("data-title");
         var dmt = $(this).attr("data-media-type");
         var fileType = $(this).attr("data-file-type");
-        window.location.href = dURL + "?v";
         if(dmt == 1){
             $(this).lightGallery({
                 fullScreen: true,
@@ -85,7 +90,7 @@ $(document).ready(function() {
             || fileType == "ppt" || fileType == "pptx" || fileType == "xls" || fileType == "xlsx"){
             window.open("https://view.officeapps.live.com/op/view.aspx?src="+fullUrl);
         }else{
-            window.location.href = dURL+"?v";
+            window.location.href = dURL;
         }
     });
     $('.folderDown').on('click', function() {

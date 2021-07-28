@@ -277,6 +277,7 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 				}
 			}
 			fn.Id = uuid.NewV4().String()
+			fn.CacheTime = time.Now().UnixNano()
 			model.SqliteDb.Create(fn)
 		}
 		if nextMarker == "" {
@@ -380,6 +381,7 @@ func TeambitionGetProjectFiles(server, accountId, rootId, p string, syncChild bo
 			}
 			if fn.FileName != "" {
 				fn.Id = uuid.NewV4().String()
+				fn.CacheTime = time.Now().UnixNano()
 				model.SqliteDb.Create(fn)
 			}
 		}

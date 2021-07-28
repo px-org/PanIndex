@@ -1,0 +1,181 @@
+{{define "pan/mdui/view-base.html"}}
+<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+    <meta name="renderer" content="webkit"/>
+    {{if eq .Mode "aliyundrive"}}
+        <meta name="referrer" content="no-referrer">
+    {{end}}
+    <meta name="force-rendering" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    {{if ne .FaviconUrl ""}}
+        <link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+        <link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+    {{else}}
+        <link rel="icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
+    {{end}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.7.3/dist/css/lightgallery.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+    <!-- MDUI CSS -->
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"
+            integrity="sha384-cLRrMq39HOZdvE0j6yBojO4+1PrHfB7a9l5qLcmRm/fiWXYY+CndJPmyu5FV/9Tw"
+            crossorigin="anonymous"
+    />
+    <!-- MDUI JavaScript -->
+    <script
+            src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+            integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+            crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
+    <style>
+        .mdui-list-item,
+        .mdui-list-item:hover {
+            border-radius: 20px;
+        }
+        .mdui-container {
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        .mdui-card {
+            box-shadow: none;
+        }
+        .search-input {
+            border-bottom: none;
+        }
+        .mdui-textfield-focus .mdui-icon,
+        .mdui-textfield-focus .mdui-textfield-label {
+            color: rgba(0, 0, 0, .54);
+        }
+
+        .mdui-textfield-focus .mdui-textfield-input,
+        .mdui-textfield-focus .mdui-textfield-input:hover {
+            border-bottom: none;
+            box-shadow: none;
+        }
+
+        .mdui-textfield-input:not([disabled]):hover {
+            border-bottom: none;
+            box-shadow: none;
+        }
+        .wordWrap {
+            /*这两行代码可以解决大部分场景下的换行问题*/
+            word-break: break-all;
+            word-wrap: break-word;
+            /*但在有些场景中，还需要加上下面这行代码*/
+            white-space: normal;
+        }
+    </style>
+    <title>{{.Title}} {{ .Path }}</title>
+    {{ $SurportFolderDown := .SurportFolderDown }}
+</head>
+<body class="mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}}">
+{{if .HasPwd}}
+<script>
+    promptPwd("{{ .FileId}}");
+    function promptPwd(fileId){
+        mdui.prompt('这是一个受保护的文件夹，您需要提供访问密码才能查看。', "<i class=\"mdui-icon material-icons\">lock_outline</i>",
+            function (value) {
+                $.cookie("dir_pwd", value);
+                location.reload();
+            },
+            function (value) {
+                return;
+            },
+            {
+                "confirmText": "确认",
+                "cancelText": "取消",
+                "confirmOnEnter": true,
+                "history": false,
+                "modal": true
+            }
+        );
+    }
+</script>
+{{else}}
+<div class="mdui-container">
+    <div class="mdui-card">
+        <div class="mdui-card-content">
+            <div style="padding: 0px 5px 12px;">
+                <div class="mdui-chip">
+                    <span class="mdui-chip-icon mdui-color-indigo" {{ if gt (len .Accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#example-1'}"{{end}}><i class="mdui-icon material-icons">home</i></span>
+                    {{ if gt (len .Accounts) 1 }}
+                        <ul class="mdui-menu" id="example-1" style="max-height: 500px">
+                            {{range $i, $a := .Accounts}}
+                                <li class="mdui-menu-item">
+                                    <a href="/d_{{$i}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq .Mode "cloud189"}}cyan{{else}}{{end}}{{if eq .Mode "onedrive"}}blue-200{{else}}{{end}}{{if eq .Mode "teambition"}}blue{{else}}{{end}}{{if eq .Mode "teambition-us"}}blue{{else}}{{end}}{{if eq .Mode "native"}}blue-grey{{else}}{{end}}{{if eq .Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>
+                                </li>
+                            {{end}}
+                        </ul>
+                    {{end}}
+                    <span class="mdui-chip-title" onclick="window.open('{{$.DIndex}}/','_self')">{{.Title}}</span>
+                </div>
+                {{range .PrePaths}}
+                    <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+                    <div class="mdui-chip" onclick="window.open('{{$.DIndex}}{{.PathUrl}}{{if (index $.List 0).IsFolder}}{{else}}?v{{end}}','_self')">
+                        <span class="mdui-chip-title">{{.PathName}}</span>
+                    </div>
+                {{end}}
+                <div class="right-icon mdui-float-right">
+                    {{if .LastFile }}
+                        <a id="view_last" href="{{$.DIndex}}{{.LastFile}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上一个'}"><i class="mdui-icon material-icons">chevron_leftt</i></a>
+                    {{end}}
+                    {{if .NextFile }}
+                        <a id="view_next" href="{{$.DIndex}}{{.NextFile}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '下一个'}"><i class="mdui-icon material-icons">chevron_right</i></a>
+                    {{end}}
+                    <a id="view_down_link" href="{{.DownloadUrl}}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '点击下载'}"><i class="mdui-icon material-icons">file_download</i></a>
+                    <button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
+                </div>
+            </div>
+            <div class="mdui-card" style="width: 100%">
+                <div class="mdui-card-primary mdui-typo">
+                    <div class="mdui-typo-body-1-opacity"><b>名称</b>：{{ (index .List 0).FileName }}</div>
+                    <div class="mdui-typo-body-1-opacity"><b>大小</b>：{{ (index .List 0).SizeFmt }}</div>
+                    <div class="mdui-typo-body-1-opacity"><b>日期</b>：{{ (index .List 0).LastOpTime }}</div>
+                    <div class="mdui-typo-body-1-opacity"><b>链接</b>：<a id="file_link" href="" data-path="{{$.DIndex}}{{.Path}}" data-mode="{{.Mode}}"></a></div>
+                </div>
+                <div>
+                    {{if eq (index .List 0).MediaType 1}}
+                        {{block "content-img" .}}{{end}}
+                    {{else if eq (index .List 0).MediaType 2}}
+                        {{block "content-audio" .}}{{end}}
+                    {{else if eq (index .List 0).MediaType 3}}
+                        {{block "content-video" .}}{{end}}
+                    {{else if eq (index .List 0).MediaType 4}}
+                        {{/*文本*/}}
+                        {{if or (eq (index .List 0).FileType "doc") (eq (index .List 0).FileType "docx") (eq (index .List 0).FileType "dotx") (eq (index .List 0).FileType "ppt") (eq (index .List 0).FileType "pptx") (eq (index .List 0).FileType "xls") (eq (index .List 0).FileType "xlsx")}}
+                            {{block "content-office" .}}{{end}}
+                        {{else}}
+                            {{block "content-code" .}}{{end}}
+                        {{end}}
+                    {{else}}
+                        {{if or (eq (index .List 0).FileType "doc") (eq (index .List 0).FileType "docx") (eq (index .List 0).FileType "dotx") (eq (index .List 0).FileType "ppt") (eq (index .List 0).FileType "pptx") (eq (index .List 0).FileType "xls") (eq (index .List 0).FileType "xlsx")}}
+                            {{block "content-office" .}}{{end}}
+                        {{else}}
+                            {{block "content-ns" .}}{{end}}
+                        {{end}}
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mdui-text-center mdui-typo">
+        {{if eq $.Footer ""}}
+            ©2021 <a href="https://github.com/libsgh/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
+        {{else}}
+            {{.Footer | unescaped}}
+        {{end}}
+    </div>
+</div>
+{{end}}
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+<script src="/static/js/mdui-view.js"></script>
+</body>
+</html>
+{{end}}
