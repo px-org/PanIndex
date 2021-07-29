@@ -208,7 +208,7 @@ func GetDownlaodMultiFiles(accountId, fileId string) string {
 //天翼云网盘登录
 func Cloud189Login(accountId, user, password string) string {
 	CLoud189Session := nic.Session{}
-	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
+	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
 	lt := ""
@@ -260,7 +260,13 @@ func Cloud189Login(accountId, user, password string) string {
 	//0登录成功，-2，需要获取验证码，-5 app info获取失败
 	if restCode == 0 {
 		toUrl := jsoniter.Get([]byte(loginResp.Text), "toUrl").ToString()
-		res, _ := CLoud189Session.Get(toUrl, nil)
+		res, err := CLoud189Session.Get(toUrl, nic.H{
+			AllowRedirect: false,
+		})
+		if err != nil {
+			log.Warningln(err.Error())
+			return "4"
+		}
 		CLoud189Sessions[accountId] = CLoud189Session
 		return res.Cookies()[0].Value
 	}

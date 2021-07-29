@@ -1,0 +1,11 @@
+---
+application:
+  name: "panindex"
+  project: "PanIndex"
+  organization: "QoveryCommunity"
+routers:
+- name: "main-panindex"
+  routes:
+  - application_name: "panindex"
+    paths:
+    - "/*"
