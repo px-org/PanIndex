@@ -3,15 +3,33 @@
 ### 如何获取目录ID？
 正常访问官方网盘页面，进入到你想分享目录的页面，浏览器里地址栏最后面的就是目录ID
 
-以天翼云为例
+本地模式：
+
+服务器目录的绝对路径，例如`/opt`
+
+天翼云（根目录ID为-11）：
 
 ![image-cloud189-rootId](_images/cloud189-rootId.png)
 
-若要使用teambition项目版：rootId，请使用**项目id**
+teambition个人版：
+
+![image-teambition-personal](_images/teambition-personal.png)
+
+teambition项目版：
+
+请使用**项目id**
 
 ![image-teambition-project](_images/teambition-project.png)
 
-**注**：当网盘启用本地模式，目录ID为分享目录的绝对路径，比如我想分享本地的`/opt`目录，`root_id`为`/opt`，密码目录同理
+阿里云盘（根目录ID为root）：
+
+![image-aliyundrive](_images/aliyundrive.png)
+
+OneDrive（根目录ID为`/`）：
+
+同本地模式一样，这里只需填写路径
+
+**注**：同样的，密码文件和隐藏文件的ID也通过上述方式获取，暂不支持给根目录设置密码。
 
 ### PanIndex为何不使用前后端分离？
 PanIndex的设计初衷是简单高效，前后分离会增加部署的复杂度，且会增加页面响应时间，PanIndex为单页面应用，目前页面的管理也相对容易，也为了更方便的适配heroku，目前将html，js，css，image都打包到二进制文件中，所以通常你只需要一个二进制文件加一个配置文件即可。

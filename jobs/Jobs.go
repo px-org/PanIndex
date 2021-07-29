@@ -5,10 +5,12 @@ import (
 	"PanIndex/config"
 	"PanIndex/entity"
 	"PanIndex/model"
+	"errors"
 	"github.com/bluele/gcache"
 	"github.com/libsgh/nic"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -157,26 +159,60 @@ func AccountLogin(account entity.Account) {
 }
 func SyncOneAccount(account entity.Account) {
 	t1 := time.Now()
+	syncDir := ""
+	syncChild := true
+	fileId := account.RootId
+	if account.SyncDir == "" {
+		syncDir = "/"
+	} else {
+		syncDir = account.SyncDir
+	}
+	if account.SyncChild == 0 {
+		syncChild = true
+	} else {
+		syncChild = false
+	}
+	if syncDir != "/" {
+		//查询fileId
+		dbFile := entity.FileNode{}
+		result := model.SqliteDb.Raw("select * from file_node where path=? and `delete`=0 and account_id=?", syncDir, account.Id).Take(&dbFile)
+		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			fileId = dbFile.FileId
+		}
+	}
 	model.SqliteDb.Table("account").Where("id=?", account.Id).Update("status", -1)
 	if account.Mode == "cloud189" {
-		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "")
+		if syncDir == "/" {
+			syncDir = ""
+		}
+		Util.Cloud189GetFiles(account.Id, fileId, fileId, syncDir, syncChild)
 	} else if account.Mode == "teambition" {
 		rootId := Util.ProjectIdCheck("www", account.Id, account.RootId)
 		if Util.TeambitionSessions[account.Id].IsPorject {
-			Util.TeambitionGetProjectFiles("www", account.Id, rootId, "/")
+			if syncDir == "/" {
+				fileId = rootId
+			}
+			Util.TeambitionGetProjectFiles("www", account.Id, fileId, syncDir, syncChild)
 		} else {
-			Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
+			Util.TeambitionGetFiles(account.Id, account.RootId, fileId, syncDir, syncChild)
 		}
 	} else if account.Mode == "teambition-us" {
 		rootId := Util.ProjectIdCheck("us", account.Id, account.RootId)
 		if Util.TeambitionSessions[account.Id].IsPorject {
-			Util.TeambitionGetProjectFiles("us", account.Id, rootId, "/")
+			if syncDir == "/" {
+				fileId = rootId
+			}
+			Util.TeambitionGetProjectFiles("us", account.Id, fileId, syncDir, syncChild)
 		} else {
 		}
 	} else if account.Mode == "aliyundrive" {
-		Util.AliGetFiles(account.Id, account.RootId, account.RootId, "/")
+		cookie := Util.AliRefreshToken(account)
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
+		Util.AliGetFiles(account.Id, account.RootId, fileId, syncDir, syncChild)
 	} else if account.Mode == "onedrive" {
-		Util.OndriveGetFiles("", account.Id, account.RootId, "/")
+		cookie := Util.OneDriveRefreshToken(account)
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
+		Util.OndriveGetFiles("", account.Id, fileId, syncDir, syncChild)
 	} else if account.Mode == "native" {
 	}
 	var fileNodeCount int64
@@ -184,10 +220,14 @@ func SyncOneAccount(account entity.Account) {
 	status := 3
 	if int(fileNodeCount) > 0 {
 		status = 2
-		//删除旧数据
-		model.SqliteDb.Where("account_id=? and `delete`=0", account.Id).Delete(entity.FileNode{})
-		//暴露新数据
-		model.SqliteDb.Table("file_node").Where("account_id=?", account.Id).Update("delete", 0)
+		if syncDir == "/" || syncDir == "" {
+			//删除旧数据
+			model.SqliteDb.Where("account_id=? and `delete`=0", account.Id).Delete(entity.FileNode{})
+			//暴露新数据
+			model.SqliteDb.Table("file_node").Where("account_id=?", account.Id).Update("delete", 0)
+		} else {
+			RefreshFileNodes(account.Id, fileId)
+		}
 		log.Infoln("[目录缓存][" + account.Name + "]缓存刷新 >> 刷新成功")
 	}
 	t2 := time.Now()
@@ -204,4 +244,25 @@ func SelectAllAccounts() []entity.Account {
 	var list []entity.Account
 	model.SqliteDb.Where("1=1").Find(&list)
 	return list
+}
+func RefreshFileNodes(accountId, fileId string) {
+	tmpList := []entity.FileNode{}
+	list := []entity.FileNode{}
+	model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0 and account_id=?", fileId, accountId).Find(&tmpList)
+	getAllNodes(&tmpList, &list)
+	for _, fn := range list {
+		model.SqliteDb.Where("id=?", fn.Id).Delete(entity.FileNode{})
+	}
+	model.SqliteDb.Table("file_node").Where("account_id=?", accountId).Update("delete", 0)
+}
+
+func getAllNodes(tmpList, list *[]entity.FileNode) {
+	for _, fn := range *tmpList {
+		tmpList = &[]entity.FileNode{}
+		model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0", fn.FileId).Find(&tmpList)
+		*list = append(*list, fn)
+		if len(*tmpList) != 0 {
+			getAllNodes(tmpList, list)
+		}
+	}
 }

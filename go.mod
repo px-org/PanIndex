@@ -8,6 +8,7 @@ require (
 	github.com/bluele/gcache v0.0.2
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gobuffalo/packr/v2 v2.8.1
+	github.com/h2non/filetype v1.1.1
 	github.com/json-iterator/go v1.1.10
 	github.com/libsgh/nic v0.3.2
 	github.com/robfig/cron v1.2.0

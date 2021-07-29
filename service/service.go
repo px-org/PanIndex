@@ -19,8 +19,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
+
+var UrlCache = gcache.New(100).LRU().Build()
 
 func GetFilesByPath(account entity.Account, path, pwd string) map[string]interface{} {
 	if path == "" {
@@ -110,11 +113,26 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 					}
 				}
 			} else {
-				//是文件
 				fileInfo, err := os.Stat(fullPath)
 				if err != nil {
 					panic(err.Error())
 				} else {
+					dir := filepath.Dir(fullPath)
+					p := filepath.Dir(path)
+					fileInfos, _ := ioutil.ReadDir(dir)
+					fileInfos = Util.FilterFiles(fileInfos)
+					last := Util.GetNextOrPrevious(fileInfos, fileInfo, -1)
+					next := Util.GetNextOrPrevious(fileInfos, fileInfo, 1)
+					if last != nil {
+						result["LastFile"] = filepath.Join(p, last.Name())
+					} else {
+						result["LastFile"] = nil
+					}
+					if next != nil {
+						result["NextFile"] = filepath.Join(p, next.Name())
+					} else {
+						result["NextFile"] = nil
+					}
 					fileType := Util.GetMimeType(fileInfo)
 					file := entity.FileNode{
 						FileId:     fullPath,
@@ -123,7 +141,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 						FileSize:   int64(fileInfo.Size()),
 						SizeFmt:    Util.FormatFileSize(int64(fileInfo.Size())),
 						FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
-						Path:       filepath.Join(path, fileInfo.Name()),
+						Path:       path,
 						MediaType:  fileType,
 						LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 					}
@@ -139,12 +157,23 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 		if len(list) == 0 {
 			result["isFile"] = true
 			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=? limit 1", path, account.Id).Find(&list)
+			next := entity.FileNode{}
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and cache_time >? order by cache_time asc limit 1",
+				list[0].ParentPath, account.Id, list[0].CacheTime).First(&next)
+			result["NextFile"] = next.Path
+			last := entity.FileNode{}
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and cache_time < ? order by cache_time desc limit 1",
+				list[0].ParentPath, account.Id, list[0].CacheTime).First(&last)
+			result["LastFile"] = last.Path
 		} else {
 			readmeFile := entity.FileNode{}
 			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and `delete`=0 and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
 			if !readmeFile.IsFolder && readmeFile.FileName == "README.md" {
 				result["HasReadme"] = true
-				result["ReadmeContent"] = Util.ReadStringByUrl(GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
+				dl := DownLock{}
+				dl.FileId = readmeFile.FileId
+				dl.L = new(sync.Mutex)
+				result["ReadmeContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
 			}
 		}
 		result["HasPwd"] = false
@@ -201,28 +230,53 @@ func SearchFilesByKey(account entity.Account, key string) map[string]interface{}
 	return result
 }
 
-func GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
-	if account.Mode == "cloud189" {
-		return Util.GetDownlaodUrl(account.Id, fileNode.FileIdDigest)
-	} else if account.Mode == "teambition" {
-		if Util.TeambitionSessions[account.Id].IsPorject {
-			return Util.GetTeambitionProDownUrl("www", account.Id, fileNode.FileId)
-		} else {
-			return Util.GetTeambitionDownUrl(account.Id, fileNode.FileId)
+type DownLock struct {
+	FileId string
+	L      *sync.Mutex
+}
+
+func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileNode) string {
+	var downloadUrl = ""
+	var err error
+	dl.L.Lock()
+	defer func() {
+		if err == nil {
+			dl.L.Unlock()
 		}
-	} else if account.Mode == "teambition-us" {
-		if Util.TeambitionSessions[account.Id].IsPorject {
-			return Util.GetTeambitionProDownUrl("us", account.Id, fileNode.FileId)
-		} else {
-			//国际版暂时没有个人文件
+	}()
+	if UrlCache.Has(fileNode.FileId) {
+		cachUrl, err := UrlCache.Get(fileNode.FileId)
+		if err == nil {
+			downloadUrl = cachUrl.(string)
+			log.Debugf("从缓存中获取下载地址:" + downloadUrl)
 		}
-	} else if account.Mode == "aliyundrive" {
-		return Util.AliGetDownloadUrl(account.Id, fileNode.FileId)
-	} else if account.Mode == "onedrive" {
-		return Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
-	} else if account.Mode == "native" {
+	} else {
+		if account.Mode == "cloud189" {
+			downloadUrl = Util.GetDownlaodUrlNew(account.Id, fileNode.FileId)
+		} else if account.Mode == "teambition" {
+			if Util.TeambitionSessions[account.Id].IsPorject {
+				downloadUrl = Util.GetTeambitionProDownUrl("www", account.Id, fileNode.FileId)
+			} else {
+				return Util.GetTeambitionDownUrl(account.Id, fileNode.FileId)
+			}
+		} else if account.Mode == "teambition-us" {
+			if Util.TeambitionSessions[account.Id].IsPorject {
+				downloadUrl = Util.GetTeambitionProDownUrl("us", account.Id, fileNode.FileId)
+			} else {
+				//国际版暂时没有个人文件
+			}
+		} else if account.Mode == "aliyundrive" {
+			downloadUrl = Util.AliGetDownloadUrl(account.Id, fileNode.FileId)
+		} else if account.Mode == "onedrive" {
+			downloadUrl = Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
+		} else if account.Mode == "native" {
+		}
+		if downloadUrl != "" {
+			UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Second*30)
+		}
+		log.Debugf("调用api获取下载地址:" + downloadUrl)
 	}
-	return ""
+	return downloadUrl
 }
 
 func GetDownlaodMultiFiles(accountId, fileId string) string {
@@ -281,9 +335,9 @@ func UpdateFolderCache(account entity.Account) {
 	Util.GC = gcache.New(10).LRU().Build()
 	model.SqliteDb.Delete(entity.FileNode{})
 	if account.Mode == "cloud189" {
-		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "")
+		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "", true)
 	} else if account.Mode == "teambition" {
-		Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/")
+		Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/", true)
 	} else if account.Mode == "native" {
 	}
 }
@@ -383,6 +437,8 @@ func SaveConfig(config map[string]interface{}) {
 			}
 			ac := entity.Account{}
 			model.SqliteDb.Table("account").Where("id=?", ID).Take(&ac)
+			ac.SyncDir = "/"
+			ac.SyncChild = 0
 			go jobs.SyncInit(ac)
 		}
 	}
@@ -521,43 +577,77 @@ func Async(accountId, path string) string {
 			}
 			if account.Mode == "teambition" && !Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 个人文件
-				Util.TeambitionGetFiles(account.Id, fileId, fileId, path)
+				Util.TeambitionGetFiles(account.Id, fileId, fileId, path, true)
 			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 项目文件
-				Util.TeambitionGetProjectFiles("www", account.Id, fileId, path)
+				Util.TeambitionGetProjectFiles("www", account.Id, fileId, path, true)
 			} else if account.Mode == "teambition-us" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition-us 项目文件
-				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path)
+				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path, true)
 			} else if account.Mode == "cloud189" {
-				Util.Cloud189GetFiles(account.Id, fileId, fileId, path)
+				Util.Cloud189GetFiles(account.Id, fileId, fileId, path, true)
 			} else if account.Mode == "aliyundrive" {
-				Util.AliGetFiles(account.Id, fileId, fileId, path)
+				Util.AliGetFiles(account.Id, fileId, fileId, path, true)
 			} else if account.Mode == "onedrive" {
-				Util.OndriveGetFiles("", account.Id, fileId, path)
+				Util.OndriveGetFiles("", account.Id, fileId, path, true)
 			}
-			refreshFileNodes(account.Id, fileId)
+			jobs.RefreshFileNodes(account.Id, fileId)
 			return "刷新成功"
 		}
 	}
 }
-func refreshFileNodes(accountId, fileId string) {
-	tmpList := []entity.FileNode{}
-	list := []entity.FileNode{}
-	model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0 and account_id=?", fileId, accountId).Find(&tmpList)
-	getAllNodes(&tmpList, &list)
-	for _, fn := range list {
-		model.SqliteDb.Where("id=?", fn.Id).Delete(entity.FileNode{})
-	}
-	model.SqliteDb.Table("file_node").Where("account_id=?", accountId).Update("delete", 0)
-}
-
-func getAllNodes(tmpList, list *[]entity.FileNode) {
-	for _, fn := range *tmpList {
-		tmpList = &[]entity.FileNode{}
-		model.SqliteDb.Raw("select * from file_node where parent_id=? and `delete`=0", fn.FileId).Find(&tmpList)
-		*list = append(*list, fn)
-		if len(*tmpList) != 0 {
-			getAllNodes(tmpList, list)
+func GetViewTemplate(mode string, fn entity.FileNode, result map[string]interface{}) string {
+	t := "ns"
+	if fn.MediaType == 1 {
+		//图片
+		t = "img"
+	} else if fn.MediaType == 2 {
+		//音频
+		t = "audio"
+	} else if fn.MediaType == 3 {
+		//视频
+		t = "video"
+	} else if fn.MediaType == 4 {
+		//文本类
+		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
+			//
+			t = "office"
+		} else {
+			//获取代码类型
+			result["CodeType"] = "text"
+			if fn.FileType == "go" {
+				result["CodeType"] = "golang"
+			} else if fn.FileType == "html" {
+				result["CodeType"] = "html"
+			} else if fn.FileType == "js" {
+				result["CodeType"] = "javascript"
+			} else if fn.FileType == "java" {
+				result["CodeType"] = "java"
+			} else if fn.FileType == "json" {
+				result["CodeType"] = "json"
+			} else if fn.FileType == "css" {
+				result["CodeType"] = "css"
+			} else if fn.FileType == "lua" {
+				result["CodeType"] = "lua"
+			} else if fn.FileType == "sh" {
+				result["CodeType"] = "sh"
+			} else if fn.FileType == "sql" {
+				result["CodeType"] = "sql"
+			} else if fn.FileType == "py" {
+				result["CodeType"] = "python"
+			}
+			//获取文本内容
+			if mode == "native" {
+				result["Content"] = Util.ReadStringByFile(fn.FileId)
+			} else {
+				result["Content"] = Util.ReadStringByUrl(result["DownloadUrl"].(string), fn.FileId)
+			}
+		}
+	} else {
+		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
+			//
+			t = "office"
 		}
 	}
+	return t
 }

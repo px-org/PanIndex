@@ -33,7 +33,7 @@ import (
 var CLoud189Sessions = map[string]nic.Session{}
 
 //获取文件列表
-func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
+func Cloud189GetFiles(accountId, rootId, fileId, prefix string, syncChild bool) {
 	CLoud189Session := CLoud189Sessions[accountId]
 	defer func() {
 		if p := recover(); p != nil {
@@ -93,7 +93,9 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 					item.ParentPath = p
 					item.SizeFmt = FormatFileSize(item.FileSize)
 					if item.IsFolder == true {
-						Cloud189GetFiles(accountId, rootId, item.FileId, prefix)
+						if syncChild {
+							Cloud189GetFiles(accountId, rootId, item.FileId, prefix, syncChild)
+						}
 					} else {
 						//如果是文件，解析下载直链
 						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
@@ -113,6 +115,7 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 							item.Hide = 1
 						}
 					}
+					item.CacheTime = time.Now().UnixNano()
 					model.SqliteDb.Create(item)
 				}
 			}
@@ -127,15 +130,25 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string) {
 func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
-		AllowRedirect: false,
+		AllowRedirect:     false,
+		Timeout:           20,
+		DisableKeepAlives: true,
+		SkipVerifyTLS:     true,
 	})
+	fmt.Println(len(dRedirectRep.Bytes))
+	if dRedirectRep != nil {
+		defer dRedirectRep.Body.Close()
+	}
 	if err != nil {
 		log.Error(err)
 		return ""
 	}
 	redirectUrl := dRedirectRep.Header.Get("Location")
 	dRedirectRep, err = CLoud189Session.Get(redirectUrl, nic.H{
-		AllowRedirect: false,
+		AllowRedirect:     false,
+		Timeout:           20,
+		DisableKeepAlives: true,
+		SkipVerifyTLS:     true,
 	})
 	if err != nil {
 		log.Error(err)
@@ -144,19 +157,44 @@ func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	if dRedirectRep == nil || dRedirectRep.Header == nil {
 		return ""
 	}
+	fmt.Println(len(dRedirectRep.Bytes))
 	return dRedirectRep.Header.Get("Location")
 }
-func GetDownlaodUrlNew(accountId, fileIdDigest string) string {
+
+func GetDownlaodUrlNew(accountId, fileId string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
-	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/v2/getPhotoOriginalUrl.action?fileIdDigest="+fileIdDigest+"&directDownload=true", nic.H{
-		AllowRedirect: false,
+	defer CLoud189Session.Client.CloseIdleConnections()
+	dRedirectRep, err := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action?noCache=%s&fileId=%s", random(), fileId), nic.H{
+		Headers: nic.KV{
+			"accept": "application/json;charset=UTF-8	",
+		},
 	})
+	if dRedirectRep != nil {
+		defer dRedirectRep.Body.Close()
+	}
 	if err != nil {
 		log.Error(err)
 		return ""
 	}
-	redirectUrl := dRedirectRep.Header.Get("Location")
-	return redirectUrl
+	resCode := jsoniter.Get(dRedirectRep.Bytes, "res_code").ToInt()
+	if resCode == 0 {
+		fileDownloadUrl := jsoniter.Get(dRedirectRep.Bytes, "fileDownloadUrl").ToString()
+		dRedirectRep, err = CLoud189Session.Get(fileDownloadUrl, nic.H{
+			AllowRedirect:     false,
+			Timeout:           20,
+			DisableKeepAlives: true,
+		})
+		if dRedirectRep != nil {
+			defer dRedirectRep.Body.Close()
+		}
+		if err != nil {
+			log.Error(err)
+			return ""
+		}
+		return dRedirectRep.Header.Get("location")
+	} else {
+		return ""
+	}
 }
 func GetDownlaodMultiFiles(accountId, fileId string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
@@ -170,7 +208,7 @@ func GetDownlaodMultiFiles(accountId, fileId string) string {
 //天翼云网盘登录
 func Cloud189Login(accountId, user, password string) string {
 	CLoud189Session := nic.Session{}
-	url := "https://cloud.189.cn/udb/udb_login.jsp?pageId=1&redirectURL=/main.action"
+	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
 	res, _ := CLoud189Session.Get(url, nil)
 	b := res.Text
 	lt := ""
@@ -222,7 +260,13 @@ func Cloud189Login(accountId, user, password string) string {
 	//0登录成功，-2，需要获取验证码，-5 app info获取失败
 	if restCode == 0 {
 		toUrl := jsoniter.Get([]byte(loginResp.Text), "toUrl").ToString()
-		res, _ := CLoud189Session.Get(toUrl, nil)
+		res, err := CLoud189Session.Get(toUrl, nic.H{
+			AllowRedirect: false,
+		})
+		if err != nil {
+			log.Warningln(err.Error())
+			return "4"
+		}
 		CLoud189Sessions[accountId] = CLoud189Session
 		return res.Cookies()[0].Value
 	}
@@ -244,11 +288,17 @@ func Cloud189Login(accountId, user, password string) string {
 func Cloud189IsLogin(accountId string) bool {
 	CLoud189Session := CLoud189Sessions[accountId]
 	if _, ok := CLoud189Sessions[accountId]; ok {
-		resp, err := CLoud189Session.Get("https://cloud.189.cn/v2/getLoginedInfos.action?showPC=true", nil)
-		if err == nil && resp.Text != "" && jsoniter.Valid(resp.Bytes) && jsoniter.Get(resp.Bytes, "errorMsg").ToString() == "" {
+		resp, err := CLoud189Session.Get("https://cloud.189.cn/v2/getLoginedInfos.action?showPC=true", nic.H{
+			Timeout:           20,
+			DisableKeepAlives: true,
+		})
+		if err == nil && resp != nil && resp.Text != "" && jsoniter.Valid(resp.Bytes) && jsoniter.Get(resp.Bytes, "errorMsg").ToString() == "" {
 			return true
 		} else {
-			log.Debug(resp.Text)
+			if resp != nil {
+				defer resp.Body.Close()
+				log.Debug(resp.Text)
+			}
 		}
 	}
 	return false

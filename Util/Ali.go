@@ -46,7 +46,7 @@ func AliRefreshToken(account entity.Account) string {
 	return tokenResp.RefreshToken
 }
 
-func AliGetFiles(accountId, rootId, fileId, p string) {
+func AliGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 	tokenResp := Alis[accountId]
 	auth := tokenResp.TokenType + " " + tokenResp.AccessToken
 	defer func() {
@@ -147,9 +147,12 @@ func AliGetFiles(accountId, rootId, fileId, p string) {
 				fn.Path = p + "/" + fn.FileName
 			}
 			if fn.IsFolder == true {
-				AliGetFiles(accountId, rootId, fn.FileId, fn.Path)
+				if syncChild {
+					AliGetFiles(accountId, rootId, fn.FileId, fn.Path, syncChild)
+				}
 			}
 			fn.Id = uuid.NewV4().String()
+			fn.CacheTime = time.Now().UnixNano()
 			model.SqliteDb.Create(fn)
 		}
 		if nextMarker == "" {

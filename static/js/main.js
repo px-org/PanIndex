@@ -19,6 +19,12 @@ clipboard.on('success', function(e) {
     }
     e.clearSelection();
 });
+$('.icon-file-mdui').on('click', function(ev) {
+    if(ev.target.tagName == "A" && (ev.target.text == "file_download" ||
+        ev.target.text == "content_copy") || ev.target.title == "复制链接") return;
+    var dURL = $(this).attr("data-url");
+    window.location.href = dURL+"?v";
+});
 $(document).ready(function() {
     $('#theme-toggle').on('click', function(){
         $('body').removeClass('mdui-theme-layout-auto');

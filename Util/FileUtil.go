@@ -54,6 +54,7 @@ func IsHiddenFile(name string) bool {
 
 func GetMimeType(fileInfo os.FileInfo) int {
 	mime := strings.Split(mime.TypeByExtension(filepath.Ext(fileInfo.Name())), "/")[0]
+	ext := filepath.Ext(fileInfo.Name())
 	if mime == "image" {
 		return 1
 	} else if mime == "audio" {
@@ -61,8 +62,20 @@ func GetMimeType(fileInfo os.FileInfo) int {
 	} else if mime == "video" {
 		return 3
 	} else if mime == "text" {
+		if strings.Contains(".pdf", ext) {
+			return 0
+		}
 		return 4
 	} else {
+		if strings.Contains(".yml,.properties,.conf.js,.txt,.py,.go,.css,.lua,.sh,.sql,.html,.json,.java,.jsp", ext) {
+			return 4
+		} else if strings.Contains(".mp4,.m4v,.mkv,.webm,.mov,.avi,.wmv,.mpg,.flv,.3gp,.m3u8,.ts", ext) {
+			return 3
+		} else if strings.Contains(".jpg,.png,.gif,.webp,.cr2,.tif,.bmp,.heif,.jxr,.psd,.ico,.dwg", ext) {
+			return 1
+		} else if strings.Contains(".mid,.mp3,.m4a,.ogg,.flac,.wav,.amr,.aac", ext) {
+			return 2
+		}
 		return 0
 	}
 }
@@ -109,7 +122,7 @@ func ReadStringByUrl(url, fileId string) string {
 	//为了提高效率，从缓存查询
 	value, _ := GC.Get(fileId)
 	if value != nil {
-		log.Debugf("从缓存中读取README.md内容{%s}", fileId)
+		log.Debugf("从缓存中读取文本内容{%s}", fileId)
 		return value.(string)
 	}
 	resp, err := http.Get(url)

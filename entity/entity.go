@@ -27,6 +27,7 @@ type FileNode struct {
 	CreateTime   string `json:"create_time"`
 	Delete       int    `json:"delete"`
 	Hide         int    `json:"hide"`
+	CacheTime    int64  `json:"cache_time"`
 }
 type Paths struct {
 	FileId    string `json:"fileId"`
@@ -67,6 +68,8 @@ type Account struct {
 	CookieStatus int    `json:"cookie_status"` //cookie状态：-1刷新中， 1未刷新，2正常，3失效
 	TimeSpan     string `json:"time_span"`
 	LastOpTime   string `json:"last_op_time"` //最近一次更新时间
+	SyncDir      string `json:"sync_dir"`     //定时缓存指定目录
+	SyncChild    int    `json:"sync_child"`   //是否缓存指定目录的子目录
 }
 type Damagou struct {
 	Username string `json:"username"`

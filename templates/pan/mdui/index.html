@@ -99,7 +99,7 @@
 </script>
 {{else}}
 <div class="mdui-container">
-	<div class="mdui-card">
+	<div class="mdui-card" style="min-height: 600px">
 		<div class="mdui-card-content">
 			<div style="padding: 0px 5px 12px;">
 				<div class="mdui-chip">
@@ -122,7 +122,13 @@
 					</div>
 				{{end}}
 				<div class="right-icon mdui-float-right">
-					<button class="mdui-btn mdui-btn-icon" id="theme-toggle"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
+					<a class="mdui-btn mdui-btn-icon" href="/?admin" target="_blank" mdui-tooltip="{content: '配置'}"><i class="mdui-icon material-icons">settings</i></a>
+				</div>
+				<div class="right-icon mdui-float-right" style="display: none">
+					<button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '排序'}" mdui-dialog="{target: '#sortConfig'}"><i class="mdui-icon material-icons">sort</i></button>
+				</div>
+				<div class="right-icon mdui-float-right">
+					<button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
 				</div>
 			</div>
 			<ul class="mdui-list">
@@ -147,13 +153,13 @@
 					</div>
 				</li>
 				{{if not .List}}
-				<div class="mdui-valign" style="min-height: 200px">
+				<div class="mdui-valign">
 					<p class="mdui-center">网盘空空如也，快去上传吧</p>
 				</div>
 				{{end}}
 				{{range .List}}
 				<li class="mdui-list-item mdui-ripple">
-					<div class="mdui-list-item-content icon-file" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}">
+					<div class="mdui-list-item-content icon-file-mdui" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}">
 						<div class="mdui-list-item-title wordWrap">
 							{{if .IsFolder}}
 							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">folder_open</i> {{.FileName}}
@@ -205,6 +211,56 @@
 				</li>
 				{{end}}
 			</ul>
+		</div>
+		<div class="mdui-dialog" id="sortConfig">
+			<div class="mdui-dialog-content">
+				<div class="mdui-dialog-title">自定义排序</div>
+				<p class="mdui-typo-title">排序字段</p>
+				<div class="mdui-row-xs-1 mdui-row-sm-2 mdui-row-md-3">
+					<div class="mdui-col">
+						<label class="mdui-radio mdui-m-b-1">
+							<input type="radio" name="column" value="file_name">
+							<i class="mdui-radio-icon"></i>
+							文件名
+						</label>
+					</div>
+					<div class="mdui-col">
+						<label class="mdui-radio mdui-m-b-1">
+							<input type="radio" name="column" value="file_size" checked="">
+							<i class="mdui-radio-icon"></i>
+							大小
+						</label>
+					</div>
+					<div class="mdui-col">
+						<label class="mdui-radio mdui-m-b-1">
+							<input type="radio" name="column" value="last_op_time">
+							<i class="mdui-radio-icon"></i>
+							修改时间
+						</label>
+					</div>
+				</div>
+				<p class="mdui-typo-title">顺序</p>
+				<div class="mdui-row-xs-1 mdui-row-sm-2 mdui-row-md-3">
+					<div class="mdui-col">
+						<label class="mdui-radio mdui-m-b-1">
+							<input type="radio" name="order" value="asc">
+							<i class="mdui-radio-icon"></i>
+							升序
+						</label>
+					</div>
+					<div class="mdui-col">
+						<label class="mdui-radio mdui-m-b-1">
+							<input type="radio" name="order" value="desc" checked="">
+							<i class="mdui-radio-icon"></i>
+							降序
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="mdui-dialog-actions">
+				<button class="mdui-btn mdui-ripple" mdui-dialog-close>关闭</button>
+				<button class="mdui-btn mdui-ripple" mdui-dialog-confirm>确认</button>
+			</div>
 		</div>
 		{{if .HasReadme}}
 		<div id="content" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">

@@ -22,9 +22,11 @@
 -data_path=/path/to/data #数据目录（配置、目录信息、临时文件目录）<br>
 -cert_file=/path/to/fullchain.pem # 开启ssl，证书文件<br>
 -key_file=/path/to/privkey.pem # 开启ssl，证书文件密钥<br>
+-cq=port # 只是查询配置，程序并不会启动
 ```bash
 $ tar -xvf PanIndex-v1.0.0-linux-amd64.tar.gz
 #nohup ./PanIndex -host=0.0.0.0 -port=5238 -debug=false > PanIndex.log &
+#./PanIndex -cq port
 $ nohup ./PanIndex > PanIndex.log &
 ```
 ### 在Systemd下运行

@@ -1,0 +1,24 @@
+{{define "pan/mdui/view-code.html"}}
+    {{template "pan/mdui/view-base.html" .}}
+{{end}}
+{{define "content-code"}}
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ace.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ext-language_tools.js"></script>
+    <pre id="editor">{{.Content}}</pre>
+    <script>
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.setFontSize(12);
+        editor.session.setMode("ace/mode/{{.CodeType}}");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true,
+            maxLines: 500,
+            readOnly:true,
+            showLineNumbers:false,
+            showGutter: false,
+            showPrintMargin:false
+        });
+    </script>
+{{end}}

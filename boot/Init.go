@@ -9,6 +9,10 @@ import (
 	"github.com/banzaicloud/logrus-runtime-formatter"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -141,4 +145,32 @@ type GithubRelease struct {
 	TagName string `json:"tag_name"`
 	HtmlUrl string `json:"html_url"`
 	Body    string `json:"body"`
+}
+
+func PrintConfig(dataPath, cq string) bool {
+	if cq == "" {
+		return false
+	}
+	if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
+		dataPath = os.Getenv("PAN_INDEX_DATA_PATH")
+	}
+	if dataPath == "" {
+		dataPath = "data"
+	}
+	if _, err := os.Stat(dataPath); os.IsNotExist(err) {
+		os.Mkdir(dataPath, os.ModePerm)
+	}
+	SqliteDb, err := gorm.Open(sqlite.Open(dataPath+"/data.db"), &gorm.Config{
+		Logger: logger.Default.LogMode(0 + 1),
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Got error when connect database, the error is '%v'", err))
+	}
+	c := ""
+	SqliteDb.Raw(fmt.Sprintf("select %s from config where 1=1 limit 1", cq)).First(&c)
+	fmt.Println(c)
+	return true
 }
