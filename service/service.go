@@ -120,7 +120,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 					dir := filepath.Dir(fullPath)
 					p := filepath.Dir(path)
 					fileInfos, _ := ioutil.ReadDir(dir)
-					fileInfos = Util.FilterFiles(fileInfos)
+					fileInfos = Util.FilterFiles(fileInfos, dir)
 					last := Util.GetNextOrPrevious(fileInfos, fileInfo, -1)
 					next := Util.GetNextOrPrevious(fileInfos, fileInfo, 1)
 					if last != nil {
@@ -158,11 +158,11 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 			result["isFile"] = true
 			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=? limit 1", path, account.Id).Find(&list)
 			next := entity.FileNode{}
-			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and cache_time >? order by cache_time asc limit 1",
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and hide = 0  and cache_time >? order by cache_time asc limit 1",
 				list[0].ParentPath, account.Id, list[0].CacheTime).First(&next)
 			result["NextFile"] = next.Path
 			last := entity.FileNode{}
-			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and cache_time < ? order by cache_time desc limit 1",
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0  and hide = 0 and cache_time < ? order by cache_time desc limit 1",
 				list[0].ParentPath, account.Id, list[0].CacheTime).First(&last)
 			result["LastFile"] = last.Path
 		} else {

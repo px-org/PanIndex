@@ -1,9 +1,11 @@
 package Util
 
 import (
+	"PanIndex/config"
 	"fmt"
 	"io/fs"
 	"math/rand"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -60,7 +62,7 @@ func GetNextOrPrevious(slice []fs.FileInfo, fs fs.FileInfo, flag int) fs.FileInf
 	return slice[index]
 }
 
-func FilterFiles(slice []fs.FileInfo) []fs.FileInfo {
+func FilterFiles(slice []fs.FileInfo, fullPath string) []fs.FileInfo {
 	sort.Slice(slice, func(i, j int) bool {
 		d1 := 0
 		if slice[i].IsDir() {
@@ -80,6 +82,15 @@ func FilterFiles(slice []fs.FileInfo) []fs.FileInfo {
 	})
 	arr := []fs.FileInfo{}
 	for _, v := range slice {
+		fileId := filepath.Join(fullPath, v.Name())
+		if config.GloablConfig.HideFileId != "" {
+			listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+			sort.Strings(listSTring)
+			i := sort.SearchStrings(listSTring, fileId)
+			if i < len(listSTring) && listSTring[i] == fileId {
+				continue
+			}
+		}
 		if !v.IsDir() {
 			arr = append(arr, v)
 		}
