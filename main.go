@@ -34,10 +34,15 @@ var Debug = flag.Bool("debug", false, "调试模式，设置为true可以输出�
 var DataPath = flag.String("data_path", "data", "数据存储目录，默认程序同级目录")
 var CertFile = flag.String("cert_file", "", "/path/to/test.pem")
 var KeyFile = flag.String("key_file", "", "/path/to/test.key")
+var ConfigQuery = flag.String("cq", "port", "获取配置参数")
 var GC = gcache.New(100).LRU().Build()
 
 func main() {
 	flag.Parse()
+	pr := boot.PrintConfig(*DataPath, *ConfigQuery)
+	if pr {
+		return
+	}
 	boot.Start(*Host, *Port, *Debug, *DataPath)
 	r := gin.New()
 	r.Use(gin.Logger())
