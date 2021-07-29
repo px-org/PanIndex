@@ -148,6 +148,9 @@ type GithubRelease struct {
 }
 
 func PrintConfig(dataPath, cq string) bool {
+	if cq == "" {
+		return false
+	}
 	if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
 		dataPath = os.Getenv("PAN_INDEX_DATA_PATH")
 	}
