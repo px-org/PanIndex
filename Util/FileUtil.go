@@ -54,6 +54,7 @@ func IsHiddenFile(name string) bool {
 
 func GetMimeType(fileInfo os.FileInfo) int {
 	mime := strings.Split(mime.TypeByExtension(filepath.Ext(fileInfo.Name())), "/")[0]
+	ext := filepath.Ext(fileInfo.Name())
 	if mime == "image" {
 		return 1
 	} else if mime == "audio" {
@@ -61,9 +62,11 @@ func GetMimeType(fileInfo os.FileInfo) int {
 	} else if mime == "video" {
 		return 3
 	} else if mime == "text" {
+		if strings.Contains(".pdf", ext) {
+			return 0
+		}
 		return 4
 	} else {
-		ext := filepath.Ext(fileInfo.Name())
 		if strings.Contains(".yml,.properties,.conf.js,.txt,.py,.go,.css,.lua,.sh,.sql,.html,.json,.java,.jsp", ext) {
 			return 4
 		} else if strings.Contains(".mp4,.m4v,.mkv,.webm,.mov,.avi,.wmv,.mpg,.flv,.3gp,.m3u8,.ts", ext) {
