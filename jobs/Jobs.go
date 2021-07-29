@@ -206,8 +206,12 @@ func SyncOneAccount(account entity.Account) {
 		} else {
 		}
 	} else if account.Mode == "aliyundrive" {
+		cookie := Util.AliRefreshToken(account)
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 		Util.AliGetFiles(account.Id, account.RootId, fileId, syncDir, syncChild)
 	} else if account.Mode == "onedrive" {
+		cookie := Util.OneDriveRefreshToken(account)
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 		Util.OndriveGetFiles("", account.Id, fileId, syncDir, syncChild)
 	} else if account.Mode == "native" {
 	}
