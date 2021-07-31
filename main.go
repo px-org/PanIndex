@@ -186,8 +186,16 @@ func initTemplates() *template.Template {
 	box := packr.New("templates", "./templates")
 	data, _ := box.FindString("pan/admin/login.html")
 	tmpl := template.New("pan/admin/login.html")
+	if Util.FileExist("./templates/pan/admin/login.html") {
+		s, _ := ioutil.ReadFile("./templates/pan/admin/login.html")
+		data = string(s)
+	}
 	tmpl.Parse(data)
 	data, _ = box.FindString("pan/admin/index.html")
+	if Util.FileExist("./templates/pan/admin/index.html") {
+		s, _ := ioutil.ReadFile("./templates/pan/admin/index.html")
+		data = string(s)
+	}
 	tmpl.New("pan/admin/index.html").Parse(data)
 	for _, theme := range themes {
 		tmpName := strings.Join([]string{"pan/", "/index.html"}, theme)
