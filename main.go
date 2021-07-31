@@ -355,7 +355,7 @@ func search(c *gin.Context, key string) {
 		return
 	}
 	account := config.GloablConfig.Accounts[index]
-	result := service.SearchFilesByKey(account, key)
+	result := service.SearchFilesByKey(key)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))

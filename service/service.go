@@ -209,28 +209,79 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 	return result
 }
 
-func SearchFilesByKey(account entity.Account, key string) map[string]interface{} {
+func SearchFilesByKey(key string) map[string]interface{} {
 	result := make(map[string]interface{})
-	list := []entity.FileNode{}
+	list := []entity.SearchNode{}
+	accouts := []entity.Account{}
 	defer func() {
 		if p := recover(); p != nil {
 			log.Errorln(p)
 		}
 	}()
-	if account.Mode == "native" {
-		list = Util.FileSearch(account.RootId, "", key)
-	} else {
-		model.SqliteDb.Raw("select * from file_node where file_name like ? and `delete`=0 and hide = 0 and account_id=?", "%"+key+"%", account.Id).Find(&list)
+	sql := `
+		SELECT
+			a.*,('/d_'||(select count(*) from account c where c.rowid < b.rowid )) as dx,b.id as account_id
+		FROM
+			file_node a
+			LEFT JOIN account b ON b.id = a.account_id
+		WHERE
+			a.file_name LIKE ?
+			AND a.` + "`delete`" + `= 0 
+			AND a.hide = 0
+			AND b.mode != 'native'
+		ORDER BY a.is_folder desc
+			`
+	model.SqliteDb.Raw(sql, "%"+key+"%").Find(&list)
+	model.SqliteDb.Raw("select * from account where mode = ?", "native").Find(&accouts)
+	if len(accouts) > 0 {
+		for _, account := range accouts {
+			nfs := Util.FileSearch(account.RootId, "", key)
+			//默认按照目录，时间倒序排列
+			sort.Slice(nfs, func(i, j int) bool {
+				d1 := 0
+				if nfs[i].IsFolder {
+					d1 = 1
+				}
+				d2 := 0
+				if nfs[j].IsFolder {
+					d2 = 1
+				}
+				if d1 > d2 {
+					return true
+				} else if d1 == d2 {
+					li, _ := time.Parse("2006-01-02 15:04:05", nfs[i].LastOpTime)
+					lj, _ := time.Parse("2006-01-02 15:04:05", nfs[j].LastOpTime)
+					return li.After(lj)
+				} else {
+					return false
+				}
+			})
+			dx := "/d_0"
+			sql = `
+				SELECT
+					('/d_'||(select count(*) from account b where b.rowid < a.rowid )) as dx
+				FROM
+					account a
+				WHERE
+					a.id = ?
+			`
+			model.SqliteDb.Raw(sql, account.Id).Find(&dx)
+			for _, fs := range nfs {
+				sn := entity.SearchNode{fs, dx, account.Id}
+				list = append(list, sn)
+			}
+		}
 	}
 	result["List"] = list
 	result["Path"] = "/"
 	result["HasParent"] = false
 	result["ParentPath"] = PetParentPath("/")
-	if account.Mode == "cloud189" || account.Mode == "native" {
+	/*if account.Mode == "cloud189" || account.Mode == "native" {
 		result["SurportFolderDown"] = true
 	} else {
 		result["SurportFolderDown"] = false
-	}
+	}*/
+	result["SurportFolderDown"] = false
 	return result
 }
 

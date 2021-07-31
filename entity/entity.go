@@ -29,6 +29,11 @@ type FileNode struct {
 	Hide         int    `json:"hide"`
 	CacheTime    int64  `json:"cache_time"`
 }
+type SearchNode struct {
+	FileNode
+	Dx        string
+	AccountId string
+}
 type Paths struct {
 	FileId    string `json:"fileId"`
 	FileName  string `json:"fileName"`

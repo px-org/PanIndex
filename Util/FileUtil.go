@@ -151,24 +151,6 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 		//是目录
 		// 读取该文件夹下所有文件
 		fileInfos, err := ioutil.ReadDir(fullPath)
-		//默认按照目录，时间倒序排列
-		sort.Slice(fileInfos, func(i, j int) bool {
-			d1 := 0
-			if fileInfos[i].IsDir() {
-				d1 = 1
-			}
-			d2 := 0
-			if fileInfos[j].IsDir() {
-				d2 = 1
-			}
-			if d1 > d2 {
-				return true
-			} else if d1 == d2 {
-				return fileInfos[i].ModTime().After(fileInfos[j].ModTime())
-			} else {
-				return false
-			}
-		})
 		if err != nil {
 			panic(err.Error())
 		} else {
@@ -200,7 +182,7 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 					FileSize:   int64(fileInfo.Size()),
 					SizeFmt:    FormatFileSize(int64(fileInfo.Size())),
 					FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
-					Path:       filepath.Join(path, fileInfo.Name()),
+					Path:       PathJoin(path, fileInfo.Name()),
 					MediaType:  fileType,
 					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 				}

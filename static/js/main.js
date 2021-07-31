@@ -267,7 +267,7 @@ $(".search").bind('keydown', function(event) {
     key = key.replace(/(^\s*)|(\s*$)/g,"")
     if (event.key === "Enter") {
         if( $(this).val() != ""){
-            window.location.href = dIndex + "?search=" + key;
+            window.location.href = "/?search=" + key;
         }else{
             window.location.href = dIndex;
         }
