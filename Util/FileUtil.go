@@ -289,3 +289,10 @@ func Zip(dst, src string) (err error) {
 		return nil
 	})
 }
+func PathJoin(path, fileName string) string {
+	if path == "/" {
+		return fmt.Sprintf("%s%s", path, fileName)
+	} else {
+		return fmt.Sprintf("%s/%s", path, fileName)
+	}
+}

@@ -95,10 +95,11 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 							FileSize:   int64(fileInfo.Size()),
 							SizeFmt:    Util.FormatFileSize(int64(fileInfo.Size())),
 							FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
-							Path:       filepath.Join(path, fileInfo.Name()),
+							Path:       Util.PathJoin(path, fileInfo.Name()),
 							MediaType:  fileType,
 							LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 						}
+						filepath.Join()
 						// 添加到切片中等待json序列化
 						list = append(list, file)
 					}
