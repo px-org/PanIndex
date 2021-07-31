@@ -356,7 +356,12 @@ func search(c *gin.Context, key string) {
 	result["DIndex"] = DIndex
 	result["AccountId"] = account.Id
 	result["Footer"] = config.GloablConfig.Footer
-	result["Theme"] = config.GloablConfig.Theme
+	cookieTheme, error := c.Cookie("Theme")
+	if error != nil {
+		result["Theme"] = config.GloablConfig.Theme
+	} else {
+		result["Theme"] = cookieTheme
+	}
 	result["FaviconUrl"] = config.GloablConfig.FaviconUrl
 	result["SearchKey"] = key
 	c.HTML(http.StatusOK, tmpFile, result)
