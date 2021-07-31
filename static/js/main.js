@@ -45,6 +45,10 @@ $(document).ready(function() {
             $.cookie("Theme", "mdui-dark");
         }
     });
+    $('#go-to-top').on('click',function () {
+        $("html, body").animate({ scrollTop: 0 }, "slow");
+        return false;
+    });
     $('.icon-file').on('click', function(ev) {
         if(ev.target.tagName == "A" && (ev.target.text == "file_download" ||
             ev.target.text == "content_copy") || ev.target.title == "复制链接") return;
