@@ -7,6 +7,7 @@ import (
 	"PanIndex/jobs"
 	"PanIndex/model"
 	"errors"
+	"fmt"
 	"github.com/bluele/gcache"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -707,4 +708,32 @@ func GetViewTemplate(mode string, fn entity.FileNode, result map[string]interfac
 		}
 	}
 	return t
+}
+func AccountsToNodes(accounts []entity.Account) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["HasReadme"] = false
+	fns := []entity.FileNode{}
+	for i, account := range accounts {
+		fn := entity.FileNode{
+			FileId:     fmt.Sprintf("/d_%d", i),
+			IsFolder:   true,
+			FileName:   account.Name,
+			FileSize:   int64(account.FilesCount),
+			SizeFmt:    "-",
+			FileType:   "",
+			Path:       fmt.Sprintf("/d_%d", i),
+			MediaType:  0,
+			LastOpTime: account.LastOpTime,
+			ParentId:   "",
+		}
+		fns = append(fns, fn)
+	}
+	result["isFile"] = false
+	result["HasPwd"] = false
+	result["List"] = fns
+	result["Path"] = "/"
+	result["HasParent"] = false
+	result["ParentPath"] = PetParentPath("/")
+	result["SurportFolderDown"] = false
+	return result
 }

@@ -264,10 +264,16 @@ func index(c *gin.Context) {
 		return
 	}
 	account := config.GloablConfig.Accounts[index]
-	result := service.GetFilesByPath(account, pathName, pwd)
+	result := make(map[string]interface{})
+	if pathName == "/" && config.GloablConfig.AccountChoose == "display" {
+		result = service.AccountsToNodes(config.GloablConfig.Accounts)
+	} else {
+		result = service.GetFilesByPath(account, pathName, pwd)
+	}
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
+	result["Config"] = config.GloablConfig
 	result["Title"] = account.Name
 	result["Accounts"] = config.GloablConfig.Accounts
 	result["DIndex"] = DIndex
@@ -360,6 +366,7 @@ func search(c *gin.Context, key string) {
 	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
 	result["Title"] = account.Name
+	result["Config"] = config.GloablConfig
 	result["Accounts"] = config.GloablConfig.Accounts
 	result["DIndex"] = DIndex
 	result["AccountId"] = account.Id

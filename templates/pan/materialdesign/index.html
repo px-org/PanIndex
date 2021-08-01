@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>{{.Title}} {{ .Path }}</title>
+		<title>
+			{{if eq $.Config.SiteName ""}}
+				{{.Title}}
+			{{else}}
+				{{$.Config.SiteName}}
+			{{end}} {{ .Path }}
+		</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	{{if eq .Mode "aliyundrive"}}
@@ -87,7 +93,17 @@
 				<nav class="grey darken-3">
 					<div class="nav-wrapper">
 						<div class="col s12">
-							<a href="/" class="breadcrumb">{{.Title}}</a>
+							<a href="{{if eq $.Config.AccountChoose "default"}}{{$.DIndex}}{{end}}/" class="breadcrumb">
+								{{if eq $.Config.SiteName ""}}
+									{{.Title}}
+								{{else}}
+									{{$.Config.SiteName}}
+								{{end}}
+							</a>
+							{{if and (eq $.Config.AccountChoose "display") (or (ne $.Path "/") (ne $.DIndex ""))}}
+								<a href="javascript:void(0)" class="breadcrumb"></a>
+								<a href="{{$.DIndex}}/">{{.Title}}</a>
+							{{end}}
 							{{range .PrePaths}}
 								<a href="javascript:void(0)" class="breadcrumb"></a>
 								{{if eq .PathUrl $.Path}}

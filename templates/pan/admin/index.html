@@ -67,6 +67,11 @@
 						<input class="mdui-textfield-input" type="text" name="port" value="{{.Port}}" required />
 						<div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
 					</div>
+					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">网站标题</label>
+						<input class="mdui-textfield-input" type="text" name="site_name" value="{{.SiteName}}" />
+						<div class="mdui-textfield-helper mdui-text-color-purple">显示优先于网盘名称</div>
+					</div>
 					<div>
 						<label class="mdui-textfield-label">主题</label>
 						<select id="theme" name="theme" class="mdui-select" mdui-select>
@@ -78,6 +83,22 @@
 							<option value='materialdesign' {{if eq .Theme "materialdesign"}}selected{{else}}{{end}}>materialdesign</option>
 						</select>
 					</div>
+					<div class="mdui-textfield">
+						<label class="mdui-textfield-label">首页账号切换</label>
+						<div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
+							<label class="mdui-radio mdui-col">
+								<input type="radio" name="account_choose" {{if or (eq .AccountChoose "default") (eq .AccountChoose "") }}checked="checked"{{end}} value="default" />
+								<i class="mdui-radio-icon"></i>
+								默认账号
+							</label>
+							<label class="mdui-radio mdui-col">
+								<input type="radio" name="account_choose" {{if eq .AccountChoose "display" }}checked="checked"{{end}} value="display" />
+								<i class="mdui-radio-icon"></i>
+								全部账号
+							</label>
+						</div>
+					</div>
+
 					<div class="mdui-textfield">
 						<label class="mdui-textfield-label">后台登录密码</label>
 						<input class="mdui-textfield-input" type="text" name="admin_password" value="{{.AdminPassword}}" placeholder="默认密码：PanIndex" required />
@@ -159,7 +180,7 @@
 							<form id="accountForm">
 								<div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
 									<i class="mdui-icon material-icons">message</i>
-									<label class="mdui-textfield-label">显示名称</label>
+									<label class="mdui-textfield-label">网盘名称</label>
 									<input type="hidden" name="id" />
 									<input class="mdui-textfield-input" type="text" name="name" value="" required>
 									<div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/config?id=%e8%b4%a6%e5%8f%b7%e7%bb%91%e5%ae%9a" target="_blank">说明</a></div>
@@ -171,12 +192,12 @@
 										<label class="mdui-radio mdui-col">
 											<input type="radio" name="mode" checked="checked" value="native" />
 											<i class="mdui-radio-icon"></i>
-											native
+											Native
 										</label>
 										<label class="mdui-radio mdui-col">
 											<input type="radio" name="mode" value="cloud189" />
 											<i class="mdui-radio-icon"></i>
-											cloud189
+											Cloud189
 										</label>
 										<label class="mdui-radio mdui-col">
 											<input type="radio" name="mode" value="aliyundrive" />
@@ -186,12 +207,12 @@
 										<label class="mdui-radio mdui-col">
 											<input type="radio" name="mode" value="teambition" />
 											<i class="mdui-radio-icon"></i>
-											teambition
+											Teambition
 										</label>
 										<label class="mdui-radio mdui-col">
 											<input type="radio" name="mode" value="teambition-us" />
 											<i class="mdui-radio-icon"></i>
-											teambition国际版
+											Teambition国际版
 										</label>
 										<label class="mdui-radio mdui-col">
 											<input type="radio" name="mode" value="onedrive" />
@@ -411,7 +432,6 @@ function fillAccount(index) {
 	}else{
 		$("#accountForm").find("input[name=sync_dir]").val(account.sync_dir);
 	}
-	console.log(account.sync_child);
 	if(account.sync_child == "0"){
 		$("#accountForm").find("input[name=sync_child]").prop("checked",true);
 	}else{

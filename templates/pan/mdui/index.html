@@ -71,7 +71,12 @@
 			 white-space: normal;
 		 }
 	</style>
-	<title>{{.Title}} {{ .Path }}</title>
+	<title>{{if eq $.Config.SiteName ""}}
+			{{.Title}}
+		{{else}}
+			{{$.Config.SiteName}}
+		{{end}} {{ .Path }}
+	</title>
 	{{ $SurportFolderDown := .SurportFolderDown }}
 </head>
 <body class="mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}}">
@@ -113,15 +118,27 @@
 							{{end}}
 						</ul>
 					{{end}}
-					<span class="mdui-chip-title" onclick="window.open('{{$.DIndex}}/','_self')">{{.Title}}</span>
+					<span class="mdui-chip-title" onclick="window.open('{{if eq $.Config.AccountChoose "default"}}{{$.DIndex}}{{end}}/','_self')">
+						{{if eq $.Config.SiteName ""}}
+							{{.Title}}
+						{{else}}
+							{{$.Config.SiteName}}
+						{{end}}
+					</span>
 				</div>
+				{{if and (eq $.Config.AccountChoose "display") (or (ne $.Path "/") (ne $.DIndex ""))}}
+					<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+					<div class="mdui-chip" onclick="window.open('{{$.DIndex}}/','_self')">
+						<span class="mdui-chip-title">{{.Title}}</span>
+					</div>
+				{{end}}
 				{{range .PrePaths}}
 					<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
 					<div class="mdui-chip" onclick="window.open('{{$.DIndex}}{{.PathUrl}}','_self')">
 						<span class="mdui-chip-title">{{.PathName}}</span>
 					</div>
 				{{end}}
-				<div class="right-icon mdui-float-right">
+				<div class="right-icon mdui-float-right" style="display: none">
 					<a class="mdui-btn mdui-btn-icon" href="/?admin" target="_blank" mdui-tooltip="{content: '配置'}"><i class="mdui-icon material-icons">settings</i></a>
 				</div>
 				<div class="right-icon mdui-float-right" style="display: none">
