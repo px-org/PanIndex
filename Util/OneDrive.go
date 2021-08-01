@@ -154,9 +154,9 @@ func OndriveGetFiles(url, accountId, fileId, p string, syncChild bool) {
 		fn.CacheTime = time.Now().UnixNano()
 		model.SqliteDb.Create(fn)
 	}
-	nextLink := jsoniter.Get(byteFiles, "@odata").Get("nextLink").ToString()
+	nextLink := jsoniter.Get(byteFiles, "@odata.nextLink").ToString()
 	if nextLink != "" {
-		OndriveGetFiles(url, accountId, fileId, p, syncChild)
+		OndriveGetFiles(nextLink, accountId, fileId, p, syncChild)
 	}
 }
 func GetFileType(name string) string {
