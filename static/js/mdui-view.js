@@ -19,4 +19,16 @@ $(function () {
     if(mode == "native"){
         $("#view_down_link").attr("href", fullUrl);
     }
+    var clipboard = new ClipboardJS('.copyBtn', {
+        text: function(trigger) {
+            var content = $(trigger).data("content");
+            return content;
+        }
+    });
+    clipboard.on('success', function(e) {
+        mdui.snackbar({
+            message: "已复制到剪切板"
+        });
+        e.clearSelection();
+    });
 });

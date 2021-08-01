@@ -98,6 +98,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 							Path:       Util.PathJoin(path, fileInfo.Name()),
 							MediaType:  fileType,
 							LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
+							ParentId:   filepath.Dir(fullPath),
 						}
 						filepath.Join()
 						// 添加到切片中等待json序列化
@@ -145,6 +146,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 						Path:       path,
 						MediaType:  fileType,
 						LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
+						ParentId:   filepath.Dir(fullPath),
 					}
 					// 添加到切片中等待json序列化
 					list = append(list, file)
