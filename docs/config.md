@@ -18,6 +18,7 @@
 ### 基础配置
 * 绑定Host：默认`0.0.0.0`，修改后重启生效
 * 绑定端口：默认`5238`，修改后重启生效
+* 网站标题：默认为空，设置后将优先于网盘名称展示
 * 主题： mdui主题功能最全，也会长期更新，并且移动端友好
     * mdui（跟随系统切换暗黑、明亮）
     * mdui-light（明亮模式）
@@ -25,6 +26,9 @@
     * classic（经典主题，不支持账号前端切换及搜索，适用于单账号）
     * bootstrap
     * materialdesign
+* 首页账号切换
+    * 默认账号：首页将显示默认账号，或顺序第一位的账号，`home`按钮切换
+    * 全部账号：首页将以文件夹形式列出所有账号，`home`按钮依然可以切换
 * 后台登录密码：默认`PanIndex`，注意保护隐私
 * 接口 token：第一次安装时系统随机生成，注意保护隐私
 * 密码文件（夹）：格式`id1:pwd1,path1:pwd2`
@@ -42,16 +46,15 @@
 ### 账号绑定
 - 显示名称：会修改网页标题，每个账号可不一致
 - 网盘模式
-    - native： 本地模式，服务器某一目录的文件列表，因为实时获取所以无需更新cookie和目录缓存
-    - cloud189：天翼云网盘
-    - teambition：阿里teambition盘，包括个人网盘和项目文件，依据根目录ID设定自动判断
-    - teambition国际版：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
-    - aliyundrive：阿里云盘，需要填入有效的`refresh_token`，在[此处登录](https://passport.aliyundrive.com/mini_login.htm?lang=zh_cn&appName=aliyun_drive&appEntrance=web&styleType=auto&bizParams=&notLoadSsoView=false&notKeepLogin=false&isMobile=true&hidePhoneCode=true&rnd=0.9186864872885723)后抓包获取，[详细教程](https://woriqq.com/archives/75.html)
-    - onedrive：微软云盘，用户填写`client_id`，密码填写`client_secret`，重定向地址`redirect_uri`及最重要的刷新令牌`refresh_token`
+    - Native： 本地模式，服务器某一目录的文件列表，因为实时获取所以无需更新cookie和目录缓存
+    - Cloud189：天翼云网盘
+    - Teambition：阿里teambition盘，包括个人网盘和项目文件，依据根目录ID设定自动判断
+    - Teambition国际版：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
+    - Aliyundrive：阿里云盘，需要填入有效的`refresh_token`，在[此处登录](https://passport.aliyundrive.com/mini_login.htm?lang=zh_cn&appName=aliyun_drive&appEntrance=web&styleType=auto&bizParams=&notLoadSsoView=false&notKeepLogin=false&isMobile=true&hidePhoneCode=true&rnd=0.9186864872885723)后抓包获取，[详细教程](https://woriqq.com/archives/75.html)
+    - OneDrive：微软云盘，用户填写`client_id`，密码填写`client_secret`，重定向地址`redirect_uri`及最重要的刷新令牌`refresh_token`
         - [在线工具](https://mgaa.noki.workers.dev/)
         - 创建应用
         - 获取onedrive api权限
-    
     由于阿里云的`refresh_token`和`access_token`有效期为2小时，第一次填入后，系统会定时刷新，所以`refresh_token`会更新，但是可以保持始终有效。
 - 用户名：部分模式必需，一般是手机号或邮箱
 - 密码
