@@ -2,7 +2,12 @@ package Util
 
 import (
 	"PanIndex/config"
+	"bufio"
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/encoding/unicode"
 	"io/fs"
 	"math/rand"
 	"path/filepath"
@@ -96,4 +101,13 @@ func FilterFiles(slice []fs.FileInfo, fullPath string) []fs.FileInfo {
 		}
 	}
 	return arr
+}
+
+func DetermineEncoding(r *bufio.Reader) encoding.Encoding {
+	_, err := r.Peek(1024)
+	if err != nil {
+		log.Error("get code error")
+		return unicode.UTF8
+	}
+	return simplifiedchinese.GBK
 }

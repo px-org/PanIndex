@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"github.com/bluele/gcache"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -17,6 +19,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 var GC = gcache.New(10).LRU().Build()
@@ -52,9 +55,9 @@ func IsHiddenFile(name string) bool {
 	return strings.HasPrefix(name, ".")
 }
 
-func GetMimeType(fileInfo os.FileInfo) int {
-	mime := strings.Split(mime.TypeByExtension(filepath.Ext(fileInfo.Name())), "/")[0]
-	ext := filepath.Ext(fileInfo.Name())
+func GetMimeType(fileName string) int {
+	mime := strings.Split(mime.TypeByExtension(filepath.Ext(fileName)), "/")[0]
+	ext := filepath.Ext(fileName)
 	if mime == "image" {
 		return 1
 	} else if mime == "audio" {
@@ -173,7 +176,7 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 						continue
 					}
 				}
-				fileType := GetMimeType(fileInfo)
+				fileType := GetMimeType(fileInfo.Name())
 				// 实例化FileNode
 				file := entity.FileNode{
 					FileId:     fileId,
@@ -277,4 +280,32 @@ func PathJoin(path, fileName string) string {
 	} else {
 		return fmt.Sprintf("%s/%s", path, fileName)
 	}
+}
+func TransformText(f *os.File) ([]byte, string) {
+	content, _ := ioutil.ReadAll(f)
+	contentType := http.DetectContentType(content)
+	if !utf8.Valid(content) {
+		rr := bytes.NewReader(content)
+		r := transform.NewReader(rr, simplifiedchinese.GBK.NewDecoder())
+		b, _ := ioutil.ReadAll(r)
+		return b, contentType
+	}
+	return content, contentType
+}
+func TransformByte(reader io.ReadCloser) ([]byte, string) {
+	content := StreamToByte(reader)
+	contentType := http.DetectContentType(content)
+	if !utf8.Valid(content) {
+		rr := bytes.NewReader(content)
+		r := transform.NewReader(rr, simplifiedchinese.GBK.NewDecoder())
+		b, _ := ioutil.ReadAll(r)
+		return b, contentType
+	}
+	return content, contentType
+}
+
+func StreamToByte(stream io.Reader) []byte {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(stream)
+	return buf.Bytes()
 }

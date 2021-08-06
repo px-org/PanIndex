@@ -31,4 +31,8 @@ $(function () {
         });
         e.clearSelection();
     });
+    var inst = new mdui.Collapse('#collapse');
+    document.getElementById('toggle-1').addEventListener('click', function () {
+        inst.toggle('#item-1');
+    });
 });

@@ -68,56 +68,31 @@ func main() {
 			}
 		}
 		if path == "/api/public/downloadMultiFiles" {
-			//文件夹下载
-			downloadMultiFiles(c)
+			downloadMultiFiles(c) //文件夹下载
 		} else if path == "/api/public/onedrive/exchangeToken" {
-			oneExchangeToken(c)
+			oneExchangeToken(c) //交换token
 		} else if path == "/api/public/onedrive/refreshToken" {
-			oneRefreshToken(c)
-		} else if method == http.MethodGet && path == "/api/updateFolderCache" {
-			message := ""
-			for _, account := range config.GloablConfig.Accounts {
-				if account.Mode == "native" {
-					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
-				} else {
-					go updateCaches(account)
-					log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
-				}
-			}
-			message = "Cache update successful"
-			c.String(http.StatusOK, message)
-		} else if method == http.MethodGet && path == "/api/refreshCookie" {
-			message := ""
-			for _, account := range config.GloablConfig.Accounts {
-				if account.Mode == "native" {
-					log.Infoln("[API请求]cookie刷新刷新 >> 当前为本地模式，无需刷新")
-				} else {
-					go refreshCookie(account)
-					log.Infoln("[API请求]cookie刷新 >> 请求刷新")
-				}
-			}
-			message = "Cookie refresh successful"
-			c.String(http.StatusOK, message)
-		} else if method == http.MethodGet && path == "/api/shareToDown" {
-			shareToDown(c)
+			oneRefreshToken(c) //刷新token
+		} else if method == http.MethodGet && strings.HasPrefix(path, "/api/public/raw") {
+			raw(c) //原始文件预览
 		} else if method == http.MethodPost && path == "/api/admin/save" {
-			adminSave(c)
+			adminSave(c) //后台配置保存
 		} else if path == "/api/admin/deleteAccount" {
-			adminDeleteAccount(c)
+			adminDeleteAccount(c) //后台删除账号
 		} else if path == "/api/admin/updateCache" {
-			updateCache(c)
+			updateCache(c) //后台刷新缓存
 		} else if path == "/api/admin/updateCookie" {
-			updateCookie(c)
+			updateCookie(c) //后台刷新cookie
 		} else if path == "/api/admin/setDefaultAccount" {
-			setDefaultAccount(c)
+			setDefaultAccount(c) //设置默认账号
 		} else if path == "/api/admin/config" {
-			getConfig(c)
+			getConfig(c) //配置信息
 		} else if path == "/api/admin/envToConfig" {
-			envToConfig(c)
+			envToConfig(c) //环境变量写入配置
 		} else if path == "/api/admin/upload" {
-			upload(c)
+			upload(c) //后台上传文件
 		} else if ad {
-			admin(c)
+			admin(c) //后台页面跳转
 		} else {
 			isForbidden := true
 			host := c.Request.Host
@@ -208,7 +183,7 @@ func initTemplates() *template.Template {
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
-	viewTemplates := [7]string{"base", "img", "audio", "video", "code", "office", "ns"}
+	viewTemplates := [9]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md"}
 	for _, vt := range viewTemplates {
 		tmpName := fmt.Sprintf("pan/%s/view-%s.html", "mdui", vt)
 		data, _ = box.FindString(tmpName)
@@ -550,5 +525,32 @@ func oneRefreshToken(c *gin.Context) {
 	redirectUri := c.PostForm("redirect_uri")
 	tokenInfo := Util.OneGetRefreshToken(clientId, redirectUri, clientSecret, refreshToken)
 	c.String(http.StatusOK, tokenInfo)
+}
+func raw(c *gin.Context) {
+	path := c.Request.URL.Path
+	//获取文件路径
+	p := strings.ReplaceAll(path, "/api/public/raw", "")
+	if p != "/" && p[len(p)-1:] == "/" {
+		p = p[0 : len(p)-1]
+	}
+	index := 0
+	if strings.HasPrefix(p, "/d_") {
+		iStr := Util.GetBetweenStr(p, "_", "/")
+		index, _ = strconv.Atoi(iStr)
+		p = strings.ReplaceAll(p, "/d_"+iStr, "")
+	}
+	if len(config.GloablConfig.Accounts) == 0 {
+		//未绑定任何账号，跳转到后台进行配置
+		c.Redirect(http.StatusFound, "/?admin")
+		return
+	}
+	account := config.GloablConfig.Accounts[index]
+	data, contentType := service.GetFileData(account, p)
+	if data == nil {
+		c.String(http.StatusNotFound, "404 page not found")
+	} else {
+		c.Data(http.StatusOK, contentType, data)
+	}
+	c.Abort()
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

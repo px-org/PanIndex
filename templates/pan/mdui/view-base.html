@@ -139,25 +139,30 @@
                         <span class="mdui-chip-title">{{.PathName}}</span>
                     </div>
                 {{end}}
-                <div class="right-icon mdui-float-right">
-                    {{if .LastFile }}
-                        <a id="view_last" href="{{$.DIndex}}{{.LastFile}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上一个'}"><i class="mdui-icon material-icons">chevron_leftt</i></a>
-                    {{end}}
-                    {{if .NextFile }}
-                        <a id="view_next" href="{{$.DIndex}}{{.NextFile}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '下一个'}"><i class="mdui-icon material-icons">chevron_right</i></a>
-                    {{end}}
-                    <a id="view_down_link" href="{{.DownloadUrl}}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '点击下载'}"><i class="mdui-icon material-icons">file_download</i></a>
-                    <button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
-                </div>
+            </div>
+            <div class="right-icon mdui-float-right">
+                {{if .LastFile }}
+                    <a id="view_last" href="{{$.DIndex}}{{.LastFile}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上一个'}"><i class="mdui-icon material-icons">chevron_leftt</i></a>
+                {{end}}
+                {{if .NextFile }}
+                    <a id="view_next" href="{{$.DIndex}}{{.NextFile}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '下一个'}"><i class="mdui-icon material-icons">chevron_right</i></a>
+                {{end}}
+                <a id="view_down_link" href="{{.DownloadUrl}}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '点击下载'}"><i class="mdui-icon material-icons">file_download</i></a>
+                <a id="toggle-1" href="javascript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件信息'}"><i class="mdui-icon material-icons">info</i></a>
+                <button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
             </div>
             <div class="mdui-card" style="width: 100%">
-                <div class="mdui-card-primary mdui-typo">
-                    <div class="mdui-typo-body-1-opacity"><b>名称：</b>{{ (index .List 0).FileName }}</div>
-                    <div class="mdui-typo-body-1-opacity"><b>大小：</b>{{ (index .List 0).SizeFmt }}</div>
-                    <div class="mdui-typo-body-1-opacity"><b>日期：</b>：{{ (index .List 0).LastOpTime }}</div>
-                    <div class="mdui-typo-body-1-opacity"><b>文件ID：</b>{{ (index .List 0).FileId }} <a href="javascript:void(0)" data-content="{{ (index .List 0).FileId }}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
-                    <div class="mdui-typo-body-1-opacity"><b>目录ID：</b>{{ (index .List 0).ParentId }} <a href="javascript:void(0)" data-content="{{ (index .List 0).ParentId }}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
-                    <div class="mdui-typo-body-1-opacity"><b>链接：</b><a id="file_link" href="" data-path="{{$.DIndex}}{{.Path}}" data-mode="{{.Mode}}"></a></div>
+                <div class="mdui-card-primary mdui-typo mdui-collapse" id="collapse">
+                    <div class="mdui-collapse-item" id="item-1">
+                        <div class="mdui-collapse-item-body">
+                            <div class="mdui-typo-body-1-opacity"><b>名称：</b>{{ (index .List 0).FileName }}</div>
+                            <div class="mdui-typo-body-1-opacity"><b>大小：</b>{{ (index .List 0).SizeFmt }}</div>
+                            <div class="mdui-typo-body-1-opacity"><b>日期：</b>：{{ (index .List 0).LastOpTime }}</div>
+                            <div class="mdui-typo-body-1-opacity"><b>文件ID：</b>{{ (index .List 0).FileId }} <a href="javascript:void(0)" data-content="{{ (index .List 0).FileId }}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
+                            <div class="mdui-typo-body-1-opacity"><b>目录ID：</b>{{ (index .List 0).ParentId }} <a href="javascript:void(0)" data-content="{{ (index .List 0).ParentId }}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
+                            <div class="mdui-typo-body-1-opacity"><b>链接：</b><a id="file_link" href="" data-path="{{$.DIndex}}{{.Path}}" data-mode="{{.Mode}}"></a></div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     {{if eq (index .List 0).MediaType 1}}
@@ -166,19 +171,20 @@
                         {{block "content-audio" .}}{{end}}
                     {{else if eq (index .List 0).MediaType 3}}
                         {{block "content-video" .}}{{end}}
-                    {{else if eq (index .List 0).MediaType 4}}
+                    {{else if or (index .List 0).MediaType 4 (index .List 0).MediaType 0}}
                         {{/*文本*/}}
                         {{if or (eq (index .List 0).FileType "doc") (eq (index .List 0).FileType "docx") (eq (index .List 0).FileType "dotx") (eq (index .List 0).FileType "ppt") (eq (index .List 0).FileType "pptx") (eq (index .List 0).FileType "xls") (eq (index .List 0).FileType "xlsx")}}
                             {{block "content-office" .}}{{end}}
-                        {{else}}
+                        {{else if eq (index .List 0).FileType "pdf"}}
+                            {{block "content-pdf" .}}{{end}}
+                        {{else if eq (index .List 0).FileType "md"}}
+                            {{block "content-md" .}}{{end}}
+                        {{else if eq .T "code"}}
                             {{block "content-code" .}}{{end}}
-                        {{end}}
-                    {{else}}
-                        {{if or (eq (index .List 0).FileType "doc") (eq (index .List 0).FileType "docx") (eq (index .List 0).FileType "dotx") (eq (index .List 0).FileType "ppt") (eq (index .List 0).FileType "pptx") (eq (index .List 0).FileType "xls") (eq (index .List 0).FileType "xlsx")}}
-                            {{block "content-office" .}}{{end}}
                         {{else}}
                             {{block "content-ns" .}}{{end}}
                         {{end}}
+                    {{else}}
                     {{end}}
                 </div>
             </div>

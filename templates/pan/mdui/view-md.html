@@ -16,7 +16,18 @@
     <link rel="stylesheet"
           href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/atom-one-light.min.css">
     <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>
-    <pre class="code"><code id="editor" class="nohighlight"></code></pre>
+    <div id="content" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">
+        <div class="mdui-chip">
+            <span class="mdui-chip-icon">M</span>
+            <span class="mdui-chip-title">Markdown</span>
+        </div>
+        <hr />
+        <input id="readme" type="hidden" value="{{.ReadmeContent}}" />
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script>
+            $("#content").append(marked($("#readme").val()));
+        </script>
+    </div>
     <script>
         var path = $("#file_link").attr("data-path");
         var mode = $("#file_link").attr("data-mode");

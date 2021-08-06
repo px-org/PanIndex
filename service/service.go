@@ -16,6 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -87,7 +88,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 								continue
 							}
 						}
-						fileType := Util.GetMimeType(fileInfo)
+						fileType := Util.GetMimeType(fileInfo.Name())
 						// 实例化FileNode
 						file := entity.FileNode{
 							FileId:     fileId,
@@ -136,7 +137,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 					} else {
 						result["NextFile"] = nil
 					}
-					fileType := Util.GetMimeType(fileInfo)
+					fileType := Util.GetMimeType(fileInfo.Name())
 					file := entity.FileNode{
 						FileId:     fullPath,
 						IsFolder:   fileInfo.IsDir(),
@@ -665,48 +666,46 @@ func GetViewTemplate(mode string, fn entity.FileNode, result map[string]interfac
 	} else if fn.MediaType == 3 {
 		//视频
 		t = "video"
-	} else if fn.MediaType == 4 {
+	} else if fn.MediaType == 4 || fn.MediaType == 0 {
 		//文本类
 		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
 			//
 			t = "office"
-		} else {
-			//获取代码类型
-			result["CodeType"] = "text"
+		} else if fn.FileType == "pdf" {
+			t = "pdf"
+		} else if fn.FileType == "md" {
+			t = "md"
+		} else if strings.Contains("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml", fn.FileType) {
+			result["CodeType"] = "Plaintext"
+			t = "code"
 			if fn.FileType == "go" {
-				result["CodeType"] = "golang"
+				result["CodeType"] = "Go"
 			} else if fn.FileType == "html" {
-				result["CodeType"] = "html"
+				result["CodeType"] = "HTML"
 			} else if fn.FileType == "js" {
-				result["CodeType"] = "javascript"
+				result["CodeType"] = "JavaScript"
 			} else if fn.FileType == "java" {
-				result["CodeType"] = "java"
+				result["CodeType"] = "Java"
 			} else if fn.FileType == "json" {
-				result["CodeType"] = "json"
+				result["CodeType"] = "JSON"
 			} else if fn.FileType == "css" {
-				result["CodeType"] = "css"
+				result["CodeType"] = "CSS"
 			} else if fn.FileType == "lua" {
-				result["CodeType"] = "lua"
+				result["CodeType"] = "Lua"
 			} else if fn.FileType == "sh" {
-				result["CodeType"] = "sh"
+				result["CodeType"] = "Bash"
 			} else if fn.FileType == "sql" {
-				result["CodeType"] = "sql"
+				result["CodeType"] = "SQL"
 			} else if fn.FileType == "py" {
-				result["CodeType"] = "python"
+				result["CodeType"] = "Python"
+			} else if fn.FileType == "cpp" {
+				result["CodeType"] = "C++"
+			} else if fn.FileType == "xml" {
+				result["CodeType"] = "XML"
 			}
-			//获取文本内容
-			if mode == "native" {
-				result["Content"] = Util.ReadStringByFile(fn.FileId)
-			} else {
-				result["Content"] = Util.ReadStringByUrl(result["DownloadUrl"].(string), fn.FileId)
-			}
-		}
-	} else {
-		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
-			//
-			t = "office"
 		}
 	}
+	result["T"] = t
 	return t
 }
 func AccountsToNodes(accounts []entity.Account) map[string]interface{} {
@@ -736,4 +735,68 @@ func AccountsToNodes(accounts []entity.Account) map[string]interface{} {
 	result["ParentPath"] = PetParentPath("/")
 	result["SurportFolderDown"] = false
 	return result
+}
+
+var dls = sync.Map{}
+
+func GetFileData(account entity.Account, path string) ([]byte, string) {
+	f := entity.FileNode{}
+	result := model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=? limit 1", path, account.Id).Find(&f)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, "image/png"
+	}
+	if account.Mode == "native" {
+		rootPath := account.RootId
+		fullPath := filepath.Join(rootPath, path)
+		f, err := os.Open(fullPath)
+		if err != nil {
+			log.Errorln(err)
+			return nil, "image/png"
+		}
+		fileInfo, err := os.Stat(fullPath)
+		mt := Util.GetMimeType(fileInfo.Name())
+		if mt == 4 {
+			return Util.TransformText(f)
+		} else {
+			b, _ := ioutil.ReadAll(f)
+			contentType := http.DetectContentType(b)
+			return b, contentType
+		}
+
+	} else {
+		var dl = DownLock{}
+		if _, ok := dls.Load(f.FileId); ok {
+			ss, _ := dls.Load(f.FileId)
+			dl = ss.(DownLock)
+		} else {
+			dl.FileId = f.FileId
+			dl.L = new(sync.Mutex)
+			dls.LoadOrStore(f.FileId, dl)
+		}
+		dUrl := dl.GetDownlaodUrl(account, f)
+		resp, err := httpClient().Get(dUrl)
+		if err != nil {
+			log.Errorln(err)
+		}
+		defer resp.Body.Close()
+		mt := Util.GetMimeType(f.FileName)
+		if mt == 4 {
+			return Util.TransformByte(resp.Body)
+		} else {
+			data, _ := ioutil.ReadAll(resp.Body)
+			contentType := http.DetectContentType(data)
+			return data, contentType
+		}
+	}
+}
+
+func httpClient() *http.Client {
+	client := http.Client{
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			r.URL.Opaque = r.URL.Path
+			return nil
+		},
+	}
+
+	return &client
 }
