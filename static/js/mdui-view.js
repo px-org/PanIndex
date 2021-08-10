@@ -4,11 +4,11 @@ $(function () {
         if($('body').hasClass('mdui-theme-layout-dark')){
             $('body').removeClass('mdui-theme-layout-dark');
             $('#theme-toggle i').text('brightness_4');
-            $.cookie("Theme", "mdui-light");
+            $.cookie("Theme", "mdui-light", {path:"/"});
         }else{
             $('body').addClass('mdui-theme-layout-dark');
             $('#theme-toggle i').text('brightness_5');
-            $.cookie("Theme", "mdui-dark");
+            $.cookie("Theme", "mdui-dark", {path:"/"});
         }
     });
     var path = $("#file_link").attr("data-path");
