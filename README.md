@@ -1,5 +1,5 @@
 # PanIndex
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex)
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/linux-jin/PanIndex)
 
 ## 简单的网盘目录列表
 - [x] 跨平台、易部署
