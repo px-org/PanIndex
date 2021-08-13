@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,7 +28,7 @@ import (
 
 var UrlCache = gcache.New(100).LRU().Build()
 
-func GetFilesByPath(account entity.Account, path, pwd string) map[string]interface{} {
+func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) map[string]interface{} {
 	if path == "" {
 		path = "/"
 	}
@@ -61,7 +62,28 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 					if d1 > d2 {
 						return true
 					} else if d1 == d2 {
-						return fileInfos[i].ModTime().After(fileInfos[j].ModTime())
+						if sColumn == "file_name" {
+							c := strings.Compare(fileInfos[i].Name(), fileInfos[j].Name())
+							if sOrder == "desc" {
+								return c >= 0
+							} else {
+								return c <= 0
+							}
+						} else if sColumn == "file_size" {
+							if sOrder == "desc" {
+								return fileInfos[i].Size() >= fileInfos[j].Size()
+							} else {
+								return fileInfos[i].Size() <= fileInfos[j].Size()
+							}
+						} else if sColumn == "last_op_time" {
+							if sOrder == "desc" {
+								return fileInfos[i].ModTime().After(fileInfos[j].ModTime())
+							} else {
+								return fileInfos[i].ModTime().Before(fileInfos[j].ModTime())
+							}
+						} else {
+							return fileInfos[i].ModTime().After(fileInfos[j].ModTime())
+						}
 					} else {
 						return false
 					}
@@ -110,12 +132,18 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 				result["isFile"] = false
 				result["HasPwd"] = false
 				PwdDirIds := config.GloablConfig.PwdDirId
-				for _, pdi := range strings.Split(PwdDirIds, ",") {
+				if hasPath, pwdOk := Util.CheckPwd(PwdDirIds, fullPath, pwd); hasPath && !pwdOk {
+					result["HasPwd"] = true
+					if strings.TrimSpace(pwd) != "" {
+						result["PwdErrorMsg"] = "密码错误"
+					}
+				}
+				/*for _, pdi := range strings.Split(PwdDirIds, ",") {
 					if strings.Split(pdi, ":")[0] == fullPath && pwd != strings.Split(pdi, ":")[1] {
 						result["HasPwd"] = true
 						result["FileId"] = fullPath
 					}
-				}
+				}*/
 			} else {
 				fileInfo, err := os.Stat(fullPath)
 				if err != nil {
@@ -124,7 +152,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 					dir := filepath.Dir(fullPath)
 					p := filepath.Dir(path)
 					fileInfos, _ := ioutil.ReadDir(dir)
-					fileInfos = Util.FilterFiles(fileInfos, dir)
+					fileInfos = Util.FilterFiles(fileInfos, dir, sColumn, sOrder)
 					last := Util.GetNextOrPrevious(fileInfos, fileInfo, -1)
 					next := Util.GetNextOrPrevious(fileInfos, fileInfo, 1)
 					if last != nil {
@@ -157,19 +185,35 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 			}
 		}
 	} else {
-		model.SqliteDb.Raw("select * from file_node where parent_path=? and `delete`=0 and hide = 0 and account_id=?", path, account.Id).Find(&list)
+		order_sql := ""
+		nl_column := "cache_time"
+		if sColumn != "default" {
+			order_sql = fmt.Sprintf(" ORDER BY is_folder desc, %s %s", sColumn, sOrder)
+			nl_column = sColumn
+		}
+		model.SqliteDb.Raw("select * from file_node where parent_path=? and `delete`=0 and hide = 0 and account_id=? "+order_sql, path, account.Id).Find(&list)
 		result["isFile"] = false
 		if len(list) == 0 {
 			result["isFile"] = true
 			model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and hide = 0 and account_id=? limit 1", path, account.Id).Find(&list)
 			if len(list) == 1 {
+				var param interface{}
+				if sColumn == "file_name" {
+					param = list[0].FileName
+				} else if sColumn == "file_size" {
+					param = list[0].FileSize
+				} else if sColumn == "last_op_time" {
+					param = list[0].LastOpTime
+				} else {
+					param = list[0].CacheTime
+				}
 				next := entity.FileNode{}
-				model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0 and hide = 0  and cache_time >? order by cache_time asc limit 1",
-					list[0].ParentPath, account.Id, list[0].CacheTime).First(&next)
+				model.SqliteDb.Raw(fmt.Sprintf("select * from file_node where parent_path=? and account_id=? and is_folder=0 and hide = 0  and %s >? order by %s asc limit 1", nl_column, nl_column),
+					list[0].ParentPath, account.Id, param).First(&next)
 				result["NextFile"] = next.Path
 				last := entity.FileNode{}
-				model.SqliteDb.Raw("select * from file_node where parent_path=? and account_id=? and is_folder=0  and hide = 0 and cache_time < ? order by cache_time desc limit 1",
-					list[0].ParentPath, account.Id, list[0].CacheTime).First(&last)
+				model.SqliteDb.Raw(fmt.Sprintf("select * from file_node where parent_path=? and account_id=? and is_folder=0  and hide = 0 and %s < ? order by %s desc limit 1", nl_column, nl_column),
+					list[0].ParentPath, account.Id, param).First(&last)
 				result["LastFile"] = last.Path
 			}
 
@@ -188,12 +232,10 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 		fileNode := entity.FileNode{}
 		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1 and `delete`=0 and account_id = ?", path, account.Id).First(&fileNode)
 		PwdDirIds := config.GloablConfig.PwdDirId
-		for _, pdi := range strings.Split(PwdDirIds, ",") {
-			if pdi != "" {
-				if strings.Split(pdi, ":")[0] == fileNode.FileId && pwd != strings.Split(pdi, ":")[1] {
-					result["HasPwd"] = true
-					result["FileId"] = fileNode.FileId
-				}
+		if hasPath, pwdOk := Util.CheckPwd(PwdDirIds, fileNode.FileId, pwd); hasPath && !pwdOk {
+			result["HasPwd"] = true
+			if strings.TrimSpace(pwd) != "" {
+				result["PwdErrorMsg"] = "密码错误"
 			}
 		}
 	}
@@ -213,7 +255,7 @@ func GetFilesByPath(account entity.Account, path, pwd string) map[string]interfa
 	return result
 }
 
-func SearchFilesByKey(key string) map[string]interface{} {
+func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 	result := make(map[string]interface{})
 	list := []entity.SearchNode{}
 	accouts := []entity.Account{}
@@ -232,34 +274,14 @@ func SearchFilesByKey(key string) map[string]interface{} {
 			a.file_name LIKE ?
 			AND a.` + "`delete`" + `= 0 
 			AND a.hide = 0
+			AND a.has_pwd = 0
 			AND b.mode != 'native'
-		ORDER BY a.is_folder desc
 			`
 	model.SqliteDb.Raw(sql, "%"+key+"%").Find(&list)
 	model.SqliteDb.Raw("select * from account where mode = ?", "native").Find(&accouts)
 	if len(accouts) > 0 {
 		for _, account := range accouts {
 			nfs := Util.FileSearch(account.RootId, "", key)
-			//默认按照目录，时间倒序排列
-			sort.Slice(nfs, func(i, j int) bool {
-				d1 := 0
-				if nfs[i].IsFolder {
-					d1 = 1
-				}
-				d2 := 0
-				if nfs[j].IsFolder {
-					d2 = 1
-				}
-				if d1 > d2 {
-					return true
-				} else if d1 == d2 {
-					li, _ := time.Parse("2006-01-02 15:04:05", nfs[i].LastOpTime)
-					lj, _ := time.Parse("2006-01-02 15:04:05", nfs[j].LastOpTime)
-					return li.After(lj)
-				} else {
-					return false
-				}
-			})
 			dx := "/d_0"
 			sql = `
 				SELECT
@@ -276,15 +298,51 @@ func SearchFilesByKey(key string) map[string]interface{} {
 			}
 		}
 	}
+	//排序
+	sort.Slice(list, func(i, j int) bool {
+		li, _ := time.Parse("2006-01-02 15:04:05", list[i].LastOpTime)
+		lj, _ := time.Parse("2006-01-02 15:04:05", list[j].LastOpTime)
+		d1 := 0
+		if list[i].IsFolder {
+			d1 = 1
+		}
+		d2 := 0
+		if list[j].IsFolder {
+			d2 = 1
+		}
+		if d1 > d2 {
+			return true
+		} else if d1 == d2 {
+			if sColumn == "file_name" {
+				c := strings.Compare(list[i].FileName, list[j].FileName)
+				if sOrder == "desc" {
+					return c >= 0
+				} else {
+					return c <= 0
+				}
+			} else if sColumn == "file_size" {
+				if sOrder == "desc" {
+					return list[i].FileSize >= list[j].FileSize
+				} else {
+					return list[i].FileSize <= list[j].FileSize
+				}
+			} else if sColumn == "last_op_time" {
+				if sOrder == "desc" {
+					return li.After(lj)
+				} else {
+					return li.Before(lj)
+				}
+			} else {
+				return li.After(lj)
+			}
+		} else {
+			return false
+		}
+	})
 	result["List"] = list
 	result["Path"] = "/"
 	result["HasParent"] = false
 	result["ParentPath"] = PetParentPath("/")
-	/*if account.Mode == "cloud189" || account.Mode == "native" {
-		result["SurportFolderDown"] = true
-	} else {
-		result["SurportFolderDown"] = false
-	}*/
 	result["SurportFolderDown"] = false
 	return result
 }
@@ -375,55 +433,6 @@ func GetPageStart(pageNo, pageSize int) int {
 		pageSize = 0
 	}
 	return (pageNo - 1) * pageSize
-}
-
-//获取总页数
-func GetTotalPage(totalCount, pageSize int) int {
-	if pageSize == 0 {
-		return 0
-	}
-	if totalCount%pageSize == 0 {
-		return totalCount / pageSize
-	} else {
-		return totalCount/pageSize + 1
-	}
-}
-
-//刷新目录缓存
-func UpdateFolderCache(account entity.Account) {
-	Util.GC = gcache.New(10).LRU().Build()
-	model.SqliteDb.Delete(entity.FileNode{})
-	if account.Mode == "cloud189" {
-		Util.Cloud189GetFiles(account.Id, account.RootId, account.RootId, "", true)
-	} else if account.Mode == "teambition" {
-		Util.TeambitionGetFiles(account.Id, account.RootId, account.RootId, "/", true)
-	} else if account.Mode == "native" {
-	}
-}
-
-//刷新登录cookie
-func RefreshCookie(account entity.Account) {
-	if account.Mode == "cloud189" {
-		Util.Cloud189Login(account.Id, account.User, account.Password)
-	} else if account.Mode == "teambition" {
-		Util.TeambitionLogin(account.Id, account.User, account.Password)
-	} else if account.Mode == "native" {
-	}
-}
-func IsDirectory(filename string) bool {
-	info, err := os.Stat(filename)
-	if err != nil {
-		return false
-	}
-	return info.IsDir()
-}
-
-func IsFile(filename string) bool {
-	info, err := os.Stat(filename)
-	if err != nil {
-		return false
-	}
-	return !info.IsDir()
 }
 
 func GetConfig() entity.Config {
@@ -636,19 +645,19 @@ func Async(accountId, path string) string {
 			}
 			if account.Mode == "teambition" && !Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 个人文件
-				Util.TeambitionGetFiles(account.Id, fileId, fileId, path, true)
+				Util.TeambitionGetFiles(account.Id, fileId, fileId, path, 0, 0, true)
 			} else if account.Mode == "teambition" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition 项目文件
-				Util.TeambitionGetProjectFiles("www", account.Id, fileId, path, true)
+				Util.TeambitionGetProjectFiles("www", account.Id, fileId, path, 0, 0, true)
 			} else if account.Mode == "teambition-us" && Util.TeambitionSessions[accountId].IsPorject {
 				//teambition-us 项目文件
-				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path, true)
+				Util.TeambitionGetProjectFiles("us", account.Id, fileId, path, 0, 0, true)
 			} else if account.Mode == "cloud189" {
-				Util.Cloud189GetFiles(account.Id, fileId, fileId, path, true)
+				Util.Cloud189GetFiles(account.Id, fileId, fileId, path, 0, 0, true)
 			} else if account.Mode == "aliyundrive" {
-				Util.AliGetFiles(account.Id, fileId, fileId, path, true)
+				Util.AliGetFiles(account.Id, fileId, fileId, path, 0, 0, true)
 			} else if account.Mode == "onedrive" {
-				Util.OndriveGetFiles("", account.Id, fileId, path, true)
+				Util.OndriveGetFiles("", account.Id, fileId, path, 0, 0, true)
 			}
 			jobs.RefreshFileNodes(account.Id, fileId)
 			return "刷新成功"
@@ -710,7 +719,7 @@ func GetViewTemplate(mode string, fn entity.FileNode, result map[string]interfac
 }
 func AccountsToNodes(accounts []entity.Account) map[string]interface{} {
 	result := make(map[string]interface{})
-	result["HasReadme"] = false
+	result["HasReadme"] = true
 	fns := []entity.FileNode{}
 	for i, account := range accounts {
 		fn := entity.FileNode{
@@ -799,4 +808,75 @@ func httpClient() *http.Client {
 	}
 
 	return &client
+}
+
+func GetFiles(accountId, parentPath, sColumn, sOrder, mediaType string) []entity.FileNode {
+	account := GetAccount(accountId)
+	mt, _ := strconv.Atoi(mediaType)
+	list := []entity.FileNode{}
+	if account.Mode == "native" {
+		//本地模式
+		list = Util.FileQuery(account.RootId, parentPath, mt)
+	} else {
+		//其他网盘模式
+		sql := `
+		SELECT
+			a.*,('/d_'||(select count(*) from account c where c.rowid < b.rowid )) as dx,b.id as account_id
+		FROM
+			file_node a
+			LEFT JOIN account b ON b.id = a.account_id
+		WHERE
+			a.parent_path = ?
+			AND a.` + "`delete`" + `= 0 
+			AND a.hide = 0
+			AND a.is_folder = 0
+			AND a.account_id = ?
+			`
+		if mt != -1 {
+			sql += " AND a.media_type = ?"
+		}
+		model.SqliteDb.Raw(sql, parentPath, accountId, mt).Find(&list)
+	}
+	//字段排序
+	sort.Slice(list, func(i, j int) bool {
+		li, _ := time.Parse("2006-01-02 15:04:05", list[i].LastOpTime)
+		lj, _ := time.Parse("2006-01-02 15:04:05", list[j].LastOpTime)
+		d1 := 0
+		if list[i].IsFolder {
+			d1 = 1
+		}
+		d2 := 0
+		if list[j].IsFolder {
+			d2 = 1
+		}
+		if d1 > d2 {
+			return true
+		} else if d1 == d2 {
+			if sColumn == "file_name" {
+				c := strings.Compare(list[i].FileName, list[j].FileName)
+				if sOrder == "desc" {
+					return c >= 0
+				} else {
+					return c <= 0
+				}
+			} else if sColumn == "file_size" {
+				if sOrder == "desc" {
+					return list[i].FileSize >= list[j].FileSize
+				} else {
+					return list[i].FileSize <= list[j].FileSize
+				}
+			} else if sColumn == "last_op_time" {
+				if sOrder == "desc" {
+					return li.After(lj)
+				} else {
+					return li.Before(lj)
+				}
+			} else {
+				return li.After(lj)
+			}
+		} else {
+			return false
+		}
+	})
+	return list
 }

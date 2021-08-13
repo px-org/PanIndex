@@ -69,6 +69,8 @@ func main() {
 		}
 		if path == "/api/public/downloadMultiFiles" {
 			downloadMultiFiles(c) //文件夹下载
+		} else if path == "/api/public/files" {
+			files(c) //查询目录下文件列表
 		} else if path == "/api/public/onedrive/exchangeToken" {
 			oneExchangeToken(c) //交换token
 		} else if path == "/api/public/onedrive/refreshToken" {
@@ -211,6 +213,8 @@ var dls = sync.Map{}
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
+	sColumn := "default"
+	sOrder := "asc"
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
 	if err == nil {
 		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
@@ -219,7 +223,22 @@ func index(c *gin.Context) {
 		}
 		pwd = decodePwd
 	}
+	sc, err := c.Request.Cookie("SColumn")
+	if err == nil {
+		sColumn, err = url.QueryUnescape(sc.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
+	so, err := c.Request.Cookie("SOrder")
+	if err == nil {
+		sOrder, err = url.QueryUnescape(so.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
 	pathName := c.Request.URL.Path
+	pwd = Util.GetPwdFromCookie(pwd, pathName)
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
 		pathName = pathName[0 : len(pathName)-1]
 	}
@@ -243,7 +262,7 @@ func index(c *gin.Context) {
 	if pathName == "/" && config.GloablConfig.AccountChoose == "display" {
 		result = service.AccountsToNodes(config.GloablConfig.Accounts)
 	} else {
-		result = service.GetFilesByPath(account, pathName, pwd)
+		result = service.GetFilesByPath(account, pathName, pwd, sColumn, sOrder)
 	}
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = account.Mode
@@ -315,6 +334,8 @@ func index(c *gin.Context) {
 }
 
 func search(c *gin.Context, key string) {
+	sColumn := "default"
+	sOrder := "asc"
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pathName := c.Request.URL.Path
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
@@ -335,8 +356,22 @@ func search(c *gin.Context, key string) {
 		c.Redirect(http.StatusFound, "/?admin")
 		return
 	}
+	sc, err := c.Request.Cookie("SColumn")
+	if err == nil {
+		sColumn, err = url.QueryUnescape(sc.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
+	so, err := c.Request.Cookie("SOrder")
+	if err == nil {
+		sOrder, err = url.QueryUnescape(so.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
 	account := config.GloablConfig.Accounts[index]
-	result := service.SearchFilesByKey(key)
+	result := service.SearchFilesByKey(key, sColumn, sOrder)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
@@ -381,30 +416,6 @@ func downloadMultiFiles(c *gin.Context) {
 		downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
 		c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 	}
-}
-
-func updateCaches(account entity.Account) {
-	service.UpdateFolderCache(account)
-	log.Infoln("[API请求]目录缓存刷新 >> 刷新成功")
-}
-
-func refreshCookie(account entity.Account) {
-	service.RefreshCookie(account)
-	log.Infoln("[API请求]cookie刷新 >> 刷新成功")
-}
-
-func shareToDown(c *gin.Context) {
-	c.Header("Access-Control-Allow-Origin", "*")
-	c.Header("Access-Control-Allow-Methods", "GET")
-	c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
-	c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
-	c.Header("Access-Control-Allow-Credentials", "true")
-	url := c.Query("url")
-	passCode := c.Query("passCode")
-	fileId := c.Query("fileId")
-	subFileId := c.Query("subFileId")
-	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
-	c.String(http.StatusOK, downUrl)
 }
 
 func admin(c *gin.Context) {
@@ -547,10 +558,26 @@ func raw(c *gin.Context) {
 	account := config.GloablConfig.Accounts[index]
 	data, contentType := service.GetFileData(account, p)
 	if data == nil {
-		c.String(http.StatusNotFound, "404 page not found")
+		c.String(http.StatusOK, "")
 	} else {
 		c.Data(http.StatusOK, contentType, data)
 	}
 	c.Abort()
+}
+func files(c *gin.Context) {
+	parentPath := c.PostForm("parentPath")
+	mediaType := c.PostForm("mediaType")
+	sColumn := c.PostForm("sColumn")
+	sOrder := c.PostForm("sOrder")
+	accountId := c.PostForm("accountId")
+	if sColumn == "" {
+		sColumn = "default"
+	}
+	files := service.GetFiles(accountId, parentPath, sColumn, sOrder, mediaType)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+		"status":  0,
+		"data":    files,
+	})
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

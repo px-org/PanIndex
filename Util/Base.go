@@ -67,7 +67,7 @@ func GetNextOrPrevious(slice []fs.FileInfo, fs fs.FileInfo, flag int) fs.FileInf
 	return slice[index]
 }
 
-func FilterFiles(slice []fs.FileInfo, fullPath string) []fs.FileInfo {
+func FilterFiles(slice []fs.FileInfo, fullPath, sColumn, sOrder string) []fs.FileInfo {
 	sort.Slice(slice, func(i, j int) bool {
 		d1 := 0
 		if slice[i].IsDir() {
@@ -80,7 +80,28 @@ func FilterFiles(slice []fs.FileInfo, fullPath string) []fs.FileInfo {
 		if d1 > d2 {
 			return true
 		} else if d1 == d2 {
-			return slice[i].ModTime().After(slice[j].ModTime())
+			if sColumn == "file_name" {
+				c := strings.Compare(slice[i].Name(), slice[j].Name())
+				if sOrder == "desc" {
+					return c >= 0
+				} else {
+					return c <= 0
+				}
+			} else if sColumn == "file_size" {
+				if sOrder == "desc" {
+					return slice[i].Size() >= slice[j].Size()
+				} else {
+					return slice[i].Size() <= slice[j].Size()
+				}
+			} else if sColumn == "last_op_time" {
+				if sOrder == "desc" {
+					return slice[i].ModTime().After(slice[j].ModTime())
+				} else {
+					return slice[i].ModTime().Before(slice[j].ModTime())
+				}
+			} else {
+				return slice[i].ModTime().After(slice[j].ModTime())
+			}
 		} else {
 			return false
 		}
@@ -110,4 +131,30 @@ func DetermineEncoding(r *bufio.Reader) encoding.Encoding {
 		return unicode.UTF8
 	}
 	return simplifiedchinese.GBK
+}
+
+func CheckPwd(PwdDirIds, path, pwd string) (bool, bool) {
+	hasPath := false
+	pwdOk := false
+	s := strings.Split(PwdDirIds, ",")
+	for _, v := range s {
+		if strings.Split(v, ":")[0] == path {
+			hasPath = true
+		}
+		if v == path+":"+pwd {
+			pwdOk = true
+		}
+	}
+	return hasPath, pwdOk
+}
+func GetPwdFromCookie(pwd, pathName string) string {
+	s := strings.Split(pwd, ",")
+	if len(s) > 0 {
+		for _, v := range s {
+			if strings.Split(v, ":")[0] == pathName {
+				return strings.Split(v, ":")[1]
+			}
+		}
+	}
+	return ""
 }

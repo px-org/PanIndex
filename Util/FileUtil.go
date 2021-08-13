@@ -176,6 +176,20 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 						continue
 					}
 				}
+				if config.GloablConfig.PwdDirId != "" {
+					listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+					hide := false
+					for _, v := range listSTring {
+						f1 := strings.Split(v, ":")[0]
+						if f1 == fileId {
+							hide = true
+							break
+						}
+					}
+					if hide {
+						continue
+					}
+				}
 				fileType := GetMimeType(fileInfo.Name())
 				// 实例化FileNode
 				file := entity.FileNode{
@@ -204,6 +218,63 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 					continue
 				}
 				list = append(list, file)
+
+			}
+		}
+	}
+	return list
+}
+func FileQuery(rootPath, path string, mt int) []entity.FileNode {
+	if path == "" {
+		path = "/"
+	}
+	list := []entity.FileNode{}
+	//列出文件夹相对路径
+	fullPath := filepath.Join(rootPath, path)
+	if FileExist(fullPath) {
+		//是目录
+		// 读取该文件夹下所有文件
+		fileInfos, err := ioutil.ReadDir(fullPath)
+		if err != nil {
+			panic(err.Error())
+		} else {
+			for _, fileInfo := range fileInfos {
+				fileId := filepath.Join(fullPath, fileInfo.Name())
+				// 当前文件是隐藏文件(以.开头)则不显示
+				if IsHiddenFile(fileInfo.Name()) {
+					continue
+				}
+				//指定隐藏的文件或目录过滤
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fileId)
+					if i < len(listSTring) && listSTring[i] == fileId {
+						continue
+					}
+				}
+				fileType := GetMimeType(fileInfo.Name())
+				// 实例化FileNode
+				file := entity.FileNode{
+					FileId:     fileId,
+					IsFolder:   fileInfo.IsDir(),
+					FileName:   fileInfo.Name(),
+					FileSize:   int64(fileInfo.Size()),
+					SizeFmt:    FormatFileSize(int64(fileInfo.Size())),
+					FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
+					Path:       PathJoin(path, fileInfo.Name()),
+					MediaType:  fileType,
+					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
+				}
+				if !fileInfo.IsDir() {
+					if mt != -1 && file.MediaType == mt {
+						list = append(list, file)
+					} else if mt == -1 {
+						list = append(list, file)
+					} else {
+						continue
+					}
+				}
 
 			}
 		}

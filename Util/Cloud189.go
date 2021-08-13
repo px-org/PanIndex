@@ -11,7 +11,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
@@ -33,7 +32,7 @@ import (
 var CLoud189Sessions = map[string]nic.Session{}
 
 //获取文件列表
-func Cloud189GetFiles(accountId, rootId, fileId, prefix string, syncChild bool) {
+func Cloud189GetFiles(accountId, rootId, fileId, prefix string, hide, hasPwd int, syncChild bool) {
 	CLoud189Session := CLoud189Sessions[accountId]
 	defer func() {
 		if p := recover(); p != nil {
@@ -92,9 +91,35 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string, syncChild bool) 
 					item.Delete = 1
 					item.ParentPath = p
 					item.SizeFmt = FormatFileSize(item.FileSize)
+					item.Hide = 0
+					item.HasPwd = 0
+					if hide == 1 {
+						item.Hide = hide
+					} else {
+						if config.GloablConfig.HideFileId != "" {
+							listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+							sort.Strings(listSTring)
+							i := sort.SearchStrings(listSTring, item.FileId)
+							if i < len(listSTring) && listSTring[i] == item.FileId {
+								item.Hide = 1
+							}
+						}
+					}
+					if hasPwd == 1 {
+						item.HasPwd = hasPwd
+					} else {
+						if config.GloablConfig.PwdDirId != "" {
+							listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+							sort.Strings(listSTring)
+							i := sort.SearchStrings(listSTring, item.FileId)
+							if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == item.FileId {
+								item.HasPwd = 1
+							}
+						}
+					}
 					if item.IsFolder == true {
 						if syncChild {
-							Cloud189GetFiles(accountId, rootId, item.FileId, prefix, syncChild)
+							Cloud189GetFiles(accountId, rootId, item.FileId, prefix, item.Hide, item.HasPwd, syncChild)
 						}
 					} else {
 						//如果是文件，解析下载直链
@@ -106,14 +131,6 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string, syncChild bool) 
 							AllowRedirect: false,
 						})
 						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
-					}
-					if config.GloablConfig.HideFileId != "" {
-						listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
-						sort.Strings(listSTring)
-						i := sort.SearchStrings(listSTring, item.FileId)
-						if i < len(listSTring) && listSTring[i] == item.FileId {
-							item.Hide = 1
-						}
 					}
 					item.CacheTime = time.Now().UnixNano()
 					model.SqliteDb.Create(item)
@@ -302,80 +319,6 @@ func Cloud189IsLogin(accountId string) bool {
 		}
 	}
 	return false
-}
-
-//分享链接跳转下载
-func Cloud189shareToDown(url, passCode, fileId, subFileId string) string {
-	CLoud189Session := nic.Session{}
-	for _, v := range CLoud189Sessions {
-		CLoud189Session = v
-		break
-	}
-	subIndex := strings.LastIndex(url, "/") + 1
-	shortCode := url[subIndex:]
-	defer func() {
-		if p := recover(); p != nil {
-			log.Errorln(p)
-		}
-	}()
-	if fileId != "" && subFileId != "" {
-		if passCode == "" {
-			passCode = "undefined"
-		}
-		floderFileDownUrlRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?"+
-			"shortCode=%s&fileId=%s&accessCode=%s&subFileId=%s", shortCode, fileId, passCode, subFileId), nil)
-		longDownloadUrl := GetBetweenStr(floderFileDownUrlRep.Text, "\"", "\"")
-		longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
-		floderFileDownUrlRep, _ = CLoud189Session.Get(longDownloadUrl, nic.H{
-			AllowRedirect: false,
-		})
-		redirectUrl := floderFileDownUrlRep.Header.Get("Location")
-		floderFileDownUrlRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
-			AllowRedirect: false,
-		})
-		return floderFileDownUrlRep.Header.Get("Location")
-	}
-	resp, err := CLoud189Session.Get(url, nil)
-	if err != nil {
-		panic(err.Error())
-	}
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err == nil {
-		shareId, exists := doc.Find(".shareId").Attr("value")
-		if !exists || shareId == "" {
-			//文件夹
-			verifyCode := GetBetweenStr(resp.Text, "_verifyCode = '", "'")
-			url := fmt.Sprintf("https://cloud.189.cn/v2/listShareDirByShareIdAndFileId.action?"+
-				"shortCode=%s&accessCode=%s&verifyCode=%s&"+
-				"orderBy=1&order=ASC&pageNum=1&pageSize=60&fileId=%s",
-				shortCode, passCode, verifyCode, fileId)
-			resp, _ = CLoud189Session.Get(url, nil)
-			return resp.Text
-		} else {
-			fileId = GetBetweenStr(resp.Text, "window.fileId = \"", "\"")
-			if fileId == "" {
-				//需要访问码，需要将访问码加入到cookie中再次请求获取fileId
-				resp, _ = CLoud189Session.Get(url, nic.H{
-					Cookies: nic.KV{
-						"shareId_" + shareId: passCode,
-					}})
-				fileId = GetBetweenStr(resp.Text, "window.fileId = \"", "\"")
-			}
-			dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/v2/getFileDownloadUrl.action?"+
-				"shortCode=%s&fileId=%s", shortCode, fileId), nil)
-			longDownloadUrl := GetBetweenStr(dRedirectRep.Text, "\"", "\"")
-			longDownloadUrl = "http:" + strings.ReplaceAll(longDownloadUrl, "\\/", "/")
-			dRedirectRep, _ = CLoud189Session.Get(longDownloadUrl, nic.H{
-				AllowRedirect: false,
-			})
-			redirectUrl := dRedirectRep.Header.Get("Location")
-			dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
-				AllowRedirect: false,
-			})
-			return dRedirectRep.Header.Get("Location")
-		}
-	}
-	return "https://cloud.pan.cn/"
 }
 
 // 加密
