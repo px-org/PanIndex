@@ -1,32 +1,9 @@
-{{define "pan/mdui/view-code.html"}}
+{{define "pan/mdui/view-md.html"}}
     {{template "pan/mdui/view-base.html" .}}
 {{end}}
-{{define "content-code"}}
-    <style>
-        .code {
-            padding: 12px 16px;
-            overflow-x: auto;
-            border: 1px solid rgba(0,0,0,.12);
-            border-radius: 2px;
-            -webkit-overflow-scrolling: touch;
-        }
-    </style>
-    <link rel="stylesheet"
-          href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/atom-one-dark.min.css">
-    <link rel="stylesheet"
-          href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/atom-one-light.min.css">
-    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>
+{{define "content-md"}}
     <div id="content" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">
-        <div class="mdui-chip">
-            <span class="mdui-chip-icon">M</span>
-            <span class="mdui-chip-title">Markdown</span>
-        </div>
-        <hr />
-        <input id="readme" type="hidden" value="{{.ReadmeContent}}" />
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script>
-            $("#content").append(marked($("#readme").val()));
-        </script>
     </div>
     <script>
         var path = $("#file_link").attr("data-path");
@@ -36,19 +13,7 @@
             method: 'GET',
             url: fullUrl,
             success: function (data) {
-                if("{{.CodeType}}" == "text"){
-                    $("#editor").html(data);
-                }else{
-                    try {
-                        var jsonObj = JSON.parse(data);
-                        if (typeof jsonObj == "object") {
-                            data = JSON.stringify(jsonObj, null, 4);
-                        }
-                    } catch (e) {
-                    }
-                    var html = hljs.highlight(data, {language: '{{.CodeType}}'}).value;
-                    $("#editor").html(html);
-                }
+                $("#content").append(marked(data));
             }
         });
     </script>
