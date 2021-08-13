@@ -31,8 +31,20 @@ $(function () {
         });
         e.clearSelection();
     });
-    var inst = new mdui.Collapse('#collapse');
-    document.getElementById('toggle-1').addEventListener('click', function () {
+    var inst = new mdui.Collapse('#info_panel');
+    var si = $.cookie("Show-Info")
+    if(si == "0"){
+        inst.close('#item-1');
+    }else{
+        inst.open('#item-1');
+    }
+    document.getElementById('info-toggle').addEventListener('click', function () {
         inst.toggle('#item-1');
+    });
+    document.getElementById('item-1').addEventListener('open.mdui.collapse', function () {
+        $.cookie("Show-Info", "1", {path:"/"});
+    });
+    document.getElementById('item-1').addEventListener('close.mdui.collapse', function () {
+        $.cookie("Show-Info", "0", {path:"/"});
     });
 });
