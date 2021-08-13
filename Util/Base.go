@@ -137,6 +137,9 @@ func CheckPwd(PwdDirIds, path, pwd string) (bool, bool) {
 	hasPath := false
 	pwdOk := false
 	s := strings.Split(PwdDirIds, ",")
+	if PwdDirIds == "" {
+		return hasPath, pwdOk
+	}
 	for _, v := range s {
 		if strings.Split(v, ":")[0] == path {
 			hasPath = true
