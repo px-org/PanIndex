@@ -55,7 +55,7 @@ func InitDb(host, port, dataPath string, debug bool) {
 	SqliteDb.Raw("select * from config where 1=1").Find(&c)
 	if c.Host == "" {
 		rand.Seed(time.Now().UnixNano())
-		ApiToken := strconv.Itoa(rand.Intn(10000))
+		ApiToken := strconv.Itoa(rand.Intn(10000000))
 		SqliteDb.Create(&entity.Config{"0.0.0.0", 5238, nil, "", "", "", ApiToken, "", "default", "mdui", "PanIndex", entity.Damagou{}, "", "0 0 8 1/1 * ?", "", "", "", ""})
 	}
 	if os.Getenv("PORT") != "" {
