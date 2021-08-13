@@ -13,10 +13,16 @@
         if(mode == "native"){
             url = fullUrl;
         }
+        var n = '{{ (index .List 0).FileName }}';
+        var vname = n.split(".")[0]
         const dp = new DPlayer({
             container: document.getElementById('view_dplayer'),
             video: {
                 url: url
+            },
+            subtitle: {
+                url: vname + '.vtt',
+                fontSize: '24px'
             },
             autoplay: true,
             lang: 'zh-cn'
