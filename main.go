@@ -68,56 +68,33 @@ func main() {
 			}
 		}
 		if path == "/api/public/downloadMultiFiles" {
-			//文件夹下载
-			downloadMultiFiles(c)
+			downloadMultiFiles(c) //文件夹下载
+		} else if path == "/api/public/files" {
+			files(c) //查询目录下文件列表
 		} else if path == "/api/public/onedrive/exchangeToken" {
-			oneExchangeToken(c)
+			oneExchangeToken(c) //交换token
 		} else if path == "/api/public/onedrive/refreshToken" {
-			oneRefreshToken(c)
-		} else if method == http.MethodGet && path == "/api/updateFolderCache" {
-			message := ""
-			for _, account := range config.GloablConfig.Accounts {
-				if account.Mode == "native" {
-					log.Infoln("[API请求]目录缓存刷新 >> 当前为本地模式，无需刷新")
-				} else {
-					go updateCaches(account)
-					log.Infoln("[API请求]目录缓存刷新 >> 请求刷新")
-				}
-			}
-			message = "Cache update successful"
-			c.String(http.StatusOK, message)
-		} else if method == http.MethodGet && path == "/api/refreshCookie" {
-			message := ""
-			for _, account := range config.GloablConfig.Accounts {
-				if account.Mode == "native" {
-					log.Infoln("[API请求]cookie刷新刷新 >> 当前为本地模式，无需刷新")
-				} else {
-					go refreshCookie(account)
-					log.Infoln("[API请求]cookie刷新 >> 请求刷新")
-				}
-			}
-			message = "Cookie refresh successful"
-			c.String(http.StatusOK, message)
-		} else if method == http.MethodGet && path == "/api/shareToDown" {
-			shareToDown(c)
+			oneRefreshToken(c) //刷新token
+		} else if method == http.MethodGet && strings.HasPrefix(path, "/api/public/raw") {
+			raw(c) //原始文件预览
 		} else if method == http.MethodPost && path == "/api/admin/save" {
-			adminSave(c)
+			adminSave(c) //后台配置保存
 		} else if path == "/api/admin/deleteAccount" {
-			adminDeleteAccount(c)
+			adminDeleteAccount(c) //后台删除账号
 		} else if path == "/api/admin/updateCache" {
-			updateCache(c)
+			updateCache(c) //后台刷新缓存
 		} else if path == "/api/admin/updateCookie" {
-			updateCookie(c)
+			updateCookie(c) //后台刷新cookie
 		} else if path == "/api/admin/setDefaultAccount" {
-			setDefaultAccount(c)
+			setDefaultAccount(c) //设置默认账号
 		} else if path == "/api/admin/config" {
-			getConfig(c)
+			getConfig(c) //配置信息
 		} else if path == "/api/admin/envToConfig" {
-			envToConfig(c)
+			envToConfig(c) //环境变量写入配置
 		} else if path == "/api/admin/upload" {
-			upload(c)
+			upload(c) //后台上传文件
 		} else if ad {
-			admin(c)
+			admin(c) //后台页面跳转
 		} else {
 			isForbidden := true
 			host := c.Request.Host
@@ -186,8 +163,16 @@ func initTemplates() *template.Template {
 	box := packr.New("templates", "./templates")
 	data, _ := box.FindString("pan/admin/login.html")
 	tmpl := template.New("pan/admin/login.html")
+	if Util.FileExist("./templates/pan/admin/login.html") {
+		s, _ := ioutil.ReadFile("./templates/pan/admin/login.html")
+		data = string(s)
+	}
 	tmpl.Parse(data)
 	data, _ = box.FindString("pan/admin/index.html")
+	if Util.FileExist("./templates/pan/admin/index.html") {
+		s, _ := ioutil.ReadFile("./templates/pan/admin/index.html")
+		data = string(s)
+	}
 	tmpl.New("pan/admin/index.html").Parse(data)
 	for _, theme := range themes {
 		tmpName := strings.Join([]string{"pan/", "/index.html"}, theme)
@@ -200,7 +185,7 @@ func initTemplates() *template.Template {
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
-	viewTemplates := [7]string{"base", "img", "audio", "video", "code", "office", "ns"}
+	viewTemplates := [9]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md"}
 	for _, vt := range viewTemplates {
 		tmpName := fmt.Sprintf("pan/%s/view-%s.html", "mdui", vt)
 		data, _ = box.FindString(tmpName)
@@ -228,6 +213,8 @@ var dls = sync.Map{}
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
+	sColumn := "default"
+	sOrder := "asc"
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
 	if err == nil {
 		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
@@ -236,7 +223,22 @@ func index(c *gin.Context) {
 		}
 		pwd = decodePwd
 	}
+	sc, err := c.Request.Cookie("SColumn")
+	if err == nil {
+		sColumn, err = url.QueryUnescape(sc.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
+	so, err := c.Request.Cookie("SOrder")
+	if err == nil {
+		sOrder, err = url.QueryUnescape(so.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
 	pathName := c.Request.URL.Path
+	pwd = Util.GetPwdFromCookie(pwd, pathName)
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
 		pathName = pathName[0 : len(pathName)-1]
 	}
@@ -256,10 +258,16 @@ func index(c *gin.Context) {
 		return
 	}
 	account := config.GloablConfig.Accounts[index]
-	result := service.GetFilesByPath(account, pathName, pwd)
+	result := make(map[string]interface{})
+	if pathName == "/" && config.GloablConfig.AccountChoose == "display" {
+		result = service.AccountsToNodes(config.GloablConfig.Accounts)
+	} else {
+		result = service.GetFilesByPath(account, pathName, pwd, sColumn, sOrder)
+	}
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
+	result["Config"] = config.GloablConfig
 	result["Title"] = account.Name
 	result["Accounts"] = config.GloablConfig.Accounts
 	result["DIndex"] = DIndex
@@ -326,6 +334,8 @@ func index(c *gin.Context) {
 }
 
 func search(c *gin.Context, key string) {
+	sColumn := "default"
+	sOrder := "asc"
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pathName := c.Request.URL.Path
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
@@ -346,17 +356,37 @@ func search(c *gin.Context, key string) {
 		c.Redirect(http.StatusFound, "/?admin")
 		return
 	}
+	sc, err := c.Request.Cookie("SColumn")
+	if err == nil {
+		sColumn, err = url.QueryUnescape(sc.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
+	so, err := c.Request.Cookie("SOrder")
+	if err == nil {
+		sOrder, err = url.QueryUnescape(so.Value)
+		if err != nil {
+			log.Warningln(err)
+		}
+	}
 	account := config.GloablConfig.Accounts[index]
-	result := service.SearchFilesByKey(account, key)
+	result := service.SearchFilesByKey(key, sColumn, sOrder)
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = account.Mode
 	result["PrePaths"] = Util.GetPrePath(result["Path"].(string))
 	result["Title"] = account.Name
+	result["Config"] = config.GloablConfig
 	result["Accounts"] = config.GloablConfig.Accounts
 	result["DIndex"] = DIndex
 	result["AccountId"] = account.Id
 	result["Footer"] = config.GloablConfig.Footer
-	result["Theme"] = config.GloablConfig.Theme
+	cookieTheme, error := c.Cookie("Theme")
+	if error != nil {
+		result["Theme"] = config.GloablConfig.Theme
+	} else {
+		result["Theme"] = cookieTheme
+	}
 	result["FaviconUrl"] = config.GloablConfig.FaviconUrl
 	result["SearchKey"] = key
 	c.HTML(http.StatusOK, tmpFile, result)
@@ -386,30 +416,6 @@ func downloadMultiFiles(c *gin.Context) {
 		downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
 		c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 	}
-}
-
-func updateCaches(account entity.Account) {
-	service.UpdateFolderCache(account)
-	log.Infoln("[API请求]目录缓存刷新 >> 刷新成功")
-}
-
-func refreshCookie(account entity.Account) {
-	service.RefreshCookie(account)
-	log.Infoln("[API请求]cookie刷新 >> 刷新成功")
-}
-
-func shareToDown(c *gin.Context) {
-	c.Header("Access-Control-Allow-Origin", "*")
-	c.Header("Access-Control-Allow-Methods", "GET")
-	c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
-	c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
-	c.Header("Access-Control-Allow-Credentials", "true")
-	url := c.Query("url")
-	passCode := c.Query("passCode")
-	fileId := c.Query("fileId")
-	subFileId := c.Query("subFileId")
-	downUrl := Util.Cloud189shareToDown(url, passCode, fileId, subFileId)
-	c.String(http.StatusOK, downUrl)
 }
 
 func admin(c *gin.Context) {
@@ -530,5 +536,48 @@ func oneRefreshToken(c *gin.Context) {
 	redirectUri := c.PostForm("redirect_uri")
 	tokenInfo := Util.OneGetRefreshToken(clientId, redirectUri, clientSecret, refreshToken)
 	c.String(http.StatusOK, tokenInfo)
+}
+func raw(c *gin.Context) {
+	path := c.Request.URL.Path
+	//获取文件路径
+	p := strings.ReplaceAll(path, "/api/public/raw", "")
+	if p != "/" && p[len(p)-1:] == "/" {
+		p = p[0 : len(p)-1]
+	}
+	index := 0
+	if strings.HasPrefix(p, "/d_") {
+		iStr := Util.GetBetweenStr(p, "_", "/")
+		index, _ = strconv.Atoi(iStr)
+		p = strings.ReplaceAll(p, "/d_"+iStr, "")
+	}
+	if len(config.GloablConfig.Accounts) == 0 {
+		//未绑定任何账号，跳转到后台进行配置
+		c.Redirect(http.StatusFound, "/?admin")
+		return
+	}
+	account := config.GloablConfig.Accounts[index]
+	data, contentType := service.GetFileData(account, p)
+	if data == nil {
+		c.String(http.StatusOK, "")
+	} else {
+		c.Data(http.StatusOK, contentType, data)
+	}
+	c.Abort()
+}
+func files(c *gin.Context) {
+	parentPath := c.PostForm("parentPath")
+	mediaType := c.PostForm("mediaType")
+	sColumn := c.PostForm("sColumn")
+	sOrder := c.PostForm("sOrder")
+	accountId := c.PostForm("accountId")
+	if sColumn == "" {
+		sColumn = "default"
+	}
+	files := service.GetFiles(accountId, parentPath, sColumn, sOrder, mediaType)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+		"status":  0,
+		"data":    files,
+	})
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

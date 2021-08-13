@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>{{.Title}} {{ .Path }}</title>
+		<title>
+			{{if eq $.Config.SiteName ""}}
+				{{.Title}}
+			{{else}}
+				{{$.Config.SiteName}}
+			{{end}} {{ .Path }}
+		</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	{{if eq .Mode "aliyundrive"}}
@@ -87,7 +93,17 @@
 				<nav class="grey darken-3">
 					<div class="nav-wrapper">
 						<div class="col s12">
-							<a href="/" class="breadcrumb">{{.Title}}</a>
+							<a href="{{if eq $.Config.AccountChoose "default"}}{{$.DIndex}}{{end}}/" class="breadcrumb">
+								{{if eq $.Config.SiteName ""}}
+									{{.Title}}
+								{{else}}
+									{{$.Config.SiteName}}
+								{{end}}
+							</a>
+							{{if and (eq $.Config.AccountChoose "display") (or (ne $.Path "/") (ne $.DIndex ""))}}
+								<a href="javascript:void(0)" class="breadcrumb"></a>
+								<a href="{{$.DIndex}}/">{{.Title}}</a>
+							{{end}}
 							{{range .PrePaths}}
 								<a href="javascript:void(0)" class="breadcrumb"></a>
 								{{if eq .PathUrl $.Path}}
@@ -135,13 +151,13 @@
 								<tr>
 									{{if .IsFolder}}
 										<td class="file-name">
-											<a class="icon icon-dir" href="{{$.DIndex}}{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a>
+											<a class="icon icon-dir" href="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a>
 										{{if $.SearchKey}}
-											<br><p style="margin-left: 45px">{{$.DIndex}}{{.Path}}</p>
+											<br><p style="margin-left: 45px">{{.Dx}}{{.Path}}</p>
 										{{end}}
 										</td>
 									{{else}}
-										<td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{$.DIndex}}{{.Path}}" href="javascript:void(0);">
+										<td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}" href="javascript:void(0);">
 												{{if eq .MediaType 1}}
 													<i class="fa fa-file-image-o" aria-hidden="true"></i>
 												{{else if eq .MediaType 2}}
@@ -165,9 +181,9 @@
 														<i class="fa fa-file" aria-hidden="true"></i>
 													{{end}}
 												{{end}}
-												&nbsp;&nbsp;{{.FileName}} <i class="fa fa-copy copyBtn" data-path="{{$.DIndex}}{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" title="复制链接" style="font-size: x-small" aria-hidden="true"></i></a>
+												&nbsp;&nbsp;{{.FileName}} <i class="fa fa-copy copyBtn" data-path="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" title="复制链接" style="font-size: x-small" aria-hidden="true"></i></a>
 												{{if $.SearchKey}}
-													<br><p style="margin-left: 45px">{{$.DIndex}}{{.Path}}</p>
+													<br><p style="margin-left: 45px">{{.Dx}}{{.Path}}</p>
 												{{end}}
 										</td>
 									{{end}}
@@ -175,12 +191,12 @@
 									<td class="file-date-modified">{{.LastOpTime}}</td>
 									{{if .IsFolder}}
 										{{if and (ne .FileId "0") (ne .FileId "-12") (ne .FileId "-14") (ne .FileId "-13") (ne .FileId "-15") (ne .FileId "-11") (ne .FileId "-16") ($SurportFolderDown)}}
-											<td class="center-align"><a class="folderDown" data-file-id="{{.FileId}}" data-account="{{$.AccountId}}" href="javascript:void(0);" target="_blank" ><i class="fa fa-download" aria-hidden="true"></i></a></td>
+											<td class="center-align"><a class="folderDown" data-file-id="{{.FileId}}" data-account="{{if $.SearchKey}}{{.AccountId}}{{else}}{{$.AccountId}}{{end}}" href="javascript:void(0);" target="_blank" ><i class="fa fa-download" aria-hidden="true"></i></a></td>
 										{{else}}
 											<td class="file-size">-</td>
 										{{end}}
 									{{else}}
-										<td class="center-align"><a href="{{$.DIndex}}{{.Path}}" target="_blank"><i class="fa fa-download" aria-hidden="true"></i></a></td>
+										<td class="center-align"><a href="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}" target="_blank"><i class="fa fa-download" aria-hidden="true"></i></a></td>
 									{{end}}
 								</tr>
 							{{end}}

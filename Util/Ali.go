@@ -46,7 +46,7 @@ func AliRefreshToken(account entity.Account) string {
 	return tokenResp.RefreshToken
 }
 
-func AliGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
+func AliGetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syncChild bool) {
 	tokenResp := Alis[accountId]
 	auth := tokenResp.TokenType + " " + tokenResp.AccessToken
 	defer func() {
@@ -132,12 +132,29 @@ func AliGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 			fn.IsStarred = item["starred"].(bool)
 			fn.ParentId = item["parent_file_id"].(string)
 			fn.Hide = 0
-			if config.GloablConfig.HideFileId != "" {
-				listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
-				sort.Strings(listSTring)
-				i := sort.SearchStrings(listSTring, fn.FileId)
-				if i < len(listSTring) && listSTring[i] == fn.FileId {
-					fn.Hide = 1
+			fn.HasPwd = 0
+			if hide == 1 {
+				fn.Hide = hide
+			} else {
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && listSTring[i] == fn.FileId {
+						fn.Hide = 1
+					}
+				}
+			}
+			if hasPwd == 1 {
+				fn.HasPwd = hasPwd
+			} else {
+				if config.GloablConfig.PwdDirId != "" {
+					listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == fn.FileId {
+						fn.HasPwd = 1
+					}
 				}
 			}
 			fn.ParentPath = p
@@ -148,7 +165,7 @@ func AliGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 			}
 			if fn.IsFolder == true {
 				if syncChild {
-					AliGetFiles(accountId, rootId, fn.FileId, fn.Path, syncChild)
+					AliGetFiles(accountId, rootId, fn.FileId, fn.Path, fn.Hide, fn.HasPwd, syncChild)
 				}
 			}
 			fn.Id = uuid.NewV4().String()

@@ -57,7 +57,7 @@ func BuildODRequestUrl(path, query string) string {
 	}
 	return "https://graph.microsoft.com/v1.0" + "/me/drive/root" + path + query
 }
-func OndriveGetFiles(url, accountId, fileId, p string, syncChild bool) {
+func OndriveGetFiles(url, accountId, fileId, p string, hide, hasPwd int, syncChild bool) {
 	od := OneDrives[accountId]
 	auth := od.TokenType + " " + od.AccessToken
 	defer func() {
@@ -131,12 +131,29 @@ func OndriveGetFiles(url, accountId, fileId, p string, syncChild bool) {
 		fn.IsStarred = false
 		fn.ParentId = fileId
 		fn.Hide = 0
-		if config.GloablConfig.HideFileId != "" {
-			listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
-			sort.Strings(listSTring)
-			i := sort.SearchStrings(listSTring, fn.FileId)
-			if i < len(listSTring) && listSTring[i] == fn.FileId {
-				fn.Hide = 1
+		fn.HasPwd = 0
+		if hide == 1 {
+			fn.Hide = hide
+		} else {
+			if config.GloablConfig.HideFileId != "" {
+				listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+				sort.Strings(listSTring)
+				i := sort.SearchStrings(listSTring, fn.FileId)
+				if i < len(listSTring) && listSTring[i] == fn.FileId {
+					fn.Hide = 1
+				}
+			}
+		}
+		if hasPwd == 1 {
+			fn.HasPwd = hasPwd
+		} else {
+			if config.GloablConfig.PwdDirId != "" {
+				listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+				sort.Strings(listSTring)
+				i := sort.SearchStrings(listSTring, fn.FileId)
+				if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == fn.FileId {
+					fn.HasPwd = 1
+				}
 			}
 		}
 		fn.ParentPath = p
@@ -147,16 +164,16 @@ func OndriveGetFiles(url, accountId, fileId, p string, syncChild bool) {
 		}
 		if fn.IsFolder == true {
 			if syncChild {
-				OndriveGetFiles("", accountId, fn.FileId, fn.Path, syncChild)
+				OndriveGetFiles("", accountId, fn.FileId, fn.Path, fn.Hide, fn.HasPwd, syncChild)
 			}
 		}
 		fn.Id = uuid.NewV4().String()
 		fn.CacheTime = time.Now().UnixNano()
 		model.SqliteDb.Create(fn)
 	}
-	nextLink := jsoniter.Get(byteFiles, "@odata").Get("nextLink").ToString()
+	nextLink := jsoniter.Get(byteFiles, "@odata.nextLink").ToString()
 	if nextLink != "" {
-		OndriveGetFiles(url, accountId, fileId, p, syncChild)
+		OndriveGetFiles(nextLink, accountId, fileId, p, hide, hasPwd, syncChild)
 	}
 }
 func GetFileType(name string) string {

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"github.com/bluele/gcache"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -17,6 +19,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 var GC = gcache.New(10).LRU().Build()
@@ -52,9 +55,9 @@ func IsHiddenFile(name string) bool {
 	return strings.HasPrefix(name, ".")
 }
 
-func GetMimeType(fileInfo os.FileInfo) int {
-	mime := strings.Split(mime.TypeByExtension(filepath.Ext(fileInfo.Name())), "/")[0]
-	ext := filepath.Ext(fileInfo.Name())
+func GetMimeType(fileName string) int {
+	mime := strings.Split(mime.TypeByExtension(filepath.Ext(fileName)), "/")[0]
+	ext := filepath.Ext(fileName)
 	if mime == "image" {
 		return 1
 	} else if mime == "audio" {
@@ -151,24 +154,6 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 		//是目录
 		// 读取该文件夹下所有文件
 		fileInfos, err := ioutil.ReadDir(fullPath)
-		//默认按照目录，时间倒序排列
-		sort.Slice(fileInfos, func(i, j int) bool {
-			d1 := 0
-			if fileInfos[i].IsDir() {
-				d1 = 1
-			}
-			d2 := 0
-			if fileInfos[j].IsDir() {
-				d2 = 1
-			}
-			if d1 > d2 {
-				return true
-			} else if d1 == d2 {
-				return fileInfos[i].ModTime().After(fileInfos[j].ModTime())
-			} else {
-				return false
-			}
-		})
 		if err != nil {
 			panic(err.Error())
 		} else {
@@ -191,7 +176,21 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 						continue
 					}
 				}
-				fileType := GetMimeType(fileInfo)
+				if config.GloablConfig.PwdDirId != "" {
+					listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+					hide := false
+					for _, v := range listSTring {
+						f1 := strings.Split(v, ":")[0]
+						if f1 == fileId {
+							hide = true
+							break
+						}
+					}
+					if hide {
+						continue
+					}
+				}
+				fileType := GetMimeType(fileInfo.Name())
 				// 实例化FileNode
 				file := entity.FileNode{
 					FileId:     fileId,
@@ -200,7 +199,7 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 					FileSize:   int64(fileInfo.Size()),
 					SizeFmt:    FormatFileSize(int64(fileInfo.Size())),
 					FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
-					Path:       filepath.Join(path, fileInfo.Name()),
+					Path:       PathJoin(path, fileInfo.Name()),
 					MediaType:  fileType,
 					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 				}
@@ -219,6 +218,63 @@ func FileSearch(rootPath, path, key string) []entity.FileNode {
 					continue
 				}
 				list = append(list, file)
+
+			}
+		}
+	}
+	return list
+}
+func FileQuery(rootPath, path string, mt int) []entity.FileNode {
+	if path == "" {
+		path = "/"
+	}
+	list := []entity.FileNode{}
+	//列出文件夹相对路径
+	fullPath := filepath.Join(rootPath, path)
+	if FileExist(fullPath) {
+		//是目录
+		// 读取该文件夹下所有文件
+		fileInfos, err := ioutil.ReadDir(fullPath)
+		if err != nil {
+			panic(err.Error())
+		} else {
+			for _, fileInfo := range fileInfos {
+				fileId := filepath.Join(fullPath, fileInfo.Name())
+				// 当前文件是隐藏文件(以.开头)则不显示
+				if IsHiddenFile(fileInfo.Name()) {
+					continue
+				}
+				//指定隐藏的文件或目录过滤
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fileId)
+					if i < len(listSTring) && listSTring[i] == fileId {
+						continue
+					}
+				}
+				fileType := GetMimeType(fileInfo.Name())
+				// 实例化FileNode
+				file := entity.FileNode{
+					FileId:     fileId,
+					IsFolder:   fileInfo.IsDir(),
+					FileName:   fileInfo.Name(),
+					FileSize:   int64(fileInfo.Size()),
+					SizeFmt:    FormatFileSize(int64(fileInfo.Size())),
+					FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
+					Path:       PathJoin(path, fileInfo.Name()),
+					MediaType:  fileType,
+					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
+				}
+				if !fileInfo.IsDir() {
+					if mt != -1 && file.MediaType == mt {
+						list = append(list, file)
+					} else if mt == -1 {
+						list = append(list, file)
+					} else {
+						continue
+					}
+				}
 
 			}
 		}
@@ -288,4 +344,39 @@ func Zip(dst, src string) (err error) {
 		log.Debugf("成功压缩文件： %s, 共写入了 %d 个字符的数据\n", path, n)
 		return nil
 	})
+}
+func PathJoin(path, fileName string) string {
+	if path == "/" {
+		return fmt.Sprintf("%s%s", path, fileName)
+	} else {
+		return fmt.Sprintf("%s/%s", path, fileName)
+	}
+}
+func TransformText(f *os.File) ([]byte, string) {
+	content, _ := ioutil.ReadAll(f)
+	contentType := http.DetectContentType(content)
+	if !utf8.Valid(content) {
+		rr := bytes.NewReader(content)
+		r := transform.NewReader(rr, simplifiedchinese.GBK.NewDecoder())
+		b, _ := ioutil.ReadAll(r)
+		return b, contentType
+	}
+	return content, contentType
+}
+func TransformByte(reader io.ReadCloser) ([]byte, string) {
+	content := StreamToByte(reader)
+	contentType := http.DetectContentType(content)
+	if !utf8.Valid(content) {
+		rr := bytes.NewReader(content)
+		r := transform.NewReader(rr, simplifiedchinese.GBK.NewDecoder())
+		b, _ := ioutil.ReadAll(r)
+		return b, contentType
+	}
+	return content, contentType
+}
+
+func StreamToByte(stream io.Reader) []byte {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(stream)
+	return buf.Bytes()
 }

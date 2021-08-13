@@ -1,0 +1,14 @@
+{{define "pan/mdui/view-pdf.html"}}
+    {{template "pan/mdui/view-base.html" .}}
+{{end}}
+{{define "content-pdf"}}
+    <iframe id="view_pdf" src="" style="width:100%;min-height: 600px" frameborder="0">
+        This is an embedded pdf file
+    </iframe>
+    <script>
+        var path = $("#file_link").attr("data-path");
+        var mode = $("#file_link").attr("data-mode");
+        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw" +path);
+        $("#view_pdf").attr("src", fullUrl);
+    </script>
+{{end}}

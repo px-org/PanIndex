@@ -7,10 +7,10 @@ import (
 
 type FileNode struct {
 	Id           string `json:"id"`
-	AccountId    string `json:"account_id"`
-	FileId       string `json:"fileId"`
+	AccountId    string `json:"account_id" gorm:"index:idx_aid"`
+	FileId       string `json:"fileId" gorm:"index:idx_fid`
 	FileIdDigest string `json:"fileIdDigest"`
-	FileName     string `json:"fileName"`
+	FileName     string `json:"fileName" gorm:"index:idx_fn"`
 	FileSize     int64  `json:"fileSize"`
 	SizeFmt      string `json:"sizeFmt"`
 	FileType     string `json:"fileType"`
@@ -18,16 +18,22 @@ type FileNode struct {
 	IsStarred    bool   `json:"isStarred"`
 	LastOpTime   string `json:"lastOpTime"`
 	ParentId     string `json:"parentId"`
-	Path         string `json:"path"`
-	ParentPath   string `json:"parentPath"`
+	Path         string `json:"path" gorm:"index:idx_p"`
+	ParentPath   string `json:"parentPath" gorm:"index:idx_pp"`
 	DownloadUrl  string `json:"downloadUrl"`
 	MediaType    int    `json:"mediaType"` //1图片，2音频，3视频，4文本文档，0其他类型
 	LargeUrl     string `json:"largeUrl"`
 	SmallUrl     string `json:"smallUrl"`
 	CreateTime   string `json:"create_time"`
-	Delete       int    `json:"delete"`
+	Delete       int    `json:"delete" gorm:"index:idx_del"`
 	Hide         int    `json:"hide"`
+	HasPwd       int    `json:"has_pwd"`
 	CacheTime    int64  `json:"cache_time"`
+}
+type SearchNode struct {
+	FileNode
+	Dx        string
+	AccountId string
 }
 type Paths struct {
 	FileId    string `json:"fileId"`
@@ -42,6 +48,8 @@ type Config struct {
 	HideFileId        string    `json:"hide_file_id"`
 	HerokuAppUrl      string    `json:"heroku_app_url"`
 	ApiToken          string    `json:"api_token"`
+	SiteName          string    `json:"site_name"`
+	AccountChoose     string    `json:"account_choose"`
 	Theme             string    `json:"theme" gorm:"default:'mdui'"`
 	AdminPassword     string    `json:"admin_password" gorm:"default:'PanIndex'"`
 	Damagou           Damagou   `json:"damagou" gorm:"-"`

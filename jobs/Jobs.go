@@ -185,16 +185,16 @@ func SyncOneAccount(account entity.Account) {
 		if syncDir == "/" {
 			syncDir = ""
 		}
-		Util.Cloud189GetFiles(account.Id, fileId, fileId, syncDir, syncChild)
+		Util.Cloud189GetFiles(account.Id, fileId, fileId, syncDir, 0, 0, syncChild)
 	} else if account.Mode == "teambition" {
 		rootId := Util.ProjectIdCheck("www", account.Id, account.RootId)
 		if Util.TeambitionSessions[account.Id].IsPorject {
 			if syncDir == "/" {
 				fileId = rootId
 			}
-			Util.TeambitionGetProjectFiles("www", account.Id, fileId, syncDir, syncChild)
+			Util.TeambitionGetProjectFiles("www", account.Id, fileId, syncDir, 0, 0, syncChild)
 		} else {
-			Util.TeambitionGetFiles(account.Id, account.RootId, fileId, syncDir, syncChild)
+			Util.TeambitionGetFiles(account.Id, account.RootId, fileId, syncDir, 0, 0, syncChild)
 		}
 	} else if account.Mode == "teambition-us" {
 		rootId := Util.ProjectIdCheck("us", account.Id, account.RootId)
@@ -202,17 +202,17 @@ func SyncOneAccount(account entity.Account) {
 			if syncDir == "/" {
 				fileId = rootId
 			}
-			Util.TeambitionGetProjectFiles("us", account.Id, fileId, syncDir, syncChild)
+			Util.TeambitionGetProjectFiles("us", account.Id, fileId, syncDir, 0, 0, syncChild)
 		} else {
 		}
 	} else if account.Mode == "aliyundrive" {
 		cookie := Util.AliRefreshToken(account)
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
-		Util.AliGetFiles(account.Id, account.RootId, fileId, syncDir, syncChild)
+		Util.AliGetFiles(account.Id, account.RootId, fileId, syncDir, 0, 0, syncChild)
 	} else if account.Mode == "onedrive" {
 		cookie := Util.OneDriveRefreshToken(account)
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
-		Util.OndriveGetFiles("", account.Id, fileId, syncDir, syncChild)
+		Util.OndriveGetFiles("", account.Id, fileId, syncDir, 0, 0, syncChild)
 	} else if account.Mode == "native" {
 	}
 	var fileNodeCount int64

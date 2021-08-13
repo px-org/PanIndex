@@ -2,23 +2,43 @@
     {{template "pan/mdui/view-base.html" .}}
 {{end}}
 {{define "content-code"}}
-    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ace.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ext-language_tools.js"></script>
-    <pre id="editor">{{.Content}}</pre>
+    <style>
+        .code {
+            padding: 12px 16px;
+            overflow-x: auto;
+            border: 1px solid rgba(0,0,0,.12);
+            border-radius: 2px;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+    <link rel="stylesheet"
+          href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/atom-one-dark.min.css">
+    <link rel="stylesheet"
+          href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/styles/atom-one-light.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.2.0/build/highlight.min.js"></script>
+    <pre class="code"><code id="editor" class="nohighlight"></code></pre>
     <script>
-        var editor = ace.edit("editor");
-        editor.setTheme("ace/theme/monokai");
-        editor.setFontSize(12);
-        editor.session.setMode("ace/mode/{{.CodeType}}");
-        editor.setOptions({
-            enableBasicAutocompletion: true,
-            enableSnippets: true,
-            enableLiveAutocompletion: true,
-            maxLines: 500,
-            readOnly:true,
-            showLineNumbers:false,
-            showGutter: false,
-            showPrintMargin:false
+        var path = $("#file_link").attr("data-path");
+        var mode = $("#file_link").attr("data-mode");
+        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw" +path);
+        $.ajax({
+            method: 'GET',
+            url: fullUrl,
+            success: function (data) {
+                if("{{.CodeType}}" == "text"){
+                    $("#editor").html(data);
+                }else{
+                    try {
+                        var jsonObj = JSON.parse(data);
+                        if (typeof jsonObj == "object") {
+                            data = JSON.stringify(jsonObj, null, 4);
+                        }
+                    } catch (e) {
+                    }
+                    var html = hljs.highlight(data, {language: '{{.CodeType}}'}).value;
+                    $("#editor").html(html);
+                }
+            }
         });
     </script>
 {{end}}

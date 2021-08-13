@@ -182,7 +182,7 @@ func ProjectIdCheck(server, accountId, rootId string) string {
 }
 
 //获取个人文件列表
-func TeambitionGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
+func TeambitionGetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syncChild bool) {
 	Teambition := TeambitionSessions[accountId]
 	TeambitionSession := Teambition.TeambitionSession
 	if rootId == "" {
@@ -257,12 +257,29 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 			fn.IsStarred = true
 			fn.ParentId = item["parentId"].(string)
 			fn.Hide = 0
-			if config.GloablConfig.HideFileId != "" {
-				listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
-				sort.Strings(listSTring)
-				i := sort.SearchStrings(listSTring, fn.FileId)
-				if i < len(listSTring) && listSTring[i] == fn.FileId {
-					fn.Hide = 1
+			fn.HasPwd = 0
+			if hide == 1 {
+				fn.Hide = hide
+			} else {
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && listSTring[i] == fn.FileId {
+						fn.Hide = 1
+					}
+				}
+			}
+			if hasPwd == 1 {
+				fn.HasPwd = hasPwd
+			} else {
+				if config.GloablConfig.PwdDirId != "" {
+					listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == fn.FileId {
+						fn.HasPwd = 1
+					}
 				}
 			}
 			fn.ParentPath = p
@@ -273,7 +290,7 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 			}
 			if fn.IsFolder == true {
 				if syncChild {
-					TeambitionGetFiles(accountId, rootId, fn.FileId, fn.Path, syncChild)
+					TeambitionGetFiles(accountId, rootId, fn.FileId, fn.Path, fn.Hide, fn.HasPwd, syncChild)
 				}
 			}
 			fn.Id = uuid.NewV4().String()
@@ -286,7 +303,7 @@ func TeambitionGetFiles(accountId, rootId, fileId, p string, syncChild bool) {
 	}
 }
 
-func TeambitionGetProjectFiles(server, accountId, rootId, p string, syncChild bool) {
+func TeambitionGetProjectFiles(server, accountId, rootId, p string, hide, hasPwd int, syncChild bool) {
 	Teambition := TeambitionSessions[accountId]
 	TeambitionSession := Teambition.TeambitionSession
 	defer func() {
@@ -362,12 +379,29 @@ func TeambitionGetProjectFiles(server, accountId, rootId, p string, syncChild bo
 			fn.IsStarred = true
 			fn.ParentId = item["_parentId"].(string)
 			fn.Hide = 0
-			if config.GloablConfig.HideFileId != "" {
-				listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
-				sort.Strings(listSTring)
-				i := sort.SearchStrings(listSTring, fn.FileId)
-				if i < len(listSTring) && listSTring[i] == fn.FileId {
-					fn.Hide = 1
+			fn.HasPwd = 0
+			if hide == 1 {
+				fn.Hide = hide
+			} else {
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && listSTring[i] == fn.FileId {
+						fn.Hide = 1
+					}
+				}
+			}
+			if hasPwd == 1 {
+				fn.HasPwd = hasPwd
+			} else {
+				if config.GloablConfig.PwdDirId != "" {
+					listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == fn.FileId {
+						fn.HasPwd = 1
+					}
 				}
 			}
 			fn.ParentPath = p
@@ -377,7 +411,7 @@ func TeambitionGetProjectFiles(server, accountId, rootId, p string, syncChild bo
 				fn.Path = p + "/" + fn.FileName
 			}
 			if syncChild {
-				TeambitionGetProjectFiles(server, accountId, fn.FileId, fn.Path, syncChild)
+				TeambitionGetProjectFiles(server, accountId, fn.FileId, fn.Path, fn.Hide, fn.HasPwd, syncChild)
 			}
 			if fn.FileName != "" {
 				fn.Id = uuid.NewV4().String()
