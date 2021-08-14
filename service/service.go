@@ -266,14 +266,14 @@ func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 	}()
 	sql := `
 		SELECT
-			a.*,('/d_'||(select count(*) from account c where c.rowid < b.rowid )) as dx,b.id as account_id
+			a.*,('/d_'||(select count(*) from account c where b.` + "`default`" + ` < c.` + "`default`" + ` and c.rowid < b.rowid)) as dx,b.id as account_id
 		FROM
 			file_node a
 			LEFT JOIN account b ON b.id = a.account_id
 		WHERE
 			a.file_name LIKE ?
 			AND a.` + "`delete`" + `= 0 
-			AND a.hide = 0
+			AND (a.hide = 0 or a.hide is null)
 			AND a.has_pwd = 0
 			AND b.mode != 'native'
 			`
@@ -285,13 +285,19 @@ func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 			dx := "/d_0"
 			sql = `
 				SELECT
-					('/d_'||(select count(*) from account b where b.rowid < a.rowid )) as dx
+					('/d_'||(select count(*) from account b where a.` + "`default`" + ` < b.` + "`default`" + ` and b.rowid < a.rowid )) as dx
 				FROM
 					account a
 				WHERE
 					a.id = ?
 			`
-			model.SqliteDb.Raw(sql, account.Id).Find(&dx)
+			for i, ac := range config.GloablConfig.Accounts {
+				if ac.Id == account.Id {
+					dx = fmt.Sprintf("/d_%d", i)
+					break
+				}
+			}
+			//model.SqliteDb.Raw(sql, account.Id).Find(&dx)
 			for _, fs := range nfs {
 				sn := entity.SearchNode{fs, dx, account.Id}
 				list = append(list, sn)
