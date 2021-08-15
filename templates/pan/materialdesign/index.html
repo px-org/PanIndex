@@ -159,8 +159,6 @@
 									{{else}}
 										<td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}{{.Path}}" href="javascript:void(0);">
 												{{if eq .MediaType 1}}
-
-													a
 													<i class="fa fa-file-image-o" aria-hidden="true"></i>
 												{{else if eq .MediaType 2}}
 													<i class="fa fa-file-audio-o" aria-hidden="true"></i>
