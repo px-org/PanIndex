@@ -53,11 +53,11 @@
 		}
 		</style>
 		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js"></script>
 	</head>
 	<body>
 		{{ $SurportFolderDown := .SurportFolderDown }}
 		{{if .HasPwd}}
-		<script src="https://cdn.bootcdn.net/ajax/libs/jquery-cookie/1.0/jquery.cookie.min.js"></script>
 		<script>
 			promptPwd("{{ .FileId}}");
 			function promptPwd(fileId){
@@ -150,13 +150,13 @@
 								<tr>
 									{{if .IsFolder}}
 										<td class="file-name">
-											<a class="icon icon-dir" href="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a>
+											<a class="icon icon-dir" href="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}{{.Path}}"><i class="fa fa-folder" aria-hidden="true"></i>&nbsp;&nbsp;{{.FileName}}</a>
 										{{if $.SearchKey}}
-											<br><p style="margin-left: 30px">{{.Dx}}{{.Path}}</p>
+											<br><p style="margin-left: 30px">{{index $.AcountIndex .AccountId }}{{.Path}}</p>
 										{{end}}
 										</td>
 									{{else}}
-										<td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}" href="javascript:void(0);">
+										<td class="file-name"><a class="icon icon-file" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}{{.Path}}" href="javascript:void(0);">
 												{{if eq .MediaType 1}}
 													<i class="fa fa-file-image-o" aria-hidden="true"></i>
 												{{else if eq .MediaType 2}}
@@ -180,10 +180,10 @@
 														<i class="fa fa-file" aria-hidden="true"></i>
 													{{end}}
 												{{end}}
-												&nbsp;&nbsp;{{.FileName}} <i class="fa fa-copy copyBtn" data-path="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" title="复制链接" style="font-size: x-small" aria-hidden="true"></i>
+												&nbsp;&nbsp;{{.FileName}} <i class="fa fa-copy copyBtn" data-path="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" title="复制链接" style="font-size: x-small" aria-hidden="true"></i>
 											</a>
 											{{if $.SearchKey}}
-												<br><p style="margin-left: 30px">{{.Dx}}{{.Path}}</p>
+												<br><p style="margin-left: 30px">{{index $.AcountIndex .AccountId }}{{.Path}}</p>
 											{{end}}
 										</td>
 									{{end}}
@@ -196,7 +196,7 @@
 											<td class="file-size">-</td>
 										{{end}}
 									{{else}}
-										<td class="text-center"><a href="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}}{{.Path}}" target="_blank"><i class="fa fa-download" aria-hidden="true"></i></a></td>
+										<td class="text-center"><a href="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}}{{.Path}}" target="_blank"><i class="fa fa-download" aria-hidden="true"></i></a></td>
 									{{end}}
 								</tr>
 							{{end}}
@@ -215,13 +215,30 @@
 								<p id="content" class="card-text">
 								</p>
 								<script>
-									$("#content").html(marked($("#readme").val()));
+									var c = $("#readme").val();
+									if(c != ""){
+										$("#content").append(marked(c));
+										$("#content").show();
+									}else{
+										var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw/README.md");
+										$.ajax({
+											method: 'GET',
+											url: fullUrl,
+											success: function (data) {
+												if(data != ""){
+													$("#content").append(marked(data));
+													$("#content").show();
+												}
+											}
+										});
+									}
 								</script>
 							</div>
 						</div>
 					</div>
 				{{else}}
 				{{end}}
+				<div id="previewImages"></div>
 				<div class="col-sm-12">
 					<div class="text-center">
 						{{if eq $.Footer ""}}

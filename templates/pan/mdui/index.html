@@ -236,7 +236,7 @@
 					{{end}}
 					{{range .List}}
 						<li class="mdui-list-item mdui-ripple">
-							<div class="mdui-list-item-content icon-file-mdui" data-folder="{{.IsFolder}}" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}">
+							<div class="mdui-list-item-content icon-file-mdui" data-folder="{{.IsFolder}}" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-media-type="{{.MediaType}}" data-title="{{.FileName}}" data-url="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}{{.Path}}">
 								<div class="mdui-list-item-title wordWrap">
 									{{if .IsFolder}}
 										<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">folder_open</i> {{.FileName}}
@@ -269,8 +269,9 @@
 													insert_drive_file
 												{{end}}
 											{{end}}
-										</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
-										<a href="{{if $.SearchKey}}{{.Dx}}{{else}}{{$.DIndex}}{{end}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
+										</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
+
+										<a href="{{if $.SearchKey}}{{index $.AcountIndex .AccountId }}{{else}}{{$.DIndex}}{{end}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
 									{{end}}
 								</div>
 								{{if .IsFolder}}
@@ -281,7 +282,7 @@
 								{{end}}
 								{{if $.SearchKey}}
 									<div class="mdui-list-item-text mdui-list-item-one-line">
-										{{.Dx}}{{.Path}}
+										{{index $.AcountIndex .AccountId }}{{.Path}}
 									</div>
 								{{end}}
 							</div>

@@ -32,7 +32,6 @@ type FileNode struct {
 }
 type SearchNode struct {
 	FileNode
-	Dx        string
 	AccountId string
 }
 type Paths struct {

@@ -187,7 +187,7 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 	} else {
 		order_sql := ""
 		nl_column := "cache_time"
-		if sColumn != "default" {
+		if sColumn != "default" && sColumn != "null" {
 			order_sql = fmt.Sprintf(" ORDER BY is_folder desc, %s %s", sColumn, sOrder)
 			nl_column = sColumn
 		}
@@ -257,6 +257,10 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 
 func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 	result := make(map[string]interface{})
+	acountIndex := make(map[string]interface{})
+	for i, account := range config.GloablConfig.Accounts {
+		acountIndex[account.Id] = fmt.Sprintf("/d_%d", i)
+	}
 	list := []entity.SearchNode{}
 	accouts := []entity.Account{}
 	defer func() {
@@ -266,7 +270,7 @@ func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 	}()
 	sql := `
 		SELECT
-			a.*,('/d_'||(select count(*) from account c where b.` + "`default`" + ` < c.` + "`default`" + ` and c.rowid < b.rowid)) as dx,b.id as account_id
+			a.*
 		FROM
 			file_node a
 			LEFT JOIN account b ON b.id = a.account_id
@@ -282,24 +286,9 @@ func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 	if len(accouts) > 0 {
 		for _, account := range accouts {
 			nfs := Util.FileSearch(account.RootId, "", key)
-			dx := "/d_0"
-			sql = `
-				SELECT
-					('/d_'||(select count(*) from account b where a.` + "`default`" + ` < b.` + "`default`" + ` and b.rowid < a.rowid )) as dx
-				FROM
-					account a
-				WHERE
-					a.id = ?
-			`
-			for i, ac := range config.GloablConfig.Accounts {
-				if ac.Id == account.Id {
-					dx = fmt.Sprintf("/d_%d", i)
-					break
-				}
-			}
 			//model.SqliteDb.Raw(sql, account.Id).Find(&dx)
 			for _, fs := range nfs {
-				sn := entity.SearchNode{fs, dx, account.Id}
+				sn := entity.SearchNode{fs, account.Id}
 				list = append(list, sn)
 			}
 		}
@@ -350,6 +339,7 @@ func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 	result["HasParent"] = false
 	result["ParentPath"] = PetParentPath("/")
 	result["SurportFolderDown"] = false
+	result["AcountIndex"] = acountIndex
 	return result
 }
 
