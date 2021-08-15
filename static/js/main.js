@@ -311,7 +311,7 @@ $(".search").bind('keydown', function(event) {
 function initSort(){
     var sColumn = $.cookie("SColumn");
     var sOrder = $.cookie("SOrder");
-    if (sColumn == null || sColumn == "" || sColumn == "default"){
+    if (sColumn == "null" || sColumn == null || sColumn == "" || sColumn == "default"){
         $('.default-check').prepend('<i class="check mdui-menu-item-icon mdui-icon material-icons">check</i>');
     }else{
         $('a[data-column='+sColumn+']:not(.sort-order-check)').prepend('<i class="check mdui-menu-item-icon mdui-icon material-icons">check</i>');
