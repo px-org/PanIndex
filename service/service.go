@@ -746,10 +746,6 @@ var dls = sync.Map{}
 
 func GetFileData(account entity.Account, path string) ([]byte, string) {
 	f := entity.FileNode{}
-	result := model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and ((hide = 0) or (hide=1 and file_name='README.md')) and account_id=? limit 1", path, account.Id).Find(&f)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, "image/png"
-	}
 	if account.Mode == "native" {
 		rootPath := account.RootId
 		fullPath := filepath.Join(rootPath, path)
@@ -769,6 +765,10 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 		}
 
 	} else {
+		result := model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and ((hide = 0) or (hide=1 and file_name='README.md')) and account_id=? limit 1", path, account.Id).First(&f)
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, "image/png"
+		}
 		var dl = DownLock{}
 		if _, ok := dls.Load(f.FileId); ok {
 			ss, _ := dls.Load(f.FileId)
