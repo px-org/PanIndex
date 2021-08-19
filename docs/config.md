@@ -50,7 +50,8 @@
     - Cloud189：天翼云网盘
     - Teambition：阿里teambition盘，包括个人网盘和项目文件，依据根目录ID设定自动判断
     - Teambition国际版：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
-    - Aliyundrive：阿里云盘，需要填入有效的`refresh_token`，在[此处登录](https://passport.aliyundrive.com/mini_login.htm?lang=zh_cn&appName=aliyun_drive&appEntrance=web&styleType=auto&bizParams=&notLoadSsoView=false&notKeepLogin=false&isMobile=true&hidePhoneCode=true&rnd=0.9186864872885723)后抓包获取，[详细教程](https://woriqq.com/archives/75.html)
+    - Aliyundrive：阿里云盘，需要填入有效的`refresh_token`，在[此处登录](https://passport.aliyundrive.com/mini_login.htm?lang=zh_cn&appName=aliyun_drive&appEntrance=web)后抓包获取，
+        如果一种登录方式不成功，请尝试扫码等其他方式。[详细教程](https://blog.deepfal.cn/index.php/archives/890)
     - OneDrive：微软云盘，用户填写`client_id`，密码填写`client_secret`，重定向地址`redirect_uri`及最重要的刷新令牌`refresh_token`
         - [在线工具](https://mgaa.noki.workers.dev/)
         - 创建应用
