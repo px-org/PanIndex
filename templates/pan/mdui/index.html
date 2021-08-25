@@ -222,7 +222,7 @@
 										}else{
 											c = null;
 										}
-										$.cookie("dir_pwd", c, {path:"/"});
+										$.cookie("dir_pwd", c, {expires : 3650, path:"/"});
 									}
 								</script>
 							{{- end}}
@@ -337,6 +337,6 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
-<script src="/static/js/main.js"></script>
+<script src="/static/js/main.js?v=206"></script>
 </body>
 </html>
