@@ -769,6 +769,7 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, "image/png"
 		}
+
 		var dl = DownLock{}
 		if _, ok := dls.Load(f.FileId); ok {
 			ss, _ := dls.Load(f.FileId)
@@ -777,6 +778,11 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 			dl.FileId = f.FileId
 			dl.L = new(sync.Mutex)
 			dls.LoadOrStore(f.FileId, dl)
+		}
+		if f.FileName == "README.md" {
+			readmeContent := Util.ReadStringByUrl(dl.GetDownlaodUrl(account, f), f.FileId)
+			contentType := http.DetectContentType([]byte(readmeContent))
+			return []byte(readmeContent), contentType
 		}
 		dUrl := dl.GetDownlaodUrl(account, f)
 		resp, err := httpClient().Get(dUrl)
