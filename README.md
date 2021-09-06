@@ -21,5 +21,10 @@
 ## 文档
 [在线文档](https://libsgh.github.io/PanIndex/)
 
+## 鸣谢
+- 前端框架：[mdui](https://www.mdui.org/)
+- mdui主题样式源自[JustList](https://github.com/txperl/JustList)
+- 后端框架：[gin-gonic](https://github.com/gin-gonic/gin)
+
 ## 声明
 本程序旨在分享网盘文件，方便下载，请勿滥用。在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等。

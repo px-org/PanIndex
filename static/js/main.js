@@ -38,11 +38,11 @@ $(document).ready(function() {
         if($('body').hasClass('mdui-theme-layout-dark')){
             $('body').removeClass('mdui-theme-layout-dark');
             $('#theme-toggle i').text('brightness_4');
-            $.cookie("Theme", "mdui-light", {path:"/"});
+            $.cookie("Theme", "mdui-light", {expires : 3650, path:"/"});
         }else{
             $('body').addClass('mdui-theme-layout-dark');
             $('#theme-toggle i').text('brightness_5');
-            $.cookie("Theme", "mdui-dark", {path:"/"});
+            $.cookie("Theme", "mdui-dark", {expires : 3650, path:"/"});
         }
     });
     $("#image-preview-list").empty();
@@ -61,13 +61,13 @@ $(document).ready(function() {
     $('.sort-order-check').on('click', function () {
         var dOrder =  $(this).attr("data-order");
         var dColumn =  $(this).attr("data-column");
-        $.cookie("SColumn", dColumn, {path:"/"});
-        $.cookie("SOrder", dOrder, {path:"/"});
+        $.cookie("SColumn", dColumn, {expires : 3650, path:"/"});
+        $.cookie("SOrder", dOrder, {expires : 3650, path:"/"});
         location.reload();
     });
     $('.default-check').on('click', function () {
-        $.cookie('SColumn', null, { path: '/'});
-        $.cookie('SOrder', null, { path: '/'});
+        $.cookie('SColumn', null, {expires : 3650, path: '/'});
+        $.cookie('SOrder', null, {expires : 3650, path: '/'});
         location.reload();
     });
     //初始化排序设置
@@ -336,9 +336,9 @@ function promptPwd(path){
     var ppwd = path + ":" + $("#input-password").val();
     if ($.cookie("dir_pwd") != null){
         var value = $.cookie("dir_pwd") + ","+ ppwd;
-        $.cookie("dir_pwd", value, {path:"/"});
+        $.cookie("dir_pwd", value, {expires : 3650, path:"/"});
     }else{
-        $.cookie("dir_pwd", ppwd, {path:"/"});
+        $.cookie("dir_pwd", ppwd, {expires : 3650, path:"/"});
     }
     location.reload();
 }
