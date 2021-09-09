@@ -71,6 +71,8 @@ func main() {
 			downloadMultiFiles(c) //文件夹下载
 		} else if path == "/api/public/files" {
 			files(c) //查询目录下文件列表
+		} else if path == "/api/public/transcode" {
+			transcode(c) //转码测试
 		} else if path == "/api/public/onedrive/exchangeToken" {
 			oneExchangeToken(c) //交换token
 		} else if path == "/api/public/onedrive/refreshToken" {
@@ -579,5 +581,11 @@ func files(c *gin.Context) {
 		"status":  0,
 		"data":    files,
 	})
+}
+func transcode(c *gin.Context) {
+	accountId := c.Query("accountId")
+	fileId := c.Query("fileId")
+	c.String(http.StatusOK, Util.AliTranscoding(accountId, fileId))
+	c.Abort()
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

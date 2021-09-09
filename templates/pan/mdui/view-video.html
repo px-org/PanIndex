@@ -6,6 +6,8 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.0.7/dist/hls.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dplayer@1.26.0/dist/DPlayer.min.js"></script>
     <script>
+        var qa_info = {"FHD":"全高清","LD":"流畅","SD":"标清","HD":"高清"};
+        var qa_sort = {"全高清": 1080,"流畅":360,"标清":540,"高清":720};
         var path = $("#file_link").attr("data-path");
         var mode = $("#file_link").attr("data-mode");
         var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
@@ -13,6 +15,54 @@
         if(mode == "native"){
             url = fullUrl;
         }
+        {{if eq .Mode "aliyundrive"}}
+        $.ajax({
+            method: 'POST',
+            url: '/api/public/transcode?accountId={{.AccountId}}&fileId={{ (index .List 0).FileId }}',
+            success: function (data) {
+               var d = JSON.parse(data);
+               var qas = [];
+               $.each(d.video_preview_play_info.live_transcoding_task_list, function(i, item){
+                   if(item.status == "finished"){
+                       var qa = {};
+                       qa["url"] = item.url;
+                       qa["name"] = qa_info[item.template_id];
+                       qa["type"] = "hls";
+                       qas.push(qa);
+                   }
+               });
+               qas = qas.sort(function(s, t){
+                    var a = qa_sort[s["name"]];
+                    var b = qa_sort[t["name"]];
+                    if (a < b) return -1;
+                    if (a > b) return 1;
+                    return 0;
+                });
+                var video = {
+                    url: url
+                }
+               var video = {url:url}
+               if(qas.length > 0){
+                  video = {
+                       quality: qas,
+                       defaultQuality: qas.length - 1
+                   }
+               }
+               var n = '{{ (index .List 0).FileName }}';
+               var vname = n.split(".")[0]
+               const dp = new DPlayer({
+                   container: document.getElementById('view_dplayer'),
+                   video:video ,
+                   subtitle: {
+                       url: vname + '.vtt',
+                       fontSize: '24px'
+                   },
+                   autoplay: true,
+                   lang: 'zh-cn'
+                });
+            }
+        });
+        {{else}}
         var n = '{{ (index .List 0).FileName }}';
         var vname = n.split(".")[0]
         const dp = new DPlayer({
@@ -27,5 +77,6 @@
             autoplay: true,
             lang: 'zh-cn'
         });
+        {{end}}
     </script>
 {{end}}

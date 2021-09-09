@@ -361,7 +361,7 @@ func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileN
 		cachUrl, err := UrlCache.Get(fileNode.FileId)
 		if err == nil {
 			downloadUrl = cachUrl.(string)
-			log.Debugf("从缓存中获取下载地址:" + downloadUrl)
+			log.Debugf("从缓存中获取下载地址:%s", downloadUrl)
 		}
 	} else {
 		if account.Mode == "cloud189" {

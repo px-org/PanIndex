@@ -268,3 +268,21 @@ func AliUpload(accountId, parentId string, files []*multipart.FileHeader) bool {
 	}
 	return true
 }
+
+//阿里云转码
+func AliTranscoding(accountId, fileId string) string {
+	tokenResp := Alis[accountId]
+	auth := tokenResp.TokenType + " " + tokenResp.AccessToken
+	resp, _ := nic.Post("https://api.aliyundrive.com/v2/file/get_video_preview_play_info", nic.H{
+		Headers: nic.KV{
+			"authorization": auth,
+		},
+		JSON: nic.KV{
+			"category":    "live_transcoding",
+			"drive_id":    tokenResp.DefaultDriveId,
+			"file_id":     fileId,
+			"template_id": "",
+		},
+	})
+	return resp.Text
+}
