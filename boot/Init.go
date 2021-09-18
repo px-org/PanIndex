@@ -171,6 +171,5 @@ func PrintConfig(dataPath, cq string) bool {
 	}
 	c := ""
 	SqliteDb.Raw(fmt.Sprintf("select %s from config where 1=1 limit 1", cq)).First(&c)
-	fmt.Println(c)
 	return true
 }
