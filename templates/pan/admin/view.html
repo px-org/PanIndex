@@ -1,0 +1,53 @@
+{{define "pan/admin/view.html"}}
+    {{template "pan/admin/base.html" .}}
+{{end}}
+{{define "admin-view"}}
+<div class="mdui-p-a-2 mdui-typo">
+    <div class="mdui-typo">
+        <h1> 文件预览 <small>多个后缀名，半角英文逗号分隔</small></h1>
+    </div>
+    <form id="configForm">
+        <div>
+            <label class="mdui-textfield-label">是否开启预览</label>
+            <label class="mdui-switch">
+                <input type="checkbox" checked/>
+                <i class="mdui-switch-icon"></i>
+            </label>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">图片(image)</label>
+            <input class="mdui-textfield-input" type="text" name="image" value="{{.Config.Image}}" />
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">视频(video)</label>
+            <input class="mdui-textfield-input" type="text" name="video" value="{{.Config.Video}}" />
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">音频(audio)</label>
+            <input class="mdui-textfield-input" type="text" name="audio" value="{{.Config.Audio}}" />
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">代码(code)</label>
+            <input class="mdui-textfield-input" type="text" name="code" value="{{.Config.Code}}" />
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">文档(doc)</label>
+            <input class="mdui-textfield-input" type="text" name="doc" value="{{.Config.Doc}}" />
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">pdf</label>
+            <input class="mdui-textfield-input" type="text" name="pdf" value="{{.Config.Pdf}}" />
+        </div>
+        <div class="mdui-row-xs-1">
+            <div class="mdui-col">
+                <button type="button" class="saveConfigBtn mdui-btn mdui-color-brown mdui-ripple" value="1">
+                    <i class="mdui-icon material-icons">save</i> 保存
+                </button>
+                <button type="button" class="saveConfigBtn mdui-btn mdui-float-right mdui-color-teal mdui-ripple" value="0">
+                    <i class="mdui-icon material-icons">repeat</i> 恢复默认
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{{end}}

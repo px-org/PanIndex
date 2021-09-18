@@ -1,0 +1,36 @@
+.mdui-list-item,
+.mdui-list-item:hover {
+    border-radius: 20px;
+}
+.mdui-container {
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.mdui-card {
+    box-shadow: none;
+}
+.search-input {
+    border-bottom: none;
+}
+.mdui-textfield-focus .mdui-icon,
+.mdui-textfield-focus .mdui-textfield-label {
+    color: rgba(0, 0, 0, .54);
+}
+
+.mdui-textfield-focus .mdui-textfield-input,
+.mdui-textfield-focus .mdui-textfield-input:hover {
+    border-bottom: none;
+    box-shadow: none;
+}
+
+.mdui-textfield-input:not([disabled]):hover {
+    border-bottom: none;
+    box-shadow: none;
+}
+.wordWrap {
+    /*这两行代码可以解决大部分场景下的换行问题*/
+    word-break: break-all;
+    word-wrap: break-word;
+    /*但在有些场景中，还需要加上下面这行代码*/
+    white-space: normal;
+}

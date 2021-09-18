@@ -6,29 +6,34 @@ import (
 )
 
 type FileNode struct {
-	Id           string `json:"id"`
-	AccountId    string `json:"account_id" gorm:"index:idx_aid"`
-	FileId       string `json:"fileId" gorm:"index:idx_fid`
+	Id           string `json:"id"`                              //数据库唯一主键
+	AccountId    string `json:"account_id" gorm:"index:idx_aid"` //文件所属账号
+	FileId       string `json:"fileId" gorm:"index:idx_fid`      //网盘中的文件id
 	FileIdDigest string `json:"fileIdDigest"`
-	FileName     string `json:"fileName" gorm:"index:idx_fn"`
-	FileSize     int64  `json:"fileSize"`
-	SizeFmt      string `json:"sizeFmt"`
-	FileType     string `json:"fileType"`
-	IsFolder     bool   `json:"isFolder"`
-	IsStarred    bool   `json:"isStarred"`
-	LastOpTime   string `json:"lastOpTime"`
-	ParentId     string `json:"parentId"`
-	Path         string `json:"path" gorm:"index:idx_p"`
-	ParentPath   string `json:"parentPath" gorm:"index:idx_pp"`
-	DownloadUrl  string `json:"downloadUrl"`
-	MediaType    int    `json:"mediaType"` //1图片，2音频，3视频，4文本文档，0其他类型
-	LargeUrl     string `json:"largeUrl"`
-	SmallUrl     string `json:"smallUrl"`
-	CreateTime   string `json:"create_time"`
-	Delete       int    `json:"delete" gorm:"index:idx_del"`
-	Hide         int    `json:"hide"`
-	HasPwd       int    `json:"has_pwd"`
-	CacheTime    int64  `json:"cache_time"`
+	FileName     string `json:"fileName" gorm:"index:idx_fn"`   //文件名称
+	FileSize     int64  `json:"fileSize"`                       //文件大小
+	SizeFmt      string `json:"sizeFmt"`                        //文件大小（格式化）
+	FileType     string `json:"fileType"`                       //文件类型
+	IsFolder     bool   `json:"isFolder"`                       //是否是目录
+	IsStarred    bool   `json:"isStarred"`                      //是否收藏
+	LastOpTime   string `json:"lastOpTime"`                     //最近一次操作时间
+	ParentId     string `json:"parentId"`                       //父目录id
+	Path         string `json:"path" gorm:"index:idx_p"`        //文件路径
+	ParentPath   string `json:"parentPath" gorm:"index:idx_pp"` //文件上层目录
+	DownloadUrl  string `json:"downloadUrl"`                    //下载地址
+	MediaType    int    `json:"mediaType"`                      //1图片，2音频，3视频，4文本文档，0其他类型
+	LargeUrl     string `json:"largeUrl"`                       //大图预览
+	SmallUrl     string `json:"smallUrl"`                       //小图预览
+	CreateTime   string `json:"create_time"`                    //创建时间（目录信息入库时间）
+	Delete       int    `json:"delete" gorm:"index:idx_del"`    //删除标记（便于做缓存）
+	Hide         int    `json:"hide"`                           //是否隐藏
+	HasPwd       int    `json:"has_pwd"`                        //是否是密码文件（包含）
+	CacheTime    int64  `json:"cache_time"`                     //缓存时间
+}
+type ShareInfo struct {
+	AccountId string `json:"account_id"` //文件所属账号
+	FilePath  string `json:"file_path"`  //PanIndex文件路径
+	ShortCode string `json:"short_code"` //短链接code
 }
 type SearchNode struct {
 	FileNode
@@ -41,7 +46,7 @@ type Paths struct {
 }
 type Config struct {
 	Host              string    `json:"host" gorm:"default:'0.0.0.0'"`
-	Port              int       `json:"port" gorm:"default:5238"`
+	Port              string    `json:"port" gorm:"default:5238"`
 	Accounts          []Account `json:"accounts" gorm:"-"`
 	PwdDirId          string    `json:"pwd_dir_id"`
 	HideFileId        string    `json:"hide_file_id"`
@@ -56,12 +61,26 @@ type Config struct {
 	RefreshCookie     string    `json:"refresh_cookie" gorm:"default:'0 0 8 1/1 * ?'"`
 	UpdateFolderCache string    `json:"update_folder_cache"`
 	HerokuKeepAlive   string    `json:"heroku_keep_alive"`
-	FaviconUrl        string    `json:"favicon_url"` //网站图标
-	Footer            string    `json:"footer"`      //网站底部信息
+	FaviconUrl        string    `json:"favicon_url"`    //网站图标
+	Footer            string    `json:"footer"`         //网站底部信息
+	Css               string    `json:"css"`            //自定义css
+	Js                string    `json:"js"`             //自定义js
+	EnablePreview     string    `json:"enable_preview"` //是否开启文件预览
+	Image             string    `json:"image"`          //图片
+	Audio             string    `json:"audio"`          //音频
+	Video             string    `json:"video"`          //视频
+	Code              string    `json:"code"`           //代码
+	Doc               string    `json:"doc"`            //文档
+	Pdf               string    `json:"pdf"`            //pdf
+}
+type ConfigItem struct {
+	K string `json:"k"` //配置项key
+	V string `json:"v"` //配置项值
+	G string `json:"g"` //配置项分组
 }
 type Account struct {
-	Id           string `json:"id"`            //网盘空间id
-	Name         string `json:"name"`          //网盘空间名称
+	Id           string `json:"id"`            //网盘账号id
+	Name         string `json:"name"`          //网盘账号名称
 	Mode         string `json:"mode"`          //网盘模式，native（本地模式），cloud189(默认，天翼云网盘)，teambition（阿里teambition网盘），aliyundrive
 	User         string `json:"user"`          //网盘账号用户名，邮箱或手机号
 	Password     string `json:"password"`      //网盘账号密码
@@ -152,4 +171,11 @@ type OneDriveAuthInfo struct {
 	ExtExpiresIn int    `json:"ext_expires_in"`
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+type Login struct {
+	Username string `form:"username" json:"username" binding:"required"`
+	Password string `form:"password" json:"password" binding:"required"`
+}
+type User struct {
+	UserName string
 }

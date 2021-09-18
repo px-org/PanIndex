@@ -8,8 +8,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -47,16 +49,33 @@ func InitDb(host, port, dataPath string, debug bool) {
 	//SqliteDb.Logger.Info()
 	//创建表
 	SqliteDb.AutoMigrate(&entity.FileNode{})
-	SqliteDb.AutoMigrate(&entity.Config{})
+	SqliteDb.AutoMigrate(&entity.ShareInfo{})
+	SqliteDb.AutoMigrate(&entity.ConfigItem{})
 	SqliteDb.AutoMigrate(&entity.Account{})
 	SqliteDb.AutoMigrate(&entity.Damagou{})
 	//初始化数据
 	c := entity.Config{}
-	SqliteDb.Raw("select * from config where 1=1").Find(&c)
+	SqliteDb.Raw("select * from config_item where 1=1").Find(&c)
 	if c.Host == "" {
 		rand.Seed(time.Now().UnixNano())
 		ApiToken := strconv.Itoa(rand.Intn(10000000))
-		SqliteDb.Create(&entity.Config{"0.0.0.0", 5238, nil, "", "", "", ApiToken, "", "default", "mdui", "PanIndex", entity.Damagou{}, "", "0 0 8 1/1 * ?", "", "", "", ""})
+		//SqliteDb.Create(&entity.Config{"0.0.0.0", 5238, nil, "", "", "", ApiToken, "", "default", "mdui", "PanIndex", entity.Damagou{}, "", "0 0 8 1/1 * ?", "", "", "", "", "", ""})
+		var count int64
+		err = SqliteDb.Model(entity.ConfigItem{}).Count(&count).Error
+		if err != nil {
+			panic(err)
+		} else if count == 0 {
+			path, err := filepath.Abs("./config/config.sql")
+			if err != nil {
+				panic(err)
+			}
+			file, err := ioutil.ReadFile(path)
+			if err != nil {
+				panic(err)
+			}
+			SqliteDb.Model(entity.ConfigItem{}).Exec(string(file))
+		}
+		SqliteDb.Table("config_item").Where("k='api_token'").Update("`v`=?", ApiToken)
 	}
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")

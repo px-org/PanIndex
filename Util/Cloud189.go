@@ -226,7 +226,12 @@ func GetDownlaodMultiFiles(accountId, fileId string) string {
 func Cloud189Login(accountId, user, password string) string {
 	CLoud189Session := nic.Session{}
 	url := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
-	res, _ := CLoud189Session.Get(url, nil)
+	res, err := CLoud189Session.Get(url, nil)
+	if err != nil {
+		log.Errorln(err)
+		return "5"
+	}
+	log.Infof("登录页面接口：%s", res.Status)
 	b := res.Text
 	lt := ""
 	ltText := regexp.MustCompile(`lt = "(.+?)"`)
@@ -309,12 +314,16 @@ func Cloud189IsLogin(accountId string) bool {
 			Timeout:           20,
 			DisableKeepAlives: true,
 		})
+		if resp != nil {
+			defer resp.Body.Close()
+		}
 		if err == nil && resp != nil && resp.Text != "" && jsoniter.Valid(resp.Bytes) && jsoniter.Get(resp.Bytes, "errorMsg").ToString() == "" {
 			return true
 		} else {
-			if resp != nil {
-				defer resp.Body.Close()
-				log.Debug(resp.Text)
+			if jsoniter.Get(resp.Bytes, "errorCode").ToString() == "InvalidSessionKey" {
+				return false
+			} else {
+				return true
 			}
 		}
 	}

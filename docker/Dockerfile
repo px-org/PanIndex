@@ -1,4 +1,4 @@
-FROM debian:10-slim
+FROM amd64/debian:10-slim
 MAINTAINER libsgh
 ENV TZ=Asia/Shanghai
 RUN apt-get update

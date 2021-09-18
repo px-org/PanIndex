@@ -13,7 +13,10 @@
             method: 'GET',
             url: fullUrl,
             success: function (data) {
-                $("#content").append(marked(data));
+                marked.use({smartypants: true});
+                var c = marked(data);
+                console.log(marked(data));
+                $("#content").append(c);
             }
         });
     </script>

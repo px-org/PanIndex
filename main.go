@@ -29,7 +29,7 @@ import (
 
 //var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
 var Host = flag.String("host", "", "绑定host，默认为0.0.0.0")
-var Port = flag.String("port", "", "绑定port，默认为8080")
+var Port = flag.String("port", "", "绑定port，默认为5238")
 var Debug = flag.Bool("debug", false, "调试模式，设置为true可以输出更多日志")
 var DataPath = flag.String("data_path", "data", "数据存储目录，默认程序同级目录")
 var CertFile = flag.String("cert_file", "", "/path/to/test.pem")
@@ -46,15 +46,10 @@ func main() {
 	boot.Start(*Host, *Port, *Debug, *DataPath)
 	r := gin.New()
 	r.Use(gin.Logger())
-	//	staticBox := packr.NewBox("./static")
+	//设置Html模板
 	r.SetHTMLTemplate(initTemplates())
-	//r.LoadHTMLGlob("templates/*	")
-	//	r.LoadHTMLFiles("templates/**")
-	//	r.Static("/static", "./static")
-	//	r.StaticFS("/static", staticBox)
-	//r.StaticFile("/favicon-cloud189.ico", "./static/img/favicon-cloud189.ico")
+	//设置静态资源文件
 	initStaticBox(r)
-	//声明一个路由
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 		method := c.Request.Method
@@ -73,6 +68,8 @@ func main() {
 			files(c) //查询目录下文件列表
 		} else if path == "/api/public/transcode" {
 			transcode(c) //转码测试
+		} else if path == "/api/public/shortInfo" {
+			shortInfo(c) //短链接&二维码
 		} else if path == "/api/public/onedrive/exchangeToken" {
 			oneExchangeToken(c) //交换token
 		} else if path == "/api/public/onedrive/refreshToken" {
@@ -97,6 +94,7 @@ func main() {
 			upload(c) //后台上传文件
 		} else if ad {
 			admin(c) //后台页面跳转
+			//adminSystem(c) //后台页面跳转
 		} else {
 			isForbidden := true
 			host := c.Request.Host
@@ -130,6 +128,9 @@ func main() {
 				if s {
 					search(c, k)
 				} else {
+					//短链跳转
+					shortRedirect(c)
+					//正常跳转
 					index(c)
 				}
 			}
@@ -138,10 +139,11 @@ func main() {
 	log.Infoln("程序启动成功")
 	if *CertFile != "" && *KeyFile != "" {
 		//开启https
-		r.Use(TlsHandler(config.GloablConfig.Port))
-		r.RunTLS(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port), *CertFile, *KeyFile)
+		p, _ := strconv.Atoi(config.GloablConfig.Port)
+		r.Use(TlsHandler(p))
+		r.RunTLS(fmt.Sprintf("%s:%s", config.GloablConfig.Host, config.GloablConfig.Port), *CertFile, *KeyFile)
 	} else {
-		r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port))
+		r.Run(fmt.Sprintf("%s:%s", config.GloablConfig.Host, config.GloablConfig.Port))
 	}
 }
 
@@ -163,7 +165,7 @@ func TlsHandler(port int) gin.HandlerFunc {
 func initTemplates() *template.Template {
 	themes := [6]string{"mdui", "mdui-light", "mdui-dark", "classic", "bootstrap", "materialdesign"}
 	box := packr.New("templates", "./templates")
-	data, _ := box.FindString("pan/admin/login.html")
+	/*data, _ := box.FindString("pan/admin/login.html")
 	tmpl := template.New("pan/admin/login.html")
 	if Util.FileExist("./templates/pan/admin/login.html") {
 		s, _ := ioutil.ReadFile("./templates/pan/admin/login.html")
@@ -175,22 +177,26 @@ func initTemplates() *template.Template {
 		s, _ := ioutil.ReadFile("./templates/pan/admin/index.html")
 		data = string(s)
 	}
-	tmpl.New("pan/admin/index.html").Parse(data)
+	tmpl.New("pan/admin/index.html").Parse(data)*/
+	tmpl := template.New("")
+	//添加后台模板
+	addTemplatesFromFolder("admin", tmpl, box)
 	for _, theme := range themes {
 		tmpName := strings.Join([]string{"pan/", "/index.html"}, theme)
 		tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
 		tmpFile = strings.ReplaceAll(tmpFile, "-light", "")
-		data, _ = box.FindString(tmpFile)
+		data, _ := box.FindString(tmpFile)
 		if Util.FileExist("./templates/" + tmpFile) {
 			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
+	//添加详情模板
 	viewTemplates := [9]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md"}
 	for _, vt := range viewTemplates {
 		tmpName := fmt.Sprintf("pan/%s/view-%s.html", "mdui", vt)
-		data, _ = box.FindString(tmpName)
+		data, _ := box.FindString(tmpName)
 		if Util.FileExist("./templates/" + tmpName) {
 			s, _ := ioutil.ReadFile("./templates/" + tmpName)
 			data = string(s)
@@ -198,6 +204,19 @@ func initTemplates() *template.Template {
 		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
 	}
 	return tmpl
+}
+
+//将文件夹里面的所有html添加为模板
+func addTemplatesFromFolder(folder string, tmpl *template.Template, box *packr.Box) {
+	fs, _ := ioutil.ReadDir(fmt.Sprintf("./templates/pan/%s", folder))
+	for _, f := range fs {
+		data, _ := box.FindString(fmt.Sprintf("pan/admin/%s", f.Name()))
+		if Util.FileExist(fmt.Sprintf("./templates/pan/admin/%s", f.Name())) {
+			s, _ := ioutil.ReadFile(fmt.Sprintf("./templates/pan/admin/%s", f.Name()))
+			data = string(s)
+		}
+		tmpl.New(fmt.Sprintf("pan/admin/%s", f.Name())).Parse(data)
+	}
 }
 
 func initStaticBox(r *gin.Engine) {
@@ -304,7 +323,9 @@ func index(c *gin.Context) {
 					result["DownloadUrl"] = dl.GetDownlaodUrl(account, fs[0])
 				}
 				t := service.GetViewTemplate(account.Mode, fs[0], result)
-				tmpFile = fmt.Sprintf("pan/%s/view-%s.html", config.GloablConfig.Theme, t)
+				theme := strings.ReplaceAll(config.GloablConfig.Theme, "-dark", "")
+				theme = strings.ReplaceAll(theme, "-light", "")
+				tmpFile = fmt.Sprintf("pan/%s/view-%s.html", theme, t)
 				c.HTML(http.StatusOK, tmpFile, result)
 				return
 			} else {
@@ -422,19 +443,23 @@ func downloadMultiFiles(c *gin.Context) {
 
 func admin(c *gin.Context) {
 	logout := c.Query("logout")
+	admin := c.Query("admin")
+	if admin == "" {
+		admin = "start"
+	}
 	sessionId, error := c.Cookie("sessionId")
 	if logout != "" && logout == "true" {
 		//退出登录
 		GC.Remove(sessionId)
-		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功", "Theme": config.GloablConfig.Theme})
+		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": admin, "Error": true, "Msg": "退出成功", "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 	} else {
 		if c.Request.Method == "GET" {
 			if error == nil && sessionId != "" && GC.Has(sessionId) {
 				//登录状态跳转首页
 				config := service.GetConfig()
-				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "RedirectUrl": admin, "Version": boot.VERSION})
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false, "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": admin, "Error": false, "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 			}
 		} else {
 			//登录
@@ -446,9 +471,9 @@ func admin(c *gin.Context) {
 				c.SetCookie("sessionId", u1, 7*24*60*60, "/", "", false, true)
 				GC.SetWithExpire(u1, u1, time.Hour*24*7)
 				config := service.GetConfig()
-				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "RedirectUrl": admin, "Version": boot.VERSION})
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Theme": config.Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": admin, "Error": true, "Theme": config.Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
 			}
 		}
 	}
@@ -586,6 +611,34 @@ func transcode(c *gin.Context) {
 	accountId := c.Query("accountId")
 	fileId := c.Query("fileId")
 	c.String(http.StatusOK, Util.AliTranscoding(accountId, fileId))
+	c.Abort()
+}
+func adminSystem(c *gin.Context) {
+	c.HTML(http.StatusOK, "pan/admin/base.html", gin.H{})
+	c.Abort()
+}
+func shortInfo(c *gin.Context) {
+	accountId := c.PostForm("accountId")
+	path := c.PostForm("path")
+	prefix := c.PostForm("prefix")
+	url, qrCode, msg := service.ShortInfo(accountId, path, prefix)
+	c.JSON(http.StatusOK, gin.H{
+		"short_url": url,
+		"qr_code":   qrCode,
+		"msg":       msg,
+	})
+	c.Abort()
+}
+func shortRedirect(c *gin.Context) {
+	pathName := c.Request.URL.Path
+	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
+		pathName = pathName[0 : len(pathName)-1]
+	}
+	paths := strings.Split(pathName, "/")
+	if len(paths) == 3 && paths[1] == "s" {
+		redirectUri := service.GetRedirectUri(paths[2])
+		c.Redirect(http.StatusFound, redirectUri)
+	}
 	c.Abort()
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

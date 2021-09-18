@@ -6,6 +6,7 @@ import (
 	"PanIndex/entity"
 	"PanIndex/jobs"
 	"PanIndex/model"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/bluele/gcache"
@@ -14,6 +15,7 @@ import (
 	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	qrcode "github.com/skip2/go-qrcode"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
@@ -433,9 +435,16 @@ func GetPageStart(pageNo, pageSize int) int {
 
 func GetConfig() entity.Config {
 	c := entity.Config{}
+	cis := []entity.ConfigItem{}
 	accounts := []entity.Account{}
 	damagou := entity.Damagou{}
-	model.SqliteDb.Raw("select * from config where 1=1 limit 1").Find(&c)
+	model.SqliteDb.Raw("select * from config_item where 1=1").Find(&cis)
+	configMap := make(map[string]interface{})
+	for _, ci := range cis {
+		configMap[ci.K] = ci.V
+	}
+	configJson, _ := jsoniter.MarshalToString(configMap)
+	jsoniter.Unmarshal([]byte(configJson), &c)
 	model.SqliteDb.Raw("select * from account order by `default`desc").Find(&accounts)
 	model.SqliteDb.Raw("select * from damagou where 1-1 limit 1").Find(&damagou)
 	c.Accounts = accounts
@@ -447,7 +456,9 @@ func GetConfig() entity.Config {
 func SaveConfig(config map[string]interface{}) {
 	if config["accounts"] == nil {
 		//基本配置
-		model.SqliteDb.Table("config").Where("1 = 1").Updates(config)
+		for key, value := range config {
+			model.SqliteDb.Table("config_item").Where("k=?", key).Update("v", value)
+		}
 		if config["hide_file_id"] != nil {
 			hideFiles := config["hide_file_id"].(string)
 			if hideFiles != "" {
@@ -514,10 +525,14 @@ func DeleteAccount(id string) {
 	model.SqliteDb.Where("account_id = ?", id).Delete(entity.FileNode{})
 	//删除账号数据
 	var a entity.Account
+	var si entity.ShareInfo
 	a.Id = id
+	si.AccountId = id
 	model.SqliteDb.Model(entity.Account{}).Delete(a)
+	model.SqliteDb.Model(entity.ShareInfo{}).Delete(si)
 	go GetConfig()
 	delete(Util.CLoud189Sessions, id)
+	delete(Util.TeambitionSessions, id)
 	delete(Util.TeambitionSessions, id)
 }
 func GetAccount(id string) entity.Account {
@@ -881,4 +896,52 @@ func GetFiles(accountId, parentPath, sColumn, sOrder, mediaType string) []entity
 		}
 	})
 	return list
+}
+func ShortInfo(accountId, path, prefix string) (string, string, string) {
+	si := entity.ShareInfo{}
+	model.SqliteDb.Raw("select * from share_info where account_id = ? and file_path=?", accountId, path).First(&si)
+	shortUrl := ""
+	if accountId == "" || path == "" {
+		return "", "", "无效的id"
+	}
+	shortCode := ""
+	if si.ShortCode != "" {
+		shortCode = si.ShortCode
+	} else {
+		shortCodes, err := Util.Transform(accountId + path)
+		if err != nil {
+			log.Errorln(err)
+			return "", "", "短链生成失败"
+		}
+		shortCode = shortCodes[0]
+		model.SqliteDb.Create(entity.ShareInfo{
+			accountId, path, shortCode,
+		})
+	}
+	shortUrl = prefix + shortCode
+	png, err := qrcode.Encode(shortUrl, qrcode.Medium, 256)
+	if err != nil {
+		panic(err)
+	}
+	dataURI := "data:image/png;base64," + base64.StdEncoding.EncodeToString([]byte(png))
+	return shortUrl, dataURI, "短链生成成功"
+}
+func GetRedirectUri(shorCode string) string {
+	redirectUri := "/"
+	si := entity.ShareInfo{}
+	result := model.SqliteDb.Raw("select * from share_info where short_code=?", shorCode).First(&si)
+	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		ac := entity.Account{}
+		result = model.SqliteDb.Raw("select * from account where id=?", si.AccountId).First(&ac)
+		drive := "/d_0"
+		for i, account := range config.GloablConfig.Accounts {
+			if account.Id == ac.Id {
+				drive = fmt.Sprintf("/d_%d", i)
+			}
+		}
+		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			redirectUri = drive + si.FilePath + "?v"
+		}
+	}
+	return redirectUri
 }
