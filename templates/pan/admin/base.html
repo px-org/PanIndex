@@ -11,25 +11,27 @@
     <script src="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/loadingio/ldbutton@v1.0.1/dist/ldbtn.min.css"/>
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/loadingio/loading.css@v2.0.0/dist/loading.min.css"/>
-<style>
-    .mdui-list-item-content {
-        line-height: inherit;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-</style>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <style>
+        .mdui-list-item-content {
+            line-height: inherit;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+    </style>
 </head>
-<body class="mdui-drawer-body-left mdui-appbar-with-toolbar mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-{{if eq .Config.Theme "mdui"}}auto{{end}}{{if eq .Config.Theme "mdui-dark"}}dark{{end}}{{if eq .Config.Theme "mdui-light"}}light{{end}} mdui-loaded mdui-bottom-nav-fixed">
+<body class="{{- if ne .RedirectUrl "login"}}mdui-drawer-body-left{{- end}} mdui-appbar-with-toolbar mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}} mdui-loaded mdui-bottom-nav-fixed">
 <header class="mdui-appbar mdui-appbar-fixed">
     <div class="mdui-toolbar mdui-color-indigo">
-        <a href="javascript:;" class="mdui-btn mdui-btn-icon" mdui-drawer="{target: '#main-drawer', swipe: true}"><i class="mdui-icon material-icons">menu</i></a>
+        <a href="javascript:;" class="mdui-btn mdui-btn-icon" {{- if ne .RedirectUrl "login"}}mdui-drawer="{target: '#main-drawer', swipe: true}"{{- end}}><i class="mdui-icon material-icons">menu</i></a>
         <a href="/" class="mdui-typo-headline mdui-hidden-xs" target="_blank">PanIndex</a>
         <a href="/?admin" class="mdui-typo-title">配置</a>
         <div class="mdui-toolbar-spacer"></div>
-        <a id="theme-toggle" href="JavaScript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Config.Theme "mdui"}}4{{end}}{{if eq .Config.Theme "mdui-dark"}}5{{end}}{{if eq .Config.Theme "mdui-light"}}4{{end}}</i></a>
-        <a href="/?admin=&logout=true" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
+        <a id="theme-toggle" href="JavaScript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></a>
+        <a href="/?admin=start&logout=true" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
     </div>
 </header>
+{{- if ne .RedirectUrl "login"}}
 <div class="mdui-drawer" id="main-drawer">
     <div class="mdui-list" mdui-collapse="{accordion: true}" style="position:relative;">
         <div class="mdui-collapse-item mdui-collapse-item-open">
@@ -39,29 +41,29 @@
             </div>
             <div class="mdui-collapse-item-body mdui-list">
                 <a href="/?admin=start" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "start"}}mdui-list-item-active{{end}}">
-                    <div class="mdui-list-item-content">
-                        <div class="mdui-list-item-title">基础配置</div>
-                    </div>
+                <div class="mdui-list-item-content">
+                    <div class="mdui-list-item-title">基础配置</div>
+                </div>
                 </a>
                 <a href="/?admin=appearance" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "appearance"}}mdui-list-item-active{{end}}">
-                    <div class="mdui-list-item-content">
-                        <div class="mdui-list-item-title">外观</div>
-                    </div>
+                <div class="mdui-list-item-content">
+                    <div class="mdui-list-item-title">外观</div>
+                </div>
                 </a>
                 <a href="/?admin=view" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "view"}}mdui-list-item-active{{end}}">
-                    <div class="mdui-list-item-content">
-                        <div class="mdui-list-item-title">文件预览</div>
-                    </div>
+                <div class="mdui-list-item-content">
+                    <div class="mdui-list-item-title">文件预览</div>
+                </div>
                 </a>
             </div>
         </div>
-        <div class="mdui-collapse-item mdui-collapse-item-open">
+        <div class="mdui-collapse-item">
             <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
                 <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-red">security</i>
                 <div class="mdui-list-item-content">安全</div><i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
             </div>
             <div class="mdui-collapse-item-body mdui-list">
-                <a href="/?admin=params" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "file_lock"}}mdui-list-item-active{{end}}">
+                <a href="/?admin=pwd" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "pwd"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">文件夹加密</div>
                 </div>
@@ -98,8 +100,9 @@
             <b>版本：{{.Version}}v2.0.6</b>
             <!--<b>构建：{{.BuildTime}}2021-09-18 09:00:00</b>-->
         </div>
+    </div>
 </div>
-</div>
+{{- end}}
 <div class="mdui-container" style="margin-bottom: 80px;">
     {{if eq .RedirectUrl "start"}}
         {{block "admin-start" .}}{{end}}
@@ -109,6 +112,10 @@
         {{block "admin-security" .}}{{end}}
     {{else if eq .RedirectUrl "view"}}
         {{block "admin-view" .}}{{end}}
+    {{else if eq .RedirectUrl "login"}}
+        {{block "admin-login" .}}{{end}}
+    {{else if eq .RedirectUrl "pwd"}}
+        {{block "admin-pwd" .}}{{end}}
     {{else}}
     {{end}}
 </div>

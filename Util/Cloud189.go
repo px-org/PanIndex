@@ -346,7 +346,7 @@ func RsaEncode(origData []byte, j_rsakey string) string {
 // 打码狗平台登录
 func LoginDamagou(accountId string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
-	url := "http://www.damagou.top/apiv1/login.html?username=" + config.GloablConfig.Damagou.Username + "&password=" + config.GloablConfig.Damagou.Password
+	url := "http://www.damagou.top/apiv1/login-bak.html?username=" + config.GloablConfig.Damagou.Username + "&password=" + config.GloablConfig.Damagou.Password
 	res, _ := CLoud189Session.Get(url, nil)
 	rsText := regexp.MustCompile(`([A-Za-z0-9]+)`).FindStringSubmatch(res.Text)[1]
 	return rsText

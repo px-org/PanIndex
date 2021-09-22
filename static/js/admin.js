@@ -5,11 +5,11 @@ $('#theme-toggle').on('click', function(){
     if($('body').hasClass('mdui-theme-layout-dark')){
         $('body').removeClass('mdui-theme-layout-dark');
         $('#theme-toggle i').text('brightness_4');
-        $.cookie("Theme", "mdui-light", {expires : 3650, path:"/"});
+        Cookies.set("Theme", "mdui-light", {expires : 3650, path:"/"});
     }else{
         $('body').addClass('mdui-theme-layout-dark');
         $('#theme-toggle i').text('brightness_5');
-        $.cookie("Theme", "mdui-dark", {expires : 3650, path:"/"});
+        Cookies.set("Theme", "mdui-dark", {expires : 3650, path:"/"});
     }
 });
 function addAccount() {
@@ -29,8 +29,9 @@ $("#resetBtn").on('click', function () {
     $("#accountForm").find("input[name=mode][value=native]").prop("checked", true);
     $("#accountForm").find("input[name=sync_dir]").val("/");
     $("#accountForm").find("input[name=sync_child]").prop("checked",true);
+    $("#accountForm").find("input[name=sync_child]").prop("checked",true);
 });
-fillAccount(0);
+//fillAccount(0);
 function fillAccount(index) {
     if(accounts.length == 0){
         mdui.snackbar({

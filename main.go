@@ -165,10 +165,10 @@ func TlsHandler(port int) gin.HandlerFunc {
 func initTemplates() *template.Template {
 	themes := [6]string{"mdui", "mdui-light", "mdui-dark", "classic", "bootstrap", "materialdesign"}
 	box := packr.New("templates", "./templates")
-	/*data, _ := box.FindString("pan/admin/login.html")
-	tmpl := template.New("pan/admin/login.html")
-	if Util.FileExist("./templates/pan/admin/login.html") {
-		s, _ := ioutil.ReadFile("./templates/pan/admin/login.html")
+	/*data, _ := box.FindString("pan/admin/login-bak.html")
+	tmpl := template.New("pan/admin/login-bak.html")
+	if Util.FileExist("./templates/pan/admin/login-bak.html") {
+		s, _ := ioutil.ReadFile("./templates/pan/admin/login-bak.html")
 		data = string(s)
 	}
 	tmpl.Parse(data)
@@ -447,19 +447,24 @@ func admin(c *gin.Context) {
 	if admin == "" {
 		admin = "start"
 	}
+	cookieTheme, error := c.Cookie("Theme")
+	Theme := config.GloablConfig.Theme
+	if error == nil {
+		Theme = cookieTheme
+	}
 	sessionId, error := c.Cookie("sessionId")
 	if logout != "" && logout == "true" {
 		//退出登录
 		GC.Remove(sessionId)
-		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": admin, "Error": true, "Msg": "退出成功", "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
+		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": true, "Msg": "退出成功", "Theme": Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 	} else {
 		if c.Request.Method == "GET" {
 			if error == nil && sessionId != "" && GC.Has(sessionId) {
 				//登录状态跳转首页
 				config := service.GetConfig()
-				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "RedirectUrl": admin, "Version": boot.VERSION})
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "Theme": Theme, "RedirectUrl": admin, "Version": boot.VERSION})
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": admin, "Error": false, "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": false, "Theme": Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 			}
 		} else {
 			//登录
@@ -471,9 +476,9 @@ func admin(c *gin.Context) {
 				c.SetCookie("sessionId", u1, 7*24*60*60, "/", "", false, true)
 				GC.SetWithExpire(u1, u1, time.Hour*24*7)
 				config := service.GetConfig()
-				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "RedirectUrl": admin, "Version": boot.VERSION})
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "Theme": Theme, "RedirectUrl": admin, "Version": boot.VERSION})
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": admin, "Error": true, "Theme": config.Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": true, "Theme": Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
 			}
 		}
 	}

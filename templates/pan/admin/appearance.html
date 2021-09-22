@@ -2,7 +2,10 @@
     {{template "pan/admin/base.html" .}}
 {{end}}
 {{define "admin-appearance"}}
-<div class="mdui-p-a-2 mdui-typo">
+<div class="mdui-m-t-2">
+    <div class="mdui-typo mdui-p-b-2">
+        <h3> 外观 </h3>
+    </div>
     <form id="configForm">
         <div>
             <label class="mdui-textfield-label">主题</label>
@@ -16,11 +19,11 @@
             </select>
         </div>
         <div class="mdui-textfield">
-            <label class="mdui-textfield-label">网站图标</label>
+            <label class="mdui-textfield-label">网站图标(Favicon)</label>
             <input class="mdui-textfield-input" type="text" name="favicon_url" placeholder="网站图标Url" value="{{.Config.FaviconUrl}}" />
         </div>
         <div class="mdui-textfield">
-            <label class="mdui-textfield-label">自定义底部信息</label>
+            <label class="mdui-textfield-label">自定义底部信息(Footer)</label>
             <input class="mdui-textfield-input" type="text" name="footer" placeholder="支持html代码" value="{{.Config.Footer}}" />
         </div>
         <div class="mdui-textfield">

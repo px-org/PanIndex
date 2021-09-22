@@ -457,7 +457,7 @@ func SaveConfig(config map[string]interface{}) {
 	if config["accounts"] == nil {
 		//基本配置
 		for key, value := range config {
-			model.SqliteDb.Table("config_item").Where("k=?", key).Update("v", value)
+			model.SqliteDb.Table("config_item").Where("k=?", key).Update("v", Util.Strval(value))
 		}
 		if config["hide_file_id"] != nil {
 			hideFiles := config["hide_file_id"].(string)
