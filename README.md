@@ -16,7 +16,7 @@
 - OneDrive国际版
 
 ## 示例
-- [在线演示](https://t1.netrss.cf "https://t1.noki.icu")
+- [在线演示](https://t1.noki.icu "https://t1.noki.icu")
  
 ## 文档
 [在线文档](https://libsgh.github.io/PanIndex/)
