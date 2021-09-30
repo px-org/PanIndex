@@ -445,12 +445,33 @@ func GetConfig() entity.Config {
 	}
 	configJson, _ := jsoniter.MarshalToString(configMap)
 	jsoniter.Unmarshal([]byte(configJson), &c)
-	model.SqliteDb.Raw("select * from account order by `default`desc").Find(&accounts)
+	model.SqliteDb.Raw("select * from account order by `seq` asc").Find(&accounts)
 	model.SqliteDb.Raw("select * from damagou where 1-1 limit 1").Find(&damagou)
 	c.Accounts = accounts
 	c.Damagou = damagou
 	config.GloablConfig = c
 	return c
+}
+
+func TransformPwdDirs(pwdDirId string) []entity.PwdDirs {
+	pwdDirs := []entity.PwdDirs{}
+	arr := strings.Split(pwdDirId, ",")
+	for _, pwdDir := range arr {
+		s := strings.Split(pwdDir, ":")
+		pwdDirs = append(pwdDirs, entity.PwdDirs{
+			s[0], s[1],
+		})
+	}
+	return pwdDirs
+}
+
+func TransformHideFiles(hideFileId string) []string {
+	hideFiles := []string{}
+	arr := strings.Split(hideFileId, ",")
+	for _, hideFile := range arr {
+		hideFiles = append(hideFiles, hideFile)
+	}
+	return hideFiles
 }
 
 func SaveConfig(config map[string]interface{}) {
@@ -501,6 +522,9 @@ func SaveConfig(config map[string]interface{}) {
 				account.(map[string]interface{})["status"] = 1
 				account.(map[string]interface{})["cookie_status"] = 1
 				account.(map[string]interface{})["files_count"] = 0
+				var seq int
+				model.SqliteDb.Table("account").Raw("select seq from account where 1=1 order by seq desc").First(&seq)
+				account.(map[string]interface{})["seq"] = seq + 1
 				model.SqliteDb.Table("account").Create(account.(map[string]interface{}))
 				if mode == "cloud189" {
 					Util.CLoud189Sessions[id] = nic.Session{}
@@ -520,20 +544,29 @@ func SaveConfig(config map[string]interface{}) {
 	go GetConfig()
 	//其他（打码狗）
 }
-func DeleteAccount(id string) {
-	//删除账号对应节点数据
-	model.SqliteDb.Where("account_id = ?", id).Delete(entity.FileNode{})
-	//删除账号数据
-	var a entity.Account
-	var si entity.ShareInfo
-	a.Id = id
-	si.AccountId = id
-	model.SqliteDb.Model(entity.Account{}).Delete(a)
-	model.SqliteDb.Model(entity.ShareInfo{}).Delete(si)
+func DeleteAccount(ids []string) {
+	for _, id := range ids {
+		//删除账号对应节点数据
+		model.SqliteDb.Where("account_id = ?", id).Delete(entity.FileNode{})
+		//删除账号数据
+		var a entity.Account
+		var si entity.ShareInfo
+		a.Id = id
+		si.AccountId = id
+		model.SqliteDb.Model(entity.Account{}).Delete(a)
+		model.SqliteDb.Model(entity.ShareInfo{}).Delete(si)
+		go GetConfig()
+		delete(Util.CLoud189Sessions, id)
+		delete(Util.TeambitionSessions, id)
+		delete(Util.TeambitionSessions, id)
+	}
+}
+func SortAccounts(ids []string) {
+	for i, id := range ids {
+		i++
+		model.SqliteDb.Model(entity.Account{}).Where("id=?", id).Update("seq", i)
+	}
 	go GetConfig()
-	delete(Util.CLoud189Sessions, id)
-	delete(Util.TeambitionSessions, id)
-	delete(Util.TeambitionSessions, id)
 }
 func GetAccount(id string) entity.Account {
 	account := entity.Account{}

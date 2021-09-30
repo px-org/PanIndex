@@ -28,7 +28,7 @@
         <a href="/?admin" class="mdui-typo-title">配置</a>
         <div class="mdui-toolbar-spacer"></div>
         <a id="theme-toggle" href="JavaScript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></a>
-        <a href="/?admin=start&logout=true" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
+        <a href="/?admin=common&logout=true" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
     </div>
 </header>
 {{- if ne .RedirectUrl "login"}}
@@ -40,7 +40,7 @@
                 <div class="mdui-list-item-content">通用</div><i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
             </div>
             <div class="mdui-collapse-item-body mdui-list">
-                <a href="/?admin=start" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "start"}}mdui-list-item-active{{end}}">
+                <a href="/?admin=common" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "common"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">基础配置</div>
                 </div>
@@ -57,7 +57,7 @@
                 </a>
             </div>
         </div>
-        <div class="mdui-collapse-item">
+        <div class="mdui-collapse-item mdui-collapse-item-open">
             <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
                 <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-red">security</i>
                 <div class="mdui-list-item-content">安全</div><i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
@@ -68,33 +68,29 @@
                     <div class="mdui-list-item-title">文件夹加密</div>
                 </div>
                 </a>
-                <a href="/?admin=params" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "file_hide"}}mdui-list-item-active{{end}}">
+                <a href="/?admin=hide" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "hide"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">隐藏文件（夹）</div>
                 </div>
                 </a>
-                <a href="/?admin=params" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "params"}}mdui-list-item-active{{end}}">
+                <a href="/?admin=safety" class="mdui-list-item mdui-ripple {{if eq .RedirectUrl "safety"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">防盗链</div>
                 </div>
                 </a>
             </div>
         </div>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme" href="/?admin=account">
-            <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue">account_circle</i>
-            <div class="mdui-list-item-content">账号绑定</div>
+        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq .RedirectUrl "disk"}}mdui-list-item-active{{end}}" href="/?admin=disk">
+            <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue">storage</i>
+            <div class="mdui-list-item-content">网盘挂载</div>
         </a>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme" href="/?admin=scheduled">
+        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq .RedirectUrl "scheduled"}}mdui-list-item-active{{end}}" href="/?admin=scheduled">
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-brown">schedule</i>
             <div class="mdui-list-item-content">定时任务</div>
         </a>
         <a class="mdui-list-item mdui-ripple mdui-text-color-theme" href="/?admin=upload">
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue-grey">cloud_upload</i>
             <div class="mdui-list-item-content">手动上传</div>
-        </a>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme" href="/?admin=sync">
-            <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-teal">sync</i>
-            <div class="mdui-list-item-content">同步</div>
         </a>
         <div class="mdui-text-center mdui-typo" style="bottom:0;position:fixed;left:0;right:0;height: 56px">
             <b>版本：{{.Version}}v2.0.6</b>
@@ -104,33 +100,33 @@
 </div>
 {{- end}}
 <div class="mdui-container" style="margin-bottom: 80px;">
-    {{if eq .RedirectUrl "start"}}
-        {{block "admin-start" .}}{{end}}
-    {{else if eq .RedirectUrl "appearance"}}
+    {{- if eq .RedirectUrl "common"}}
+        {{block "admin-common" .}}{{end}}
+    {{- else if eq .RedirectUrl "appearance"}}
         {{block "admin-appearance" .}}{{end}}
-    {{else if eq .RedirectUrl "security"}}
+    {{- else if eq .RedirectUrl "security"}}
         {{block "admin-security" .}}{{end}}
-    {{else if eq .RedirectUrl "view"}}
+    {{- else if eq .RedirectUrl "view"}}
         {{block "admin-view" .}}{{end}}
-    {{else if eq .RedirectUrl "login"}}
+    {{- else if eq .RedirectUrl "login"}}
         {{block "admin-login" .}}{{end}}
-    {{else if eq .RedirectUrl "pwd"}}
+    {{- else if eq .RedirectUrl "pwd"}}
         {{block "admin-pwd" .}}{{end}}
-    {{else}}
-    {{end}}
+    {{- else if eq .RedirectUrl "hide"}}
+        {{block "admin-hide" .}}{{end}}
+    {{- else if eq .RedirectUrl "safety"}}
+        {{block "admin-safety" .}}{{end}}
+    {{- else if eq .RedirectUrl "disk"}}
+        {{block "admin-disk" .}}{{end}}
+    {{- else if eq .RedirectUrl "scheduled"}}
+        {{block "admin-scheduled" .}}{{end}}
+    {{- else}}
+    {{- end}}
 </div>
 <script>
     var ApiToken = '{{.Config.ApiToken}}';
-    var accounts = [
-        {{range .Config.Accounts}}
-    {"name":"{{.Name}}","id":"{{.Id}}","mode":"{{.Mode}}","user":"{{.User}}","password":"{{.Password}}",
-        "refresh_token":"{{.RefreshToken}}","redirect_uri":"{{.RedirectUri}}","root_id":"{{.RootId}}",
-        "cookie_status":"{{.CookieStatus}}","status":"{{.Status}}","files_count":"{{.FilesCount}}","time_span":"{{.TimeSpan}}",
-        "last_op_time":"{{.LastOpTime}}", "sync_dir":"{{.SyncDir}}", "sync_child": "{{.SyncChild}}"
-    },
-    {{end}}
-    ];
 </script>
-<script src="/static/js/admin.js?v=206"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="/static/js/admin.js?v=207"></script>
 </body>
 </html>

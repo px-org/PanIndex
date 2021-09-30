@@ -9,6 +9,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
@@ -31,8 +32,8 @@ import (
 //var CLoud189Session nic.Session
 var CLoud189Sessions = map[string]nic.Session{}
 
-//获取文件列表
-func Cloud189GetFiles(accountId, rootId, fileId, prefix string, hide, hasPwd int, syncChild bool) {
+//获取文件列表2.0
+func Cloud189GetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syncChild bool) {
 	CLoud189Session := CLoud189Sessions[accountId]
 	defer func() {
 		if p := recover(); p != nil {
@@ -41,109 +42,170 @@ func Cloud189GetFiles(accountId, rootId, fileId, prefix string, hide, hasPwd int
 	}()
 	pageNum := 1
 	for {
-		url := fmt.Sprintf("https://cloud.189.cn/v2/listFiles.action?fileId=%s&mediaType=&keyword=&inGroupSpace=false&orderBy=3&order=DESC&pageNum=%d&pageSize=100&noCache=%s", fileId, pageNum, random())
-		resp, err := CLoud189Session.Get(url, nil)
+		url := fmt.Sprintf("https://cloud.189.cn/api/open/file/listFiles.action?noCache=%s&pageSize=100&pageNum=%d&mediaType=0&folderId=%s&iconOption=5&orderBy=lastOpTime&descending=true", random(), pageNum, fileId)
+		resp, err := CLoud189Session.Get(url, nic.H{
+			Headers: nic.KV{
+				"accept": "application/json;charset=UTF-8",
+			},
+		})
 		if err != nil {
 			panic(err.Error())
 		}
 		byteFiles := []byte(resp.Text)
-		totalCount := jsoniter.Get(byteFiles, "recordCount").ToInt()
-		d := jsoniter.Get(byteFiles, "data")
-		paths := jsoniter.Get(byteFiles, "path")
-		ps := []entity.Paths{}
-		err = jsoniter.Unmarshal([]byte(paths.ToString()), &ps)
-		p := ""
-		flag := false
-		if err == nil {
-			for _, item := range ps {
-				if flag == true && item.FileId != rootId {
-					if strings.HasSuffix(p, "/") != true {
-						p += "/" + item.FileName
-					} else {
-						p += item.FileName
-					}
-				}
-				if item.FileId == rootId {
-					flag = true
-				}
-				if flag == true && item.FileId == rootId {
-					p += "/"
-				}
-			}
-		}
-		if p == "/" && prefix != "" {
-			p = prefix
-		} else if p != "/" && prefix != "" {
-			p = prefix + p
-		}
-		if d != nil {
-			m := []entity.FileNode{}
-			err = jsoniter.Unmarshal([]byte(d.ToString()), &m)
-			if err == nil {
-				for _, item := range m {
-					item.AccountId = accountId
-					if p == "/" {
-						item.Path = "/" + item.FileName
-					} else {
-						item.Path = p + "/" + item.FileName
-					}
-					item.Id = uuid.NewV4().String()
-					item.Delete = 1
-					item.ParentPath = p
-					item.SizeFmt = FormatFileSize(item.FileSize)
-					item.Hide = 0
-					item.HasPwd = 0
-					if hide == 1 {
-						item.Hide = hide
-					} else {
-						if config.GloablConfig.HideFileId != "" {
-							listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
-							sort.Strings(listSTring)
-							i := sort.SearchStrings(listSTring, item.FileId)
-							if i < len(listSTring) && listSTring[i] == item.FileId {
-								item.Hide = 1
-							}
-						}
-					}
-					if hasPwd == 1 {
-						item.HasPwd = hasPwd
-					} else {
-						if config.GloablConfig.PwdDirId != "" {
-							listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
-							sort.Strings(listSTring)
-							i := sort.SearchStrings(listSTring, item.FileId)
-							if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == item.FileId {
-								item.HasPwd = 1
-							}
-						}
-					}
-					if item.IsFolder == true {
-						if syncChild {
-							Cloud189GetFiles(accountId, rootId, item.FileId, prefix, item.Hide, item.HasPwd, syncChild)
-						}
-					} else {
-						//如果是文件，解析下载直链
-						/*dRedirectRep, _ := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
-							AllowRedirect: false,
-						})
-						redirectUrl := dRedirectRep.Header.Get("Location")
-						dRedirectRep, _ = CLoud189Session.Get(redirectUrl, nic.H{
-							AllowRedirect: false,
-						})
-						item.DownloadUrl = dRedirectRep.Header.Get("Location")*/
-					}
-					item.CacheTime = time.Now().UnixNano()
-					model.SqliteDb.Create(item)
-				}
-			}
-		}
-		if pageNum*100 < totalCount {
-			pageNum++
-		} else {
+		totalCount := jsoniter.Get(byteFiles, "fileListAO").Get("count").ToInt()
+		if totalCount == 0 {
 			break
 		}
+		d := jsoniter.Get(byteFiles, "fileListAO").Get("folderList")
+		var folderList []Folder
+		json.Unmarshal([]byte(d.ToString()), &folderList)
+		//同步文件夹
+		for _, item := range folderList {
+			fn := entity.FileNode{}
+			fn.FileId = fmt.Sprintf("%d", item.Id)
+			fn.AccountId = accountId
+			fn.FileName = item.Name
+			fn.CreateTime = item.CreateDate
+			fn.LastOpTime = item.LastOpTime
+			fn.FileType = ""
+			fn.IsFolder = true
+			fn.FileSize = 0
+			fn.SizeFmt = "-"
+			fn.MediaType = 0
+			fn.DownloadUrl = ""
+			fn.ParentId = fmt.Sprintf("%d", item.ParentId)
+			fn.ParentPath = p
+			fn.Hide = 0
+			fn.HasPwd = 0
+			if hide == 1 {
+				fn.Hide = hide
+			} else {
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && listSTring[i] == fn.FileId {
+						fn.Hide = 1
+					}
+				}
+			}
+			if hasPwd == 1 {
+				fn.HasPwd = hasPwd
+			} else {
+				if config.GloablConfig.PwdDirId != "" {
+					listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == fn.FileId {
+						fn.HasPwd = 1
+					}
+				}
+			}
+			if p == "/" {
+				fn.Path = p + fn.FileName
+			} else {
+				fn.Path = p + "/" + fn.FileName
+			}
+			if fn.IsFolder == true {
+				//同步子目录&&子目录不为空
+				if syncChild && item.FileCount > 0 {
+					Cloud189GetFiles(accountId, rootId, fn.FileId, fn.Path, fn.Hide, fn.HasPwd, syncChild)
+				}
+			}
+			fn.Delete = 1
+			fn.Id = uuid.NewV4().String()
+			fn.CacheTime = time.Now().UnixNano()
+			model.SqliteDb.Create(fn)
+			/**/
+		}
+		//同步文件
+		d = jsoniter.Get(byteFiles, "fileListAO").Get("fileList")
+		var fileList []File
+		json.Unmarshal([]byte(d.ToString()), &fileList)
+		//同步文件夹
+		for _, item := range fileList {
+			fn := entity.FileNode{}
+			fn.AccountId = accountId
+			fn.FileId = fmt.Sprintf("%d", item.Id)
+			fn.FileName = item.Name
+			fn.FileIdDigest = ""
+			fn.CreateTime = item.CreateDate
+			fn.LastOpTime = item.LastOpTime
+			fn.FileSize = item.Size
+			fn.SizeFmt = FormatFileSize(fn.FileSize)
+			fn.Id = uuid.NewV4().String()
+			fn.CacheTime = time.Now().UnixNano()
+			fn.IsFolder = false
+			fn.IsStarred = false
+			fn.MediaType = item.MediaType
+			fn.FileType = GetFileType(fn.FileName)
+			fn.ParentId = fileId
+			fn.ParentPath = p
+			if p == "/" {
+				fn.Path = p + fn.FileName
+			} else {
+				fn.Path = p + "/" + fn.FileName
+			}
+			fn.Hide = 0
+			fn.HasPwd = 0
+			if hide == 1 {
+				fn.Hide = hide
+			} else {
+				if config.GloablConfig.HideFileId != "" {
+					listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && listSTring[i] == fn.FileId {
+						fn.Hide = 1
+					}
+				}
+			}
+			if hasPwd == 1 {
+				fn.HasPwd = hasPwd
+			} else {
+				if config.GloablConfig.PwdDirId != "" {
+					listSTring := strings.Split(config.GloablConfig.PwdDirId, ",")
+					sort.Strings(listSTring)
+					i := sort.SearchStrings(listSTring, fn.FileId)
+					if i < len(listSTring) && strings.Split(listSTring[i], ":")[0] == fn.FileId {
+						fn.HasPwd = 1
+					}
+				}
+			}
+			fn.Delete = 1
+			fn.Id = uuid.NewV4().String()
+			fn.CacheTime = time.Now().UnixNano()
+			model.SqliteDb.Create(fn)
+		}
+		pageNum++
 	}
 }
+
+type Folder struct {
+	CreateDate   string `json:"createDate"`
+	FileCata     int    `json:"fileCata"`
+	FileCount    int    `json:"fileCount"`
+	FileListSize int    `json:"fileListSize"`
+	Id           int64  `json:"id"`
+	LastOpTime   string `json:"lastOpTime"`
+	Name         string `json:"name"`
+	ParentId     int64  `json:"parentId"`
+	Rev          string `json:"rev"`
+	StarLabel    int    `json:"starLabel"`
+}
+type File struct {
+	CreateDate string `json:"createDate"`
+	FileCata   int    `json:"fileCata"`
+	Id         int64  `json:"id"`
+	LastOpTime string `json:"lastOpTime"`
+	Md5        string `json:"md5"`
+	MediaType  int    `json:"mediaType"`
+	Name       string `json:"name"`
+	Rev        string `json:"rev"`
+	StarLabel  int    `json:"starLabel"`
+	Size       int64  `json:"size"`
+}
+
 func GetDownlaodUrl(accountId, fileIdDigest string) string {
 	CLoud189Session := CLoud189Sessions[accountId]
 	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
@@ -152,7 +214,6 @@ func GetDownlaodUrl(accountId, fileIdDigest string) string {
 		DisableKeepAlives: true,
 		SkipVerifyTLS:     true,
 	})
-	fmt.Println(len(dRedirectRep.Bytes))
 	if dRedirectRep != nil {
 		defer dRedirectRep.Body.Close()
 	}

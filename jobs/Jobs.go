@@ -182,9 +182,6 @@ func SyncOneAccount(account entity.Account) {
 	}
 	model.SqliteDb.Table("account").Where("id=?", account.Id).Update("status", -1)
 	if account.Mode == "cloud189" {
-		if syncDir == "/" {
-			syncDir = ""
-		}
 		Util.Cloud189GetFiles(account.Id, fileId, fileId, syncDir, 0, 0, syncChild)
 	} else if account.Mode == "teambition" {
 		rootId := Util.ProjectIdCheck("www", account.Id, account.RootId)

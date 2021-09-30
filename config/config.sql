@@ -22,3 +22,6 @@ INSERT INTO "main"."config_item"("k", "v", "g") VALUES ('refresh_cookie', '', 'c
 INSERT INTO "main"."config_item"("k", "v", "g") VALUES ('update_folder_cache', '', 'cron');
 INSERT INTO "main"."config_item"("k", "v", "g") VALUES ('heroku_keep_alive', '', 'cron');
 INSERT INTO "main"."config_item"("k", "v", "g") VALUES ('heroku_app_url', '', 'cron');
+INSERT INTO "main"."config_item"("k", "v", "g") VALUES ('enable_safety_link', '0', 'safety');
+INSERT INTO "main"."config_item"("k", "v", "g") VALUES ('only_referrer', '', 'safety');
+INSERT INTO "main"."config_item"("k", "v", "g") VALUES ('is_null_referrer', '0', 'safety');

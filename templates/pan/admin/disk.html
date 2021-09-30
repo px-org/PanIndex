@@ -1,0 +1,230 @@
+{{define "pan/admin/disk.html"}}
+    {{template "pan/admin/base.html" .}}
+{{end}}
+{{define "admin-disk"}}
+<div class="mdui-m-t-2">
+    <div class="mdui-typo mdui-p-b-2">
+        <h3> 网盘挂载 </h3>
+    </div>
+    <div class="mdui-table-fluid">
+        <div class="mdui-toolbar mdui-float-right">
+            <a id="addDiskBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '添加'}">
+                <i class="mdui-icon material-icons">add_circle</i>
+            </a>
+            <a id="updateDiskBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '修改'}">
+                <i class="mdui-icon material-icons">update</i>
+            </a>
+            <a id="openUploadDialog" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件上传'}">
+                <i class="mdui-icon material-icons">file_upload</i>
+            </a>
+            <a href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新令牌'}">
+                <i class="mdui-icon material-icons">refresh</i>
+            </a>
+            <a id="" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新缓存'}">
+                <i class="mdui-icon material-icons">cached</i>
+            </a>
+            <a id="delDiskBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '删除'}">
+                <i class="mdui-icon material-icons">remove_circle</i>
+            </a>
+        </div>
+        <table class="mdui-table mdui-table-hoverable mdui-table-selectable">
+            <thead>
+            <tr>
+                <th>网盘名称</th>
+                <th>网盘类型</th>
+                <th>登录状态</th>
+                <th>缓存状态</th>
+                <th>文件总数</th>
+                <th>上一次同步</th>
+            </tr>
+            </thead>
+            <tbody id="items">
+            {{- if gt (len .Config.Accounts) 0 }}
+            {{- range .Config.Accounts}}
+            <tr data-id="{{.Id}}">
+                <td>
+                    <div class="mdui-chip handle">
+                        {{- if eq .Mode "cloud189"}}
+                            <span class="mdui-chip-icon mdui-color-cyan"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "teambition-us"}}
+                            <span class="mdui-chip-icon mdui-color-blue"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "teambition"}}
+                            <span class="mdui-chip-icon mdui-color-blue"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "onedrive"}}
+                            <span class="mdui-chip-icon mdui-color-blue-200"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "native"}}
+                            <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "aliyundrive"}}
+                            <span class="mdui-chip-icon mdui-color-deep-purple-accent"><i class="mdui-icon material-icons">face</i></span>
+                        {{else}}
+                        {{end}}
+                        <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
+                    </div>
+                </td>
+                <td>
+                {{- if eq .Mode "native"}}
+                    本地磁盘
+                {{- else if eq .Mode "cloud189"}}
+                    天翼云盘
+                {{- else if eq .Mode "aliyundrive"}}
+                    阿里云盘
+                {{- else if eq .Mode "onedrive"}}
+                    微软云盘
+                {{- else if eq .Mode "teambition"}}
+                    Teambition项目盘
+                {{- else if eq .Mode "teambition-us"}}
+                    Teambition国际服
+                {{- else}}
+                {{- end}}
+                </td>
+                <td>
+                    {{- if eq .Mode "native"}}
+                        -
+                    {{- else}}
+                        {{- if eq .CookieStatus 1}}
+                            未刷新
+                        {{- else if eq .CookieStatus 2}}
+                            正常
+                        {{- else if eq .CookieStatus 3}}
+                            失效
+                        {{- else if eq .CookieStatus 4}}
+                            登录失败
+                        {{- else if eq .CookieStatus -1}}
+                            刷新中
+                        {{- else}}
+                            未知
+                        {{- end}}
+                    {{- end}}
+                </td>
+                <td>
+                    {{- if eq .Mode "native"}}
+                        -
+                    {{- else}}
+                        {{- if eq .Status 1}}
+                            未缓存
+                        {{- else if eq .Status 2}}
+                            缓存成功
+                        {{- else if eq .Status 3}}
+                            缓存失败
+                        {{- else if eq .Status -1}}
+                            缓存中
+                        {{- else}}
+                            未知
+                        {{- end}}
+                    {{- end}}
+                </td>
+                <td>
+                    {{- if eq .Mode "native"}}
+                    -
+                    {{- else}}
+                    {{.FilesCount}}
+                    {{- end}}
+                </td>
+                <td>
+                    {{- if eq .Mode "native"}}
+                    -
+                    {{- else}}
+                    {{.LastOpTime}}
+                    {{- end}}
+                </td>
+            </tr>
+            {{- end}}
+            {{- end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="disk_dialog" class="mdui-dialog">
+    <div class="mdui-dialog-content">
+        <div id="title" class="mdui-dialog-title">添加</div>
+        <form id="accountForm" onsubmit="return savePwddir()">
+        <div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+            <i class="mdui-icon material-icons">message</i>
+            <label class="mdui-textfield-label">网盘名称</label>
+            <input type="hidden" name="id" />
+            <input class="mdui-textfield-input" type="text" name="name" value="" required>
+            <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/config?id=%e8%b4%a6%e5%8f%b7%e7%bb%91%e5%ae%9a" target="_blank">说明</a></div>
+        </div>
+        <div class="mdui-textfield">
+            <i class="mdui-icon material-icons">more_horiz</i>
+            <label class="mdui-textfield-label mdui-text-color-pink-300">网盘模式</label>
+            <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="mode" checked="checked" value="native" />
+                    <i class="mdui-radio-icon"></i>
+                    本地磁盘
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="mode" value="cloud189" />
+                    <i class="mdui-radio-icon"></i>
+                    天翼云盘
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="mode" value="aliyundrive" />
+                    <i class="mdui-radio-icon"></i>
+                    阿里云盘
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="mode" value="teambition" />
+                    <i class="mdui-radio-icon"></i>
+                    Teambition项目盘
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="mode" value="teambition-us" />
+                    <i class="mdui-radio-icon"></i>
+                    Teambition国际盘
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="mode" value="onedrive" />
+                    <i class="mdui-radio-icon"></i>
+                    OneDrive
+                </label>
+            </div>
+        </div>
+        <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">account_circle</i>
+            <label class="mdui-textfield-label" id="user_label">用户名</label>
+            <input class="mdui-textfield-input" type="text" name="user" required>
+        </div>
+        <div id="PasswordDiv" class="mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">lock</i>
+            <label class="mdui-textfield-label" id="password_label">密码</label>
+            <input class="mdui-textfield-input" type="text" name="password">
+        </div>
+        <div id="RefreshTokenDiv" class="mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">refresh</i>
+            <label class="mdui-textfield-label">刷新令牌（Refresh Token）</label>
+            <input class="mdui-textfield-input" type="text" name="refresh_token">
+        </div>
+        <div id="RedirectUriDiv" class="mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">insert_link</i>
+            <label class="mdui-textfield-label">重定向地址</label>
+            <input class="mdui-textfield-input" type="text" name="redirect_uri" placeholder="https://mgaa.noki.workers.dev">
+        </div>
+        <div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+            <i class="mdui-icon material-icons">folder_open</i>
+            <label class="mdui-textfield-label">根目录ID(路径)</label>
+            <input class="mdui-textfield-input" type="text" name="root_id" required>
+            <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
+        </div>
+        <div class="sync-div mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">folder_open</i>
+            <label class="mdui-textfield-label">定时缓存目录</label>
+            <input class="mdui-textfield-input" type="text" name="sync_dir" value="/" placeholder="/">
+            <div class="mdui-textfield-helper">定时任务只更新某个目录的缓存， 默认缓存全部</div>
+        </div>
+        <div class="sync-div" style="margin-left: 50px;margin-top: 10px;margin-bottom: 10px">
+            <label class="mdui-checkbox">
+                <input type="checkbox" name="sync_child" value="0" checked/>
+                <i class="mdui-checkbox-icon"></i>
+                缓存是否包含子目录
+            </label>
+        </div>
+        </form>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button id="saveAccountBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 保存</button>
+        <button id="closeAccountBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600"><i class="mdui-icon material-icons">close</i> 关闭</button>
+    </div>
+</div>
+{{end}}

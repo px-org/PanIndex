@@ -78,8 +78,12 @@ func main() {
 			raw(c) //原始文件预览
 		} else if method == http.MethodPost && path == "/api/admin/save" {
 			adminSave(c) //后台配置保存
-		} else if path == "/api/admin/deleteAccount" {
-			adminDeleteAccount(c) //后台删除账号
+		} else if method == http.MethodPost && path == "/api/admin/getAccount" {
+			adminGetAccount(c) //查询账号信息
+		} else if path == "/api/admin/deleteAccounts" {
+			adminDeleteAccounts(c) //后台删除账号
+		} else if path == "/api/admin/sortAccounts" {
+			adminSortAccounts(c) //后台账号拖动排序
 		} else if path == "/api/admin/updateCache" {
 			updateCache(c) //后台刷新缓存
 		} else if path == "/api/admin/updateCookie" {
@@ -443,12 +447,15 @@ func downloadMultiFiles(c *gin.Context) {
 
 func admin(c *gin.Context) {
 	logout := c.Query("logout")
-	admin := c.Query("admin")
-	if admin == "" {
-		admin = "start"
+	adminModule := c.Query("admin")
+	if adminModule == "" {
+		adminModule = "common"
 	}
 	cookieTheme, error := c.Cookie("Theme")
-	Theme := config.GloablConfig.Theme
+	Theme := "mdui"
+	if strings.HasPrefix(config.GloablConfig.Theme, "mdui") {
+		Theme = config.GloablConfig.Theme
+	}
 	if error == nil {
 		Theme = cookieTheme
 	}
@@ -456,32 +463,49 @@ func admin(c *gin.Context) {
 	if logout != "" && logout == "true" {
 		//退出登录
 		GC.Remove(sessionId)
-		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": true, "Msg": "退出成功", "Theme": Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
+		c.HTML(http.StatusOK, "pan/admin/login.html",
+			gin.H{"RedirectUrl": "login",
+				"Error":      true,
+				"Msg":        "退出成功",
+				"Theme":      Theme,
+				"FaviconUrl": config.GloablConfig.FaviconUrl})
 	} else {
+		configData := service.GetConfig()
+		data := gin.H{"Config": configData, "Theme": Theme, "RedirectUrl": adminModule, "Version": boot.VERSION}
+		if adminModule == "pwd" {
+			pwdDirs := service.TransformPwdDirs(configData.PwdDirId)
+			data["PwdDirs"] = pwdDirs
+		}
+		if adminModule == "hide" {
+			hideFiles := service.TransformHideFiles(configData.HideFileId)
+			data["HideFiles"] = hideFiles
+		}
 		if c.Request.Method == "GET" {
 			if error == nil && sessionId != "" && GC.Has(sessionId) {
 				//登录状态跳转首页
-				config := service.GetConfig()
-				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "Theme": Theme, "RedirectUrl": admin, "Version": boot.VERSION})
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", adminModule), data)
 			} else {
 				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": false, "Theme": Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 			}
 		} else {
 			//登录
 			password, _ := c.GetPostForm("password")
-			config := service.GetConfig()
-			if password == config.AdminPassword {
+			if password == config.GloablConfig.AdminPassword {
 				//登录成功
 				u1 := uuid.NewV4().String()
 				c.SetCookie("sessionId", u1, 7*24*60*60, "/", "", false, true)
 				GC.SetWithExpire(u1, u1, time.Hour*24*7)
-				config := service.GetConfig()
-				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", admin), gin.H{"Config": config, "Theme": Theme, "RedirectUrl": admin, "Version": boot.VERSION})
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", adminModule), data)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": true, "Theme": Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": true, "Theme": Theme, "FaviconUrl": config.GloablConfig.FaviconUrl, "Msg": "密码错误，请重试！"})
 			}
 		}
 	}
+}
+
+func adminGetAccount(c *gin.Context) {
+	id := c.Query("id")
+	c.JSON(http.StatusOK, service.GetAccount(id))
 }
 
 func adminSave(c *gin.Context) {
@@ -491,10 +515,18 @@ func adminSave(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置已更新，部分配置重启后生效！"})
 }
 
-func adminDeleteAccount(c *gin.Context) {
-	id := c.Query("id")
-	service.DeleteAccount(id)
+func adminDeleteAccounts(c *gin.Context) {
+	delIds := []string{}
+	c.BindJSON(&delIds)
+	service.DeleteAccount(delIds)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
+}
+
+func adminSortAccounts(c *gin.Context) {
+	sortIds := []string{}
+	c.BindJSON(&sortIds)
+	service.SortAccounts(sortIds)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "排序完成！"})
 }
 
 func getConfig(c *gin.Context) {

@@ -58,6 +58,8 @@ type Config struct {
 	AdminPassword     string    `json:"admin_password" gorm:"default:'PanIndex'"`
 	Damagou           Damagou   `json:"damagou" gorm:"-"`
 	OnlyReferrer      string    `json:"only_referrer"`
+	EnableSafetyLink  string    `json:"enable_safety_link"`
+	IsNullReferrer    string    `json:"is_null_referrer"`
 	RefreshCookie     string    `json:"refresh_cookie" gorm:"default:'0 0 8 1/1 * ?'"`
 	UpdateFolderCache string    `json:"update_folder_cache"`
 	HerokuKeepAlive   string    `json:"heroku_keep_alive"`
@@ -78,6 +80,10 @@ type ConfigItem struct {
 	V string `json:"v"` //配置项值
 	G string `json:"g"` //配置项分组
 }
+type PwdDirs struct {
+	FileId   string `json:"file_id"`  //文件id
+	Password string `json:"password"` //密码
+}
 type Account struct {
 	Id           string `json:"id"`            //网盘账号id
 	Name         string `json:"name"`          //网盘账号名称
@@ -89,6 +95,7 @@ type Account struct {
 	RedirectUri  string `json:"redirect_uri"`  //重定向url（onedrive）
 	RootId       string `json:"root_id"`       //目录id
 	Default      int    `json:"default"`       //是否默认
+	Seq          int    `json:"seq"`           //排序序号
 	FilesCount   int    `json:"files_count"`   //文件总数
 	Status       int    `json:"status"`        //状态：-1，缓存中 1，未缓存，2缓存成功，3缓存失败
 	CookieStatus int    `json:"cookie_status"` //cookie状态：-1刷新中， 1未刷新，2正常，3失效

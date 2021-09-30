@@ -75,7 +75,7 @@ func InitDb(host, port, dataPath string, debug bool) {
 			}
 			SqliteDb.Model(entity.ConfigItem{}).Exec(string(file))
 		}
-		SqliteDb.Table("config_item").Where("k='api_token'").Update("`v`=?", ApiToken)
+		SqliteDb.Table("config_item").Where("k='api_token'").Update("v", ApiToken)
 	}
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
