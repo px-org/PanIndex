@@ -13,7 +13,12 @@
 ## 安装
 
 ### 一键脚本
-未完成
+- 基于`systemd`的安装脚本，以`root`账户运行
+- 脚本仓库：https://github.com/libsgh/PanIndex-install
+```
+# bash <(curl -L https://github.com/libsgh/PanIndex-install/raw/main/install-release.sh) -h
+```
+
 ### 直接运行
 启动参数<br>
 -host=0.0.0.0 #绑定host，默认0.0.0.0<br>

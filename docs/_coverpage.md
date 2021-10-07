@@ -1,11 +1,11 @@
 ![logo](_media/index.png)
 
-# PanIndex <small>v2.0.5</small>
+# PanIndex <small>v2.0.6s</small>
 
 > 一个简易的网盘目录列表.
 >
 - 跨平台、易部署
-- 多模式，多账户
+- 多模式，多网盘
 - 多主题
 - 下载直链
 - 防盗链
