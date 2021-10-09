@@ -25,7 +25,7 @@
             method: 'GET',
             url: fullUrl,
             success: function (data) {
-                if("{{.CodeType}}" == "text"){
+                if("{{(index .List 0).FileType}}" == "txt"){
                     $("#editor").html(data);
                 }else{
                     try {
@@ -35,7 +35,7 @@
                         }
                     } catch (e) {
                     }
-                    var html = hljs.highlight(data, {language: '{{.CodeType}}'}).value;
+                    var html = hljs.highlightAuto(data).value;
                     $("#editor").html(html);
                 }
             }

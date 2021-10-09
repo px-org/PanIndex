@@ -73,12 +73,12 @@ type Config struct {
 	Video             string    `json:"video"`          //视频
 	Code              string    `json:"code"`           //代码
 	Doc               string    `json:"doc"`            //文档
-	Pdf               string    `json:"pdf"`            //pdf
+	Other             string    `json:"other"`          //other
 }
 type ConfigItem struct {
-	K string `json:"k"` //配置项key
-	V string `json:"v"` //配置项值
-	G string `json:"g"` //配置项分组
+	K string `json:"k" gorm:"unique;not null"` //配置项key
+	V string `json:"v"`                        //配置项值
+	G string `json:"g"`                        //配置项分组
 }
 type PwdDirs struct {
 	FileId   string `json:"file_id"`  //文件id
@@ -103,6 +103,7 @@ type Account struct {
 	LastOpTime   string `json:"last_op_time"` //最近一次更新时间
 	SyncDir      string `json:"sync_dir"`     //定时缓存指定目录
 	SyncChild    int    `json:"sync_child"`   //是否缓存指定目录的子目录
+	SyncCron     string `json:"sync_cron"`    //定时任务-缓存
 }
 type Damagou struct {
 	Username string `json:"username"`

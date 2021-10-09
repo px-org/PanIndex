@@ -52,40 +52,35 @@ func InitDb(host, port, dataPath string, debug bool) {
 	SqliteDb.AutoMigrate(&entity.ShareInfo{})
 	SqliteDb.AutoMigrate(&entity.ConfigItem{})
 	SqliteDb.AutoMigrate(&entity.Account{})
-	SqliteDb.AutoMigrate(&entity.Damagou{})
 	//初始化数据
-	c := entity.Config{}
-	SqliteDb.Raw("select * from config_item where 1=1").Find(&c)
-	if c.Host == "" {
+	var count int64
+	err = SqliteDb.Model(entity.ConfigItem{}).Count(&count).Error
+	if err != nil {
+		panic(err)
+	} else if count == 0 {
 		rand.Seed(time.Now().UnixNano())
 		ApiToken := strconv.Itoa(rand.Intn(10000000))
-		//SqliteDb.Create(&entity.Config{"0.0.0.0", 5238, nil, "", "", "", ApiToken, "", "default", "mdui", "PanIndex", entity.Damagou{}, "", "0 0 8 1/1 * ?", "", "", "", "", "", ""})
-		var count int64
-		err = SqliteDb.Model(entity.ConfigItem{}).Count(&count).Error
-		if err != nil {
-			panic(err)
-		} else if count == 0 {
-			path, err := filepath.Abs("./config/config.sql")
-			if err != nil {
-				panic(err)
-			}
-			file, err := ioutil.ReadFile(path)
-			if err != nil {
-				panic(err)
-			}
-			SqliteDb.Model(entity.ConfigItem{}).Exec(string(file))
-		}
-		SqliteDb.Table("config_item").Where("k='api_token'").Update("v", ApiToken)
+		configItem := entity.ConfigItem{K: "api_token", V: ApiToken, G: "common"}
+		SqliteDb.Create(configItem)
 	}
+	path, err := filepath.Abs("./config/config.sql")
+	if err != nil {
+		panic(err)
+	}
+	file, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	SqliteDb.Model(entity.ConfigItem{}).Exec(string(file))
 	if os.Getenv("PORT") != "" {
 		port = os.Getenv("PORT")
 	}
 	if host != "" {
 		//启动时指定了host/port
-		SqliteDb.Table("config").Where("1=1").Update("host", host)
+		SqliteDb.Table("config_item").Where("k='host'").Update("v", host)
 	}
 	if port != "" {
 		//启动时指定了host/port
-		SqliteDb.Table("config").Where("1=1").Update("port", port)
+		SqliteDb.Table("config_item").Where("k='port'").Update("v", port)
 	}
 }

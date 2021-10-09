@@ -4,7 +4,7 @@
 {{define "admin-disk"}}
 <div class="mdui-m-t-2">
     <div class="mdui-typo mdui-p-b-2">
-        <h3> 网盘挂载 </h3>
+        <h3> 网盘挂载 <small>拖动修改显示顺序</small></h3>
     </div>
     <div class="mdui-table-fluid">
         <div class="mdui-toolbar mdui-float-right">
@@ -15,12 +15,12 @@
                 <i class="mdui-icon material-icons">update</i>
             </a>
             <a id="openUploadDialog" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件上传'}">
-                <i class="mdui-icon material-icons">file_upload</i>
+                <i class="mdui-icon material-icons">cloud_upload</i>
             </a>
-            <a href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新令牌'}">
+            <a id="refreshTokenBtn"  href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新令牌'}">
                 <i class="mdui-icon material-icons">refresh</i>
             </a>
-            <a id="" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新缓存'}">
+            <a id="refreshCacheBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新缓存'}">
                 <i class="mdui-icon material-icons">cached</i>
             </a>
             <a id="delDiskBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '删除'}">
@@ -35,7 +35,8 @@
                 <th>登录状态</th>
                 <th>缓存状态</th>
                 <th>文件总数</th>
-                <th>上一次同步</th>
+                <th>上一次缓存</th>
+                <th>耗时</th>
             </tr>
             </thead>
             <tbody id="items">
@@ -127,6 +128,13 @@
                     {{.LastOpTime}}
                     {{- end}}
                 </td>
+                <td>
+                    {{- if eq .Mode "native"}}
+                    -
+                    {{- else}}
+                    {{.TimeSpan}}
+                    {{- end}}
+                </td>
             </tr>
             {{- end}}
             {{- end}}
@@ -189,7 +197,7 @@
         <div id="PasswordDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">lock</i>
             <label class="mdui-textfield-label" id="password_label">密码</label>
-            <input class="mdui-textfield-input" type="text" name="password">
+            <input class="mdui-textfield-input" type="password" name="password">
         </div>
         <div id="RefreshTokenDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">refresh</i>
@@ -206,6 +214,12 @@
             <label class="mdui-textfield-label">根目录ID(路径)</label>
             <input class="mdui-textfield-input" type="text" name="root_id" required>
             <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
+        </div>
+        <div class="sync-div mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">schedule</i>
+            <label class="mdui-textfield-label">定时刷新缓存</label>
+            <input class="mdui-textfield-input" type="text" name="sync_cron" placeholder="0 0 4 1/1 * ?" value="{{.SyncCron}}" />
+            <div class="mdui-textfield-helper mdui-text-color-purple">为空将关闭定时缓存，<a href="https://cron.qqe2.com/" target="_blank">cron表达式在线生成</a></div>
         </div>
         <div class="sync-div mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">folder_open</i>
@@ -225,6 +239,48 @@
     <div class="mdui-dialog-actions">
         <button id="saveAccountBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 保存</button>
         <button id="closeAccountBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600"><i class="mdui-icon material-icons">close</i> 关闭</button>
+    </div>
+</div>
+<div id="refresh_cache_dialog" class="mdui-dialog">
+    <div class="mdui-dialog-content">
+        <div class="mdui-dialog-title">刷新缓存</div>
+        <form id="cacheForm">
+            <div class="mdui-textfield mdui-typo">
+                <i class="mdui-icon material-icons">folder_open</i>
+                <label class="mdui-textfield-label">远程目录(PanIndex路径)</label>
+                <input type="hidden" name="account_id" />
+                <input class="mdui-textfield-input" name="cache_folder" type="text" value="/" placeholder="/" required="required"/>
+                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的相对路径，不需要带盘符<code>/d_0</code></div>
+            </div>
+        </form>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button id="confirmRefreshCacheBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 确定</button>
+        <button id="closeCacheBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600"><i class="mdui-icon material-icons">close</i> 关闭</button>
+    </div>
+</div>
+<div id="upload_dialog" class="mdui-dialog">
+    <div class="mdui-dialog-content">
+        <div class="mdui-dialog-title">文件上传</div>
+        <form id="uploadForm">
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">选择文件</label>
+                <input id="uploadFile" type="file" class="mdui-textfield-input"
+                       placeholder="本地上传" multiple/>
+            </div>
+            <div class="mdui-textfield mdui-typo">
+                <i class="mdui-icon material-icons">folder_open</i>
+                <label class="mdui-textfield-label">远程目录(PanIndex路径)</label>
+                <input type="hidden" name="account_id" />
+                <input class="mdui-textfield-input" name="upload_folder" type="text" value="/" placeholder="/" required="required"/>
+                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的相对路径，不需要带盘符<code>/d_0</code></div>
+            </div>
+        </form>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button type="button" class="uploadBtn mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown ld-ext-right" value="0"><i class="mdui-icon material-icons">file_upload</i> 上传</button>
+        <button type="button" class="uploadBtn mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown ld-ext-right" value="2"><i class="mdui-icon material-icons">file_upload</i> 上传并刷新</button>
+        <button id="closeUploadBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600"><i class="mdui-icon material-icons">close</i> 关闭</button>
     </div>
 </div>
 {{end}}

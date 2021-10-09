@@ -154,6 +154,9 @@ func CheckPwd(PwdDirIds, path, pwd string) (bool, bool) {
 	return hasPath, pwdOk
 }
 func GetPwdFromCookie(pwd, pathName string) string {
+	if pathName == "/" {
+		pathName = "/d_0"
+	}
 	s := strings.Split(pwd, ",")
 	if len(s) > 0 {
 		for _, v := range s {

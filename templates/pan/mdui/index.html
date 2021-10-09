@@ -17,19 +17,10 @@
 	<link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
 {{- end}}
 	<!-- MDUI CSS -->
-	<link
-			rel="stylesheet"
-			href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"
-			integrity="sha384-cLRrMq39HOZdvE0j6yBojO4+1PrHfB7a9l5qLcmRm/fiWXYY+CndJPmyu5FV/9Tw"
-			crossorigin="anonymous"
-	/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"/>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.css">
 	<!-- MDUI JavaScript -->
-	<script
-			src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
-			integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
-			crossorigin="anonymous"
-	></script>
+	<script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js"></script>
 	<link rel="stylesheet" href="/static/css/index.css">
@@ -154,7 +145,7 @@
 								<button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '排序'}" mdui-menu="{target: '#sort-menu',position:'bottom'}"><i class="mdui-icon material-icons">sort</i></button>
 								<button id="previewImages" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '预览本页所有图片'}"><i class="mdui-icon material-icons">panorama_wide_angle</i></button>
 								{{- if .HasParent}}
-								<a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu'}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>
+								<a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu',covered: false}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>
 								<ul id="share-menu" class="mdui-menu" data-fp="{{ .Path }}" data-aid="{{ .AccountId }}">
 									<li class="mdui-divider"></li>
 									<li class="mdui-menu-item">
@@ -189,11 +180,20 @@
 										var dpArr = dp.split(",");
 										var newArr = [];
 										var c = "";
-										$.each(dpArr, function (i, item) {
-											if(item.split(":")[0] != path){
-												newArr.push(item);
+										if(path == "/"){
+											path = "/d_0";
+										}else{
+											if(endWith(path, "/")){
+												path = path.substring(0, path.Length-1);
 											}
-										});
+										}
+										if(dp != ""){
+											$.each(dpArr, function (i, item) {
+												if(item.split(":")[0] != path){
+													newArr.push(item);
+												}
+											});
+										}
 										if(newArr.length > 1){
 											c = newArr.join(",");
 										}else if(newArr.length == 1){
@@ -202,6 +202,16 @@
 											c = null;
 										}
 										$.cookie("dir_pwd", c, {expires : 3650, path:"/"});
+									}
+									function endWith (path, param) {
+										if (param == null || param == "" || path.length == 0 || param.length > path.length) {
+											return false;
+										}
+										if (path.substring(path.length - param.length) == param) {
+											return true;
+										} else {
+											return false;
+										}
 									}
 								</script>
 							{{- end}}

@@ -371,6 +371,14 @@ window.addEventListener('DOMContentLoaded', function () {
     });
 });
 function promptPwd(path){
+    if(path == "/"){
+        path = "/d_0";
+    }else{
+        if(path.endWith("/")){
+            path = path.substring(0,path.Length-1);
+
+        }
+    }
     var ppwd = path + ":" + $("#input-password").val();
     if ($.cookie("dir_pwd") != null){
         var value = $.cookie("dir_pwd") + ","+ ppwd;
@@ -386,3 +394,13 @@ $("#input-password").bind('keydown', function(event) {
         promptPwd(path);
     }
 });
+String.prototype.endWith = function (param) {
+    if (param == null || param == "" || this.length == 0 || param.length > this.length) {
+        return false;
+    }
+    if (this.substring(this.length - param.length) == param) {
+        return true;
+    } else {
+        return false;
+    }
+}

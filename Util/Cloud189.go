@@ -292,7 +292,7 @@ func Cloud189Login(accountId, user, password string) string {
 		log.Errorln(err)
 		return "5"
 	}
-	log.Infof("登录页面接口：%s", res.Status)
+	log.Debugf("登录页面接口：%s", res.Status)
 	b := res.Text
 	lt := ""
 	ltText := regexp.MustCompile(`lt = "(.+?)"`)
@@ -307,12 +307,13 @@ func Cloud189Login(accountId, user, password string) string {
 	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]
 	//reqId := regexp.MustCompile(`reqId = "(.+?)"`).FindStringSubmatch(b)[1]
 	jRsakey := regexp.MustCompile(`j_rsaKey" value="(\S+)"`).FindStringSubmatch(b)[1]
+	vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
 	vCodeRS := ""
-	if config.GloablConfig.Damagou.Username != "" {
-		vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
-		vCodeRS = GetValidateCode(accountId, vCodeID)
-		log.Warningln("[登录接口]得到验证码：" + vCodeRS)
-		return "4"
+	if vCodeID != "" {
+		//vCodeRS = GetValidateCode(accountId, vCodeID)
+		//log.Warningln("[登录接口]得到验证码：" + vCodeRS)
+		//log.Warningln("[登录接口]需要输入验证码")
+		//return "4"
 	}
 	userRsa := RsaEncode([]byte(user), jRsakey)
 	passwordRsa := RsaEncode([]byte(password), jRsakey)

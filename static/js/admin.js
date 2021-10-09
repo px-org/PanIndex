@@ -1,8 +1,9 @@
 var $ = mdui.$;
-var bd = new mdui.Dialog("#account_dialog");
 var pwdd = new mdui.Dialog("#pwd_dialog");
 var hided = new mdui.Dialog("#hide_dialog");
 var diskd = new mdui.Dialog("#disk_dialog", {modal:true});
+var cached = new mdui.Dialog("#refresh_cache_dialog", {modal:true});
+var ud = new mdui.Dialog("#upload_dialog", {modal:true});
 $('#theme-toggle').on('click', function(){
     $('body').removeClass('mdui-theme-layout-auto');
     if($('body').hasClass('mdui-theme-layout-dark')){
@@ -17,29 +18,16 @@ $('#theme-toggle').on('click', function(){
 });
 $(".saveConfigBtn").on("click", function () {
     var config = $("#configForm").serializeObject();
-    config.port = Number(config.port);
-    $.ajax({
-        method: 'POST',
-        url: '/api/admin/save?token='+ApiToken,
-        data: JSON.stringify(config),
-        contentType: 'application/json',
-        success: function (data) {
-            var d = JSON.parse(data);
-            mdui.snackbar({
-                message: d.msg,
-                timeout: 2000
-            });
+    if(config.port){
+        config.port = Number(config.port);
+    }
+    var enable_preview = $("#configForm").find("input[name=enable_preview]");
+    if(enable_preview && enable_preview.length > 0){
+        if(enable_preview.prop('checked')){
+            config["enable_preview"] = "1";
+        }else{
+            config["enable_preview"] = "0";
         }
-    });
-});
-$(".saveCronBtn").on("click", function () {
-    var config = $("#cronForm").serializeObject();
-    if(!config.refresh_cookie){
-        mdui.snackbar({
-            message: "必填项不能为空",
-            timeout: 2000
-        });
-        return false;
     }
     $.ajax({
         method: 'POST',
@@ -169,6 +157,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=root_id]").val("");
     $("#accountForm").find("input[name=mode][value=native]").prop("checked", true);
     $("#accountForm").find("input[name=sync_dir]").val("/");
+    $("#accountForm").find("input[name=sync_cron]").val("");
     $("#accountForm").find("input[name=sync_child]").prop("checked",true);
     $("#accountForm").find("input[name=sync_child]").prop("checked",true);
     dynamicChgMode("native");
@@ -198,6 +187,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
                 $("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
                 $("#accountForm").find("input[name=root_id]").val(account.root_id);
+                $("#accountForm").find("input[name=sync_cron]").val(account.sync_cron);
                 if(account.sync_dir == ""){
                     $("#accountForm").find("input[name=sync_dir]").val("/");
                 }else{
@@ -208,13 +198,11 @@ $("#updateDiskBtn").on('click', function (ev){
                 }else{
                     $("#accountForm").find("input[name=sync_child]").prop("checked",false);
                 }
-                fillCacheRecord(account)
                 dynamicChgMode(account.mode);
                 mdui.updateTextFields();
                 diskd.toggle();
             }
         });
-
     }
 });
 //拖动排序
@@ -285,15 +273,17 @@ function savePwddir(){
     var pwd = $("#pwd").val();
     var result = [];
     var flag = false;
-    $.each(pwdDirId.split(","), function(i, item){
-        var fId = item.split(":")[0];
-        if(fId == fileId){
-            flag = true;
-            result.push(fileId+":"+pwd);
-        }else{
-            result.push(item);
-        }
-    });
+    if(pwdDirId != ""){
+        $.each(pwdDirId.split(","), function(i, item){
+            var fId = item.split(":")[0];
+            if(fId == fileId){
+                flag = true;
+                result.push(fileId+":"+pwd);
+            }else{
+                result.push(item);
+            }
+        });
+    }
     if(!flag){
         //追加
         result.push(fileId+":"+pwd);
@@ -357,15 +347,17 @@ function saveHide(){
     var fileId = $("#file_id").val();
     var result = [];
     var flag = false;
-    $.each(hideId.split(","), function(i, item){
-        var fId = item;
-        if(fId == fileId){
-            flag = true;
-            result.push(fileId);
-        }else{
-            result.push(item);
-        }
-    });
+    if(hideId != ""){
+        $.each(hideId.split(","), function(i, item){
+            var fId = item;
+            if(fId == fileId){
+                flag = true;
+                result.push(fileId);
+            }else{
+                result.push(item);
+            }
+        });
+    }
     if(!flag){
         //追加
         result.push(fileId);
@@ -415,7 +407,7 @@ $("#saveSafetyConfigBtn").on('click', function (ev){
     if(is_null_referrer){
         $("#configForm").find("input[name=is_null_referrer]").val("1");
     }else{
-        $("#configForm").find("input[name=is_null_referrer]").val("1");
+        $("#configForm").find("input[name=is_null_referrer]").val("0");
     }
     configSave();
 });
@@ -439,85 +431,99 @@ function configSave() {
         }
     });
 }
-
-function fillCacheRecord(account){
-    var text = "";
-    if(account.cookie_status == 1){
-        text += "<p>cookie： 未刷新</p>";
-    }else if (account.cookie_status == 2){
-        text += "<p>cookie： 正常</p>";
-    }else if (account.cookie_status == 3){
-        text += "<p>cookie： 失效</p>";
-    }else if (account.cookie_status == 4){
-        text += "<p>cookie： 登录失败</p>";
-    }else if (account.cookie_status == -1){
-        text += "<p>cookie： 刷新中</p>";
-    }
-    if(account.status == 1){
-        text += "<p>状态： 未缓存</p>";
-    }else if (account.status == 2){
-        text += "<p>状态： 缓存成功</p>";
-    }else if (account.status == 3){
-        text += "<p>状态： 缓存失败</p>";
-    }else if (account.status == -1){
-        text += "<p>状态： 缓存中</p>";
-    }
-    if(account.files_count > 0){
-        text += "<p>文件数：" + account.files_count + "</p>";
+//手动刷新令牌-start
+$("#refreshTokenBtn").on('click', function (ev){
+    var selectRecords = $('.mdui-table-row-selected');
+    if(selectRecords.length != 1){
+        mdui.snackbar({
+            message: "请选择需要刷新的挂载盘",
+            timeout: 2000
+        });
     }else{
-        text += "<p>文件数：-</p>";
+        var id = selectRecords.eq(0).attr("data-id");
+        $.ajax({
+            method: 'POST',
+            url: '/api/admin/updateCookie?token='+ApiToken+'&id='+id,
+            success: function (data) {
+                var d = JSON.parse(data);
+                mdui.snackbar({
+                    message: d.msg,
+                    timeout: 3000
+                });
+            }
+        });
     }
-    if(account.time_span){
-        text += "<p>耗时：" + account.time_span + "</p>";
+});
+//手动刷新令牌-end
+//手动刷新目录缓存-start
+$("#refreshCacheBtn").on('click', function (ev){
+    var selectRecords = $('.mdui-table-row-selected');
+    if(selectRecords.length != 1){
+        mdui.snackbar({
+            message: "请选择需要刷新的挂载盘",
+            timeout: 2000
+        });
     }else{
-        text += "<p>耗时：-</p>";
+        var id = selectRecords.eq(0).attr("data-id");
+        $("#cacheForm").find("input[name=account_id]").val(id);
+        cached.toggle();
     }
-    if(account.last_op_time){
-        text += "<p>最近一次缓存：" + account.last_op_time + "</p>";
-    }else{
-        text += "<p>最近一次缓存：-</p>";
+});
+$("#confirmRefreshCacheBtn").on('click', function (ev){
+    var formData = new FormData();
+    var id = $("#cacheForm").find("input[name=account_id]").val();
+    var cf = $("#cacheForm").find("input[name=cache_folder]").val();
+    if(cf == ""){
+        cf = "/";
     }
-    $("#cacheRecord").html(text);
-}
-function updateCache(){
-    var id = $("#accountForm").find("input[name=id]").val();
+    formData.append("accountId", id);
+    formData.append("cachePath", cf);
     $.ajax({
         method: 'POST',
-        url: '/api/admin/updateCache?token='+ApiToken+'&id='+id,
+        url: '/api/admin/updateCache?token='+ApiToken,
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
         success: function (data) {
             var d = JSON.parse(data);
             mdui.snackbar({
                 message: d.msg,
-                timeout: 3000
+                timeout: 3000,
+                onClose: function(){
+                    cached.toggle();
+                }
             });
         }
     });
-}
-function updateCookie(){
-    var id = $("#accountForm").find("input[name=id]").val();
-    $.ajax({
-        method: 'POST',
-        url: '/api/admin/updateCookie?token='+ApiToken+'&id='+id,
-        success: function (data) {
-            var d = JSON.parse(data);
-            mdui.snackbar({
-                message: d.msg,
-                timeout: 3000
-            });
-        }
-    });
-}
-$(".acli").on('click', function(e){
-    if(e.target.tagName == 'INPUT')return;
-    fillAccount($(this).attr('data-index'));
+});
+$("#closeCacheBtn").on('click', function (ev){
+    cached.close();
+});
+//手动刷新目录缓存-end
+//手动上传文件-start
+$("#openUploadDialog").on('click', function (ev){
+    var selectRecords = $('.mdui-table-row-selected');
+    if(selectRecords.length != 1){
+        mdui.snackbar({
+            message: "请选择需要上传的挂载盘",
+            timeout: 2000
+        });
+    }else{
+        var id = selectRecords.eq(0).attr("data-id");
+        $("#uploadForm").find("input[name=account_id]").val(id);
+        ud.toggle();
+    }
 });
 var status = 0;
-$('.uploadBtn').on('click', function () {
+$(".uploadBtn").on('click', function (ev){
     var type = $(this).val();
     var fileObjs = document.getElementById('uploadFile').files;
+    var accountId = $("#uploadForm").find("input[name=account_id]").val();
+    var uploadFolder = $("#uploadForm").find("input[name=upload_folder]").val();
     var formData = new FormData();
-    formData.append("uploadAccount", $('#uploadAccount').val());
-    formData.append("uploadPath", $('#uploadPath').val());
+    formData.append("uploadAccount", accountId);
+    formData.append("uploadPath", uploadFolder);
     formData.append("type", type);
     $.each(fileObjs, function (i, f) {
         formData.append("uploadFile", f);
@@ -526,17 +532,10 @@ $('.uploadBtn').on('click', function () {
         return;
     }
     status = 1;
-    if(type == 0 || type == 2){
-        mdui.snackbar({
-            message: "开始上传，请耐心等待",
-            timeout: 1000
-        });
-    }else{
-        mdui.snackbar({
-            message: "开始刷新，请耐心等待",
-            timeout: 1000
-        });
-    }
+    mdui.snackbar({
+        message: "开始上传，请耐心等待",
+        timeout: 1000
+    });
     var btn = $(this);
     btn.toggleClass("running");
     $.ajax({
@@ -550,13 +549,29 @@ $('.uploadBtn').on('click', function () {
             var d = JSON.parse(data);
             mdui.snackbar({
                 message: d.msg,
-                timeout: 3000
+                timeout: 3000,
+                onClose: function(){
+                    ud.toggle();
+                }
             });
             btn.toggleClass("running");
             status = 0
         }
     });
 });
+$("#closeUploadBtn").on('click', function (ev){
+    ud.close();
+});
+//预览配置重置
+$("#resetViewConfig").on('click', function (ev){
+    $("#configForm").find("input[name=enable_preview]").prop("checked", true);
+    $("#configForm").find("input[name=image]").val("png,gif,jpg,bmp,jpeg");
+    $("#configForm").find("input[name=video]").val("mp4,mkv,m3u8,ts,avi");
+    $("#configForm").find("input[name=audio]").val("mp3,wav");
+    $("#configForm").find("input[name=code]").val("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml");
+    $("#configForm").find("input[name=other]").val("*");
+});
+//手动上传文件-end
 $.fn.serializeObject = function()
 {
     var o = {};

@@ -100,30 +100,7 @@ func main() {
 			admin(c) //后台页面跳转
 			//adminSystem(c) //后台页面跳转
 		} else {
-			isForbidden := true
-			host := c.Request.Host
-			referer, err := url.Parse(c.Request.Referer())
-			if err != nil {
-				log.Warningln(err)
-			}
-			if referer != nil && referer.Host != "" {
-				if referer.Host == host {
-					//站内，自动通过
-					isForbidden = false
-				} else if referer.Host != host && len(config.GloablConfig.OnlyReferrer) > 0 {
-					//外部引用，并且设置了防盗链，需要进行判断
-					for _, rf := range strings.Split(config.GloablConfig.OnlyReferrer, ",") {
-						if rf == referer.Host {
-							isForbidden = false
-							break
-						}
-					}
-				} else {
-					isForbidden = false
-				}
-			} else {
-				isForbidden = false
-			}
+			isForbidden := checkReferer(c)
 			if isForbidden == true {
 				c.String(http.StatusForbidden, "403 Hotlink Forbidden")
 				return
@@ -149,6 +126,44 @@ func main() {
 	} else {
 		r.Run(fmt.Sprintf("%s:%s", config.GloablConfig.Host, config.GloablConfig.Port))
 	}
+}
+
+//防盗链检测
+func checkReferer(c *gin.Context) bool {
+	isForbidden := true
+	if config.GloablConfig.EnableSafetyLink == "0" {
+		//开启了防盗链
+		isForbidden = false
+	} else {
+		host := c.Request.Host
+		referer, err := url.Parse(c.Request.Referer())
+		if err != nil {
+			log.Warningln(err)
+		}
+		if referer != nil && referer.Host != "" {
+			if referer.Host == host {
+				//站内，自动通过
+				isForbidden = false
+			} else if referer.Host != host && len(config.GloablConfig.OnlyReferrer) > 0 {
+				//外部引用，并且设置了防盗链，需要进行判断
+				for _, rf := range strings.Split(config.GloablConfig.OnlyReferrer, ",") {
+					if rf == referer.Host {
+						isForbidden = false
+						break
+					}
+				}
+			} else {
+				isForbidden = false
+			}
+		} else {
+			if config.GloablConfig.IsNullReferrer == "1" {
+				isForbidden = false
+			} else {
+				isForbidden = true
+			}
+		}
+	}
+	return isForbidden
 }
 
 func TlsHandler(port int) gin.HandlerFunc {
@@ -194,7 +209,7 @@ func initTemplates() *template.Template {
 			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
 			data = string(s)
 		}
-		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped, "contains": strings.Contains}).Parse(data)
 	}
 	//添加详情模板
 	viewTemplates := [9]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md"}
@@ -205,7 +220,7 @@ func initTemplates() *template.Template {
 			s, _ := ioutil.ReadFile("./templates/" + tmpName)
 			data = string(s)
 		}
-		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped, "contains": strings.Contains}).Parse(data)
 	}
 	return tmpl
 }
@@ -309,7 +324,8 @@ func index(c *gin.Context) {
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
 			_, has := c.GetQuery("v")
-			if has {
+			t := service.GetViewTemplate(fs[0])
+			if has && t != "" {
 				//跳转文件预览页面
 				if account.Mode == "native" {
 					result["downloadUrl"] = ""
@@ -326,7 +342,6 @@ func index(c *gin.Context) {
 					}
 					result["DownloadUrl"] = dl.GetDownlaodUrl(account, fs[0])
 				}
-				t := service.GetViewTemplate(account.Mode, fs[0], result)
 				theme := strings.ReplaceAll(config.GloablConfig.Theme, "-dark", "")
 				theme = strings.ReplaceAll(theme, "-light", "")
 				tmpFile = fmt.Sprintf("pan/%s/view-%s.html", theme, t)
@@ -471,7 +486,7 @@ func admin(c *gin.Context) {
 				"FaviconUrl": config.GloablConfig.FaviconUrl})
 	} else {
 		configData := service.GetConfig()
-		data := gin.H{"Config": configData, "Theme": Theme, "RedirectUrl": adminModule, "Version": boot.VERSION}
+		data := gin.H{"Config": configData, "Theme": Theme, "RedirectUrl": adminModule, "Version": boot.VERSION, "FaviconUrl": config.GloablConfig.FaviconUrl}
 		if adminModule == "pwd" {
 			pwdDirs := service.TransformPwdDirs(configData.PwdDirId)
 			data["PwdDirs"] = pwdDirs
@@ -534,26 +549,35 @@ func getConfig(c *gin.Context) {
 }
 
 func updateCache(c *gin.Context) {
-	id := c.Query("id")
-	account := service.GetAccount(id)
-	if account.Status == -1 {
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "目录缓存中，请勿重复操作！"})
+	accountId := c.PostForm("accountId")
+	cachePath := c.PostForm("cachePath")
+	account := service.GetAccount(accountId)
+	if account.Mode == "native" {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "当前网盘无需刷新操作！"})
 	} else {
-		account.SyncDir = "/"
-		account.SyncChild = 0
-		go jobs.SyncOneAccount(account)
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在缓存目录，请稍后刷新页面查看缓存结果！"})
+		if account.Status == -1 {
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "目录缓存中，请勿重复操作！"})
+		} else {
+			account.SyncDir = cachePath
+			account.SyncChild = 0
+			go jobs.SyncOneAccount(account)
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在缓存目录，请稍后刷新页面查看缓存结果！"})
+		}
 	}
 }
 
 func updateCookie(c *gin.Context) {
 	id := c.Query("id")
 	account := service.GetAccount(id)
-	if account.CookieStatus == -1 {
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "cookie刷新中，请勿重复操作！"})
+	if account.Mode == "native" {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "当前网盘无需刷新操作！"})
 	} else {
-		go jobs.AccountLogin(account)
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+		if account.CookieStatus == -1 {
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "cookie刷新中，请勿重复操作！"})
+		} else {
+			go jobs.AccountLogin(account)
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+		}
 	}
 }
 

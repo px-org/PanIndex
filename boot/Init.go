@@ -49,8 +49,10 @@ func Start(host, port string, debug bool, dataPath string) {
 	//从环境变量写入到config
 	service.EnvToConfig()
 	service.GetConfig()
-	//定时任务初始化
+	//系统定时任务初始化
 	jobs.Run()
+	//网盘定时缓存任务初始化
+	jobs.AutoCacheRun()
 	//刷新cookie和目录缓存
 	go jobs.StartInit()
 }

@@ -437,7 +437,6 @@ func GetConfig() entity.Config {
 	c := entity.Config{}
 	cis := []entity.ConfigItem{}
 	accounts := []entity.Account{}
-	damagou := entity.Damagou{}
 	model.SqliteDb.Raw("select * from config_item where 1=1").Find(&cis)
 	configMap := make(map[string]interface{})
 	for _, ci := range cis {
@@ -446,30 +445,32 @@ func GetConfig() entity.Config {
 	configJson, _ := jsoniter.MarshalToString(configMap)
 	jsoniter.Unmarshal([]byte(configJson), &c)
 	model.SqliteDb.Raw("select * from account order by `seq` asc").Find(&accounts)
-	model.SqliteDb.Raw("select * from damagou where 1-1 limit 1").Find(&damagou)
 	c.Accounts = accounts
-	c.Damagou = damagou
 	config.GloablConfig = c
 	return c
 }
 
 func TransformPwdDirs(pwdDirId string) []entity.PwdDirs {
 	pwdDirs := []entity.PwdDirs{}
-	arr := strings.Split(pwdDirId, ",")
-	for _, pwdDir := range arr {
-		s := strings.Split(pwdDir, ":")
-		pwdDirs = append(pwdDirs, entity.PwdDirs{
-			s[0], s[1],
-		})
+	if pwdDirId != "" {
+		arr := strings.Split(pwdDirId, ",")
+		for _, pwdDir := range arr {
+			s := strings.Split(pwdDir, ":")
+			pwdDirs = append(pwdDirs, entity.PwdDirs{
+				s[0], s[1],
+			})
+		}
 	}
 	return pwdDirs
 }
 
 func TransformHideFiles(hideFileId string) []string {
 	hideFiles := []string{}
-	arr := strings.Split(hideFileId, ",")
-	for _, hideFile := range arr {
-		hideFiles = append(hideFiles, hideFile)
+	if hideFileId != "" {
+		arr := strings.Split(hideFileId, ",")
+		for _, hideFile := range arr {
+			hideFiles = append(hideFiles, hideFile)
+		}
 	}
 	return hideFiles
 }
@@ -539,6 +540,8 @@ func SaveConfig(config map[string]interface{}) {
 			ac.SyncDir = "/"
 			ac.SyncChild = 0
 			go jobs.SyncInit(ac)
+			jobs.CacheCron.Stop()
+			jobs.AutoCacheRun()
 		}
 	}
 	go GetConfig()
@@ -592,7 +595,6 @@ func EnvToConfig() {
 		}
 		c["damagou"] = nil
 		delete(c, "damagou")
-		model.SqliteDb.Where("1 = 1").Delete(&entity.Damagou{})
 		model.SqliteDb.Where("1 = 1").Delete(&entity.Account{})
 		//model.SqliteDb.Where("1 = 1").Delete(&entity.FileNode{})
 		for _, account := range c["accounts"].([]interface{}) {
@@ -708,57 +710,28 @@ func Async(accountId, path string) string {
 		}
 	}
 }
-func GetViewTemplate(mode string, fn entity.FileNode, result map[string]interface{}) string {
-	t := "ns"
-	if fn.MediaType == 1 {
-		//图片
+func GetViewTemplate(fn entity.FileNode) string {
+	t := ""
+	if config.GloablConfig.EnablePreview == "0" {
+		return t
+	}
+	if strings.Contains(config.GloablConfig.Image, fn.FileType) {
 		t = "img"
-	} else if fn.MediaType == 2 {
-		//音频
+	} else if strings.Contains(config.GloablConfig.Audio, fn.FileType) {
 		t = "audio"
-	} else if fn.MediaType == 3 {
-		//视频
+	} else if strings.Contains(config.GloablConfig.Video, fn.FileType) {
 		t = "video"
-	} else if fn.MediaType == 4 || fn.MediaType == 0 {
-		//文本类
-		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
-			//
-			t = "office"
-		} else if fn.FileType == "pdf" {
-			t = "pdf"
-		} else if fn.FileType == "md" {
-			t = "md"
-		} else if strings.Contains("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml", fn.FileType) {
-			result["CodeType"] = "Plaintext"
-			t = "code"
-			if fn.FileType == "go" {
-				result["CodeType"] = "Go"
-			} else if fn.FileType == "html" {
-				result["CodeType"] = "HTML"
-			} else if fn.FileType == "js" {
-				result["CodeType"] = "JavaScript"
-			} else if fn.FileType == "java" {
-				result["CodeType"] = "Java"
-			} else if fn.FileType == "json" {
-				result["CodeType"] = "JSON"
-			} else if fn.FileType == "css" {
-				result["CodeType"] = "CSS"
-			} else if fn.FileType == "lua" {
-				result["CodeType"] = "Lua"
-			} else if fn.FileType == "sh" {
-				result["CodeType"] = "Bash"
-			} else if fn.FileType == "sql" {
-				result["CodeType"] = "SQL"
-			} else if fn.FileType == "py" {
-				result["CodeType"] = "Python"
-			} else if fn.FileType == "cpp" {
-				result["CodeType"] = "C++"
-			} else if fn.FileType == "xml" {
-				result["CodeType"] = "XML"
-			}
+	} else if fn.FileType == "pdf" {
+		t = "pdf"
+	} else if fn.FileType == "md" {
+		t = "md"
+	} else {
+		if config.GloablConfig.Other == "*" {
+			t = "ns"
+		} else if strings.Contains(config.GloablConfig.Other, fn.FileType) {
+			t = "ns"
 		}
 	}
-	result["T"] = t
 	return t
 }
 func AccountsToNodes(accounts []entity.Account) map[string]interface{} {

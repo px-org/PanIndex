@@ -7,16 +7,30 @@
     <meta name="renderer" content="webkit">
     <meta http-equiv="Cache-Control" content="no-siteapp"/>
     <title>系统配置 - PanIndex</title>
+    {{- if ne .FaviconUrl ""}}
+    <link rel="icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{.FaviconUrl}}" type="image/x-icon" />
+    {{- else}}
+    <link rel="icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+    {{- end}}
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"/>
     <script src="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/loadingio/ldbutton@v1.0.1/dist/ldbtn.min.css"/>
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/loadingio/loading.css@v2.0.0/dist/loading.min.css"/>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
     <style>
-        .mdui-list-item-content {
-            line-height: inherit;
-            padding-top: 10px;
-            padding-bottom: 10px;
+        .version{
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px
+        }
+        .version a{
+            font-weight: 500;
+            font-size: 16px;
+            letter-spacing: .02em
         }
     </style>
 </head>
@@ -84,18 +98,9 @@
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue">storage</i>
             <div class="mdui-list-item-content">网盘挂载</div>
         </a>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq .RedirectUrl "scheduled"}}mdui-list-item-active{{end}}" href="/?admin=scheduled">
-            <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-brown">schedule</i>
-            <div class="mdui-list-item-content">定时任务</div>
-        </a>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme" href="/?admin=upload">
-            <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue-grey">cloud_upload</i>
-            <div class="mdui-list-item-content">手动上传</div>
-        </a>
-        <div class="mdui-text-center mdui-typo" style="bottom:0;position:fixed;left:0;right:0;height: 56px">
-            <b>版本：{{.Version}}v2.0.6</b>
-            <!--<b>构建：{{.BuildTime}}2021-09-18 09:00:00</b>-->
-        </div>
+    </div>
+    <div class="mdui-text-center mdui-typo version">
+        <a href="https://github.com/libsgh/PanIndex/releases/tag/{{.Version}}" target="_blank">v2.0.6{{.Version}}</a>
     </div>
 </div>
 {{- end}}
@@ -118,8 +123,6 @@
         {{block "admin-safety" .}}{{end}}
     {{- else if eq .RedirectUrl "disk"}}
         {{block "admin-disk" .}}{{end}}
-    {{- else if eq .RedirectUrl "scheduled"}}
-        {{block "admin-scheduled" .}}{{end}}
     {{- else}}
     {{- end}}
 </div>

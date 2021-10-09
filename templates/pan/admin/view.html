@@ -10,7 +10,7 @@
         <div>
             <label class="mdui-textfield-label">是否开启预览</label>
             <label class="mdui-switch">
-                <input type="checkbox" checked/>
+                <input type="checkbox" name="enable_preview" {{if eq .Config.EnablePreview "1"}}checked{{else}}{{end}}/>
                 <i class="mdui-switch-icon"></i>
             </label>
         </div>
@@ -35,15 +35,16 @@
             <input class="mdui-textfield-input" type="text" name="doc" value="{{.Config.Doc}}" />
         </div>
         <div class="mdui-textfield">
-            <label class="mdui-textfield-label">pdf</label>
-            <input class="mdui-textfield-input" type="text" name="pdf" value="{{.Config.Pdf}}" />
+            <label class="mdui-textfield-label">其他（other）</label>
+            <input class="mdui-textfield-input" type="text" name="other" value="{{.Config.Other}}" />
+            <div class="mdui-textfield-helper mdui-typo">这部分文件不支持预览， 但是也可以跳转到预览页</div>
         </div>
         <div class="mdui-row-xs-1">
             <div class="mdui-col">
                 <button type="button" class="saveConfigBtn mdui-btn mdui-color-brown mdui-ripple" value="1">
                     <i class="mdui-icon material-icons">save</i> 保存
                 </button>
-                <button type="button" class="saveConfigBtn mdui-btn mdui-float-right mdui-color-teal mdui-ripple" value="0">
+                <button id="resetViewConfig" type="button" class="mdui-btn mdui-float-right mdui-color-teal mdui-ripple" value="0">
                     <i class="mdui-icon material-icons">repeat</i> 恢复默认
                 </button>
             </div>
