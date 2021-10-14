@@ -129,6 +129,8 @@
                         {{block "content-office" .}}{{end}}
                     {{- else if eq "pdf" (index .List 0).FileType}}
                         {{block "content-pdf" .}}{{end}}
+                    {{- else if eq "epub" (index .List 0).FileType}}
+                        {{block "content-epub" .}}{{end}}
                     {{- else if eq "md" (index .List 0).FileType}}
                         {{block "content-md" .}}{{end}}
                     {{- else}}

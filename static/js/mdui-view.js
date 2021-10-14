@@ -6,11 +6,13 @@ $(function () {
             $('#theme-toggle i').text('brightness_4');
             $.cookie("Theme", "mdui-light", {expires : 3650, path:"/"});
             $(".aplayer-title").css("color", "");
+            $(".aplayer-list-title").css("color", "");
         }else{
             $('body').addClass('mdui-theme-layout-dark');
             $('#theme-toggle i').text('brightness_5');
             $.cookie("Theme", "mdui-dark", {expires : 3650, path:"/"});
             $(".aplayer-title").css("color", "#666");
+            $(".aplayer-list-title").css("color", "#666");
         }
     });
     var path = $("#file_link").attr("data-path");

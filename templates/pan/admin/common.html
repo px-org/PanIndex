@@ -46,7 +46,20 @@
             <label class="mdui-textfield-label">接口 token</label>
             <input class="mdui-textfield-input" type="text" name="api_token" value="{{.Config.ApiToken}}" placeholder="用于接口调用" required />
         </div>
-        <div class="mdui-row-xs-1">
+        <div>
+            <label class="mdui-textfield-label">排序</label>
+            <select name="s_column" class="mdui-select" mdui-select="{position:'bottom'}">
+                <option value="default" {{- if eq .Config.SColumn "default"}}selected{{- end}}>网盘默认</option>
+                <option value="file_name" {{- if eq .Config.SColumn "file_name"}}selected{{- end}}>文件名</option>
+                <option value="file_size" {{- if eq .Config.SColumn "file_size"}}selected{{- end}}>文件大小</option>
+                <option value="last_op_time">修改时间</option>
+            </select>
+            <select name="s_order" class="mdui-select" mdui-select="{position:'bottom'}" style="margin-left: 10px">
+                <option value="asc" {{- if eq .Config.SOrder "asc"}}selected{{- end}}>升序</option>
+                <option value="desc" {{- if eq .Config.SOrder "desc"}}selected{{- end}}>降序</option>
+            </select>
+        </div>
+        <div class="mdui-row-xs-1" style="margin-top: 20px">
             <div class="mdui-col">
                 <button type="button" class="saveConfigBtn mdui-btn mdui-color-brown mdui-ripple" value="1">
                     <i class="mdui-icon material-icons">save</i> 保存

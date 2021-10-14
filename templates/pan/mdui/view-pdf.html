@@ -6,10 +6,10 @@
         This is an embedded pdf file
     </iframe>-->
     <div id="view_pdf"></div>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfh5@1.3.20/css/pdfh5.css">
-    <script src="https://cdn.jsdelivr.net/npm/pdfh5@1.3.20/js/pdf.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfh5@1.3.20/js/pdf.worker.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfh5@1.3.20/js/pdfh5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pdfh5@1.4.0/css/pdfh5.css">
+    <script src="https://cdn.jsdelivr.net/npm/pdfh5@1.4.0/js/pdf.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfh5@1.4.0/js/pdf.worker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfh5@1.4.0/js/pdfh5.min.js"></script>
     <script>
         var path = $("#file_link").attr("data-path");
         var mode = $("#file_link").attr("data-mode");
@@ -18,8 +18,5 @@
         var pdfh5 = new Pdfh5('#view_pdf', {
             pdfurl: fullUrl
         });
-        pdfh5.on("ready", function () {
-            pdfh5.scrollEnable(false);
-        })
     </script>
 {{end}}

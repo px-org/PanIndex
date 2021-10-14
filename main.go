@@ -212,7 +212,7 @@ func initTemplates() *template.Template {
 		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped, "contains": strings.Contains}).Parse(data)
 	}
 	//添加详情模板
-	viewTemplates := [9]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md"}
+	viewTemplates := [10]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md", "epub"}
 	for _, vt := range viewTemplates {
 		tmpName := fmt.Sprintf("pan/%s/view-%s.html", "mdui", vt)
 		data, _ := box.FindString(tmpName)
@@ -253,8 +253,8 @@ var dls = sync.Map{}
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
-	sColumn := "default"
-	sOrder := "asc"
+	sColumn := config.GloablConfig.SColumn
+	sOrder := config.GloablConfig.SOrder
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
 	if err == nil {
 		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
@@ -376,8 +376,8 @@ func index(c *gin.Context) {
 }
 
 func search(c *gin.Context, key string) {
-	sColumn := "default"
-	sOrder := "asc"
+	sColumn := config.GloablConfig.SColumn
+	sOrder := config.GloablConfig.SOrder
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pathName := c.Request.URL.Path
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
@@ -438,6 +438,7 @@ func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
 	accountId := c.Query("accountId")
 	account := service.GetAccount(accountId)
+	ua := c.Request.UserAgent()
 	if account.Mode == "native" {
 		dp := *DataPath
 		if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
@@ -452,10 +453,12 @@ func downloadMultiFiles(c *gin.Context) {
 		Util.Zip(dp+string(filepath.Separator)+t+".zip", fileId)
 		c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", t+".zip"))
 		c.Writer.Header().Add("Content-Type", "application/octet-stream")
+		fmt.Println("0")
 		c.File(dst)
+		os.Remove(dst)
 		return
-	} else if account.Mode == "cloud189" {
-		downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
+	} else {
+		downUrl := service.GetDownlaodMultiFiles(account, fileId, ua)
 		c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 	}
 }
@@ -659,7 +662,10 @@ func files(c *gin.Context) {
 	sOrder := c.PostForm("sOrder")
 	accountId := c.PostForm("accountId")
 	if sColumn == "" {
-		sColumn = "default"
+		sColumn = config.GloablConfig.SColumn
+	}
+	if sOrder == "" {
+		sOrder = config.GloablConfig.SOrder
 	}
 	files := service.GetFiles(accountId, parentPath, sColumn, sOrder, mediaType)
 	c.JSON(http.StatusOK, gin.H{

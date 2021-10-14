@@ -13,10 +13,8 @@
             method: 'GET',
             url: fullUrl,
             success: function (data) {
-                marked.use({smartypants: true});
-                var c = marked(data);
-                console.log(marked(data));
-                $("#content").append(c);
+                $("#content").append(marked(data));
+                $("table").addClass("mdui-table");
             }
         });
     </script>

@@ -86,7 +86,7 @@ $("#saveAccountBtn").on("click", function () {
         }
     });
 });
-$("#accountForm").find("input[name=mode]").on('change', function () {
+$("#accountForm").find("select[name=mode]").on('change', function () {
     var mode = $(this).val();
     dynamicChgMode(mode);
 });
@@ -155,7 +155,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=refresh_token]").val("");
     $("#accountForm").find("input[name=redirect_uri]").val("");
     $("#accountForm").find("input[name=root_id]").val("");
-    $("#accountForm").find("input[name=mode][value=native]").prop("checked", true);
+    $("#accountForm").find("select[name=mode]").val("native");
     $("#accountForm").find("input[name=sync_dir]").val("/");
     $("#accountForm").find("input[name=sync_cron]").val("");
     $("#accountForm").find("input[name=sync_child]").prop("checked",true);
@@ -182,7 +182,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=id]").val(account.id);
                 $("#accountForm").find("input[name=name]").val(account.name);
                 $("#accountForm").find("input[name=password]").val(account.password);
-                $("#accountForm").find("input[name=mode][value="+account.mode+"]").prop("checked", true);
+                $("#accountForm").find("select[name=mode]").val(account.mode);
                 $("#accountForm").find("input[name=user]").val(account.user);
                 $("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
                 $("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
@@ -565,10 +565,10 @@ $("#closeUploadBtn").on('click', function (ev){
 //预览配置重置
 $("#resetViewConfig").on('click', function (ev){
     $("#configForm").find("input[name=enable_preview]").prop("checked", true);
-    $("#configForm").find("input[name=image]").val("png,gif,jpg,bmp,jpeg");
+    $("#configForm").find("input[name=image]").val("png,gif,jpg,bmp,jpeg,ico,svg");
     $("#configForm").find("input[name=video]").val("mp4,mkv,m3u8,ts,avi");
-    $("#configForm").find("input[name=audio]").val("mp3,wav");
-    $("#configForm").find("input[name=code]").val("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml");
+    $("#configForm").find("input[name=audio]").val("mp3,wav,ape,flac");
+    $("#configForm").find("input[name=code]").val("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini");
     $("#configForm").find("input[name=other]").val("*");
 });
 //手动上传文件-end

@@ -153,41 +153,16 @@
             <input class="mdui-textfield-input" type="text" name="name" value="" required>
             <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/config?id=%e8%b4%a6%e5%8f%b7%e7%bb%91%e5%ae%9a" target="_blank">说明</a></div>
         </div>
-        <div class="mdui-textfield">
-            <i class="mdui-icon material-icons">more_horiz</i>
-            <label class="mdui-textfield-label mdui-text-color-pink-300">网盘模式</label>
-            <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
-                <label class="mdui-radio mdui-col">
-                    <input type="radio" name="mode" checked="checked" value="native" />
-                    <i class="mdui-radio-icon"></i>
-                    本地磁盘
-                </label>
-                <label class="mdui-radio mdui-col">
-                    <input type="radio" name="mode" value="cloud189" />
-                    <i class="mdui-radio-icon"></i>
-                    天翼云盘
-                </label>
-                <label class="mdui-radio mdui-col">
-                    <input type="radio" name="mode" value="aliyundrive" />
-                    <i class="mdui-radio-icon"></i>
-                    阿里云盘
-                </label>
-                <label class="mdui-radio mdui-col">
-                    <input type="radio" name="mode" value="teambition" />
-                    <i class="mdui-radio-icon"></i>
-                    Teambition项目盘
-                </label>
-                <label class="mdui-radio mdui-col">
-                    <input type="radio" name="mode" value="teambition-us" />
-                    <i class="mdui-radio-icon"></i>
-                    Teambition国际盘
-                </label>
-                <label class="mdui-radio mdui-col">
-                    <input type="radio" name="mode" value="onedrive" />
-                    <i class="mdui-radio-icon"></i>
-                    OneDrive
-                </label>
-            </div>
+        <div>
+            <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">网盘模式</label>
+            <select id="theme" name="mode" class="mdui-select" mdui-select="{position:'bottom'}" style="margin-left: 50px">
+                <option value="native">本地磁盘</option>
+                <option value="cloud189">天翼云盘</option>
+                <option value="aliyundrive">阿里云盘</option>
+                <option value="teambition">Teambition项目盘</option>
+                <option value="teambition-us">Teambition国际盘</option>
+                <option value="onedrive">OneDrive</option>
+            </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">account_circle</i>

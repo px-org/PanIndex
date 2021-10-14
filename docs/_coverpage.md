@@ -1,6 +1,6 @@
 ![logo](_media/index.png)
 
-# PanIndex <small>v2.0.6s</small>
+# PanIndex <small>v2.0.7</small>
 
 > 一个简易的网盘目录列表.
 >
@@ -12,5 +12,5 @@
 
 
 [GitHub](https://github.com/libsgh/PanIndex/)
-[Getting Started](quickstart.md)
-
+[Demo](https://t1.noki.icu)
+[Getting Started](introduction)

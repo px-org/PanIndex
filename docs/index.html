@@ -6,42 +6,63 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
   <link rel="icon" href="_media/favicon.ico" />
   <meta name="description" content="Description">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css">
 </head>
 <body>
-  <div data-app id="main">加载中</div>
+  <div id="app"></div>
+  <!-- Docsify v4 -->
   <script>
     window.$docsify = {
-      el: '#main',
       name: 'PanIndex',
       repo: 'libsgh/PanIndex',
       coverpage: true,
       auto2top: true,
-      loadNavbar: true,
+      loadNavbar: false,
       homepage: 'quickstart.md',
-      relativePath: true
+      relativePath: true,
+      loadSidebar: '_navbar.md',
+      maxLevel   : 3,
+      subMaxLevel: 3,
+      copyCode: {
+        buttonText : 'Copy to clipboard',
+        errorText  : 'Error',
+        successText: 'Copied'
+      },
+      search: 'auto',
+      search: {
+        depth      : 3,
+        noData     : 'No results!',
+        placeholder: 'Search...'
+      },
+      themeable: {
+        readyTransition : true, // default
+        responsiveTables: true  // default
+      }
     }
   </script>
-  <!-- Docsify v4 -->
-  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
-
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
-  <script>
-    const gitalk = new Gitalk({
-      clientID: 'e1db5cc4fbcf2a57a3bb',
-      clientSecret: '84f876c491be67fcdbad3f675c8ec4c6b3867f72',
-      repo: 'libsgh/PanIndex',
-      owner: 'libsgh',
-      admin: ['libsgh'],
-      // facebook-like distraction free mode
-      distractionFreeMode: false,
-      language: 'zh-CN'
-    });
-  </script>
 </body>
+<script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
+<script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.js"></script>
+<script src="//unpkg.com/docsify-copy-code"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '1e4dd5af169f90a6bb8c',
+    clientSecret: '0e9b9fc22994f5c3bb036575f2d417100ea38f40',
+    repo: 'PanIndex-comments',
+    owner: 'libsgh',
+    admin: ['libsgh'],
+    distractionFreeMode: false,
+    language: 'zh-CN'
+  });
+</script>
 </html>

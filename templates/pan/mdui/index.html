@@ -17,12 +17,13 @@
 	<link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
 {{- end}}
 	<!-- MDUI CSS -->
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"/>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.css">
+	<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"/>
+	<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.css">
 	<!-- MDUI JavaScript -->
-	<script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js"></script>
+	<script src="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
+	<script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+	<script src="//cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js"></script>
+	<script src="//cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 	<link rel="stylesheet" href="/static/css/index.css">
 {{- if ne .Config.Css ""}}
 	{{.Config.Css | unescaped}}
@@ -72,6 +73,37 @@
 					</div>
 				{{- end}}
 			</div>
+			{{- if and (.HasHead) (not .HasPwd)}}
+			<div id="headContent" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">
+				<div class="mdui-chip head" style="display: none">
+					<span class="mdui-chip-icon">M</span>
+					<i class="mdui-icon material-icons">notifications_active</i>
+					<span class="mdui-chip-title">HEAD.md</span>
+				</div>
+				<hr class="head" style="display: none" />
+				<input id="head" type="hidden" value="{{.HeadContent}}" />
+				<script>
+					var c = $("#head").val();
+					if(c != ""){
+						$("#headContent").append(marked(c));
+						$("#headContent").toggle();
+					}else{
+						var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw/HEAD.md");
+						$.ajax({
+							method: 'GET',
+							url: fullUrl,
+							success: function (data) {
+								if(data != ""){
+									$("#headContent").append(marked(data));
+									$("table").addClass("mdui-table");
+									$("#headContent").toggle();
+								}
+							}
+						});
+					}
+				</script>
+			</div>
+			{{- end}}
 			<ul class="mdui-list">
 				<li class="mdui-list-item">
 					<div class="mdui-list-item-content">
@@ -157,6 +189,7 @@
 									</li>
 								</ul>
 								{{- end}}
+								<button id="copyAllLinks" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '复制全部下载链接'}"><i class="mdui-icon material-icons">content_copy</i></button>
 								<button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></button>
 							</div>
 						</div>
@@ -281,13 +314,12 @@
 		</div>
 		{{- if and (.HasReadme) (not .HasPwd)}}
 		<div id="content" class="mdui-typo mdui-shadow-2" style="display: none;padding: 15px;margin: 10px;">
-			<div class="mdui-chip">
+			<div class="mdui-chip readme">
 				<span class="mdui-chip-icon">M</span>
 				<span class="mdui-chip-title">README.md</span>
 			</div>
-			<hr />
+			<hr class="readme" />
 			<input id="readme" type="hidden" value="{{.ReadmeContent}}" />
-			<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 			<script>
 				var c = $("#readme").val();
 				if(c != ""){
@@ -300,9 +332,8 @@
 						url: fullUrl,
 						success: function (data) {
 							if(data != ""){
-								marked.use({smartypants: true});
-								var c = marked.lexer(data);
-								$("#content").append(c);
+								$("#content").append(marked(data));
+								$("table").addClass("mdui-table");
 								$("#content").toggle();
 							}
 						}

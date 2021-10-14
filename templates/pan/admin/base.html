@@ -42,6 +42,7 @@
         <a href="/?admin" class="mdui-typo-title">配置</a>
         <div class="mdui-toolbar-spacer"></div>
         <a id="theme-toggle" href="JavaScript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq .Theme "mdui"}}4{{end}}{{if eq .Theme "mdui-dark"}}5{{end}}{{if eq .Theme "mdui-light"}}4{{end}}</i></a>
+        {{- if ne .RedirectUrl "login"}}<a target="_blank" href="/api/admin/config?token={{.Config.ApiToken}}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '查看完整配置（JSON）'"><i class="mdui-icon material-icons">perm_data_setting</i></a>{{- end}}
         <a href="/?admin=common&logout=true" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
     </div>
 </header>

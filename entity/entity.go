@@ -74,6 +74,8 @@ type Config struct {
 	Code              string    `json:"code"`           //代码
 	Doc               string    `json:"doc"`            //文档
 	Other             string    `json:"other"`          //other
+	SColumn           string    `json:"s_column"`       //排序字段
+	SOrder            string    `json:"s_order"`        //排序顺序
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key
@@ -121,6 +123,10 @@ type Teambition struct {
 type Ali struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+type Cloud189 struct {
+	Cloud189Session nic.Session
+	SessionKey      string `json:"session_key"`
 }
 type TokenResp struct {
 	RespError

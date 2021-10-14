@@ -5,6 +5,26 @@ var clipboard = new ClipboardJS('.copyBtn', {
         return encodeURI(fullUrl);
     }
 });
+var copyAllLinksBoard = new ClipboardJS('#copyAllLinks', {
+    text: function(trigger) {
+        var urls = [];
+        $(".icon-file-mdui").each(function (i, item) {
+            var folder = $(this).attr("data-folder");
+            var path = $(this).attr("data-url");
+            var fullUrl = window.location.protocol + "//"+window.location.host + path;
+            if(folder == "false"){
+                urls.push(fullUrl);
+            }
+        });
+        return urls.join("\n");
+    }
+});
+copyAllLinksBoard.on('success', function(e) {
+    mdui.snackbar({
+        message: "链接已复制到剪切板"
+    });
+    e.clearSelection();
+});
 clipboard.on('success', function(e) {
     if(typeof(mdui) != "undefined"){
         mdui.snackbar({
@@ -66,7 +86,7 @@ $(document).ready(function() {
         location.reload();
     });
     $('.default-check').on('click', function () {
-        $.cookie('SColumn', null, {expires : 3650, path: '/'});
+        $.cookie('SColumn', "default", {expires : 3650, path: '/'});
         $.cookie('SOrder', null, {expires : 3650, path: '/'});
         location.reload();
     });
