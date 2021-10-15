@@ -177,7 +177,7 @@ func PrintConfig(dataPath, cq string) bool {
 	if err != nil {
 		panic(fmt.Sprintf("Got error when connect database, the error is '%v'", err))
 	}
-	SqliteDb.Raw(fmt.Sprintf("select %s from config where 1=1 limit 1", cq)).First(&c)
+	SqliteDb.Raw("select v from config_item where k=? limit 1", cq).First(&c)
 	fmt.Print(c)
 	return true
 }
