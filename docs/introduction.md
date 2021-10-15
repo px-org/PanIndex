@@ -33,9 +33,11 @@
 
 ## 联系与支持
 
-- Github Issue: [GitHub issue](https://github.com/libsgh/PanIndex/issues)
+- [GitHub Issues](https://github.com/libsgh/PanIndex/issues)
+- [GitHub Discussions](https://github.com/libsgh/PanIndex/discussions)
+- **[Telegram讨论组(活跃)](https://t.me/PanIndex)**
 - QQ群: 760166719
-- Telegram讨论组: https://t.me/PanIndex
+
 
 ## License
 

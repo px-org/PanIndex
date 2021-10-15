@@ -792,7 +792,7 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 		fullPath := filepath.Join(rootPath, path)
 		f, err := os.Open(fullPath)
 		if err != nil {
-			log.Errorln(err)
+			log.Debug(err)
 			return nil, "image/png"
 		}
 		fileInfo, err := os.Stat(fullPath)

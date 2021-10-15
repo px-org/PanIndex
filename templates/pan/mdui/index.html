@@ -252,8 +252,11 @@
 					</div>
 				{{- else}}
 					{{- if not .List}}
-						<div class="mdui-valign">
-							<p class="mdui-center">网盘空空如也，快去上传吧</p>
+						<div class="mdui-valign ">
+							<div class="mdui-center">
+								<img class="mdui-center" src="/static/img/empty-folder.png" style="width: 53px;height: 56px">
+								<p class="mdui-center">网盘空空如也</p>
+							</div>
 						</div>
 					{{- end}}
 					{{- range .List}}
