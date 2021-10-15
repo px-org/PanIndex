@@ -199,7 +199,8 @@ func initTemplates() *template.Template {
 	tmpl.New("pan/admin/index.html").Parse(data)*/
 	tmpl := template.New("")
 	//添加后台模板
-	addTemplatesFromFolder("admin", tmpl, box)
+	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "pwd", "safety", "view"}
+	addTemplatesFromFolder("admin", tmpl, box, templatesFileNames)
 	for _, theme := range themes {
 		tmpName := strings.Join([]string{"pan/", "/index.html"}, theme)
 		tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
@@ -226,15 +227,15 @@ func initTemplates() *template.Template {
 }
 
 //将文件夹里面的所有html添加为模板
-func addTemplatesFromFolder(folder string, tmpl *template.Template, box *packr.Box) {
-	fs, _ := ioutil.ReadDir(fmt.Sprintf("./templates/pan/%s", folder))
-	for _, f := range fs {
-		data, _ := box.FindString(fmt.Sprintf("pan/admin/%s", f.Name()))
-		if Util.FileExist(fmt.Sprintf("./templates/pan/admin/%s", f.Name())) {
-			s, _ := ioutil.ReadFile(fmt.Sprintf("./templates/pan/admin/%s", f.Name()))
+func addTemplatesFromFolder(folder string, tmpl *template.Template, box *packr.Box, templatesFileNames []string) {
+	for _, vt := range templatesFileNames {
+		tmpName := fmt.Sprintf("pan/%s/%s.html", folder, vt)
+		data, _ := box.FindString(tmpName)
+		if Util.FileExist("./templates/" + tmpName) {
+			s, _ := ioutil.ReadFile("./templates/" + tmpName)
 			data = string(s)
 		}
-		tmpl.New(fmt.Sprintf("pan/admin/%s", f.Name())).Parse(data)
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped, "contains": strings.Contains}).Parse(data)
 	}
 }
 
