@@ -32,6 +32,17 @@
             font-size: 16px;
             letter-spacing: .02em
         }
+        input:-webkit-autofill , textarea:-webkit-autofill, select:-webkit-autofill {
+
+            -webkit-text-fill-color: #ededed !important;
+            -webkit-box-shadow: 0 0 0px 1000px transparent  inset !important;
+            background-color:transparent;
+            background-image: none;
+            transition: background-color 50000s ease-in-out 0s;
+        }
+        input {
+            background-color:transparent;
+        }
     </style>
 </head>
 <body class="{{- if ne .RedirectUrl "login"}}mdui-drawer-body-left{{- end}} mdui-appbar-with-toolbar mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}} mdui-loaded mdui-bottom-nav-fixed">
