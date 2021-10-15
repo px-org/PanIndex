@@ -274,9 +274,14 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 func SearchFilesByKey(key, sColumn, sOrder string) map[string]interface{} {
 	result := make(map[string]interface{})
 	acountIndex := make(map[string]interface{})
-	for i, account := range config.GloablConfig.Accounts {
-		acountIndex[account.Id] = fmt.Sprintf("/d_%d", i)
+	if len(config.GloablConfig.Accounts) == 1 {
+		acountIndex[config.GloablConfig.Accounts[0].Id] = ""
+	} else {
+		for i, account := range config.GloablConfig.Accounts {
+			acountIndex[account.Id] = fmt.Sprintf("/d_%d", i)
+		}
 	}
+
 	list := []entity.SearchNode{}
 	accouts := []entity.Account{}
 	defer func() {
