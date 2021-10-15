@@ -8,15 +8,45 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"io/ioutil"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
 
 var SqliteDb *gorm.DB
+
+const InitSql string = `
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('host', '0.0.0.0', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('port', '5238', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('site_name', '', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('account_choose', 'default', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('admin_password', 'PanIndex', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('api_token', '', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('s_column', 'default', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('s_order', 'asc', 'common');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('favicon_url', '', 'appearance');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('footer', '', 'appearance');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('css', '', 'appearance');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('js', '', 'appearance');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('enable_preview', '1', 'view');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('image', 'png,gif,jpg,bmp,jpeg,ico', 'view');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('video', 'mp4,mkv,m3u8,ts,avi', 'view');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('audio', 'mp3,wav,flac,ape', 'view');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('code', 'txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini', 'view');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('doc', 'doc,docx,dotx,ppt,pptx,xls,xlsx', 'view');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('other', '*', 'view');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('pwd_dir_id', '', 'pdi');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('hide_file_id', '', 'hfi');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('theme', 'mdui', 'appearance');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('refresh_cookie', '', 'cron');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('update_folder_cache', '', 'cron');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('heroku_keep_alive', '', 'cron');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('heroku_app_url', '', 'cron');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('enable_safety_link', '0', 'safety');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('only_referrer', '', 'safety');
+INSERT OR IGNORE INTO "main"."config_item"("k", "v", "g") VALUES ('is_null_referrer', '0', 'safety');
+`
 
 func InitDb(host, port, dataPath string, debug bool) {
 	if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
@@ -63,15 +93,7 @@ func InitDb(host, port, dataPath string, debug bool) {
 		configItem := entity.ConfigItem{K: "api_token", V: ApiToken, G: "common"}
 		SqliteDb.Create(configItem)
 	}
-	path, err := filepath.Abs("./config/config.sql")
-	if err != nil {
-		panic(err)
-	}
-	file, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	SqliteDb.Model(entity.ConfigItem{}).Exec(string(file))
+	SqliteDb.Model(entity.ConfigItem{}).Exec(InitSql)
 	//同步旧版配置数据
 	syncOldConfig()
 	if os.Getenv("PORT") != "" {
