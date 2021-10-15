@@ -5,6 +5,26 @@ var clipboard = new ClipboardJS('.copyBtn', {
         return encodeURI(fullUrl);
     }
 });
+var copyAllLinksBoard = new ClipboardJS('#copyAllLinks', {
+    text: function(trigger) {
+        var urls = [];
+        $(".icon-file-mdui").each(function (i, item) {
+            var folder = $(this).attr("data-folder");
+            var path = $(this).attr("data-url");
+            var fullUrl = window.location.protocol + "//"+window.location.host + path;
+            if(folder == "false"){
+                urls.push(fullUrl);
+            }
+        });
+        return urls.join("\n");
+    }
+});
+copyAllLinksBoard.on('success', function(e) {
+    mdui.snackbar({
+        message: "链接已复制到剪切板"
+    });
+    e.clearSelection();
+});
 clipboard.on('success', function(e) {
     if(typeof(mdui) != "undefined"){
         mdui.snackbar({
@@ -51,7 +71,7 @@ $(document).ready(function() {
         var du = $(this).attr("data-url");
         var t = $(this).attr("data-title");
         if(mt == 1){
-            $("#image-preview-list").append("<img src=\""+du+"\" alt=\""+t+"\">");
+            $("#image-preview-list").append("<img data-original=\""+du+"\" alt=\""+t+"\"></img>");
         }
     });
     $('#go-to-top').on('click',function () {
@@ -66,7 +86,7 @@ $(document).ready(function() {
         location.reload();
     });
     $('.default-check').on('click', function () {
-        $.cookie('SColumn', null, {expires : 3650, path: '/'});
+        $.cookie('SColumn', "default", {expires : 3650, path: '/'});
         $.cookie('SOrder', null, {expires : 3650, path: '/'});
         location.reload();
     });
@@ -162,6 +182,40 @@ $(document).ready(function() {
             $(this).html(orderColumn+" <i class=\"fa fa-angle-double-down\" aria-hidden=\"true\"></i>");
         }
     });
+    if(document.getElementById('share-menu')){
+        document.getElementById('share-menu').addEventListener('open.mdui.menu', function () {
+            var formData = new FormData();
+            var prefix = window.location.protocol + "//"+window.location.host + "/s/";
+            formData.append("accountId", $(this).attr("data-aid"));
+            formData.append("prefix", prefix);
+            formData.append("path", $(this).attr("data-fp"));
+            $.ajax({
+                type: 'POST',
+                url: '/api/public/shortInfo',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(d){
+                    $("#qrcode").attr("src", d.qr_code);
+                    $("#copyShortUrl").attr("data-content", d.short_url);
+                    $("#copyShortUrl").attr("data-clipboard-action", "copy");
+                    var clipboard = new ClipboardJS('#copyShortUrl', {
+                        text: function(trigger) {
+                            var content = $(trigger).data("content");
+                            return content;
+                        }
+                    });
+                    clipboard.on('success', function(e) {
+                        mdui.snackbar({
+                            message: "已复制到剪切板"
+                        });
+                        e.clearSelection();
+                    });
+                }
+            });
+        });
+    }
 });
 function sortTable(sort_order, data_type){
     $('table tbody > tr').not('.parent').sortElements(function (a, b) {
@@ -324,8 +378,12 @@ window.addEventListener('DOMContentLoaded', function () {
         var ipl = $('#image-preview-list').html();
         if(ipl.length != 0){
             var viewer = new Viewer(document.getElementById('image-preview-list'), {
+                url: 'data-original',
                 hidden: function () {
                     viewer.destroy();
+                },
+                title: function (image) {
+                    return image.alt + ' (' + (this.index + 1) + '/' + this.length + ')';
                 }
             });
             viewer.show();
@@ -333,6 +391,14 @@ window.addEventListener('DOMContentLoaded', function () {
     });
 });
 function promptPwd(path){
+    if(path == "/"){
+        path = "/d_0";
+    }else{
+        if(path.endWith("/")){
+            path = path.substring(0,path.Length-1);
+
+        }
+    }
     var ppwd = path + ":" + $("#input-password").val();
     if ($.cookie("dir_pwd") != null){
         var value = $.cookie("dir_pwd") + ","+ ppwd;
@@ -348,3 +414,13 @@ $("#input-password").bind('keydown', function(event) {
         promptPwd(path);
     }
 });
+String.prototype.endWith = function (param) {
+    if (param == null || param == "" || this.length == 0 || param.length > this.length) {
+        return false;
+    }
+    if (this.substring(this.length - param.length) == param) {
+        return true;
+    } else {
+        return false;
+    }
+}

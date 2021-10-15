@@ -8,8 +8,8 @@ then
         | grep '"tag_name":' \
         | sed -E 's/.*"([^"]+)".*/\1/'`
 fi
-curl -sOL "https://hub.fastgit.org/libsgh/PanIndex/releases/download/${version}/PanIndex-${version}-linux-amd64.tar.gz"
-sha256sum "PanIndex-"${version}"-linux-amd64.tar.gz"
-tar -xvzf "PanIndex-"${version}"-linux-amd64.tar.gz"
+curl -sOL "https://hub.fastgit.org/libsgh/PanIndex/releases/download/${version}/PanIndex-${version}-linux-arm64.tar.gz"
+sha256sum "PanIndex-"${version}"-linux-arm64.tar.gz"
+tar -xvzf "PanIndex-"${version}"-linux-arm64.tar.gz"
 rm -rf README.md LICENSE
 chmod +x PanIndex

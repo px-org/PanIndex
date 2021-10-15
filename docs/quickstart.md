@@ -1,6 +1,4 @@
 # 快速开始
-- [在线演示](https://t1.netrss.cf "https://t1.netrss.cf")
-
 ## 平台支持
 由于PanIndex交叉编译需要cgo（sqlite），目前很多平台还不能很好的支持，如果你有特殊的编译需求，请告知我，我会尽量添加
 - Linux （x86 / amd64 / arm / arm64 ）
@@ -12,8 +10,13 @@
 
 ## 安装
 
-### 一键脚本
-未完成
+### Bash脚本
+- 基于`systemd`的安装脚本，以`root`账户运行
+- 脚本仓库：https://github.com/libsgh/PanIndex-install
+```bash
+$ bash <(curl -L https://github.com/libsgh/PanIndex-install/raw/main/install-release.sh) -h
+```
+
 ### 直接运行
 启动参数<br>
 -host=0.0.0.0 #绑定host，默认0.0.0.0<br>
@@ -33,7 +36,7 @@ $ nohup ./PanIndex > PanIndex.log &
 > 以下命令请切换到root下执行
 
 1. 下载PanIndex并解压
-```
+```bash
 $ mkdir /usr/local/etc/PanIndex
 $ cd /usr/local/etc/PanIndex
 $ wget https://github.com/libsgh/PanIndex/releases/download/v2.0.3/PanIndex-v2.0.3-linux-amd64.tar.gz
@@ -41,7 +44,7 @@ $ tar -xvf PanIndex-v2.0.3-linux-amd64.tar.gz
 $ cp PanIndex /usr/local/bin/
 ```
 2. 编写PanIndex.service文件
-```
+```bash
 $ vim /etc/systemd/system/PanIndex.service
 ```
 3. service内容参考
@@ -64,7 +67,7 @@ WantedBy=multi-user.target
 ```
 
 4. Systemd常用命令
-```
+```bash
 $ systemctl daemon-reload #PanIndex.service有修改重新加载
 $ systemctl restart PanIndex #重启PanIndex
 $ systemctl enable PanIndex #设置开机启动
@@ -111,17 +114,15 @@ docker run -itd \
 - 安装git和golang
 - 设置go环境变量`go env -w GO111MODULE=on`
 - 如果是国内服务器，设置下代理`go env -w GOPROXY=https://goproxy.cn,direct`
-```
+```bash
 $ git clone https://github.com/libsgh/PanIndex.git
 $ cd PanIndex
 $ nohup go run main.go > PanIndex.log &
 ```
 也可以下载源码后自行编译成二进制程序再执行
 以linux,amd64为例
-```
+```bash
 $ CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o PanIndex
 $ nohup ./PanIndex &
 ```
 更多平台编译参考：[PanIndex-release-action](https://github.com/libsgh/PanIndex-release-action)
-### 宝塔配置
-### 视频教程

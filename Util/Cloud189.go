@@ -5,10 +5,13 @@ import (
 	"PanIndex/entity"
 	"PanIndex/model"
 	"bytes"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -30,11 +33,11 @@ import (
 )
 
 //var CLoud189Session nic.Session
-var CLoud189Sessions = map[string]nic.Session{}
+var CLoud189Sessions = map[string]entity.Cloud189{}
 
 //获取文件列表2.0
-func Cloud189GetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syncChild bool)  {
-	CLoud189Session := CLoud189Sessions[accountId]
+func Cloud189GetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syncChild bool) {
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
 	defer func() {
 		if p := recover(); p != nil {
 			log.Errorln(p)
@@ -53,7 +56,7 @@ func Cloud189GetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syn
 		}
 		byteFiles := []byte(resp.Text)
 		totalCount := jsoniter.Get(byteFiles, "fileListAO").Get("count").ToInt()
-		if totalCount == 0{
+		if totalCount == 0 {
 			break
 		}
 		d := jsoniter.Get(byteFiles, "fileListAO").Get("folderList")
@@ -108,7 +111,7 @@ func Cloud189GetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syn
 			}
 			if fn.IsFolder == true {
 				//同步子目录&&子目录不为空
-				if syncChild &&  item.FileCount > 0{
+				if syncChild && item.FileCount > 0 {
 					Cloud189GetFiles(accountId, rootId, fn.FileId, fn.Path, fn.Hide, fn.HasPwd, syncChild)
 				}
 			}
@@ -177,74 +180,41 @@ func Cloud189GetFiles(accountId, rootId, fileId, p string, hide, hasPwd int, syn
 			fn.CacheTime = time.Now().UnixNano()
 			model.SqliteDb.Create(fn)
 		}
-		pageNum++;
+		pageNum++
 	}
 }
 
 type Folder struct {
-	CreateDate string `json:"createDate"`
-	FileCata int `json:"fileCata"`
-	FileCount int `json:"fileCount"`
-	FileListSize int `json:"fileListSize"`
-	Id int64 `json:"id"`
-	LastOpTime string `json:"lastOpTime"`
-	Name string `json:"name"`
-	ParentId int64 `json:"parentId"`
-	Rev string `json:"rev"`
-	StarLabel int `json:"starLabel"`
+	CreateDate   string `json:"createDate"`
+	FileCata     int    `json:"fileCata"`
+	FileCount    int    `json:"fileCount"`
+	FileListSize int    `json:"fileListSize"`
+	Id           int64  `json:"id"`
+	LastOpTime   string `json:"lastOpTime"`
+	Name         string `json:"name"`
+	ParentId     int64  `json:"parentId"`
+	Rev          string `json:"rev"`
+	StarLabel    int    `json:"starLabel"`
 }
 type File struct {
 	CreateDate string `json:"createDate"`
-	FileCata int `json:"fileCata"`
-	Id int64 `json:"id"`
+	FileCata   int    `json:"fileCata"`
+	Id         int64  `json:"id"`
 	LastOpTime string `json:"lastOpTime"`
-	Md5 string `json:"md5"`
-	MediaType int `json:"mediaType"`
-	Name string `json:"name"`
-	Rev string `json:"rev"`
-	StarLabel int `json:"starLabel"`
-	Size int64 `json:"size"`
-}
-func GetDownlaodUrl(accountId, fileIdDigest string) string {
-	CLoud189Session := CLoud189Sessions[accountId]
-	dRedirectRep, err := CLoud189Session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+fileIdDigest+"&downloadType=1", nic.H{
-		AllowRedirect:     false,
-		Timeout:           20,
-		DisableKeepAlives: true,
-		SkipVerifyTLS:     true,
-	})
-	fmt.Println(len(dRedirectRep.Bytes))
-	if dRedirectRep != nil {
-		defer dRedirectRep.Body.Close()
-	}
-	if err != nil {
-		log.Error(err)
-		return ""
-	}
-	redirectUrl := dRedirectRep.Header.Get("Location")
-	dRedirectRep, err = CLoud189Session.Get(redirectUrl, nic.H{
-		AllowRedirect:     false,
-		Timeout:           20,
-		DisableKeepAlives: true,
-		SkipVerifyTLS:     true,
-	})
-	if err != nil {
-		log.Error(err)
-		return ""
-	}
-	if dRedirectRep == nil || dRedirectRep.Header == nil {
-		return ""
-	}
-	fmt.Println(len(dRedirectRep.Bytes))
-	return dRedirectRep.Header.Get("Location")
+	Md5        string `json:"md5"`
+	MediaType  int    `json:"mediaType"`
+	Name       string `json:"name"`
+	Rev        string `json:"rev"`
+	StarLabel  int    `json:"starLabel"`
+	Size       int64  `json:"size"`
 }
 
 func GetDownlaodUrlNew(accountId, fileId string) string {
-	CLoud189Session := CLoud189Sessions[accountId]
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
 	defer CLoud189Session.Client.CloseIdleConnections()
 	dRedirectRep, err := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action?noCache=%s&fileId=%s", random(), fileId), nic.H{
 		Headers: nic.KV{
-			"accept": "application/json;charset=UTF-8",
+			"accept": "application/json;charset=UTF-8	",
 		},
 	})
 	if dRedirectRep != nil {
@@ -275,7 +245,7 @@ func GetDownlaodUrlNew(accountId, fileId string) string {
 	}
 }
 func GetDownlaodMultiFiles(accountId, fileId string) string {
-	CLoud189Session := CLoud189Sessions[accountId]
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
 	dRedirectRep, _ := CLoud189Session.Get(fmt.Sprintf("https://cloud.189.cn/downloadMultiFiles.action?fileIdS=%s&downloadType=1&recursive=1", fileId), nic.H{
 		AllowRedirect: false,
 	})
@@ -292,7 +262,7 @@ func Cloud189Login(accountId, user, password string) string {
 		log.Errorln(err)
 		return "5"
 	}
-	log.Infof("登录页面接口：%s", res.Status)
+	log.Debugf("登录页面接口：%s", res.Status)
 	b := res.Text
 	lt := ""
 	ltText := regexp.MustCompile(`lt = "(.+?)"`)
@@ -307,12 +277,13 @@ func Cloud189Login(accountId, user, password string) string {
 	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]
 	//reqId := regexp.MustCompile(`reqId = "(.+?)"`).FindStringSubmatch(b)[1]
 	jRsakey := regexp.MustCompile(`j_rsaKey" value="(\S+)"`).FindStringSubmatch(b)[1]
+	vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
 	vCodeRS := ""
-	if config.GloablConfig.Damagou.Username != "" {
-		vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
-		vCodeRS = GetValidateCode(accountId, vCodeID)
-		log.Warningln("[登录接口]得到验证码：" + vCodeRS)
-		return "4"
+	if vCodeID != "" {
+		//vCodeRS = GetValidateCode(accountId, vCodeID)
+		//log.Warningln("[登录接口]得到验证码：" + vCodeRS)
+		//log.Warningln("[登录接口]需要输入验证码")
+		//return "4"
 	}
 	userRsa := RsaEncode([]byte(user), jRsakey)
 	passwordRsa := RsaEncode([]byte(password), jRsakey)
@@ -350,7 +321,8 @@ func Cloud189Login(accountId, user, password string) string {
 			log.Warningln(err.Error())
 			return "4"
 		}
-		CLoud189Sessions[accountId] = CLoud189Session
+		sessionKey := GetSessionKey(CLoud189Session)
+		CLoud189Sessions[accountId] = entity.Cloud189{CLoud189Session, sessionKey}
 		return res.Cookies()[0].Value
 	}
 	errorReason := jsoniter.Get([]byte(loginResp.Text), "msg").ToString()
@@ -368,8 +340,32 @@ func Cloud189Login(accountId, user, password string) string {
 	return "4"
 }
 
+func GetSessionKey(session nic.Session) string {
+	resp, error := session.Get("https://cloud.189.cn/v2/getUserBriefInfo.action?noCache="+random(), nil)
+	if error != nil {
+		return ""
+	}
+	sessionKey := jsoniter.Get(resp.Bytes, "sessionKey").ToString()
+	return sessionKey
+}
+
+func GetRsaKey(accountId string) (string, string) {
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
+	resp, error := CLoud189Session.Get("https://cloud.189.cn/api/security/generateRsaKey.action?noCache="+random(), nic.H{
+		Headers: nic.KV{
+			"accept": "application/json;charset=UTF-8",
+		},
+	})
+	if error != nil {
+		return "", ""
+	}
+	pubKey := jsoniter.Get(resp.Bytes, "pubKey").ToString()
+	pkId := jsoniter.Get(resp.Bytes, "pkId").ToString()
+	return pubKey, pkId
+}
+
 func Cloud189IsLogin(accountId string) bool {
-	CLoud189Session := CLoud189Sessions[accountId]
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
 	if _, ok := CLoud189Sessions[accountId]; ok {
 		resp, err := CLoud189Session.Get("https://cloud.189.cn/v2/getLoginedInfos.action?showPC=true", nic.H{
 			Timeout:           20,
@@ -406,7 +402,7 @@ func RsaEncode(origData []byte, j_rsakey string) string {
 
 // 打码狗平台登录
 func LoginDamagou(accountId string) string {
-	CLoud189Session := CLoud189Sessions[accountId]
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
 	url := "http://www.damagou.top/apiv1/login-bak.html?username=" + config.GloablConfig.Damagou.Username + "&password=" + config.GloablConfig.Damagou.Password
 	res, _ := CLoud189Session.Get(url, nil)
 	rsText := regexp.MustCompile(`([A-Za-z0-9]+)`).FindStringSubmatch(res.Text)[1]
@@ -415,7 +411,7 @@ func LoginDamagou(accountId string) string {
 
 // 调用打码狗获取验证码结果
 func GetValidateCode(accountId, params string) string {
-	CLoud189Session := CLoud189Sessions[accountId]
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
 	timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
 	url := "https://open.e.189.cn/api/logbox/oauth2/picCaptcha.do?token=" + params + timeStamp
 	log.Warningln("[登录接口]正在尝试获取验证码")
@@ -457,10 +453,68 @@ func GetValidateCode(accountId, params string) string {
 	return ""
 }
 
+func Cloud189UploadFilesNew(accountId, parentId string, files []*multipart.FileHeader) bool {
+	CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
+	sessionKey := CLoud189Sessions[accountId].SessionKey
+	UPLOAD_PART_SIZE := 10 * 1024 * 1024
+	date := time.Now().Unix()
+	rid := "8aab8fc8-99ae-458e-89dd-85e0d7b7d4f6"
+	pk := strings.ReplaceAll(rid, "-", "")
+	pubKey, pId := GetRsaKey(accountId)
+	fmt.Println(qs(nic.KV{
+		"parentFolderId": parentId,
+		"fileName":       files[0].Filename,
+		"fileSize":       files[0].Size,
+		"sliceSize":      UPLOAD_PART_SIZE,
+		"lazyCheck":      1,
+	}))
+	re, _ := nic.Post("https://www.devglan.com/online-tools/aes-encryption", nic.H{
+		Data: nic.KV{
+			"file": "undefined",
+			"data": nic.KV{
+				"textToEncrypt": qs(nic.KV{
+					"parentFolderId": parentId,
+					"fileName":       files[0].Filename,
+					"fileSize":       files[0].Size,
+					"sliceSize":      UPLOAD_PART_SIZE,
+					"lazyCheck":      1,
+				}),
+				"secretKey":  pk[0:16],
+				"mode":       "ECB",
+				"keySize":    "128",
+				"dataFormat": "Hex",
+			},
+		},
+	})
+	params := jsoniter.Get(re.Bytes, "output").ToString()
+	signature := hmacSha1(fmt.Sprintf("SessionKey=%s&Operate=GET&RequestURI=%s&Date=%s&params=%s", sessionKey, "/person/initMultiUpload", date, params), pk)
+	encryptiontext := RsaEncode([]byte(pk), pubKey)
+	headers := nic.KV{
+		"encryptiontext": encryptiontext,
+		"pkid":           pId,
+		"signature":      signature,
+		"sessionkey":     sessionKey,
+		"x-request-id":   rid,
+		"x-request-date": date,
+		"origin":         "https://cloud.189.cn",
+		"referer":        "https://cloud.189.cn/",
+	}
+	response, _ := CLoud189Session.Get("https://upload.cloud.189.cn"+"/person/initMultiUpload?params="+params, nic.H{
+		Headers: headers,
+	})
+	fmt.Println(response.Text)
+	return true
+}
+func hmacSha1(data string, secret string) string {
+	h := hmac.New(sha1.New, []byte(secret))
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
+}
 func Cloud189UploadFiles(accountId, parentId string, files []*multipart.FileHeader) bool {
-	CLoud189Session := CLoud189Sessions[accountId]
-	response, _ := CLoud189Session.Get("https://cloud.189.cn/main.action#home", nil)
-	sessionKey := GetCurBetweenStr(response.Text, "window.edrive.sessionKey = '", "';")
+	//CLoud189Session := CLoud189Sessions[accountId].Cloud189Session
+	//response, _ := CLoud189Session.Get("https://cloud.189.cn/main.action#home", nil)
+	//sessionKey := GetCurBetweenStr(response.Text, "window.edrive.sessionKey = '", "';")
+	sessionKey := CLoud189Sessions[accountId].SessionKey
 	log.Debug(sessionKey)
 	for _, file := range files {
 		t1 := time.Now()
@@ -568,4 +622,20 @@ func GetBetweenStr(str, start, end string) string {
 	}
 	str = string([]byte(str)[:m])
 	return str
+}
+
+func qs(params nic.KV) string {
+	var dataParams string
+	//ksort
+	var keys []string
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		fmt.Println("key:", k, "Value:", Strval(params[k]))
+		dataParams = dataParams + k + "=" + Strval(params[k]) + "&"
+	}
+	ff := dataParams[0 : len(dataParams)-1]
+	return ff
 }

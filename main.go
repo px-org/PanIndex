@@ -29,7 +29,7 @@ import (
 
 //var configPath = flag.String("config", "config.json", "配置文件config.json的路径")
 var Host = flag.String("host", "", "绑定host，默认为0.0.0.0")
-var Port = flag.String("port", "", "绑定port，默认为8080")
+var Port = flag.String("port", "", "绑定port，默认为5238")
 var Debug = flag.Bool("debug", false, "调试模式，设置为true可以输出更多日志")
 var DataPath = flag.String("data_path", "data", "数据存储目录，默认程序同级目录")
 var CertFile = flag.String("cert_file", "", "/path/to/test.pem")
@@ -46,15 +46,10 @@ func main() {
 	boot.Start(*Host, *Port, *Debug, *DataPath)
 	r := gin.New()
 	r.Use(gin.Logger())
-	//	staticBox := packr.NewBox("./static")
+	//设置Html模板
 	r.SetHTMLTemplate(initTemplates())
-	//r.LoadHTMLGlob("templates/*	")
-	//	r.LoadHTMLFiles("templates/**")
-	//	r.Static("/static", "./static")
-	//	r.StaticFS("/static", staticBox)
-	//r.StaticFile("/favicon-cloud189.ico", "./static/img/favicon-cloud189.ico")
+	//设置静态资源文件
 	initStaticBox(r)
-	//声明一个路由
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 		method := c.Request.Method
@@ -71,6 +66,10 @@ func main() {
 			downloadMultiFiles(c) //文件夹下载
 		} else if path == "/api/public/files" {
 			files(c) //查询目录下文件列表
+		} else if path == "/api/public/transcode" {
+			transcode(c) //转码测试
+		} else if path == "/api/public/shortInfo" {
+			shortInfo(c) //短链接&二维码
 		} else if path == "/api/public/onedrive/exchangeToken" {
 			oneExchangeToken(c) //交换token
 		} else if path == "/api/public/onedrive/refreshToken" {
@@ -79,8 +78,12 @@ func main() {
 			raw(c) //原始文件预览
 		} else if method == http.MethodPost && path == "/api/admin/save" {
 			adminSave(c) //后台配置保存
-		} else if path == "/api/admin/deleteAccount" {
-			adminDeleteAccount(c) //后台删除账号
+		} else if method == http.MethodPost && path == "/api/admin/getAccount" {
+			adminGetAccount(c) //查询账号信息
+		} else if path == "/api/admin/deleteAccounts" {
+			adminDeleteAccounts(c) //后台删除账号
+		} else if path == "/api/admin/sortAccounts" {
+			adminSortAccounts(c) //后台账号拖动排序
 		} else if path == "/api/admin/updateCache" {
 			updateCache(c) //后台刷新缓存
 		} else if path == "/api/admin/updateCookie" {
@@ -95,31 +98,9 @@ func main() {
 			upload(c) //后台上传文件
 		} else if ad {
 			admin(c) //后台页面跳转
+			//adminSystem(c) //后台页面跳转
 		} else {
-			isForbidden := true
-			host := c.Request.Host
-			referer, err := url.Parse(c.Request.Referer())
-			if err != nil {
-				log.Warningln(err)
-			}
-			if referer != nil && referer.Host != "" {
-				if referer.Host == host {
-					//站内，自动通过
-					isForbidden = false
-				} else if referer.Host != host && len(config.GloablConfig.OnlyReferrer) > 0 {
-					//外部引用，并且设置了防盗链，需要进行判断
-					for _, rf := range strings.Split(config.GloablConfig.OnlyReferrer, ",") {
-						if rf == referer.Host {
-							isForbidden = false
-							break
-						}
-					}
-				} else {
-					isForbidden = false
-				}
-			} else {
-				isForbidden = false
-			}
+			isForbidden := checkReferer(c)
 			if isForbidden == true {
 				c.String(http.StatusForbidden, "403 Hotlink Forbidden")
 				return
@@ -128,6 +109,9 @@ func main() {
 				if s {
 					search(c, k)
 				} else {
+					//短链跳转
+					shortRedirect(c)
+					//正常跳转
 					index(c)
 				}
 			}
@@ -136,11 +120,50 @@ func main() {
 	log.Infoln("程序启动成功")
 	if *CertFile != "" && *KeyFile != "" {
 		//开启https
-		r.Use(TlsHandler(config.GloablConfig.Port))
-		r.RunTLS(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port), *CertFile, *KeyFile)
+		p, _ := strconv.Atoi(config.GloablConfig.Port)
+		r.Use(TlsHandler(p))
+		r.RunTLS(fmt.Sprintf("%s:%s", config.GloablConfig.Host, config.GloablConfig.Port), *CertFile, *KeyFile)
 	} else {
-		r.Run(fmt.Sprintf("%s:%d", config.GloablConfig.Host, config.GloablConfig.Port))
+		r.Run(fmt.Sprintf("%s:%s", config.GloablConfig.Host, config.GloablConfig.Port))
 	}
+}
+
+//防盗链检测
+func checkReferer(c *gin.Context) bool {
+	isForbidden := true
+	if config.GloablConfig.EnableSafetyLink == "0" {
+		//开启了防盗链
+		isForbidden = false
+	} else {
+		host := c.Request.Host
+		referer, err := url.Parse(c.Request.Referer())
+		if err != nil {
+			log.Warningln(err)
+		}
+		if referer != nil && referer.Host != "" {
+			if referer.Host == host {
+				//站内，自动通过
+				isForbidden = false
+			} else if referer.Host != host && len(config.GloablConfig.OnlyReferrer) > 0 {
+				//外部引用，并且设置了防盗链，需要进行判断
+				for _, rf := range strings.Split(config.GloablConfig.OnlyReferrer, ",") {
+					if rf == referer.Host {
+						isForbidden = false
+						break
+					}
+				}
+			} else {
+				isForbidden = false
+			}
+		} else {
+			if config.GloablConfig.IsNullReferrer == "1" {
+				isForbidden = false
+			} else {
+				isForbidden = true
+			}
+		}
+	}
+	return isForbidden
 }
 
 func TlsHandler(port int) gin.HandlerFunc {
@@ -161,10 +184,10 @@ func TlsHandler(port int) gin.HandlerFunc {
 func initTemplates() *template.Template {
 	themes := [6]string{"mdui", "mdui-light", "mdui-dark", "classic", "bootstrap", "materialdesign"}
 	box := packr.New("templates", "./templates")
-	data, _ := box.FindString("pan/admin/login.html")
-	tmpl := template.New("pan/admin/login.html")
-	if Util.FileExist("./templates/pan/admin/login.html") {
-		s, _ := ioutil.ReadFile("./templates/pan/admin/login.html")
+	/*data, _ := box.FindString("pan/admin/login-bak.html")
+	tmpl := template.New("pan/admin/login-bak.html")
+	if Util.FileExist("./templates/pan/admin/login-bak.html") {
+		s, _ := ioutil.ReadFile("./templates/pan/admin/login-bak.html")
 		data = string(s)
 	}
 	tmpl.Parse(data)
@@ -173,29 +196,46 @@ func initTemplates() *template.Template {
 		s, _ := ioutil.ReadFile("./templates/pan/admin/index.html")
 		data = string(s)
 	}
-	tmpl.New("pan/admin/index.html").Parse(data)
+	tmpl.New("pan/admin/index.html").Parse(data)*/
+	tmpl := template.New("")
+	//添加后台模板
+	addTemplatesFromFolder("admin", tmpl, box)
 	for _, theme := range themes {
 		tmpName := strings.Join([]string{"pan/", "/index.html"}, theme)
 		tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
 		tmpFile = strings.ReplaceAll(tmpFile, "-light", "")
-		data, _ = box.FindString(tmpFile)
+		data, _ := box.FindString(tmpFile)
 		if Util.FileExist("./templates/" + tmpFile) {
 			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
 			data = string(s)
 		}
-		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped, "contains": strings.Contains}).Parse(data)
 	}
-	viewTemplates := [9]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md"}
+	//添加详情模板
+	viewTemplates := [10]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md", "epub"}
 	for _, vt := range viewTemplates {
 		tmpName := fmt.Sprintf("pan/%s/view-%s.html", "mdui", vt)
-		data, _ = box.FindString(tmpName)
+		data, _ := box.FindString(tmpName)
 		if Util.FileExist("./templates/" + tmpName) {
 			s, _ := ioutil.ReadFile("./templates/" + tmpName)
 			data = string(s)
 		}
-		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped}).Parse(data)
+		tmpl.New(tmpName).Funcs(template.FuncMap{"unescaped": unescaped, "contains": strings.Contains}).Parse(data)
 	}
 	return tmpl
+}
+
+//将文件夹里面的所有html添加为模板
+func addTemplatesFromFolder(folder string, tmpl *template.Template, box *packr.Box) {
+	fs, _ := ioutil.ReadDir(fmt.Sprintf("./templates/pan/%s", folder))
+	for _, f := range fs {
+		data, _ := box.FindString(fmt.Sprintf("pan/admin/%s", f.Name()))
+		if Util.FileExist(fmt.Sprintf("./templates/pan/admin/%s", f.Name())) {
+			s, _ := ioutil.ReadFile(fmt.Sprintf("./templates/pan/admin/%s", f.Name()))
+			data = string(s)
+		}
+		tmpl.New(fmt.Sprintf("pan/admin/%s", f.Name())).Parse(data)
+	}
 }
 
 func initStaticBox(r *gin.Engine) {
@@ -213,8 +253,8 @@ var dls = sync.Map{}
 func index(c *gin.Context) {
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pwd := ""
-	sColumn := "default"
-	sOrder := "asc"
+	sColumn := config.GloablConfig.SColumn
+	sOrder := config.GloablConfig.SOrder
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
 	if err == nil {
 		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
@@ -284,7 +324,8 @@ func index(c *gin.Context) {
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
 			_, has := c.GetQuery("v")
-			if has {
+			t := service.GetViewTemplate(fs[0])
+			if has && t != "" {
 				//跳转文件预览页面
 				if account.Mode == "native" {
 					result["downloadUrl"] = ""
@@ -301,8 +342,9 @@ func index(c *gin.Context) {
 					}
 					result["DownloadUrl"] = dl.GetDownlaodUrl(account, fs[0])
 				}
-				t := service.GetViewTemplate(account.Mode, fs[0], result)
-				tmpFile = fmt.Sprintf("pan/%s/view-%s.html", config.GloablConfig.Theme, t)
+				theme := strings.ReplaceAll(config.GloablConfig.Theme, "-dark", "")
+				theme = strings.ReplaceAll(theme, "-light", "")
+				tmpFile = fmt.Sprintf("pan/%s/view-%s.html", theme, t)
 				c.HTML(http.StatusOK, tmpFile, result)
 				return
 			} else {
@@ -334,8 +376,8 @@ func index(c *gin.Context) {
 }
 
 func search(c *gin.Context, key string) {
-	sColumn := "default"
-	sOrder := "asc"
+	sColumn := config.GloablConfig.SColumn
+	sOrder := config.GloablConfig.SOrder
 	tmpFile := strings.Join([]string{"pan/", "/index.html"}, config.GloablConfig.Theme)
 	pathName := c.Request.URL.Path
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
@@ -396,6 +438,7 @@ func downloadMultiFiles(c *gin.Context) {
 	fileId := c.Query("fileId")
 	accountId := c.Query("accountId")
 	account := service.GetAccount(accountId)
+	ua := c.Request.UserAgent()
 	if account.Mode == "native" {
 		dp := *DataPath
 		if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
@@ -410,46 +453,77 @@ func downloadMultiFiles(c *gin.Context) {
 		Util.Zip(dp+string(filepath.Separator)+t+".zip", fileId)
 		c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", t+".zip"))
 		c.Writer.Header().Add("Content-Type", "application/octet-stream")
+		fmt.Println("0")
 		c.File(dst)
+		os.Remove(dst)
 		return
-	} else if account.Mode == "cloud189" {
-		downUrl := service.GetDownlaodMultiFiles(accountId, fileId)
+	} else {
+		downUrl := service.GetDownlaodMultiFiles(account, fileId, ua)
 		c.JSON(http.StatusOK, gin.H{"redirect_url": downUrl})
 	}
 }
 
 func admin(c *gin.Context) {
 	logout := c.Query("logout")
+	adminModule := c.Query("admin")
+	if adminModule == "" {
+		adminModule = "common"
+	}
+	cookieTheme, error := c.Cookie("Theme")
+	Theme := "mdui"
+	if strings.HasPrefix(config.GloablConfig.Theme, "mdui") {
+		Theme = config.GloablConfig.Theme
+	}
+	if error == nil {
+		Theme = cookieTheme
+	}
 	sessionId, error := c.Cookie("sessionId")
 	if logout != "" && logout == "true" {
 		//退出登录
 		GC.Remove(sessionId)
-		c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Msg": "退出成功", "Theme": config.GloablConfig.Theme})
+		c.HTML(http.StatusOK, "pan/admin/login.html",
+			gin.H{"RedirectUrl": "login",
+				"Error":      true,
+				"Msg":        "退出成功",
+				"Theme":      Theme,
+				"FaviconUrl": config.GloablConfig.FaviconUrl})
 	} else {
+		configData := service.GetConfig()
+		data := gin.H{"Config": configData, "Theme": Theme, "RedirectUrl": adminModule, "Version": boot.VERSION, "FaviconUrl": config.GloablConfig.FaviconUrl}
+		if adminModule == "pwd" {
+			pwdDirs := service.TransformPwdDirs(configData.PwdDirId)
+			data["PwdDirs"] = pwdDirs
+		}
+		if adminModule == "hide" {
+			hideFiles := service.TransformHideFiles(configData.HideFileId)
+			data["HideFiles"] = hideFiles
+		}
 		if c.Request.Method == "GET" {
 			if error == nil && sessionId != "" && GC.Has(sessionId) {
 				//登录状态跳转首页
-				config := service.GetConfig()
-				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", adminModule), data)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": false, "Theme": config.GloablConfig.Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": false, "Theme": Theme, "FaviconUrl": config.GloablConfig.FaviconUrl})
 			}
 		} else {
 			//登录
 			password, _ := c.GetPostForm("password")
-			config := service.GetConfig()
-			if password == config.AdminPassword {
+			if password == config.GloablConfig.AdminPassword {
 				//登录成功
 				u1 := uuid.NewV4().String()
 				c.SetCookie("sessionId", u1, 7*24*60*60, "/", "", false, true)
 				GC.SetWithExpire(u1, u1, time.Hour*24*7)
-				config := service.GetConfig()
-				c.HTML(http.StatusOK, "pan/admin/index.html", config)
+				c.HTML(http.StatusOK, fmt.Sprintf("pan/admin/%s.html", adminModule), data)
 			} else {
-				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"Error": true, "Theme": config.Theme, "FaviconUrl": config.FaviconUrl, "Msg": "密码错误，请重试！"})
+				c.HTML(http.StatusOK, "pan/admin/login.html", gin.H{"RedirectUrl": "login", "Error": true, "Theme": Theme, "FaviconUrl": config.GloablConfig.FaviconUrl, "Msg": "密码错误，请重试！"})
 			}
 		}
 	}
+}
+
+func adminGetAccount(c *gin.Context) {
+	id := c.Query("id")
+	c.JSON(http.StatusOK, service.GetAccount(id))
 }
 
 func adminSave(c *gin.Context) {
@@ -459,10 +533,18 @@ func adminSave(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置已更新，部分配置重启后生效！"})
 }
 
-func adminDeleteAccount(c *gin.Context) {
-	id := c.Query("id")
-	service.DeleteAccount(id)
+func adminDeleteAccounts(c *gin.Context) {
+	delIds := []string{}
+	c.BindJSON(&delIds)
+	service.DeleteAccount(delIds)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
+}
+
+func adminSortAccounts(c *gin.Context) {
+	sortIds := []string{}
+	c.BindJSON(&sortIds)
+	service.SortAccounts(sortIds)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "排序完成！"})
 }
 
 func getConfig(c *gin.Context) {
@@ -470,26 +552,35 @@ func getConfig(c *gin.Context) {
 }
 
 func updateCache(c *gin.Context) {
-	id := c.Query("id")
-	account := service.GetAccount(id)
-	if account.Status == -1 {
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "目录缓存中，请勿重复操作！"})
+	accountId := c.PostForm("accountId")
+	cachePath := c.PostForm("cachePath")
+	account := service.GetAccount(accountId)
+	if account.Mode == "native" {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "当前网盘无需刷新操作！"})
 	} else {
-		account.SyncDir = "/"
-		account.SyncChild = 0
-		go jobs.SyncOneAccount(account)
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在缓存目录，请稍后刷新页面查看缓存结果！"})
+		if account.Status == -1 {
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "目录缓存中，请勿重复操作！"})
+		} else {
+			account.SyncDir = cachePath
+			account.SyncChild = 0
+			go jobs.SyncOneAccount(account)
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在缓存目录，请稍后刷新页面查看缓存结果！"})
+		}
 	}
 }
 
 func updateCookie(c *gin.Context) {
 	id := c.Query("id")
 	account := service.GetAccount(id)
-	if account.CookieStatus == -1 {
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "cookie刷新中，请勿重复操作！"})
+	if account.Mode == "native" {
+		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "当前网盘无需刷新操作！"})
 	} else {
-		go jobs.AccountLogin(account)
-		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+		if account.CookieStatus == -1 {
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "cookie刷新中，请勿重复操作！"})
+		} else {
+			go jobs.AccountLogin(account)
+			c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "正在刷新cookie，请稍后刷新页面查看缓存结果！"})
+		}
 	}
 }
 
@@ -571,7 +662,10 @@ func files(c *gin.Context) {
 	sOrder := c.PostForm("sOrder")
 	accountId := c.PostForm("accountId")
 	if sColumn == "" {
-		sColumn = "default"
+		sColumn = config.GloablConfig.SColumn
+	}
+	if sOrder == "" {
+		sOrder = config.GloablConfig.SOrder
 	}
 	files := service.GetFiles(accountId, parentPath, sColumn, sOrder, mediaType)
 	c.JSON(http.StatusOK, gin.H{
@@ -579,5 +673,39 @@ func files(c *gin.Context) {
 		"status":  0,
 		"data":    files,
 	})
+}
+func transcode(c *gin.Context) {
+	accountId := c.Query("accountId")
+	fileId := c.Query("fileId")
+	c.String(http.StatusOK, Util.AliTranscoding(accountId, fileId))
+	c.Abort()
+}
+func adminSystem(c *gin.Context) {
+	c.HTML(http.StatusOK, "pan/admin/base.html", gin.H{})
+	c.Abort()
+}
+func shortInfo(c *gin.Context) {
+	accountId := c.PostForm("accountId")
+	path := c.PostForm("path")
+	prefix := c.PostForm("prefix")
+	url, qrCode, msg := service.ShortInfo(accountId, path, prefix)
+	c.JSON(http.StatusOK, gin.H{
+		"short_url": url,
+		"qr_code":   qrCode,
+		"msg":       msg,
+	})
+	c.Abort()
+}
+func shortRedirect(c *gin.Context) {
+	pathName := c.Request.URL.Path
+	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
+		pathName = pathName[0 : len(pathName)-1]
+	}
+	paths := strings.Split(pathName, "/")
+	if len(paths) == 3 && paths[1] == "s" {
+		redirectUri := service.GetRedirectUri(paths[2])
+		c.Redirect(http.StatusFound, redirectUri)
+	}
+	c.Abort()
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

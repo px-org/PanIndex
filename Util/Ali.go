@@ -204,6 +204,35 @@ func AliGetDownloadUrl(accountId, fileId string) string {
 	return downUrl
 }
 
+func AliFolderDownload(accountId, fileId, archiveName, ua string) string {
+	tokenResp := Alis[accountId]
+	auth := tokenResp.TokenType + " " + tokenResp.AccessToken
+	resp, err := nic.Post("https://api.aliyundrive.com/adrive/v1/file/multiDownloadUrl", nic.H{
+		Headers: nic.KV{
+			"authorization": auth,
+			"User-Agent":    ua,
+		},
+		JSON: nic.KV{
+			"download_infos": []nic.KV{nic.KV{
+				"drive_id": tokenResp.DefaultDriveId,
+				"files": []nic.KV{nic.KV{
+					"file_id": fileId,
+				}},
+			},
+			},
+			"archive_name": archiveName,
+		},
+	})
+	if err != nil {
+		return ""
+	}
+	downUrl := jsoniter.Get(resp.Bytes, "download_url").ToString()
+	if downUrl == "" {
+		log.Warningln("阿里云盘下载地址获取失败")
+	}
+	return downUrl
+}
+
 func AliUpload(accountId, parentId string, files []*multipart.FileHeader) bool {
 	tokenResp := Alis[accountId]
 	auth := tokenResp.TokenType + " " + tokenResp.AccessToken
@@ -267,4 +296,22 @@ func AliUpload(accountId, parentId string, files []*multipart.FileHeader) bool {
 		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
 	}
 	return true
+}
+
+//阿里云转码
+func AliTranscoding(accountId, fileId string) string {
+	tokenResp := Alis[accountId]
+	auth := tokenResp.TokenType + " " + tokenResp.AccessToken
+	resp, _ := nic.Post("https://api.aliyundrive.com/v2/file/get_video_preview_play_info", nic.H{
+		Headers: nic.KV{
+			"authorization": auth,
+		},
+		JSON: nic.KV{
+			"category":    "live_transcoding",
+			"drive_id":    tokenResp.DefaultDriveId,
+			"file_id":     fileId,
+			"template_id": "",
+		},
+	})
+	return resp.Text
 }

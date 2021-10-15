@@ -6,51 +6,37 @@ import (
 	"PanIndex/entity"
 	"PanIndex/model"
 	"errors"
-	"github.com/bluele/gcache"
-	"github.com/libsgh/nic"
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"time"
 )
 
+var CacheCron *cron.Cron
+
+func AutoCacheRun() {
+	CacheCron = cron.New()
+	accounts := []entity.Account{}
+	model.SqliteDb.Raw("select * from account where mode !=?", "native").Find(&accounts)
+	for _, ac := range accounts {
+		if ac.SyncCron != "" {
+			CacheCron.AddFunc(ac.SyncCron, func() {
+				SyncOneAccount(ac)
+			})
+		}
+	}
+	CacheCron.Start()
+}
 func Run() {
 	c := cron.New()
-	if config.GloablConfig.HerokuKeepAlive != "" {
-		c.AddFunc(config.GloablConfig.HerokuKeepAlive, func() {
-			if config.GloablConfig.HerokuAppUrl != "" && config.GloablConfig.HerokuKeepAlive != "" {
-				resp, err := nic.Get(config.GloablConfig.HerokuAppUrl, nil)
-				if err != nil {
-					log.Infoln(err.Error())
-				} else {
-					log.Infoln("[定时任务]heroku防休眠 >> " + resp.Status)
-				}
-			}
-		})
-	}
-	if config.GloablConfig.RefreshCookie != "" {
-		c.AddFunc(config.GloablConfig.RefreshCookie, func() {
-			if config.GloablConfig.HerokuAppUrl != "" {
-				resp, err := nic.Get(config.GloablConfig.HerokuAppUrl+"/api/admin/envToConfig?token="+config.GloablConfig.ApiToken, nil)
-				if err != nil {
-					log.Infoln(err.Error())
-				} else {
-					log.Infoln("[定时任务]heroku配置防丢失 >> " + resp.Status)
-				}
-			}
-			for _, account := range SelectAllAccounts() {
-				AccountLogin(account)
-			}
-		})
-	}
-	if config.GloablConfig.UpdateFolderCache != "" {
+	/*if config.GloablConfig.UpdateFolderCache != "" {
 		c.AddFunc(config.GloablConfig.UpdateFolderCache, func() {
 			Util.GC = gcache.New(10).LRU().Build()
 			for _, account := range SelectAllAccounts() {
 				SyncOneAccount(account)
 			}
 		})
-	}
+	}*/
 	//阿里云盘 accesstoken过期时间为2小时，这里采取固定cron刷新的方式
 	c.AddFunc("0 0 0/1 * * ?", func() {
 		for k, v := range Util.Alis {

@@ -49,8 +49,10 @@ func Start(host, port string, debug bool, dataPath string) {
 	//从环境变量写入到config
 	service.EnvToConfig()
 	service.GetConfig()
-	//定时任务初始化
+	//系统定时任务初始化
 	jobs.Run()
+	//网盘定时缓存任务初始化
+	jobs.AutoCacheRun()
 	//刷新cookie和目录缓存
 	go jobs.StartInit()
 }
@@ -148,8 +150,14 @@ type GithubRelease struct {
 }
 
 func PrintConfig(dataPath, cq string) bool {
+	c := ""
 	if cq == "" {
 		return false
+	}
+	if cq == "version" {
+		c = VERSION
+		fmt.Print(VERSION)
+		return true
 	}
 	if os.Getenv("PAN_INDEX_DATA_PATH") != "" {
 		dataPath = os.Getenv("PAN_INDEX_DATA_PATH")
@@ -169,8 +177,7 @@ func PrintConfig(dataPath, cq string) bool {
 	if err != nil {
 		panic(fmt.Sprintf("Got error when connect database, the error is '%v'", err))
 	}
-	c := ""
 	SqliteDb.Raw(fmt.Sprintf("select %s from config where 1=1 limit 1", cq)).First(&c)
-	fmt.Println(c)
+	fmt.Print(c)
 	return true
 }

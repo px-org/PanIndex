@@ -1,4 +1,3 @@
-## 配置说明
 ### 注意事项
 - 后台配置地址：`http://ip:port/?admin`
 - 默认密码：`PanIndex`

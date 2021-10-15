@@ -6,6 +6,7 @@ import (
 	"PanIndex/entity"
 	"PanIndex/jobs"
 	"PanIndex/model"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/bluele/gcache"
@@ -14,6 +15,7 @@ import (
 	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	qrcode "github.com/skip2/go-qrcode"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
@@ -26,7 +28,7 @@ import (
 	"time"
 )
 
-var UrlCache = gcache.New(100).LRU().Build()
+var UrlCache = gcache.New(500).LRU().Build()
 
 func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) map[string]interface{} {
 	if path == "" {
@@ -40,6 +42,7 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 		}
 	}()
 	result["HasReadme"] = false
+	result["HasHead"] = false
 	if account.Mode == "native" {
 		//列出文件夹相对路径
 		rootPath := account.RootId
@@ -100,6 +103,10 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 						if fileInfo.Name() == "README.md" {
 							result["HasReadme"] = true
 							result["ReadmeContent"] = Util.ReadStringByFile(fileId)
+						}
+						if fileInfo.Name() == "HEAD.md" {
+							result["HasHead"] = true
+							result["HeadContent"] = Util.ReadStringByFile(fileId)
 						}
 						//指定隐藏的文件或目录过滤
 						if config.GloablConfig.HideFileId != "" {
@@ -218,14 +225,23 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 			}
 
 		} else {
-			readmeFile := entity.FileNode{}
-			model.SqliteDb.Raw("select * from file_node where parent_path=? and file_name=? and `delete`=0 and account_id=?", path, "README.md", account.Id).Find(&readmeFile)
-			if !readmeFile.IsFolder && readmeFile.FileName == "README.md" {
-				result["HasReadme"] = true
-				dl := DownLock{}
-				dl.FileId = readmeFile.FileId
-				dl.L = new(sync.Mutex)
-				result["ReadmeContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, readmeFile), readmeFile.FileId)
+			mfs := []entity.FileNode{}
+			model.SqliteDb.Raw("select * from file_node where parent_path=? and (file_name='README.md' or file_name='HEAD.md') and `delete`=0 and account_id=?", path, account.Id).Find(&mfs)
+			for _, mf := range mfs {
+				if !mf.IsFolder && mf.FileName == "README.md" {
+					result["HasReadme"] = true
+					dl := DownLock{}
+					dl.FileId = mf.FileId
+					dl.L = new(sync.Mutex)
+					result["ReadmeContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, mf), mf.FileId)
+				}
+				if !mf.IsFolder && mf.FileName == "HEAD.md" {
+					result["HasHead"] = true
+					dl := DownLock{}
+					dl.FileId = mf.FileId
+					dl.L = new(sync.Mutex)
+					result["HeadContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, mf), mf.FileId)
+				}
 			}
 		}
 		result["HasPwd"] = false
@@ -247,7 +263,7 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 		result["HasParent"] = true
 	}
 	result["ParentPath"] = PetParentPath(path)
-	if account.Mode == "cloud189" || account.Mode == "native" {
+	if account.Mode == "native" || account.Mode == "aliyundrive" {
 		result["SurportFolderDown"] = true
 	} else {
 		result["SurportFolderDown"] = false
@@ -361,7 +377,7 @@ func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileN
 		cachUrl, err := UrlCache.Get(fileNode.FileId)
 		if err == nil {
 			downloadUrl = cachUrl.(string)
-			log.Debugf("从缓存中获取下载地址:" + downloadUrl)
+			log.Debugf("从缓存中获取下载地址:%s", downloadUrl)
 		}
 	} else {
 		if account.Mode == "cloud189" {
@@ -385,21 +401,27 @@ func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileN
 		} else if account.Mode == "native" {
 		}
 		if downloadUrl != "" {
-			UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Second*30)
+			//阿里云盘15分钟
+			//天翼云盘15分钟
+			//onedrive > 15分钟
+			UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Minute*14)
 		}
 		log.Debugf("调用api获取下载地址:" + downloadUrl)
 	}
 	return downloadUrl
 }
 
-func GetDownlaodMultiFiles(accountId, fileId string) string {
-	return Util.GetDownlaodMultiFiles(accountId, fileId)
-}
-
-func GetPath(accountId, fileId string) string {
-	fileNode := entity.FileNode{}
-	model.SqliteDb.Raw("select * from file_node where account_id = ? and file_id = ? and delete = 0 limit 1", accountId, fileId).Find(&fileNode)
-	return fileNode.Path
+func GetDownlaodMultiFiles(account entity.Account, fileId, ua string) string {
+	downUrl := ""
+	if account.Mode == "cloud189" {
+		Util.GetDownlaodMultiFiles(account.Id, fileId)
+	} else if account.Mode == "aliyundrive" {
+		fileNode := entity.FileNode{}
+		model.SqliteDb.Raw("select * from file_node where account_id = ? and file_id = ? limit 1", account.Id, fileId).Find(&fileNode)
+		//fmt.Println(Util.AliGetDownloadUrl(account.Id, fileId))
+		downUrl = Util.AliFolderDownload(account.Id, fileId, fileNode.FileName, ua)
+	}
+	return downUrl
 }
 
 func PetParentPath(p string) string {
@@ -433,21 +455,52 @@ func GetPageStart(pageNo, pageSize int) int {
 
 func GetConfig() entity.Config {
 	c := entity.Config{}
+	cis := []entity.ConfigItem{}
 	accounts := []entity.Account{}
-	damagou := entity.Damagou{}
-	model.SqliteDb.Raw("select * from config where 1=1 limit 1").Find(&c)
-	model.SqliteDb.Raw("select * from account order by `default`desc").Find(&accounts)
-	model.SqliteDb.Raw("select * from damagou where 1-1 limit 1").Find(&damagou)
+	model.SqliteDb.Raw("select * from config_item where 1=1").Find(&cis)
+	configMap := make(map[string]interface{})
+	for _, ci := range cis {
+		configMap[ci.K] = ci.V
+	}
+	configJson, _ := jsoniter.MarshalToString(configMap)
+	jsoniter.Unmarshal([]byte(configJson), &c)
+	model.SqliteDb.Raw("select * from account order by `seq` asc").Find(&accounts)
 	c.Accounts = accounts
-	c.Damagou = damagou
 	config.GloablConfig = c
 	return c
+}
+
+func TransformPwdDirs(pwdDirId string) []entity.PwdDirs {
+	pwdDirs := []entity.PwdDirs{}
+	if pwdDirId != "" {
+		arr := strings.Split(pwdDirId, ",")
+		for _, pwdDir := range arr {
+			s := strings.Split(pwdDir, ":")
+			pwdDirs = append(pwdDirs, entity.PwdDirs{
+				s[0], s[1],
+			})
+		}
+	}
+	return pwdDirs
+}
+
+func TransformHideFiles(hideFileId string) []string {
+	hideFiles := []string{}
+	if hideFileId != "" {
+		arr := strings.Split(hideFileId, ",")
+		for _, hideFile := range arr {
+			hideFiles = append(hideFiles, hideFile)
+		}
+	}
+	return hideFiles
 }
 
 func SaveConfig(config map[string]interface{}) {
 	if config["accounts"] == nil {
 		//基本配置
-		model.SqliteDb.Table("config").Where("1 = 1").Updates(config)
+		for key, value := range config {
+			model.SqliteDb.Table("config_item").Where("k=?", key).Update("v", Util.Strval(value))
+		}
 		if config["hide_file_id"] != nil {
 			hideFiles := config["hide_file_id"].(string)
 			if hideFiles != "" {
@@ -474,7 +527,7 @@ func SaveConfig(config map[string]interface{}) {
 					delete(Util.CLoud189Sessions, old.Id)
 					delete(Util.TeambitionSessions, old.Id)
 					if mode == "cloud189" {
-						Util.CLoud189Sessions[old.Id] = nic.Session{}
+						Util.CLoud189Sessions[old.Id] = entity.Cloud189{}
 					} else if mode == "teambition" {
 						Util.TeambitionSessions[old.Id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 					} else if mode == "teambition-us" {
@@ -490,9 +543,12 @@ func SaveConfig(config map[string]interface{}) {
 				account.(map[string]interface{})["status"] = 1
 				account.(map[string]interface{})["cookie_status"] = 1
 				account.(map[string]interface{})["files_count"] = 0
+				var seq int
+				model.SqliteDb.Table("account").Raw("select seq from account where 1=1 order by seq desc").First(&seq)
+				account.(map[string]interface{})["seq"] = seq + 1
 				model.SqliteDb.Table("account").Create(account.(map[string]interface{}))
 				if mode == "cloud189" {
-					Util.CLoud189Sessions[id] = nic.Session{}
+					Util.CLoud189Sessions[id] = entity.Cloud189{}
 				} else if mode == "teambition" {
 					Util.TeambitionSessions[id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 				} else if mode == "teambition-us" {
@@ -504,21 +560,36 @@ func SaveConfig(config map[string]interface{}) {
 			ac.SyncDir = "/"
 			ac.SyncChild = 0
 			go jobs.SyncInit(ac)
+			jobs.CacheCron.Stop()
+			jobs.AutoCacheRun()
 		}
 	}
 	go GetConfig()
 	//其他（打码狗）
 }
-func DeleteAccount(id string) {
-	//删除账号对应节点数据
-	model.SqliteDb.Where("account_id = ?", id).Delete(entity.FileNode{})
-	//删除账号数据
-	var a entity.Account
-	a.Id = id
-	model.SqliteDb.Model(entity.Account{}).Delete(a)
+func DeleteAccount(ids []string) {
+	for _, id := range ids {
+		//删除账号对应节点数据
+		model.SqliteDb.Where("account_id = ?", id).Delete(entity.FileNode{})
+		//删除账号数据
+		var a entity.Account
+		var si entity.ShareInfo
+		a.Id = id
+		si.AccountId = id
+		model.SqliteDb.Model(entity.Account{}).Delete(a)
+		model.SqliteDb.Model(entity.ShareInfo{}).Delete(si)
+		go GetConfig()
+		delete(Util.CLoud189Sessions, id)
+		delete(Util.TeambitionSessions, id)
+		delete(Util.TeambitionSessions, id)
+	}
+}
+func SortAccounts(ids []string) {
+	for i, id := range ids {
+		i++
+		model.SqliteDb.Model(entity.Account{}).Where("id=?", id).Update("seq", i)
+	}
 	go GetConfig()
-	delete(Util.CLoud189Sessions, id)
-	delete(Util.TeambitionSessions, id)
 }
 func GetAccount(id string) entity.Account {
 	account := entity.Account{}
@@ -544,7 +615,6 @@ func EnvToConfig() {
 		}
 		c["damagou"] = nil
 		delete(c, "damagou")
-		model.SqliteDb.Where("1 = 1").Delete(&entity.Damagou{})
 		model.SqliteDb.Where("1 = 1").Delete(&entity.Account{})
 		//model.SqliteDb.Where("1 = 1").Delete(&entity.FileNode{})
 		for _, account := range c["accounts"].([]interface{}) {
@@ -660,57 +730,28 @@ func Async(accountId, path string) string {
 		}
 	}
 }
-func GetViewTemplate(mode string, fn entity.FileNode, result map[string]interface{}) string {
-	t := "ns"
-	if fn.MediaType == 1 {
-		//图片
+func GetViewTemplate(fn entity.FileNode) string {
+	t := ""
+	if config.GloablConfig.EnablePreview == "0" {
+		return t
+	}
+	if strings.Contains(config.GloablConfig.Image, fn.FileType) {
 		t = "img"
-	} else if fn.MediaType == 2 {
-		//音频
+	} else if strings.Contains(config.GloablConfig.Audio, fn.FileType) {
 		t = "audio"
-	} else if fn.MediaType == 3 {
-		//视频
+	} else if strings.Contains(config.GloablConfig.Video, fn.FileType) {
 		t = "video"
-	} else if fn.MediaType == 4 || fn.MediaType == 0 {
-		//文本类
-		if strings.Contains("doc,docx,dotx,ppt,pptx,xls,xlsx", fn.FileType) {
-			//
-			t = "office"
-		} else if fn.FileType == "pdf" {
-			t = "pdf"
-		} else if fn.FileType == "md" {
-			t = "md"
-		} else if strings.Contains("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml", fn.FileType) {
-			result["CodeType"] = "Plaintext"
-			t = "code"
-			if fn.FileType == "go" {
-				result["CodeType"] = "Go"
-			} else if fn.FileType == "html" {
-				result["CodeType"] = "HTML"
-			} else if fn.FileType == "js" {
-				result["CodeType"] = "JavaScript"
-			} else if fn.FileType == "java" {
-				result["CodeType"] = "Java"
-			} else if fn.FileType == "json" {
-				result["CodeType"] = "JSON"
-			} else if fn.FileType == "css" {
-				result["CodeType"] = "CSS"
-			} else if fn.FileType == "lua" {
-				result["CodeType"] = "Lua"
-			} else if fn.FileType == "sh" {
-				result["CodeType"] = "Bash"
-			} else if fn.FileType == "sql" {
-				result["CodeType"] = "SQL"
-			} else if fn.FileType == "py" {
-				result["CodeType"] = "Python"
-			} else if fn.FileType == "cpp" {
-				result["CodeType"] = "C++"
-			} else if fn.FileType == "xml" {
-				result["CodeType"] = "XML"
-			}
+	} else if fn.FileType == "pdf" {
+		t = "pdf"
+	} else if fn.FileType == "md" {
+		t = "md"
+	} else {
+		if config.GloablConfig.Other == "*" {
+			t = "ns"
+		} else if strings.Contains(config.GloablConfig.Other, fn.FileType) {
+			t = "ns"
 		}
 	}
-	result["T"] = t
 	return t
 }
 func AccountsToNodes(accounts []entity.Account) map[string]interface{} {
@@ -751,7 +792,7 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 		fullPath := filepath.Join(rootPath, path)
 		f, err := os.Open(fullPath)
 		if err != nil {
-			log.Errorln(err)
+			log.Debug(err)
 			return nil, "image/png"
 		}
 		fileInfo, err := os.Stat(fullPath)
@@ -881,4 +922,52 @@ func GetFiles(accountId, parentPath, sColumn, sOrder, mediaType string) []entity
 		}
 	})
 	return list
+}
+func ShortInfo(accountId, path, prefix string) (string, string, string) {
+	si := entity.ShareInfo{}
+	model.SqliteDb.Raw("select * from share_info where account_id = ? and file_path=?", accountId, path).First(&si)
+	shortUrl := ""
+	if accountId == "" || path == "" {
+		return "", "", "无效的id"
+	}
+	shortCode := ""
+	if si.ShortCode != "" {
+		shortCode = si.ShortCode
+	} else {
+		shortCodes, err := Util.Transform(accountId + path)
+		if err != nil {
+			log.Errorln(err)
+			return "", "", "短链生成失败"
+		}
+		shortCode = shortCodes[0]
+		model.SqliteDb.Create(entity.ShareInfo{
+			accountId, path, shortCode,
+		})
+	}
+	shortUrl = prefix + shortCode
+	png, err := qrcode.Encode(shortUrl, qrcode.Medium, 256)
+	if err != nil {
+		panic(err)
+	}
+	dataURI := "data:image/png;base64," + base64.StdEncoding.EncodeToString([]byte(png))
+	return shortUrl, dataURI, "短链生成成功"
+}
+func GetRedirectUri(shorCode string) string {
+	redirectUri := "/"
+	si := entity.ShareInfo{}
+	result := model.SqliteDb.Raw("select * from share_info where short_code=?", shorCode).First(&si)
+	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		ac := entity.Account{}
+		result = model.SqliteDb.Raw("select * from account where id=?", si.AccountId).First(&ac)
+		drive := "/d_0"
+		for i, account := range config.GloablConfig.Accounts {
+			if account.Id == ac.Id {
+				drive = fmt.Sprintf("/d_%d", i)
+			}
+		}
+		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			redirectUri = drive + si.FilePath + "?v"
+		}
+	}
+	return redirectUri
 }

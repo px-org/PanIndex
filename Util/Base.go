@@ -3,6 +3,9 @@ package Util
 import (
 	"PanIndex/config"
 	"bufio"
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/encoding"
@@ -151,6 +154,9 @@ func CheckPwd(PwdDirIds, path, pwd string) (bool, bool) {
 	return hasPath, pwdOk
 }
 func GetPwdFromCookie(pwd, pathName string) string {
+	if pathName == "/" {
+		pathName = "/d_0"
+	}
 	s := strings.Split(pwd, ",")
 	if len(s) > 0 {
 		for _, v := range s {
@@ -160,4 +166,102 @@ func GetPwdFromCookie(pwd, pathName string) string {
 		}
 	}
 	return ""
+}
+
+const (
+	VAL   = 0x3FFFFFFF
+	INDEX = 0x0000003D
+)
+
+var (
+	alphabet = []byte("abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+)
+
+/** implementation of short url algorithm **/
+func Transform(longURL string) ([4]string, error) {
+	md5Str := getMd5Str(longURL)
+	//var hexVal int64
+	var tempVal int64
+	var result [4]string
+	var tempUri []byte
+	for i := 0; i < 4; i++ {
+		tempSubStr := md5Str[i*8 : (i+1)*8]
+		hexVal, err := strconv.ParseInt(tempSubStr, 16, 64)
+		if err != nil {
+			return result, nil
+		}
+		tempVal = int64(VAL) & hexVal
+		var index int64
+		tempUri = []byte{}
+		for i := 0; i < 6; i++ {
+			index = INDEX & tempVal
+			tempUri = append(tempUri, alphabet[index])
+			tempVal = tempVal >> 5
+		}
+		result[i] = string(tempUri)
+	}
+	return result, nil
+}
+
+/** generate md5 checksum of URL in hex format **/
+func getMd5Str(str string) string {
+	m := md5.New()
+	m.Write([]byte(str))
+	c := m.Sum(nil)
+	return hex.EncodeToString(c)
+}
+func Strval(value interface{}) string {
+	// interface 转 string
+	var key string
+	if value == nil {
+		return key
+	}
+
+	switch value.(type) {
+	case float64:
+		ft := value.(float64)
+		key = strconv.FormatFloat(ft, 'f', -1, 64)
+	case float32:
+		ft := value.(float32)
+		key = strconv.FormatFloat(float64(ft), 'f', -1, 64)
+	case int:
+		it := value.(int)
+		key = strconv.Itoa(it)
+	case uint:
+		it := value.(uint)
+		key = strconv.Itoa(int(it))
+	case int8:
+		it := value.(int8)
+		key = strconv.Itoa(int(it))
+	case uint8:
+		it := value.(uint8)
+		key = strconv.Itoa(int(it))
+	case int16:
+		it := value.(int16)
+		key = strconv.Itoa(int(it))
+	case uint16:
+		it := value.(uint16)
+		key = strconv.Itoa(int(it))
+	case int32:
+		it := value.(int32)
+		key = strconv.Itoa(int(it))
+	case uint32:
+		it := value.(uint32)
+		key = strconv.Itoa(int(it))
+	case int64:
+		it := value.(int64)
+		key = strconv.FormatInt(it, 10)
+	case uint64:
+		it := value.(uint64)
+		key = strconv.FormatUint(it, 10)
+	case string:
+		key = value.(string)
+	case []byte:
+		key = string(value.([]byte))
+	default:
+		newValue, _ := json.Marshal(value)
+		key = string(newValue)
+	}
+
+	return key
 }
