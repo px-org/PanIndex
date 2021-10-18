@@ -117,22 +117,26 @@
                     </div>
                 </div>
                 <div>
-                    {{- if contains $.Config.Image (index .List 0).FileType}}
-                        {{block "content-img" .}}{{end}}
-                    {{- else if contains $.Config.Audio (index .List 0).FileType}}
-                        {{block "content-audio" .}}{{end}}
-                    {{- else if contains $.Config.Video (index .List 0).FileType}}
-                        {{block "content-video" .}}{{end}}
-                    {{- else if contains $.Config.Code (index .List 0).FileType}}
-                        {{block "content-code" .}}{{end}}
-                    {{- else if contains $.Config.Doc (index .List 0).FileType}}
-                        {{block "content-office" .}}{{end}}
-                    {{- else if eq "pdf" (index .List 0).FileType}}
-                        {{block "content-pdf" .}}{{end}}
-                    {{- else if eq "epub" (index .List 0).FileType}}
-                        {{block "content-epub" .}}{{end}}
-                    {{- else if eq "md" (index .List 0).FileType}}
-                        {{block "content-md" .}}{{end}}
+                    {{- if (index .List 0).FileType}}
+                        {{- if contains $.Config.Image (index .List 0).FileType}}
+                            {{block "content-img" .}}{{end}}
+                        {{- else if contains $.Config.Audio (index .List 0).FileType}}
+                            {{block "content-audio" .}}{{end}}
+                        {{- else if contains $.Config.Video (index .List 0).FileType}}
+                            {{block "content-video" .}}{{end}}
+                        {{- else if contains $.Config.Code (index .List 0).FileType}}
+                            {{block "content-code" .}}{{end}}
+                        {{- else if contains $.Config.Doc (index .List 0).FileType}}
+                            {{block "content-office" .}}{{end}}
+                        {{- else if eq "pdf" (index .List 0).FileType}}
+                            {{block "content-pdf" .}}{{end}}
+                        {{- else if eq "epub" (index .List 0).FileType}}
+                            {{block "content-epub" .}}{{end}}
+                        {{- else if eq "md" (index .List 0).FileType}}
+                            {{block "content-md" .}}{{end}}
+                        {{- else}}
+                            {{block "content-ns" .}}{{end}}
+                        {{- end}}
                     {{- else}}
                         {{block "content-ns" .}}{{end}}
                     {{- end}}
