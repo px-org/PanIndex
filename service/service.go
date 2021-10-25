@@ -30,7 +30,7 @@ import (
 
 var UrlCache = gcache.New(500).LRU().Build()
 
-func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) map[string]interface{} {
+func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string, isView bool) map[string]interface{} {
 	if path == "" {
 		path = "/"
 	}
@@ -109,13 +109,17 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 							result["HeadContent"] = Util.ReadStringByFile(fileId)
 						}
 						//指定隐藏的文件或目录过滤
-						if config.GloablConfig.HideFileId != "" {
+						/*if config.GloablConfig.HideFileId != "" {
 							listSTring := strings.Split(config.GloablConfig.HideFileId, ",")
 							sort.Strings(listSTring)
 							i := sort.SearchStrings(listSTring, fileId)
 							if i < len(listSTring) && listSTring[i] == fileId {
 								continue
 							}
+						}*/
+						hide := Util.CheckHide(fileId, config.GloablConfig.HideFileId)
+						if hide {
+							continue
 						}
 						fileType := Util.GetMimeType(fileInfo.Name())
 						// 实例化FileNode
@@ -129,7 +133,7 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 							Path:       Util.PathJoin(path, fileInfo.Name()),
 							MediaType:  fileType,
 							LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
-							ParentId:   filepath.Dir(fullPath),
+							ParentId:   fullPath,
 						}
 						filepath.Join()
 						// 添加到切片中等待json序列化
@@ -137,40 +141,28 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 					}
 				}
 				result["isFile"] = false
-				result["HasPwd"] = false
-				PwdDirIds := config.GloablConfig.PwdDirId
-				if hasPath, pwdOk := Util.CheckPwd(PwdDirIds, fullPath, pwd); hasPath && !pwdOk {
-					result["HasPwd"] = true
-					if strings.TrimSpace(pwd) != "" {
-						result["PwdErrorMsg"] = "密码错误"
-					}
-				}
-				/*for _, pdi := range strings.Split(PwdDirIds, ",") {
-					if strings.Split(pdi, ":")[0] == fullPath && pwd != strings.Split(pdi, ":")[1] {
-						result["HasPwd"] = true
-						result["FileId"] = fullPath
-					}
-				}*/
 			} else {
 				fileInfo, err := os.Stat(fullPath)
 				if err != nil {
 					panic(err.Error())
 				} else {
-					dir := filepath.Dir(fullPath)
-					p := filepath.Dir(path)
-					fileInfos, _ := ioutil.ReadDir(dir)
-					fileInfos = Util.FilterFiles(fileInfos, dir, sColumn, sOrder)
-					last := Util.GetNextOrPrevious(fileInfos, fileInfo, -1)
-					next := Util.GetNextOrPrevious(fileInfos, fileInfo, 1)
-					if last != nil {
-						result["LastFile"] = filepath.Join(p, last.Name())
-					} else {
-						result["LastFile"] = nil
-					}
-					if next != nil {
-						result["NextFile"] = filepath.Join(p, next.Name())
-					} else {
-						result["NextFile"] = nil
+					if isView {
+						dir := filepath.Dir(fullPath)
+						p := filepath.Dir(path)
+						fileInfos, _ := ioutil.ReadDir(dir)
+						fileInfos = Util.FilterFiles(fileInfos, dir, sColumn, sOrder)
+						last := Util.GetNextOrPrevious(fileInfos, fileInfo, -1)
+						next := Util.GetNextOrPrevious(fileInfos, fileInfo, 1)
+						if last != nil {
+							result["LastFile"] = filepath.Join(p, last.Name())
+						} else {
+							result["LastFile"] = nil
+						}
+						if next != nil {
+							result["NextFile"] = filepath.Join(p, next.Name())
+						} else {
+							result["NextFile"] = nil
+						}
 					}
 					fileType := Util.GetMimeType(fileInfo.Name())
 					file := entity.FileNode{
@@ -185,10 +177,19 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 						LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 						ParentId:   filepath.Dir(fullPath),
 					}
-					// 添加到切片中等待json序列化
-					list = append(list, file)
+					hide := Util.CheckHide(fullPath, config.GloablConfig.HideFileId)
+					if !hide {
+						// 添加到切片中等待json序列化
+						list = append(list, file)
+					}
 				}
 				result["isFile"] = true
+			}
+			result["HasPwd"] = true
+			hasPwd, pwdOk, msg := Util.CheckPwd(config.GloablConfig.PwdDirId, fullPath, pwd)
+			result["PwdErrorMsg"] = msg
+			if !hasPwd || (hasPwd && pwdOk) {
+				result["HasPwd"] = false
 			}
 		}
 	} else {
@@ -214,16 +215,17 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 				} else {
 					param = list[0].CacheTime
 				}
-				next := entity.FileNode{}
-				model.SqliteDb.Raw(fmt.Sprintf("select * from file_node where parent_path=? and account_id=? and is_folder=0 and hide = 0  and %s >? order by %s asc limit 1", nl_column, nl_column),
-					list[0].ParentPath, account.Id, param).First(&next)
-				result["NextFile"] = next.Path
-				last := entity.FileNode{}
-				model.SqliteDb.Raw(fmt.Sprintf("select * from file_node where parent_path=? and account_id=? and is_folder=0  and hide = 0 and %s < ? order by %s desc limit 1", nl_column, nl_column),
-					list[0].ParentPath, account.Id, param).First(&last)
-				result["LastFile"] = last.Path
+				if isView {
+					next := entity.FileNode{}
+					model.SqliteDb.Raw(fmt.Sprintf("select * from file_node where parent_path=? and account_id=? and is_folder=0 and hide = 0  and %s >? order by %s asc limit 1", nl_column, nl_column),
+						list[0].ParentPath, account.Id, param).First(&next)
+					result["NextFile"] = next.Path
+					last := entity.FileNode{}
+					model.SqliteDb.Raw(fmt.Sprintf("select * from file_node where parent_path=? and account_id=? and is_folder=0  and hide = 0 and %s < ? order by %s desc limit 1", nl_column, nl_column),
+						list[0].ParentPath, account.Id, param).First(&last)
+					result["LastFile"] = last.Path
+				}
 			}
-
 		} else {
 			mfs := []entity.FileNode{}
 			model.SqliteDb.Raw("select * from file_node where parent_path=? and (file_name='README.md' or file_name='HEAD.md') and `delete`=0 and account_id=?", path, account.Id).Find(&mfs)
@@ -244,15 +246,27 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string) m
 				}
 			}
 		}
-		result["HasPwd"] = false
+		result["HasPwd"] = true
+		fId := ""
 		fileNode := entity.FileNode{}
-		model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 1 and `delete`=0 and account_id = ?", path, account.Id).First(&fileNode)
-		PwdDirIds := config.GloablConfig.PwdDirId
-		if hasPath, pwdOk := Util.CheckPwd(PwdDirIds, fileNode.FileId, pwd); hasPath && !pwdOk {
-			result["HasPwd"] = true
-			if strings.TrimSpace(pwd) != "" {
-				result["PwdErrorMsg"] = "密码错误"
+		r := model.SqliteDb.Raw("select * from file_node where path = ? and `delete`=0 and account_id = ? and hide = 0", path, account.Id).First(&fileNode)
+		if errors.Is(r.Error, gorm.ErrRecordNotFound) {
+			ac := entity.Account{}
+			acr := model.SqliteDb.Raw("select * from account where id = ?", account.Id).First(&ac)
+			if !errors.Is(acr.Error, gorm.ErrRecordNotFound) {
+				fId = ac.RootId
 			}
+		} else {
+			fId = fileNode.FileId
+		}
+		if fId != "" {
+			hasPwd, pwdOk, msg := Util.CheckPwd(config.GloablConfig.PwdDirId, fId, pwd)
+			result["PwdErrorMsg"] = msg
+			if !hasPwd || (hasPwd && pwdOk) {
+				result["HasPwd"] = false
+			}
+		} else {
+			result["HasPwd"] = false
 		}
 	}
 	result["List"] = list
@@ -512,6 +526,20 @@ func SaveConfig(config map[string]interface{}) {
 				model.SqliteDb.Table("file_node").Where("1 = 1").Update("hide", 0)
 				for _, hf := range strings.Split(hideFiles, ",") {
 					model.SqliteDb.Table("file_node").Where("file_id = ?", hf).Update("hide", 1)
+					go hideChildrenFiles(hf)
+				}
+			}
+		}
+		if config["pwd_dir_id"] != nil {
+			pwdFiles := config["pwd_dir_id"].(string)
+			if pwdFiles != "" {
+				model.SqliteDb.Table("file_node").Where("1 = 1").Update("has_pwd", 0)
+				for _, opf := range strings.Split(pwdFiles, ",") {
+					pf := strings.Split(opf, ":")[0]
+					model.SqliteDb.Table("file_node").
+						Where("file_id = ?", pf).
+						Updates(map[string]interface{}{"has_pwd": 1})
+					go pwdChildrenFiles(pf)
 				}
 			}
 		}
@@ -759,7 +787,7 @@ func GetViewTemplate(fn entity.FileNode) string {
 	}
 	return t
 }
-func AccountsToNodes(accounts []entity.Account) map[string]interface{} {
+func AccountsToNodes(accounts []entity.Account, pwd string) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["HasReadme"] = true
 	fns := []entity.FileNode{}
@@ -779,7 +807,13 @@ func AccountsToNodes(accounts []entity.Account) map[string]interface{} {
 		fns = append(fns, fn)
 	}
 	result["isFile"] = false
-	result["HasPwd"] = false
+	result["HasPwd"] = true
+	fId := "all"
+	hasPwd, pwdOk, msg := Util.CheckPwd(config.GloablConfig.PwdDirId, fId, pwd)
+	result["PwdErrorMsg"] = msg
+	if !hasPwd || (hasPwd && pwdOk) {
+		result["HasPwd"] = false
+	}
 	result["List"] = fns
 	result["Path"] = "/"
 	result["HasParent"] = false
@@ -975,4 +1009,87 @@ func GetRedirectUri(shorCode string) string {
 		}
 	}
 	return redirectUri
+}
+
+func hideChildrenFiles(fileId string) {
+	files := []entity.FileNode{}
+	model.SqliteDb.Table("file_node").Where("parent_id = ?", fileId).Find(&files)
+	model.SqliteDb.Table("file_node").Where("parent_id = ?", fileId).Update("hide", 1)
+	for _, file := range files {
+		if file.IsFolder {
+			hideChildrenFiles(file.FileId)
+		}
+	}
+}
+
+func pwdChildrenFiles(fileId string) {
+	files := []entity.FileNode{}
+	model.SqliteDb.Table("file_node").Where("parent_id = ?", fileId).Find(&files)
+	model.SqliteDb.Table("file_node").
+		Where("parent_id = ?", fileId).
+		Updates(map[string]interface{}{"has_pwd": 1})
+	for _, file := range files {
+		if file.IsFolder {
+			pwdChildrenFiles(file.FileId)
+		}
+	}
+}
+
+func AutoAddPassword(oldDirPwd string) string {
+	oldDirPwds := strings.Split(oldDirPwd, ",")
+	newDirPwds := []string{}
+	for _, odp := range oldDirPwds {
+		fileId := strings.Split(odp, ":")[0]
+		pwd := strings.Split(odp, ":")[1]
+		fileIds := []string{}
+		GetAllFileIds(fileId, &fileIds)
+		newDirPwds = append(newDirPwds, fileId+":"+pwd)
+		if len(fileIds) > 0 {
+			for _, npd := range fileIds {
+				flag := false
+				for _, odp2 := range oldDirPwds {
+					if odp2 == npd {
+						flag = true
+					}
+				}
+				if !flag {
+					newDirPwds = append(newDirPwds, npd+":"+pwd)
+				}
+			}
+		}
+	}
+	return strings.Join(newDirPwds, ",")
+}
+
+func AutoRemovePassword(cookieDirPwd, fileId string) string {
+	cookieDirPwds := strings.Split(cookieDirPwd, ",")
+	newDirPwds := []string{}
+	fileIds := []string{}
+	fileIds = append(fileIds, fileId)
+	GetAllFileIds(fileId, &fileIds)
+	for _, odp := range cookieDirPwds {
+		fId := strings.Split(odp, ":")[0]
+		flag := true
+		for _, f := range fileIds {
+			if f == fId {
+				flag = false
+				break
+			}
+		}
+		if flag {
+			newDirPwds = append(newDirPwds, fId)
+		}
+	}
+	return strings.Join(newDirPwds, ",")
+}
+
+func GetAllFileIds(fileId string, fileIds *[]string) {
+	files := []entity.FileNode{}
+	model.SqliteDb.Table("file_node").Where("parent_id = ?", fileId).Find(&files)
+	for _, file := range files {
+		*fileIds = append(*fileIds, file.FileId)
+		if file.IsFolder {
+			GetAllFileIds(file.FileId, fileIds)
+		}
+	}
 }

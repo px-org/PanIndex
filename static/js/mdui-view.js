@@ -84,3 +84,23 @@ $(function () {
         });
     });
 });
+function promptPwd(dfi){
+    if(dfi == ""){
+        dfi = "all";
+    }
+    var result = $.cookie("dir_pwd");
+    var ppwd = dfi + ":" + $("#input-password").val();
+    if (result != null && result != "null" && result != ""){
+        result = result + ","+ ppwd;
+    }else{
+        result = ppwd;
+    }
+    $.cookie("dir_pwd", result, {expires : 3650, path:"/"});
+    location.reload();
+}
+$("#input-password").bind('keydown', function(event) {
+    if (event.key === "Enter") {
+        var dfi = $(this).attr("data-file-id");
+        promptPwd(dfi);
+    }
+});

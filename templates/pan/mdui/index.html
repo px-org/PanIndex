@@ -37,8 +37,8 @@
 	{{ $SurportFolderDown := .SurportFolderDown }}
 </head>
 <body class="mdui-theme-layout-{{- if eq .Theme "mdui"}}auto{{end}}{{- if eq .Theme "mdui-dark"}}dark{{- end}}{{- if eq .Theme "mdui-light"}}light{{- end}}">
-<div class="mdui-container">
-	<div class="mdui-card" style="min-height: 600px">
+<div class="mdui-container" >
+	<div class="mdui-card" style="min-height: 600px;">
 		<div class="mdui-card-content">
 			<div style="padding: 0px 5px 12px;">
 				<div class="mdui-chip">
@@ -200,50 +200,32 @@
 						<div class="mdui-textfield mdui-textfield-floating-label{{if .PwdErrorMsg}} mdui-textfield-invalid{{- end}}">
 							<i id="inpsw-icon-lock" class="mdui-icon material-icons">lock</i>
 							<label class="mdui-textfield-label">请输入密码</label>
-							<input id="input-password" type="password" data-path="{{$.DIndex}}{{.Path}}" class="mdui-textfield-input" required style="border-bottom: 1px solid rgba(0, 0, 0, 0.42); width: calc(100% - 95px);">
-							<a class="mdui-btn mdui-btn-icon mdui-icon" style="right: 0px;" href="javascript:promptPwd('{{$.DIndex}}{{.Path}}');">
+							<input id="input-password" type="password" data-file-id="{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}" class="mdui-textfield-input" required style="border-bottom: 1px solid rgba(0, 0, 0, 0.42); width: calc(100% - 95px);">
+							<a class="mdui-btn mdui-btn-icon mdui-icon" style="right: 0px;" href="javascript:promptPwd('{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}');">
 								<i class="mdui-icon material-icons" style="padding: 0px;">fingerprint</i>
 							</a>
 							{{- if .PwdErrorMsg}}
 								<div class="mdui-textfield-error">{{.PwdErrorMsg}}</div>
 								<script>
-									removePwd('{{$.DIndex}}{{.Path}}');
-									function removePwd(path) {
-										var dp = $.cookie("dir_pwd");
-										var dpArr = dp.split(",");
-										var newArr = [];
-										var c = "";
-										if(path == "/"){
-											path = "/d_0";
-										}else{
-											if(endWith(path, "/")){
-												path = path.substring(0, path.Length-1);
-											}
+									removePwd('{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}');
+									function removePwd(dfi){
+										if(dfi == ""){
+											dfi = "all";
 										}
-										if(dp != ""){
-											$.each(dpArr, function (i, item) {
-												if(item.split(":")[0] != path){
-													newArr.push(item);
+										var cookieDirPwd = $.cookie("dir_pwd");
+										var newDirPwd = [];
+										if(cookieDirPwd != ""){
+											$.each(cookieDirPwd.split(","), function (i, item){
+												var fileId = item.split(":")[0]
+												if(fileId != dfi){
+													newDirPwd.push(item);
 												}
 											});
 										}
-										if(newArr.length > 1){
-											c = newArr.join(",");
-										}else if(newArr.length == 1){
-											c = newArr[0];
+										if (newDirPwd.length > 0){
+											$.cookie("dir_pwd", newDirPwd.join(","), {expires : 3650, path:"/"});
 										}else{
-											c = null;
-										}
-										$.cookie("dir_pwd", c, {expires : 3650, path:"/"});
-									}
-									function endWith (path, param) {
-										if (param == null || param == "" || path.length == 0 || param.length > path.length) {
-											return false;
-										}
-										if (path.substring(path.length - param.length) == param) {
-											return true;
-										} else {
-											return false;
+											$.removeCookie('dir_pwd', { path: '/' });
 										}
 									}
 								</script>

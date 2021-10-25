@@ -390,37 +390,23 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-function promptPwd(path){
-    if(path == "/"){
-        path = "/d_0";
-    }else{
-        if(path.endWith("/")){
-            path = path.substring(0,path.Length-1);
-
-        }
+function promptPwd(dfi){
+    if(dfi == ""){
+        dfi = "all";
     }
-    var ppwd = path + ":" + $("#input-password").val();
-    if ($.cookie("dir_pwd") != null){
-        var value = $.cookie("dir_pwd") + ","+ ppwd;
-        $.cookie("dir_pwd", value, {expires : 3650, path:"/"});
+    var result = $.cookie("dir_pwd");
+    var ppwd = dfi + ":" + $("#input-password").val();
+    if (result != null && result != "null" && result != ""){
+        result = result + ","+ ppwd;
     }else{
-        $.cookie("dir_pwd", ppwd, {expires : 3650, path:"/"});
+        result = ppwd;
     }
+    $.cookie("dir_pwd", result, {expires : 3650, path:"/"});
     location.reload();
 }
 $("#input-password").bind('keydown', function(event) {
     if (event.key === "Enter") {
-        var path = $(this).attr("data-path");
-        promptPwd(path);
+        var dfi = $(this).attr("data-file-id");
+        promptPwd(dfi);
     }
 });
-String.prototype.endWith = function (param) {
-    if (param == null || param == "" || this.length == 0 || param.length > this.length) {
-        return false;
-    }
-    if (this.substring(this.length - param.length) == param) {
-        return true;
-    } else {
-        return false;
-    }
-}
