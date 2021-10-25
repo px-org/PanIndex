@@ -74,7 +74,7 @@
 				{{- end}}
 			</div>
 			{{- if and (.HasHead) (not .HasPwd)}}
-			<div id="headContent" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">
+			<div id="headContent" class="mdui-typo mdui-shadow-2" style="display: none;padding: 15px;margin: 10px;">
 				<div class="mdui-chip head" style="display: none">
 					<span class="mdui-chip-icon">M</span>
 					<i class="mdui-icon material-icons">notifications_active</i>
@@ -86,6 +86,7 @@
 					var c = $("#head").val();
 					if(c != ""){
 						$("#headContent").append(marked(c));
+						$("table").addClass("mdui-table");
 						$("#headContent").toggle();
 					}else{
 						var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw/HEAD.md");
@@ -309,6 +310,7 @@
 				var c = $("#readme").val();
 				if(c != ""){
 					$("#content").append(marked(c));
+					$("table").addClass("mdui-table");
 					$("#content").toggle();
 				}else{
 					var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw/README.md");
@@ -343,7 +345,7 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
-<script src="/static/js/main.js?v=206"></script>
+<script src="/static/js/main.js?v=208"></script>
 {{- if ne .Config.Js ""}}
 {{.Config.Js | unescaped}}
 {{- end}}
