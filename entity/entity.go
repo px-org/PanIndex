@@ -95,6 +95,7 @@ type Account struct {
 	RefreshToken string `json:"refresh_token"` //刷新token
 	AccessToken  string `json:"access_token"`  //授权token
 	RedirectUri  string `json:"redirect_uri"`  //重定向url（onedrive）
+	ApiUrl       string `json:"api_url"`       //api地址
 	RootId       string `json:"root_id"`       //目录id
 	Default      int    `json:"default"`       //是否默认
 	Seq          int    `json:"seq"`           //排序序号

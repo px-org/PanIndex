@@ -96,51 +96,62 @@ function dynamicChgMode(mode){
         $("#RefreshTokenDiv").hide();
         $("#UserDiv").hide();
         $("#PasswordDiv").hide();
-        $("#recordDiv").hide();
         $(".sync-div").hide();
+        $("#ApiUrlDiv").hide();
     }else if (mode == "cloud189"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
         $("#UserDiv").show();
         $("#PasswordDiv").show();
-        $("#recordDiv").show();
         $(".sync-div").show();
         $("#user_label").text("用户名");
         $("#password_label").text("密码");
     }else if (mode == "teambition"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
         $("#UserDiv").show();
         $("#PasswordDiv").show();
-        $("#recordDiv").show();
         $(".sync-div").show();
         $("#user_label").text("用户名");
         $("#password_label").text("密码");
     }else if (mode == "teambition-us"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
         $("#UserDiv").show();
         $("#PasswordDiv").show();
-        $("#recordDiv").show();
         $(".sync-div").show();
         $("#user_label").text("用户名");
         $("#password_label").text("密码");
     }else if (mode == "aliyundrive"){
         $("#RedirectUriDiv").hide();
+        $("#ApiUrlDiv").hide();
         $("#RefreshTokenDiv").show();
         $("#UserDiv").hide();
         $("#PasswordDiv").hide();
         $(".sync-div").show();
-        $("#recordDiv").show();
     }else if (mode == "onedrive"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
         $("#UserDiv").show();
         $("#PasswordDiv").show();
-        $("#recordDiv").show();
         $(".sync-div").show();
         $("#user_label").text("客户端ID（Client ID）");
         $("#password_label").text("客户端密码（Client Secret）");
+        $("#ApiUrlDiv").hide();
+    }else if (mode == "ftp"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#ApiUrlDiv").show();
+        $("#user_label").text("用户名");
+        $("#password_label").text("密码");
+        $("#api_url_label").text("FTP地址（FTP Addr）");
+        $("#api_url").attr("placeholder", "192.168.1.1:21");
     }
     diskd.handleUpdate();
 }
@@ -158,6 +169,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("select[name=mode]").val("native");
     $("#accountForm").find("input[name=sync_dir]").val("/");
     $("#accountForm").find("input[name=sync_cron]").val("");
+    $("#accountForm").find("input[name=api_url]").val("");
     $("#accountForm").find("input[name=sync_child]").prop("checked",true);
     $("#accountForm").find("input[name=sync_child]").prop("checked",true);
     dynamicChgMode("native");
@@ -184,6 +196,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=password]").val(account.password);
                 $("#accountForm").find("select[name=mode]").val(account.mode);
                 $("#accountForm").find("input[name=user]").val(account.user);
+                $("#accountForm").find("input[name=api_url]").val(account.api_url);
                 $("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
                 $("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
                 $("#accountForm").find("input[name=root_id]").val(account.root_id);

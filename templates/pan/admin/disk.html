@@ -56,7 +56,9 @@
                         {{- else if eq .Mode "native"}}
                             <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "aliyundrive"}}
-                            <span class="mdui-chip-icon mdui-color-deep-purple-accent"><i class="mdui-icon material-icons">face</i></span>
+                            <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "ftp"}}
+                            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
                         {{else}}
                         {{end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -75,6 +77,8 @@
                     Teambition项目盘
                 {{- else if eq .Mode "teambition-us"}}
                     Teambition国际服
+                {{- else if eq .Mode "ftp"}}
+                    FTP
                 {{- else}}
                 {{- end}}
                 </td>
@@ -157,6 +161,7 @@
             <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">网盘模式</label>
             <select id="theme" name="mode" class="mdui-select" mdui-select="{position:'bottom'}" style="margin-left: 50px">
                 <option value="native">本地磁盘</option>
+                <option value="ftp">FTP</option>
                 <option value="cloud189">天翼云盘</option>
                 <option value="aliyundrive">阿里云盘</option>
                 <option value="teambition">Teambition项目盘</option>
@@ -173,6 +178,11 @@
             <i class="mdui-icon material-icons">lock</i>
             <label class="mdui-textfield-label" id="password_label">密码</label>
             <input class="mdui-textfield-input" type="password" name="password">
+        </div>
+        <div id="ApiUrlDiv" class="mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">insert_link</i>
+            <label class="mdui-textfield-label" id="api_url_label"></label>
+            <input id="api_url" class="mdui-textfield-input" type="text" name="api_url">
         </div>
         <div id="RefreshTokenDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">refresh</i>

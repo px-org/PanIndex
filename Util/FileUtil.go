@@ -363,6 +363,16 @@ func TransformText(f *os.File) ([]byte, string) {
 	}
 	return content, contentType
 }
+func TransformTextFromBytes(content []byte) ([]byte, string) {
+	contentType := http.DetectContentType(content)
+	if !utf8.Valid(content) {
+		rr := bytes.NewReader(content)
+		r := transform.NewReader(rr, simplifiedchinese.GBK.NewDecoder())
+		b, _ := ioutil.ReadAll(r)
+		return b, contentType
+	}
+	return content, contentType
+}
 func TransformByte(reader io.ReadCloser) ([]byte, string) {
 	content := StreamToByte(reader)
 	contentType := http.DetectContentType(content)

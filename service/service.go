@@ -198,6 +198,8 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string, i
 		if sColumn != "default" && sColumn != "null" {
 			order_sql = fmt.Sprintf(" ORDER BY is_folder desc, %s %s", sColumn, sOrder)
 			nl_column = sColumn
+		} else {
+			order_sql = fmt.Sprintf(" ORDER BY is_folder desc")
 		}
 		model.SqliteDb.Raw("select * from file_node where parent_path=? and `delete`=0 and hide = 0 and account_id=? "+order_sql, path, account.Id).Find(&list)
 		result["isFile"] = false
@@ -714,6 +716,9 @@ func Upload(accountId, path string, c *gin.Context) string {
 			} else if account.Mode == "onedrive" {
 				//微软云盘文件上传
 				Util.OneDriveUpload(accountId, fileId, files)
+			} else if account.Mode == "ftp" {
+				//微软云盘文件上传
+				Util.FtpUpload(account, fileId, files)
 			}
 			return "上传成功"
 		}
@@ -757,6 +762,8 @@ func Async(accountId, path string) string {
 				Util.AliGetFiles(account.Id, fileId, fileId, path, 0, 0, true)
 			} else if account.Mode == "onedrive" {
 				Util.OndriveGetFiles("", account.Id, fileId, path, 0, 0, true)
+			} else if account.Mode == "ftp" {
+				Util.FtpGetFiles(account, fileId, path, 0, 0, true)
 			}
 			jobs.RefreshFileNodes(account.Id, fileId)
 			return "刷新成功"
@@ -844,6 +851,20 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 			return b, contentType
 		}
 
+	} else if account.Mode == "ftp" {
+		data := Util.FtpReadFileToBytes(account, path)
+		if data == nil {
+			return nil, "image/png"
+		} else {
+			mt := Util.GetMimeType(path)
+			if mt == 4 {
+				return Util.TransformTextFromBytes(data)
+			} else {
+				contentType := http.DetectContentType(data)
+				return data, contentType
+			}
+
+		}
 	} else {
 		result := model.SqliteDb.Raw("select * from file_node where path = ? and is_folder = 0 and `delete`=0 and ((hide = 0) or (hide=1 and file_name='README.md')) and account_id=? limit 1", path, account.Id).First(&f)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {

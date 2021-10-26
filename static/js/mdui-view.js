@@ -20,7 +20,7 @@ $(function () {
     var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
     $("#file_link").attr("href", fullUrl);
     $("#file_link").text(fullUrl);
-    if(mode == "native"){
+    if(mode == "native" || mode == "ftp"){
         $("#view_down_link").attr("href", fullUrl);
     }
     var clipboard = new ClipboardJS('.copyBtn', {

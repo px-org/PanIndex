@@ -334,6 +334,8 @@ func index(c *gin.Context) {
 				//跳转文件预览页面
 				if account.Mode == "native" {
 					result["downloadUrl"] = ""
+				} else if account.Mode == "ftp" {
+					result["downloadUrl"] = ""
 				} else {
 					var dl = service.DownLock{}
 					/*dls.LoadOrStore(fs[0].FileId, dl)*/
@@ -367,6 +369,11 @@ func index(c *gin.Context) {
 					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
 					c.Writer.Header().Add("Content-Type", "application/octet-stream")
 					c.File(fs[0].FileId)
+					return
+				} else if account.Mode == "ftp" {
+					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
+					c.Writer.Header().Add("Content-Type", "application/octet-stream")
+					c.Data(http.StatusOK, "application/octet-stream", Util.FtpReadFileToBytes(account, fs[0].FileId))
 					return
 				} else {
 					var dl = service.DownLock{}

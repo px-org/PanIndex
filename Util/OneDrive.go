@@ -206,6 +206,7 @@ func OneDriveUpload(accountId, parentId string, files []*multipart.FileHeader) b
 		//bfs := ReadBlock(file, 16384000)327680
 		bfs := ReadBlock(file)
 		uploadUrl := CreateUploadSession(accountId, filepath.Join(parentId, file.Filename))
+		log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
 		for _, bf := range bfs {
 			r, _ := http.NewRequest("PUT", uploadUrl, bytes.NewReader(bf.Content))
 			r.Header.Add("Content-Length", strconv.FormatInt(file.Size, 10))
@@ -215,7 +216,6 @@ func OneDriveUpload(accountId, parentId string, files []*multipart.FileHeader) b
 			body, _ := ioutil.ReadAll(res.Body)
 			log.Debugf("上传接口返回：%s", body)
 		}
-		log.Debugf("开始上传文件：%s，大小：%d", file.Filename, file.Size)
 		log.Debugf("文件：%s，上传成功，耗时：%s", file.Filename, ShortDur(time.Now().Sub(t1)))
 	}
 	return false

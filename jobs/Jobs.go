@@ -55,7 +55,7 @@ func Run() {
 	//cookie有效性检测
 	c.AddFunc("0 0/1 * * * ?", func() {
 		for _, account := range SelectAllAccounts() {
-			if account.Mode != "native" && account.Mode != "aliyundrive" && account.Mode != "onedrive" {
+			if account.Mode != "native" && account.Mode != "ftp" && account.Mode != "aliyundrive" && account.Mode != "onedrive" {
 				if account.CookieStatus == 4 {
 					//频繁登录或用户名密码错误导致的失败
 					//跳过验证
@@ -131,6 +131,13 @@ func AccountLogin(account entity.Account) {
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 	} else if account.Mode == "native" {
 		msg = "[" + account.Name + "] >> 本地模式"
+	} else if account.Mode == "ftp" {
+		msg = "[" + account.Name + "] >> FTP"
+		_, err := Util.FtpLogin(account, true)
+		if err == nil {
+			cookie = "ftp server login success"
+		}
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 	}
 	if cookie != "" && cookie != "4" {
 		log.Infoln(msg + " >> COOKIE更新 >> 登录成功")
@@ -197,6 +204,8 @@ func SyncOneAccount(account entity.Account) {
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 		Util.OndriveGetFiles("", account.Id, fileId, syncDir, 0, 0, syncChild)
 	} else if account.Mode == "native" {
+	} else if account.Mode == "ftp" {
+		Util.FtpGetFiles(account, fileId, syncDir, 0, 0, syncChild)
 	}
 	var fileNodeCount int64
 	model.SqliteDb.Model(&entity.FileNode{}).Where("account_id=? and `delete`=1", account.Id).Count(&fileNodeCount)
