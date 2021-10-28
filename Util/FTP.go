@@ -85,7 +85,7 @@ func FtpGetFiles(account entity.Account, fileId, path string, hide, hasPwd int, 
 				fn.LastOpTime = time.Unix(entry.Time.Unix(), 0).Format("2006-01-02 15:04:05")
 				fn.CreateTime = fn.LastOpTime
 				fn.ParentPath = path
-				fn.ParentId = path
+				fn.ParentId = fileId
 				fn.Hide = 0
 				fn.HasPwd = 0
 				if hide == 1 {
@@ -168,7 +168,13 @@ func FtpUpload(account entity.Account, fileId string, files []*multipart.FileHea
 			t1 := time.Now()
 			fileContent, _ := file.Open()
 			defer fileContent.Close()
-			err := c.Stor("/"+file.Filename, fileContent)
+			filePath := ""
+			if fileId == "/" {
+				filePath = fileId + file.Filename
+			} else {
+				filePath = fileId + "/" + file.Filename
+			}
+			err := c.Stor(filePath, fileContent)
 			if err != nil {
 				panic(err)
 			}

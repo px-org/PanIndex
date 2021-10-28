@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
 	<meta name="renderer" content="webkit"/>
-{{- if eq .Mode "aliyundrive"}}
+{{- if or (eq .Mode "aliyundrive") (.SearchKey)}}
 	<meta name="referrer" content="no-referrer">
 {{- end}}
 	<meta name="force-rendering" content="webkit"/>

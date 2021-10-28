@@ -372,8 +372,11 @@ func index(c *gin.Context) {
 					return
 				} else if account.Mode == "ftp" {
 					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
-					c.Writer.Header().Add("Content-Type", "application/octet-stream")
 					c.Data(http.StatusOK, "application/octet-stream", Util.FtpReadFileToBytes(account, fs[0].FileId))
+					return
+				} else if account.Mode == "webdav" {
+					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
+					c.Data(http.StatusOK, "application/octet-stream", Util.WebDavReadFileToBytes(account, fs[0].FileId))
 					return
 				} else {
 					var dl = service.DownLock{}

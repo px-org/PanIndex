@@ -152,6 +152,17 @@ function dynamicChgMode(mode){
         $("#password_label").text("密码");
         $("#api_url_label").text("FTP地址（FTP Addr）");
         $("#api_url").attr("placeholder", "192.168.1.1:21");
+    }else if (mode == "webdav"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#ApiUrlDiv").show();
+        $("#user_label").text("用户名");
+        $("#password_label").text("密码");
+        $("#api_url_label").text("WebDav地址（WebDav Server）");
+        $("#api_url").attr("placeholder", "https://webdav.mydomain.me");
     }
     diskd.handleUpdate();
 }

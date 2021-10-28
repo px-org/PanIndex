@@ -717,8 +717,11 @@ func Upload(accountId, path string, c *gin.Context) string {
 				//微软云盘文件上传
 				Util.OneDriveUpload(accountId, fileId, files)
 			} else if account.Mode == "ftp" {
-				//微软云盘文件上传
+				//FTP文件上传
 				Util.FtpUpload(account, fileId, files)
+			} else if account.Mode == "webdav" {
+				//WebDav文件上传
+				Util.WebDavUpload(account, fileId, files)
 			}
 			return "上传成功"
 		}
@@ -764,6 +767,8 @@ func Async(accountId, path string) string {
 				Util.OndriveGetFiles("", account.Id, fileId, path, 0, 0, true)
 			} else if account.Mode == "ftp" {
 				Util.FtpGetFiles(account, fileId, path, 0, 0, true)
+			} else if account.Mode == "webdav" {
+				Util.WebDavGetFiles(account, fileId, path, 0, 0, true)
 			}
 			jobs.RefreshFileNodes(account.Id, fileId)
 			return "刷新成功"
@@ -853,6 +858,20 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 
 	} else if account.Mode == "ftp" {
 		data := Util.FtpReadFileToBytes(account, path)
+		if data == nil {
+			return nil, "image/png"
+		} else {
+			mt := Util.GetMimeType(path)
+			if mt == 4 {
+				return Util.TransformTextFromBytes(data)
+			} else {
+				contentType := http.DetectContentType(data)
+				return data, contentType
+			}
+
+		}
+	} else if account.Mode == "webdav" {
+		data := Util.WebDavReadFileToBytes(account, path)
 		if data == nil {
 			return nil, "image/png"
 		} else {

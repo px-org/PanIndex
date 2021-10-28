@@ -59,8 +59,10 @@
                             <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "ftp"}}
                             <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
-                        {{else}}
-                        {{end}}
+                        {{- else if eq .Mode "webdav"}}
+                            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else}}
+                        {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
                     </div>
                 </td>
@@ -79,6 +81,8 @@
                     Teambition国际服
                 {{- else if eq .Mode "ftp"}}
                     FTP
+                {{- else if eq .Mode "webdav"}}
+                    WebDav
                 {{- else}}
                 {{- end}}
                 </td>
@@ -162,6 +166,7 @@
             <select id="theme" name="mode" class="mdui-select" mdui-select="{position:'bottom'}" style="margin-left: 50px">
                 <option value="native">本地磁盘</option>
                 <option value="ftp">FTP</option>
+                <option value="webdav">WebDav</option>
                 <option value="cloud189">天翼云盘</option>
                 <option value="aliyundrive">阿里云盘</option>
                 <option value="teambition">Teambition项目盘</option>
