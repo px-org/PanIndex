@@ -4,7 +4,7 @@
 {{define "admin-disk"}}
 <div class="mdui-m-t-2">
     <div class="mdui-typo mdui-p-b-2">
-        <h3> 网盘挂载 <small>拖动修改显示顺序</small></h3>
+        <h3> 网盘挂载 <small>拖动头像修改显示顺序</small></h3>
     </div>
     <div class="mdui-table-fluid">
         <div class="mdui-toolbar mdui-float-right">
@@ -56,11 +56,11 @@
                         {{- else if eq .Mode "native"}}
                             <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "aliyundrive"}}
-                            <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
+                            <span class="mdui-chip-icon mdui-color-deep-purple-accent"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "ftp"}}
                             <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "webdav"}}
-                            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
+                            <span class="mdui-chip-icon mdui-color-brown"><i class="mdui-icon material-icons">face</i></span>
                         {{- else}}
                         {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -163,7 +163,7 @@
         </div>
         <div>
             <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">网盘模式</label>
-            <select id="theme" name="mode" class="mdui-select" mdui-select="{position:'bottom'}" style="margin-left: 50px">
+            <select id="mode" name="mode" style="margin-left: 50px">
                 <option value="native">本地磁盘</option>
                 <option value="ftp">FTP</option>
                 <option value="webdav">WebDav</option>

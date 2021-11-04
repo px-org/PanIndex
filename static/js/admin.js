@@ -4,6 +4,7 @@ var hided = new mdui.Dialog("#hide_dialog");
 var diskd = new mdui.Dialog("#disk_dialog", {modal:true});
 var cached = new mdui.Dialog("#refresh_cache_dialog", {modal:true});
 var ud = new mdui.Dialog("#upload_dialog", {modal:true});
+var modeSelect = new mdui.Select('#mode');
 $('#theme-toggle').on('click', function(){
     $('body').removeClass('mdui-theme-layout-auto');
     if($('body').hasClass('mdui-theme-layout-dark')){
@@ -182,7 +183,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=sync_cron]").val("");
     $("#accountForm").find("input[name=api_url]").val("");
     $("#accountForm").find("input[name=sync_child]").prop("checked",true);
-    $("#accountForm").find("input[name=sync_child]").prop("checked",true);
+    modeSelect.handleUpdate();
     dynamicChgMode("native");
     diskd.toggle();
 });
@@ -212,6 +213,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
                 $("#accountForm").find("input[name=root_id]").val(account.root_id);
                 $("#accountForm").find("input[name=sync_cron]").val(account.sync_cron);
+                modeSelect.handleUpdate();
                 if(account.sync_dir == ""){
                     $("#accountForm").find("input[name=sync_dir]").val("/");
                 }else{
