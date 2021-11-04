@@ -120,7 +120,7 @@ func ReadStringByFile(filePth string) string {
 	}
 	return fmt.Sprintf("%s", b)
 }
-func ReadStringByUrl(url, fileId string) string {
+func ReadStringByUrl(account entity.Account, url, fileId string) string {
 	content := ""
 	//为了提高效率，从缓存查询
 	value, _ := GC.Get(fileId)
@@ -128,16 +128,23 @@ func ReadStringByUrl(url, fileId string) string {
 		log.Debugf("从缓存中读取文本内容{%s}", fileId)
 		return value.(string)
 	}
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Errorln(err)
-		return content
-	}
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Errorln(err)
-		return content
+	data := []byte("")
+	if account.Mode == "webdav" {
+		data = WebDavReadFileToBytes(account, fileId)
+	} else if account.Mode == "ftp" {
+		data = FtpReadFileToBytes(account, fileId)
+	} else {
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Errorln(err)
+			return content
+		}
+		defer resp.Body.Close()
+		data, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Errorln(err)
+			return content
+		}
 	}
 	content = fmt.Sprintf("%s", data)
 	GC.Set(fileId, content)

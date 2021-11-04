@@ -237,14 +237,14 @@ func GetFilesByPath(account entity.Account, path, pwd, sColumn, sOrder string, i
 					dl := DownLock{}
 					dl.FileId = mf.FileId
 					dl.L = new(sync.Mutex)
-					result["ReadmeContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, mf), mf.FileId)
+					result["ReadmeContent"] = Util.ReadStringByUrl(account, dl.GetDownlaodUrl(account, mf), mf.FileId)
 				}
 				if !mf.IsFolder && mf.FileName == "HEAD.md" {
 					result["HasHead"] = true
 					dl := DownLock{}
 					dl.FileId = mf.FileId
 					dl.L = new(sync.Mutex)
-					result["HeadContent"] = Util.ReadStringByUrl(dl.GetDownlaodUrl(account, mf), mf.FileId)
+					result["HeadContent"] = Util.ReadStringByUrl(account, dl.GetDownlaodUrl(account, mf), mf.FileId)
 				}
 			}
 		}
@@ -420,14 +420,16 @@ func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileN
 		} else if account.Mode == "onedrive" {
 			downloadUrl = Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
 		} else if account.Mode == "native" {
+		} else if account.Mode == "webdav" {
+		} else if account.Mode == "ftp" {
 		}
 		if downloadUrl != "" {
 			//阿里云盘15分钟
 			//天翼云盘15分钟
 			//onedrive > 15分钟
 			UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Minute*14)
+			log.Debugf("调用api获取下载地址:" + downloadUrl)
 		}
-		log.Debugf("调用api获取下载地址:" + downloadUrl)
 	}
 	return downloadUrl
 }
@@ -857,7 +859,8 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 		}
 
 	} else if account.Mode == "ftp" {
-		data := Util.FtpReadFileToBytes(account, path)
+		fileId := filepath.Join(account.RootId, path)
+		data := Util.FtpReadFileToBytes(account, fileId)
 		if data == nil {
 			return nil, "image/png"
 		} else {
@@ -871,7 +874,8 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 
 		}
 	} else if account.Mode == "webdav" {
-		data := Util.WebDavReadFileToBytes(account, path)
+		fileId := filepath.Join(account.RootId, path)
+		data := Util.WebDavReadFileToBytes(account, fileId)
 		if data == nil {
 			return nil, "image/png"
 		} else {
@@ -900,7 +904,7 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 			dls.LoadOrStore(f.FileId, dl)
 		}
 		if f.FileName == "README.md" {
-			readmeContent := Util.ReadStringByUrl(dl.GetDownlaodUrl(account, f), f.FileId)
+			readmeContent := Util.ReadStringByUrl(account, dl.GetDownlaodUrl(account, f), f.FileId)
 			contentType := http.DetectContentType([]byte(readmeContent))
 			return []byte(readmeContent), contentType
 		}
