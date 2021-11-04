@@ -85,7 +85,7 @@
 				<script>
 					var c = $("#head").val();
 					if(c != ""){
-						$("#headContent").append(marked(c));
+						$("#headContent").append(marked.parse(c));
 						$("table").addClass("mdui-table");
 						$("#headContent").toggle();
 					}else{
@@ -95,7 +95,7 @@
 							url: fullUrl,
 							success: function (data) {
 								if(data != ""){
-									$("#headContent").append(marked(data));
+									$("#headContent").append(marked.parse(data));
 									$("table").addClass("mdui-table");
 									$("#headContent").toggle();
 								}
@@ -309,7 +309,7 @@
 			<script>
 				var c = $("#readme").val();
 				if(c != ""){
-					$("#content").append(marked(c));
+					$("#content").append(marked.parse(c));
 					$("table").addClass("mdui-table");
 					$("#content").toggle();
 				}else{
@@ -319,7 +319,7 @@
 						url: fullUrl,
 						success: function (data) {
 							if(data != ""){
-								$("#content").append(marked(data));
+								$("#content").append(marked.parse(data));
 								$("table").addClass("mdui-table");
 								$("#content").toggle();
 							}
