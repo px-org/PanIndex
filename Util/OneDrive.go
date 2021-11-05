@@ -37,6 +37,7 @@ var zones = map[string]entity.Zone{
 }
 
 func OneDriveRefreshToken(account entity.Account) string {
+
 	defer func() {
 		if p := recover(); p != nil {
 			log.Errorln(p)
@@ -292,8 +293,11 @@ func CreateUploadSession(accountId, filePath string) string {
 	log.Debugf("[OneDrive]获取上传url:%s", resp.Text)
 	return jsoniter.Get(resp.Bytes, "uploadUrl").ToString()
 }
-func OneExchangeToken(clientId, redirectUri, clientSecret, code string) string {
-	resp, err := nic.Post(zones["onedrive"].Login+"/common/oauth2/v2.0/token", nic.H{
+func OneExchangeToken(zone, clientId, redirectUri, clientSecret, code string) string {
+	if zone == "" {
+		zone = "onedrive"
+	}
+	resp, err := nic.Post(zones[zone].Login+"/common/oauth2/v2.0/token", nic.H{
 		Headers: nic.KV{
 			"Content-Type": "application/x-www-form-urlencoded",
 		},
@@ -311,8 +315,11 @@ func OneExchangeToken(clientId, redirectUri, clientSecret, code string) string {
 	}
 	return resp.Text
 }
-func OneGetRefreshToken(clientId, redirectUri, clientSecret, refreshToken string) string {
-	resp, err := nic.Post(zones["onedrive"].Login+"/common/oauth2/v2.0/token", nic.H{
+func OneGetRefreshToken(zone, clientId, redirectUri, clientSecret, refreshToken string) string {
+	if zone == "" {
+		zone = "onedrive"
+	}
+	resp, err := nic.Post(zones[zone].Login+"/common/oauth2/v2.0/token", nic.H{
 		Headers: nic.KV{
 			"Content-Type": "application/x-www-form-urlencoded",
 		},

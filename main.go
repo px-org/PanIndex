@@ -641,15 +641,17 @@ func oneExchangeToken(c *gin.Context) {
 	clientSecret := c.PostForm("client_secret")
 	code := c.PostForm("code")
 	redirectUri := c.PostForm("redirect_uri")
-	tokenInfo := Util.OneExchangeToken(clientId, redirectUri, clientSecret, code)
-	c.JSON(http.StatusOK, tokenInfo)
+	zone := c.PostForm("zone")
+	tokenInfo := Util.OneExchangeToken(zone, clientId, redirectUri, clientSecret, code)
+	c.String(http.StatusOK, tokenInfo)
 }
 func oneRefreshToken(c *gin.Context) {
 	clientId := c.PostForm("client_id")
 	clientSecret := c.PostForm("client_secret")
 	refreshToken := c.PostForm("refresh_token")
 	redirectUri := c.PostForm("redirect_uri")
-	tokenInfo := Util.OneGetRefreshToken(clientId, redirectUri, clientSecret, refreshToken)
+	zone := c.PostForm("zone")
+	tokenInfo := Util.OneGetRefreshToken(zone, clientId, redirectUri, clientSecret, refreshToken)
 	c.String(http.StatusOK, tokenInfo)
 }
 func raw(c *gin.Context) {
