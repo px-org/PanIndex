@@ -186,6 +186,7 @@ type OneDriveAuthInfo struct {
 	ExtExpiresIn int    `json:"ext_expires_in"`
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	Mode         string `json:"refresh_token"`
 }
 type Login struct {
 	Username string `form:"username" json:"username" binding:"required"`
@@ -193,4 +194,9 @@ type Login struct {
 }
 type User struct {
 	UserName string
+}
+type Zone struct {
+	Login string
+	Api   string
+	Desc  string
 }

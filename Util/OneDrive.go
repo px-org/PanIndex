@@ -23,6 +23,18 @@ import (
 )
 
 var OneDrives = map[string]entity.OneDriveAuthInfo{}
+var zones = map[string]entity.Zone{
+	"onedrive": entity.Zone{
+		Login: "https://login.microsoftonline.com",
+		Api:   "https://graph.microsoft.com",
+		Desc:  "国际版",
+	},
+	"onedrive-cn": entity.Zone{
+		Login: "https://login.chinacloudapi.cn",
+		Api:   "https://microsoftgraph.chinacloudapi.cn",
+		Desc:  "世纪互联",
+	},
+}
 
 func OneDriveRefreshToken(account entity.Account) string {
 	defer func() {
@@ -30,7 +42,8 @@ func OneDriveRefreshToken(account entity.Account) string {
 			log.Errorln(p)
 		}
 	}()
-	resp, _ := nic.Post("https://login.microsoftonline.com/common/oauth2/v2.0/token", nic.H{
+
+	resp, _ := nic.Post(zones[account.Mode].Login+"/common/oauth2/v2.0/token", nic.H{
 		Headers: nic.KV{
 			"Content-Type": "application/x-www-form-urlencoded",
 		},
@@ -48,14 +61,15 @@ func OneDriveRefreshToken(account entity.Account) string {
 		panic(err.Error())
 		return ""
 	}
+	auth.Mode = account.Mode
 	OneDrives[account.Id] = auth
 	return auth.RefreshToken
 }
-func BuildODRequestUrl(path, query string) string {
+func BuildODRequestUrl(mode, path, query string) string {
 	if path != "" && path != "/" {
 		path = fmt.Sprintf(":%s:/", path)
 	}
-	return "https://graph.microsoft.com/v1.0" + "/me/drive/root" + path + query
+	return zones[mode].Api + "/v1.0" + "/me/drive/root" + path + query
 }
 func OndriveGetFiles(url, accountId, fileId, p string, hide, hasPwd int, syncChild bool) {
 	od := OneDrives[accountId]
@@ -66,7 +80,7 @@ func OndriveGetFiles(url, accountId, fileId, p string, hide, hasPwd int, syncChi
 		}
 	}()
 	if url == "" {
-		url = BuildODRequestUrl(fileId, "children?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file")
+		url = BuildODRequestUrl(od.Mode, fileId, "children?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file")
 	}
 	//limit := 100
 	//nextMarker := ""
@@ -191,7 +205,7 @@ func GetCategory(mimeType string) string {
 func GetOneDriveDownloadUrl(accountId, fileId string) string {
 	od := OneDrives[accountId]
 	auth := od.TokenType + " " + od.AccessToken
-	resp, _ := nic.Get("https://graph.microsoft.com/v1.0/me/drive/root:"+fileId, nic.H{
+	resp, _ := nic.Get(zones[od.Mode].Api+"/v1.0/me/drive/root:"+fileId, nic.H{
 		Headers: nic.KV{
 			"Authorization": auth,
 			"Host":          "graph.microsoft.com",
@@ -261,7 +275,7 @@ type SplitFile struct {
 func CreateUploadSession(accountId, filePath string) string {
 	od := OneDrives[accountId]
 	auth := od.TokenType + " " + od.AccessToken
-	resp, err := nic.Post("https://graph.microsoft.com/v1.0/me/drive/root:"+filePath+":/createUploadSession", nic.H{
+	resp, err := nic.Post(zones[od.Mode].Api+"/v1.0/me/drive/root:"+filePath+":/createUploadSession", nic.H{
 		Headers: nic.KV{
 			"Authorization": auth,
 			"Host":          "graph.microsoft.com",
@@ -279,7 +293,7 @@ func CreateUploadSession(accountId, filePath string) string {
 	return jsoniter.Get(resp.Bytes, "uploadUrl").ToString()
 }
 func OneExchangeToken(clientId, redirectUri, clientSecret, code string) string {
-	resp, err := nic.Post("https://login.microsoftonline.com/common/oauth2/v2.0/token", nic.H{
+	resp, err := nic.Post(zones["onedrive"].Login+"/common/oauth2/v2.0/token", nic.H{
 		Headers: nic.KV{
 			"Content-Type": "application/x-www-form-urlencoded",
 		},
@@ -298,7 +312,7 @@ func OneExchangeToken(clientId, redirectUri, clientSecret, code string) string {
 	return resp.Text
 }
 func OneGetRefreshToken(clientId, redirectUri, clientSecret, refreshToken string) string {
-	resp, err := nic.Post("https://login.microsoftonline.com/common/oauth2/v2.0/token", nic.H{
+	resp, err := nic.Post(zones["onedrive"].Login+"/common/oauth2/v2.0/token", nic.H{
 		Headers: nic.KV{
 			"Content-Type": "application/x-www-form-urlencoded",
 		},

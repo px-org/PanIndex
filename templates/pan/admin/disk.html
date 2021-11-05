@@ -53,6 +53,8 @@
                             <span class="mdui-chip-icon mdui-color-blue"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "onedrive"}}
                             <span class="mdui-chip-icon mdui-color-blue-200"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "onedrive-cn"}}
+                            <span class="mdui-chip-icon mdui-color-blue-200"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "native"}}
                             <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "aliyundrive"}}
@@ -75,6 +77,8 @@
                     阿里云盘
                 {{- else if eq .Mode "onedrive"}}
                     微软云盘
+                {{- else if eq .Mode "onedrive-cn"}}
+                    世纪互联
                 {{- else if eq .Mode "teambition"}}
                     Teambition项目盘
                 {{- else if eq .Mode "teambition-us"}}
@@ -172,6 +176,7 @@
                 <option value="teambition">Teambition项目盘</option>
                 <option value="teambition-us">Teambition国际盘</option>
                 <option value="onedrive">OneDrive</option>
+                <option value="onedrive-cn">OneDrive世纪互联</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">

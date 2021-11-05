@@ -142,6 +142,15 @@ function dynamicChgMode(mode){
         $("#user_label").text("客户端ID（Client ID）");
         $("#password_label").text("客户端密码（Client Secret）");
         $("#ApiUrlDiv").hide();
+    }else if (mode == "onedrive-cn"){
+        $("#RedirectUriDiv").show();
+        $("#RefreshTokenDiv").show();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#user_label").text("客户端ID（Client ID）");
+        $("#password_label").text("客户端密码（Client Secret）");
+        $("#ApiUrlDiv").hide();
     }else if (mode == "ftp"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();

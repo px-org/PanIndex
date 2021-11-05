@@ -642,7 +642,7 @@ func oneExchangeToken(c *gin.Context) {
 	code := c.PostForm("code")
 	redirectUri := c.PostForm("redirect_uri")
 	tokenInfo := Util.OneExchangeToken(clientId, redirectUri, clientSecret, code)
-	c.String(http.StatusOK, tokenInfo)
+	c.JSON(http.StatusOK, tokenInfo)
 }
 func oneRefreshToken(c *gin.Context) {
 	clientId := c.PostForm("client_id")

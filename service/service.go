@@ -419,6 +419,8 @@ func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileN
 			downloadUrl = Util.AliGetDownloadUrl(account.Id, fileNode.FileId)
 		} else if account.Mode == "onedrive" {
 			downloadUrl = Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
+		} else if account.Mode == "onedrive-cn" {
+			downloadUrl = Util.GetOneDriveDownloadUrl(account.Id, fileNode.FileId)
 		} else if account.Mode == "native" {
 		} else if account.Mode == "webdav" {
 		} else if account.Mode == "ftp" {
@@ -718,6 +720,9 @@ func Upload(accountId, path string, c *gin.Context) string {
 			} else if account.Mode == "onedrive" {
 				//微软云盘文件上传
 				Util.OneDriveUpload(accountId, fileId, files)
+			} else if account.Mode == "onedrive-cn" {
+				//世纪互联文件上传
+				Util.OneDriveUpload(accountId, fileId, files)
 			} else if account.Mode == "ftp" {
 				//FTP文件上传
 				Util.FtpUpload(account, fileId, files)
@@ -766,6 +771,8 @@ func Async(accountId, path string) string {
 			} else if account.Mode == "aliyundrive" {
 				Util.AliGetFiles(account.Id, fileId, fileId, path, 0, 0, true)
 			} else if account.Mode == "onedrive" {
+				Util.OndriveGetFiles("", account.Id, fileId, path, 0, 0, true)
+			} else if account.Mode == "onedrive-cn" {
 				Util.OndriveGetFiles("", account.Id, fileId, path, 0, 0, true)
 			} else if account.Mode == "ftp" {
 				Util.FtpGetFiles(account, fileId, path, 0, 0, true)

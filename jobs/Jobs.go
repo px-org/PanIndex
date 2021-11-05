@@ -56,7 +56,7 @@ func Run() {
 	c.AddFunc("0 0/1 * * * ?", func() {
 		for _, account := range SelectAllAccounts() {
 			if account.Mode != "native" && account.Mode != "ftp" && account.Mode != "webdav" &&
-				account.Mode != "aliyundrive" && account.Mode != "onedrive" {
+				account.Mode != "aliyundrive" && account.Mode != "onedrive" && account.Mode != "onedrive-cn" {
 				if account.CookieStatus == 4 {
 					//频繁登录或用户名密码错误导致的失败
 					//跳过验证
@@ -129,6 +129,10 @@ func AccountLogin(account entity.Account) {
 	} else if account.Mode == "onedrive" {
 		cookie = Util.OneDriveRefreshToken(account)
 		msg = "[" + account.Name + "] >> 微软云盘"
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
+	} else if account.Mode == "onedrive-cn" {
+		cookie = Util.OneDriveRefreshToken(account)
+		msg = "[" + account.Name + "] >> 世纪互联"
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 	} else if account.Mode == "native" {
 		msg = "[" + account.Name + "] >> 本地模式"
@@ -205,6 +209,10 @@ func SyncOneAccount(account entity.Account) {
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 		Util.AliGetFiles(account.Id, account.RootId, fileId, syncDir, 0, 0, syncChild)
 	} else if account.Mode == "onedrive" {
+		cookie := Util.OneDriveRefreshToken(account)
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
+		Util.OndriveGetFiles("", account.Id, fileId, syncDir, 0, 0, syncChild)
+	} else if account.Mode == "onedrive-cn" {
 		cookie := Util.OneDriveRefreshToken(account)
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 		Util.OndriveGetFiles("", account.Id, fileId, syncDir, 0, 0, syncChild)
