@@ -1,3 +1,17 @@
+### [v2.0.8](https://github.com/libsgh/PanIndex/compare/v2.0.7...v2.0.8) (2021-11-08)
+
+****
+
+##### Bug Fixes
+
+- 修复文件（夹）加密无法访问
+- 『阿里云盘』增加转码播放切换按钮
+- 修复一些后台显示错误
+- 修复markdown文件渲染失败
+
+##### Features
+- 新增『FTP』『WebDav』『世纪互联』三种网盘类型
+
 ### [v2.0.7](https://github.com/libsgh/PanIndex/compare/v2.0.6...v2.0.7) (2021-10-14)
 
 **为方便以后配置扩展，此版本主要是对后台配置进行了重写，另外只有mdui主题做了功能增强，请尽量使用该主题**
