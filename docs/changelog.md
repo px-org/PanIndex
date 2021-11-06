@@ -1,7 +1,5 @@
 ### [v2.0.8](https://github.com/libsgh/PanIndex/compare/v2.0.7...v2.0.8) (2021-11-08)
 
-****
-
 ##### Bug Fixes
 
 - 修复文件（夹）加密无法访问
