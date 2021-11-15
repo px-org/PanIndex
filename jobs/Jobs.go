@@ -51,12 +51,18 @@ func Run() {
 			account.RefreshToken = v.RefreshToken
 			Util.OneDriveRefreshToken(account)
 		}
+		for k, _ := range Util.GoogleDrives {
+			account := entity.Account{}
+			model.SqliteDb.Raw("select * from account where id=?", k).First(&account)
+			Util.GDfreshToken(account)
+		}
 	})
 	//cookie有效性检测
 	c.AddFunc("0 0/1 * * * ?", func() {
 		for _, account := range SelectAllAccounts() {
 			if account.Mode != "native" && account.Mode != "ftp" && account.Mode != "webdav" &&
-				account.Mode != "aliyundrive" && account.Mode != "onedrive" && account.Mode != "onedrive-cn" {
+				account.Mode != "aliyundrive" && account.Mode != "onedrive" && account.Mode != "onedrive-cn" &&
+				account.Mode != "yun139" && account.Mode != "googledrive" {
 				if account.CookieStatus == 4 {
 					//频繁登录或用户名密码错误导致的失败
 					//跳过验证
@@ -147,6 +153,14 @@ func AccountLogin(account entity.Account) {
 		msg = "[" + account.Name + "] >> WebDav"
 		cookie = Util.WebDavLogin(account)
 		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
+	} else if account.Mode == "yun139" {
+		msg = "[" + account.Name + "] >> yun139"
+		cookie = Util.Yun139Login(account)
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("password", cookie)
+	} else if account.Mode == "googledrive" {
+		msg = "[" + account.Name + "] >> GoogleDrive"
+		cookie = Util.GDfreshToken(account)
+		model.SqliteDb.Table("account").Where("id=?", account.Id).Update("refresh_token", cookie)
 	}
 	if cookie != "" && cookie != "4" {
 		log.Infoln(msg + " >> COOKIE更新 >> 登录成功")
@@ -221,6 +235,10 @@ func SyncOneAccount(account entity.Account) {
 		Util.FtpGetFiles(account, fileId, syncDir, 0, 0, syncChild)
 	} else if account.Mode == "webdav" {
 		Util.WebDavGetFiles(account, fileId, syncDir, 0, 0, syncChild)
+	} else if account.Mode == "yun139" {
+		Util.Yun139GetFiles(account.Id, fileId, syncDir, 0, 0, syncChild)
+	} else if account.Mode == "googledrive" {
+		Util.GDGetFiles(account.Id, fileId, syncDir, 0, 0, syncChild)
 	}
 	var fileNodeCount int64
 	model.SqliteDb.Model(&entity.FileNode{}).Where("account_id=? and `delete`=1", account.Id).Count(&fileNodeCount)

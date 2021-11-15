@@ -424,12 +424,20 @@ func (dl *DownLock) GetDownlaodUrl(account entity.Account, fileNode entity.FileN
 		} else if account.Mode == "native" {
 		} else if account.Mode == "webdav" {
 		} else if account.Mode == "ftp" {
+		} else if account.Mode == "yun139" {
+			downloadUrl = Util.GetYun139DownUrl(account.Id, fileNode.FileId)
+		} else if account.Mode == "googledrive" {
+			downloadUrl = Util.GDGetDownUrl(account.Id, fileNode.FileId)
 		}
 		if downloadUrl != "" {
 			//阿里云盘15分钟
 			//天翼云盘15分钟
 			//onedrive > 15分钟
-			UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Minute*14)
+			if account.Mode == "aliyundrive" {
+				UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Minute*230)
+			} else {
+				UrlCache.SetWithExpire(fileNode.FileId, downloadUrl, time.Minute*14)
+			}
 			log.Debugf("调用api获取下载地址:" + downloadUrl)
 		}
 	}
@@ -571,6 +579,12 @@ func SaveConfig(config map[string]interface{}) {
 						Util.TeambitionSessions[old.Id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 					} else if mode == "teambition-us" {
 						Util.TeambitionSessions[old.Id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
+					} else if mode == "onedrive" || mode == "onedrive-cn" {
+						Util.OneDrives[old.Id] = entity.OneDriveAuthInfo{}
+					} else if mode == "aliyundrive" {
+						Util.Alis[old.Id] = entity.TokenResp{}
+					} else if mode == "yun139" {
+						Util.Yun139Credentials[old.Id] = entity.Yun139{}
 					}
 				}
 				ID = old.Id
@@ -592,6 +606,14 @@ func SaveConfig(config map[string]interface{}) {
 					Util.TeambitionSessions[id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
 				} else if mode == "teambition-us" {
 					Util.TeambitionSessions[id] = entity.Teambition{nic.Session{}, "", "", "", "", "", false}
+				} else if mode == "onedrive" || mode == "onedrive-cn" {
+					Util.OneDrives[id] = entity.OneDriveAuthInfo{}
+				} else if mode == "aliyundrive" {
+					Util.Alis[id] = entity.TokenResp{}
+				} else if mode == "yun139" {
+					Util.Yun139Credentials[id] = entity.Yun139{}
+				} else if mode == "googledrive" {
+					Util.GoogleDrives[id] = entity.GoogleDriveAuthInfo{}
 				}
 			}
 			ac := entity.Account{}
@@ -729,6 +751,12 @@ func Upload(accountId, path string, c *gin.Context) string {
 			} else if account.Mode == "webdav" {
 				//WebDav文件上传
 				Util.WebDavUpload(account, fileId, files)
+			} else if account.Mode == "yun139" {
+				//和彩云上传文件
+				Util.Yun139Upload(account.Id, fileId, files)
+			} else if account.Mode == "googledrive" {
+				//谷歌云上传文件
+				Util.GDUpload(account.Id, fileId, files)
 			}
 			return "上传成功"
 		}
@@ -778,6 +806,10 @@ func Async(accountId, path string) string {
 				Util.FtpGetFiles(account, fileId, path, 0, 0, true)
 			} else if account.Mode == "webdav" {
 				Util.WebDavGetFiles(account, fileId, path, 0, 0, true)
+			} else if account.Mode == "yun139" {
+				Util.Yun139GetFiles(account.Id, fileId, path, 0, 0, true)
+			} else if account.Mode == "googledrive" {
+				Util.GDGetFiles(account.Id, fileId, path, 0, 0, true)
 			}
 			jobs.RefreshFileNodes(account.Id, fileId)
 			return "刷新成功"
@@ -900,7 +932,6 @@ func GetFileData(account entity.Account, path string) ([]byte, string) {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, "image/png"
 		}
-
 		var dl = DownLock{}
 		if _, ok := dls.Load(f.FileId); ok {
 			ss, _ := dls.Load(f.FileId)

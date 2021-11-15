@@ -23,6 +23,8 @@
 
   ![image-aliyundrive](_images/aliyundrive.png)
 
+- 和彩云盘（根目录ID为`00019700101000000001`）
+
 - OneDrive（根目录ID为`/`）：
 
   同本地模式一样，这里的ID为文件路径

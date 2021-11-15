@@ -93,6 +93,7 @@ $("#accountForm").find("select[name=mode]").on('change', function () {
 });
 function dynamicChgMode(mode){
     if(mode == "native"){
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
         $("#UserDiv").hide();
@@ -107,6 +108,7 @@ function dynamicChgMode(mode){
         $("#PasswordDiv").show();
         $(".sync-div").show();
         $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
     }else if (mode == "teambition"){
         $("#RedirectUriDiv").hide();
@@ -116,6 +118,7 @@ function dynamicChgMode(mode){
         $("#PasswordDiv").show();
         $(".sync-div").show();
         $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
     }else if (mode == "teambition-us"){
         $("#RedirectUriDiv").hide();
@@ -125,6 +128,7 @@ function dynamicChgMode(mode){
         $("#PasswordDiv").show();
         $(".sync-div").show();
         $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
     }else if (mode == "aliyundrive"){
         $("#RedirectUriDiv").hide();
@@ -133,6 +137,7 @@ function dynamicChgMode(mode){
         $("#UserDiv").hide();
         $("#PasswordDiv").hide();
         $(".sync-div").show();
+        $("#accountForm").find("input[name=password]").attr("type", "password");
     }else if (mode == "onedrive"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
@@ -141,6 +146,7 @@ function dynamicChgMode(mode){
         $(".sync-div").show();
         $("#user_label").text("客户端ID（Client ID）");
         $("#password_label").text("客户端密码（Client Secret）");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
     }else if (mode == "onedrive-cn"){
         $("#RedirectUriDiv").show();
@@ -150,6 +156,7 @@ function dynamicChgMode(mode){
         $(".sync-div").show();
         $("#user_label").text("客户端ID（Client ID）");
         $("#password_label").text("客户端密码（Client Secret）");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
     }else if (mode == "ftp"){
         $("#RedirectUriDiv").hide();
@@ -159,6 +166,7 @@ function dynamicChgMode(mode){
         $(".sync-div").show();
         $("#ApiUrlDiv").show();
         $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
         $("#api_url_label").text("FTP地址（FTP Addr）");
         $("#api_url").attr("placeholder", "192.168.1.1:21");
@@ -170,9 +178,30 @@ function dynamicChgMode(mode){
         $(".sync-div").show();
         $("#ApiUrlDiv").show();
         $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
         $("#api_url_label").text("WebDav地址（WebDav Server）");
         $("#api_url").attr("placeholder", "https://webdav.mydomain.me");
+    }else if (mode == "yun139"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#user_label").text("手机号");
+        $("#password_label").text("COOKIE");
+        $("#accountForm").find("input[name=password]").attr("type", "text");
+    }else if (mode == "googledrive"){
+        $("#RedirectUriDiv").show();
+        $("#RefreshTokenDiv").show();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#user_label").text("客户端ID（Client ID）");
+        $("#password_label").text("客户端密码（Client Secret）");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
+        $("#ApiUrlDiv").hide();
     }
     diskd.handleUpdate();
 }

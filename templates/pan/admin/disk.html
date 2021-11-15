@@ -63,6 +63,10 @@
                             <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "webdav"}}
                             <span class="mdui-chip-icon mdui-color-brown"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "yun139"}}
+                            <span class="mdui-chip-icon mdui-color-pink"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "googledrive"}}
+                            <span class="mdui-chip-icon mdui-color-amber"><i class="mdui-icon material-icons">face</i></span>
                         {{- else}}
                         {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -87,6 +91,10 @@
                     FTP
                 {{- else if eq .Mode "webdav"}}
                     WebDav
+                {{- else if eq .Mode "yun139"}}
+                    和彩云
+                {{- else if eq .Mode "googledrive"}}
+                    谷歌云盘
                 {{- else}}
                 {{- end}}
                 </td>
@@ -175,8 +183,10 @@
                 <option value="aliyundrive">阿里云盘</option>
                 <option value="teambition">Teambition项目盘</option>
                 <option value="teambition-us">Teambition国际盘</option>
+                <option value="yun139">和彩云</option>
                 <option value="onedrive">OneDrive</option>
                 <option value="onedrive-cn">OneDrive世纪互联</option>
+                <option value="googledrive">GoogleDrive（测试版）</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
