@@ -188,6 +188,12 @@ type OneDriveAuthInfo struct {
 	RefreshToken string `json:"refresh_token"`
 	Mode         string `json:"mode"`
 }
+type GoogleDriveAuthInfo struct {
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+	ExpiresIn   int    `json:"expires_in"`
+	AccessToken string `json:"access_token"`
+}
 type Login struct {
 	Username string `form:"username" json:"username" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
@@ -199,4 +205,8 @@ type Zone struct {
 	Login string
 	Api   string
 	Desc  string
+}
+type Yun139 struct {
+	Cookie string `json:"cookie"`
+	Mobile string `json:"mobile"`
 }

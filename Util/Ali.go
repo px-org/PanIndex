@@ -6,6 +6,7 @@ import (
 	"PanIndex/model"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/nic"
 	uuid "github.com/satori/go.uuid"
@@ -186,13 +187,15 @@ func AliGetDownloadUrl(accountId, fileId string) string {
 			"authorization": auth,
 		},
 		JSON: nic.KV{
-			"drive_id": tokenResp.UserInfo.DefaultDriveId,
-			"file_id":  fileId,
+			"drive_id":   tokenResp.UserInfo.DefaultDriveId,
+			"file_id":    fileId,
+			"expire_sec": 14400,
 		},
 	})
 	if err != nil {
 		return ""
 	}
+	fmt.Println(resp.Text)
 	downUrl := jsoniter.Get(resp.Bytes, "url").ToString()
 	speedLimit := jsoniter.Get(resp.Bytes, "ratelimit").Get("part_speed").ToInt()
 	if downUrl == "" {

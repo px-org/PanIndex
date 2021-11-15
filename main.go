@@ -336,6 +336,8 @@ func index(c *gin.Context) {
 					result["downloadUrl"] = ""
 				} else if account.Mode == "ftp" {
 					result["downloadUrl"] = ""
+				} else if account.Mode == "webdav" {
+					result["downloadUrl"] = ""
 				} else {
 					var dl = service.DownLock{}
 					/*dls.LoadOrStore(fs[0].FileId, dl)*/
@@ -674,6 +676,7 @@ func raw(c *gin.Context) {
 	}
 	account := config.GloablConfig.Accounts[index]
 	data, contentType := service.GetFileData(account, p)
+
 	if data == nil {
 		c.String(http.StatusOK, "")
 	} else {

@@ -252,9 +252,10 @@ func ReadBlock(file *multipart.FileHeader) []BlockFile {
 	for i := uint64(0); i < totalPartsNum; i++ {
 		partSize := int64(math.Min(fileChunk, float64(file.Size-int64(i*fileChunk))))
 		contentRange := fmt.Sprintf("bytes %d-%d/%d", off, off+partSize-1, totalSize)
+		contentRange2 := fmt.Sprintf("bytes=%d-%d", off, off+partSize-1)
 		partBuffer := make([]byte, partSize)
 		FileHandle.Read(partBuffer)
-		bfs = append(bfs, BlockFile{partBuffer, contentRange})
+		bfs = append(bfs, BlockFile{partBuffer, contentRange, contentRange2})
 		off += partSize
 	}
 	return bfs
@@ -263,6 +264,7 @@ func ReadBlock(file *multipart.FileHeader) []BlockFile {
 type BlockFile struct {
 	Content []byte
 	Name    string
+	Range2  string
 }
 type SplitFile struct {
 	File      *multipart.FileHeader

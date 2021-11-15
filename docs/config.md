@@ -62,11 +62,14 @@
     - Cloud189：天翼云网盘，基于用户名（手机号）和密码，程序自动检测cookie是否有效并自动刷新。
     - Teambition：阿里teambition项目盘，根目录ID需要填写项目ID。
     - Teambition国际版：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
-    - Aliyundrive：阿里云盘，需要填入**手机端的**的`refresh_token`，推荐使用 [PanIndex Tool](https://mgaa.noki.workers.dev/) 扫码获取
-    - OneDrive、世纪互联：按照[PanIndex Tool](https://mgaa.noki.workers.dev/) 教程指引获取授权信息
+    - 和彩云：由于登录会有验证码，所以不会采用自动登录的方式，请登录网页版复制完整COOKIE并输入手机号。
+    - Aliyundrive：阿里云盘，需要填入**手机端的**的`refresh_token`，推荐使用 [PanIndex Tool](https://mgaa.noki.workers.dev/) 扫码获取。
+    - OneDrive、世纪互联：按照[PanIndex Tool](https://mgaa.noki.workers.dev/) 教程指引获取授权信息。
+    - GoogleDrive：按照[PanIndex Tool](https://mgaa.noki.workers.dev/) 教程指引获取授权信息，请注意此模式下有一些限制：下载文件需要登录google，无法预览视频（跨域），服务器需要特殊网络环境等。
     > 由于阿里云的`refresh_token`和`access_token`有效期为2小时，第一次填入后，系统会自动刷新，所以`refresh_token`值会变，但是可以保持有效。
 - 根目录ID(路径)：native、webdav、ftp的ID格式为对应路径，teambition为项目ID，其他为目录ID，[如何获取？](https://libsgh.github.io/PanIndex/#/question?id=%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e7%9b%ae%e5%bd%95id%ef%bc%9f)
-  > 这里填写你要分享的目录ID，如果你想分享网盘的根目录，天翼云为`-11`，阿里云盘为`root`
+  
+  > 这里填写你要分享的目录ID，如果你想分享网盘的根目录，天翼云为`-11`，阿里云盘为`root`，合彩云盘为`00019700101000000001`
 - 定时刷新缓存：为空将关闭缓存，请不要过于频繁的定时刷新，建议间隔频率1小时以上。
 - 定时缓存目录：指定定时刷新PanIndex的虚拟目录，设置经常更新的目录，可以提高缓存效率。
 - 缓存是否包含子目录：取消勾选后将不会递归更新子目录。
