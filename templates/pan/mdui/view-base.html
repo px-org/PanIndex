@@ -36,7 +36,7 @@
 </head>
 <body class="mdui-theme-layout-{{if eq .Theme "mdui"}}auto{{end}}{{if eq .Theme "mdui-dark"}}dark{{end}}{{if eq .Theme "mdui-light"}}light{{end}}">
 <div class="mdui-container">
-    <div class="mdui-card">
+    <div class="mdui-card" style="min-height: 600px;">
         <div class="mdui-card-content">
             <div style="padding: 0px 5px 12px;">
                 <div class="mdui-chip">
@@ -79,9 +79,9 @@
                             {{- if .HasParent}}
                                 <button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '返回上级目录'}" onclick="window.open('{{$.DIndex}}{{.ParentPath}}','_self')"><i class="mdui-icon material-icons">arrow_back</i></button>
                             {{- end}}
-                            <a id="info-toggle" href="javascript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件信息'}"><i class="mdui-icon material-icons">info</i></a>
-                            <a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu',covered: false}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>
-                            <a id="view_down_link" href="{{.DownloadUrl}}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '点击下载'}"><i class="mdui-icon material-icons">file_download</i></a>
+                            {{- if .HasPwd}}{{- else}}<a id="info-toggle" href="javascript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件信息'}"><i class="mdui-icon material-icons">info</i></a>{{- end}}
+                            {{- if .HasPwd}}{{- else}}<a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu',covered: false}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>{{- end}}
+                            {{- if .HasPwd}}{{- else}}<a id="view_down_link" href="{{.DownloadUrl}}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '点击下载'}"><i class="mdui-icon material-icons">file_download</i></a>{{- end}}
                             {{- if .LastFile }}
                                 <a id="view_last" href="{{$.DIndex}}{{.LastFile}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上一个'}"><i class="mdui-icon material-icons">chevron_leftt</i></a>
                             {{- end}}
@@ -104,6 +104,44 @@
                 </li>
             </ul>
             <div class="mdui-card" style="width: 100%">
+                {{- if .HasPwd}}
+                <div class="mdui-card-media mdui-center" style="margin-top:150px; width: 350px; max-width: 100%;">
+                    <div class="mdui-textfield mdui-textfield-floating-label{{if .PwdErrorMsg}} mdui-textfield-invalid{{- end}}">
+                        <i id="inpsw-icon-lock" class="mdui-icon material-icons">lock</i>
+                        <label class="mdui-textfield-label">请输入密码</label>
+                        <input id="input-password" type="password" data-file-id="{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}" class="mdui-textfield-input" required style="border-bottom: 1px solid rgba(0, 0, 0, 0.42); width: calc(100% - 95px);">
+                        <a class="mdui-btn mdui-btn-icon mdui-icon" style="right: 0px;" href="javascript:promptPwd('{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}');">
+                            <i class="mdui-icon material-icons" style="padding: 0px;">fingerprint</i>
+                        </a>
+                        {{- if .PwdErrorMsg}}
+                        <div class="mdui-textfield-error">{{.PwdErrorMsg}}</div>
+                        <script>
+                            removePwd('{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}');
+                            function removePwd(dfi){
+                                if(dfi == ""){
+                                    dfi = "all";
+                                }
+                                var cookieDirPwd = $.cookie("dir_pwd");
+                                var newDirPwd = [];
+                                if(cookieDirPwd != ""){
+                                    $.each(cookieDirPwd.split(","), function (i, item){
+                                        var fileId = item.split(":")[0]
+                                        if(fileId != dfi){
+                                            newDirPwd.push(item);
+                                        }
+                                    });
+                                }
+                                if (newDirPwd.length > 0){
+                                    $.cookie("dir_pwd", newDirPwd.join(","), {expires : 3650, path:"/"});
+                                }else{
+                                    $.removeCookie('dir_pwd', { path: '/' });
+                                }
+                            }
+                        </script>
+                        {{- end}}
+                    </div>
+                </div>
+                {{- else}}
                 <div class="mdui-card-primary mdui-typo mdui-collapse" id="info_panel" style="padding-top: 0px">
                     <div class="mdui-collapse-item mdui-collapse-item-o" id="item-1">
                         <div class="mdui-collapse-item-body">
@@ -117,26 +155,32 @@
                     </div>
                 </div>
                 <div>
+                    {{- if (index .List 0).FileType}}
                     {{- if contains $.Config.Image (index .List 0).FileType}}
-                        {{block "content-img" .}}{{end}}
+                    {{block "content-img" .}}{{end}}
                     {{- else if contains $.Config.Audio (index .List 0).FileType}}
-                        {{block "content-audio" .}}{{end}}
+                    {{block "content-audio" .}}{{end}}
                     {{- else if contains $.Config.Video (index .List 0).FileType}}
-                        {{block "content-video" .}}{{end}}
+                    {{block "content-video" .}}{{end}}
                     {{- else if contains $.Config.Code (index .List 0).FileType}}
-                        {{block "content-code" .}}{{end}}
+                    {{block "content-code" .}}{{end}}
                     {{- else if contains $.Config.Doc (index .List 0).FileType}}
-                        {{block "content-office" .}}{{end}}
+                    {{block "content-office" .}}{{end}}
                     {{- else if eq "pdf" (index .List 0).FileType}}
-                        {{block "content-pdf" .}}{{end}}
+                    {{block "content-pdf" .}}{{end}}
                     {{- else if eq "epub" (index .List 0).FileType}}
-                        {{block "content-epub" .}}{{end}}
+                    {{block "content-epub" .}}{{end}}
                     {{- else if eq "md" (index .List 0).FileType}}
-                        {{block "content-md" .}}{{end}}
+                    {{block "content-md" .}}{{end}}
                     {{- else}}
-                        {{block "content-ns" .}}{{end}}
+                    {{block "content-ns" .}}{{end}}
+                    {{- end}}
+                    {{- else}}
+                    {{block "content-ns" .}}{{end}}
                     {{- end}}
                 </div>
+                {{- end}}
+
             </div>
         </div>
     </div>
@@ -149,7 +193,7 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
-<script src="/static/js/mdui-view.js?v=206"></script>
+<script src="/static/js/mdui-view.js?v=208"></script>
 {{- if ne .Config.Js ""}}
 {{.Config.Js | unescaped}}
 {{- end}}

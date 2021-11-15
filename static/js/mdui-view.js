@@ -20,7 +20,7 @@ $(function () {
     var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
     $("#file_link").attr("href", fullUrl);
     $("#file_link").text(fullUrl);
-    if(mode == "native"){
+    if(mode == "native" || mode == "ftp" || mode == "webdav"){
         $("#view_down_link").attr("href", fullUrl);
     }
     var clipboard = new ClipboardJS('.copyBtn', {
@@ -83,4 +83,24 @@ $(function () {
             }
         });
     });
+});
+function promptPwd(dfi){
+    if(dfi == ""){
+        dfi = "all";
+    }
+    var result = $.cookie("dir_pwd");
+    var ppwd = dfi + ":" + $("#input-password").val();
+    if (result != null && result != "null" && result != ""){
+        result = result + ","+ ppwd;
+    }else{
+        result = ppwd;
+    }
+    $.cookie("dir_pwd", result, {expires : 3650, path:"/"});
+    location.reload();
+}
+$("#input-password").bind('keydown', function(event) {
+    if (event.key === "Enter") {
+        var dfi = $(this).attr("data-file-id");
+        promptPwd(dfi);
+    }
 });

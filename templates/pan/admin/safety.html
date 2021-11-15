@@ -9,8 +9,8 @@
     <form id="configForm">
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">许可域名</label>
-            <textarea class="mdui-textfield-input" rows="5" name="only_referrer" value="{{.Config.OnlyReferrer}}">{{.Config.OnlyReferrer}}</textarea>
-            <div class="mdui-textfield-helper mdui-text-color-purple">允许的 Referrer，一行一个，例：baidu.com</div>
+            <input class="mdui-textfield-input" name="only_referrer" value="{{.Config.OnlyReferrer}}" />
+            <div class="mdui-textfield-helper mdui-text-color-purple">允许的 Referrer，英文,分隔，例：baidu.com,noki.icu</div>
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label"></label>

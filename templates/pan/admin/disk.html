@@ -4,7 +4,7 @@
 {{define "admin-disk"}}
 <div class="mdui-m-t-2">
     <div class="mdui-typo mdui-p-b-2">
-        <h3> 网盘挂载 <small>拖动修改显示顺序</small></h3>
+        <h3> 网盘挂载 <small>拖动头像修改显示顺序</small></h3>
     </div>
     <div class="mdui-table-fluid">
         <div class="mdui-toolbar mdui-float-right">
@@ -53,12 +53,18 @@
                             <span class="mdui-chip-icon mdui-color-blue"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "onedrive"}}
                             <span class="mdui-chip-icon mdui-color-blue-200"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "onedrive-cn"}}
+                            <span class="mdui-chip-icon mdui-color-blue-200"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "native"}}
                             <span class="mdui-chip-icon mdui-color-blue-grey"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "aliyundrive"}}
                             <span class="mdui-chip-icon mdui-color-deep-purple-accent"><i class="mdui-icon material-icons">face</i></span>
-                        {{else}}
-                        {{end}}
+                        {{- else if eq .Mode "ftp"}}
+                            <span class="mdui-chip-icon"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "webdav"}}
+                            <span class="mdui-chip-icon mdui-color-brown"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else}}
+                        {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
                     </div>
                 </td>
@@ -71,10 +77,16 @@
                     阿里云盘
                 {{- else if eq .Mode "onedrive"}}
                     微软云盘
+                {{- else if eq .Mode "onedrive-cn"}}
+                    世纪互联
                 {{- else if eq .Mode "teambition"}}
                     Teambition项目盘
                 {{- else if eq .Mode "teambition-us"}}
                     Teambition国际服
+                {{- else if eq .Mode "ftp"}}
+                    FTP
+                {{- else if eq .Mode "webdav"}}
+                    WebDav
                 {{- else}}
                 {{- end}}
                 </td>
@@ -155,13 +167,16 @@
         </div>
         <div>
             <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">网盘模式</label>
-            <select id="theme" name="mode" class="mdui-select" mdui-select="{position:'bottom'}" style="margin-left: 50px">
+            <select id="mode" name="mode" style="margin-left: 50px">
                 <option value="native">本地磁盘</option>
+                <option value="ftp">FTP</option>
+                <option value="webdav">WebDav</option>
                 <option value="cloud189">天翼云盘</option>
                 <option value="aliyundrive">阿里云盘</option>
                 <option value="teambition">Teambition项目盘</option>
                 <option value="teambition-us">Teambition国际盘</option>
                 <option value="onedrive">OneDrive</option>
+                <option value="onedrive-cn">OneDrive世纪互联</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
@@ -173,6 +188,11 @@
             <i class="mdui-icon material-icons">lock</i>
             <label class="mdui-textfield-label" id="password_label">密码</label>
             <input class="mdui-textfield-input" type="password" name="password">
+        </div>
+        <div id="ApiUrlDiv" class="mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">insert_link</i>
+            <label class="mdui-textfield-label" id="api_url_label"></label>
+            <input id="api_url" class="mdui-textfield-input" type="text" name="api_url">
         </div>
         <div id="RefreshTokenDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">refresh</i>
@@ -225,7 +245,7 @@
                 <label class="mdui-textfield-label">远程目录(PanIndex路径)</label>
                 <input type="hidden" name="account_id" />
                 <input class="mdui-textfield-input" name="cache_folder" type="text" value="/" placeholder="/" required="required"/>
-                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的相对路径，不需要带盘符<code>/d_0</code></div>
+                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的虚拟路径，不需要带盘符<code>/d_0</code></div>
             </div>
         </form>
     </div>
@@ -248,7 +268,7 @@
                 <label class="mdui-textfield-label">远程目录(PanIndex路径)</label>
                 <input type="hidden" name="account_id" />
                 <input class="mdui-textfield-input" name="upload_folder" type="text" value="/" placeholder="/" required="required"/>
-                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的相对路径，不需要带盘符<code>/d_0</code></div>
+                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的虚拟路径，不需要带盘符<code>/d_0</code></div>
             </div>
         </form>
     </div>

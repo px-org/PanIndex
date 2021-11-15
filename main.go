@@ -76,6 +76,10 @@ func main() {
 			oneRefreshToken(c) //刷新token
 		} else if method == http.MethodGet && strings.HasPrefix(path, "/api/public/raw") {
 			raw(c) //原始文件预览
+		} else if method == http.MethodPost && strings.HasPrefix(path, "/api/public/autoAddPassword") {
+			autoAddPassword(c) //文件、目录添加输入密码
+		} else if method == http.MethodPost && strings.HasPrefix(path, "/api/public/autoRemovePassword") {
+			autoRemovePassword(c) //文件、目录删除错误的输入密码
 		} else if method == http.MethodPost && path == "/api/admin/save" {
 			adminSave(c) //后台配置保存
 		} else if method == http.MethodPost && path == "/api/admin/getAccount" {
@@ -257,6 +261,7 @@ func index(c *gin.Context) {
 	sColumn := config.GloablConfig.SColumn
 	sOrder := config.GloablConfig.SOrder
 	pwdCookie, err := c.Request.Cookie("dir_pwd")
+	_, has := c.GetQuery("v")
 	if err == nil {
 		decodePwd, err := url.QueryUnescape(pwdCookie.Value)
 		if err != nil {
@@ -279,7 +284,7 @@ func index(c *gin.Context) {
 		}
 	}
 	pathName := c.Request.URL.Path
-	pwd = Util.GetPwdFromCookie(pwd, pathName)
+	//pwd = Util.GetPwdFromCookie(pwd, pathName)
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
 		pathName = pathName[0 : len(pathName)-1]
 	}
@@ -301,9 +306,9 @@ func index(c *gin.Context) {
 	account := config.GloablConfig.Accounts[index]
 	result := make(map[string]interface{})
 	if pathName == "/" && config.GloablConfig.AccountChoose == "display" {
-		result = service.AccountsToNodes(config.GloablConfig.Accounts)
+		result = service.AccountsToNodes(config.GloablConfig.Accounts, pwd)
 	} else {
-		result = service.GetFilesByPath(account, pathName, pwd, sColumn, sOrder)
+		result = service.GetFilesByPath(account, pathName, pwd, sColumn, sOrder, has)
 	}
 	result["HerokuappUrl"] = config.GloablConfig.HerokuAppUrl
 	result["Mode"] = account.Mode
@@ -324,11 +329,12 @@ func index(c *gin.Context) {
 	fs, ok := result["List"].([]entity.FileNode)
 	if ok {
 		if len(fs) == 1 && !fs[0].IsFolder && result["isFile"].(bool) {
-			_, has := c.GetQuery("v")
 			t := service.GetViewTemplate(fs[0])
 			if has && t != "" {
 				//跳转文件预览页面
 				if account.Mode == "native" {
+					result["downloadUrl"] = ""
+				} else if account.Mode == "ftp" {
 					result["downloadUrl"] = ""
 				} else {
 					var dl = service.DownLock{}
@@ -350,10 +356,27 @@ func index(c *gin.Context) {
 				return
 			} else {
 				//文件
+				if result["HasPwd"].(bool) {
+					//访问文件或是文件预览时， 如果密码错误或未输入密码
+					//返回未授权的访问
+					c.JSON(http.StatusUnauthorized, gin.H{
+						"status": http.StatusUnauthorized,
+						"msg":    "Unauthorized access, please add a password to the cookie.",
+					})
+					return
+				}
 				if account.Mode == "native" {
 					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
 					c.Writer.Header().Add("Content-Type", "application/octet-stream")
 					c.File(fs[0].FileId)
+					return
+				} else if account.Mode == "ftp" {
+					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
+					c.Data(http.StatusOK, "application/octet-stream", Util.FtpReadFileToBytes(account, fs[0].FileId))
+					return
+				} else if account.Mode == "webdav" {
+					c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fs[0].FileName))
+					c.Data(http.StatusOK, "application/octet-stream", Util.WebDavReadFileToBytes(account, fs[0].FileId))
 					return
 				} else {
 					var dl = service.DownLock{}
@@ -618,7 +641,8 @@ func oneExchangeToken(c *gin.Context) {
 	clientSecret := c.PostForm("client_secret")
 	code := c.PostForm("code")
 	redirectUri := c.PostForm("redirect_uri")
-	tokenInfo := Util.OneExchangeToken(clientId, redirectUri, clientSecret, code)
+	zone := c.PostForm("zone")
+	tokenInfo := Util.OneExchangeToken(zone, clientId, redirectUri, clientSecret, code)
 	c.String(http.StatusOK, tokenInfo)
 }
 func oneRefreshToken(c *gin.Context) {
@@ -626,7 +650,8 @@ func oneRefreshToken(c *gin.Context) {
 	clientSecret := c.PostForm("client_secret")
 	refreshToken := c.PostForm("refresh_token")
 	redirectUri := c.PostForm("redirect_uri")
-	tokenInfo := Util.OneGetRefreshToken(clientId, redirectUri, clientSecret, refreshToken)
+	zone := c.PostForm("zone")
+	tokenInfo := Util.OneGetRefreshToken(zone, clientId, redirectUri, clientSecret, refreshToken)
 	c.String(http.StatusOK, tokenInfo)
 }
 func raw(c *gin.Context) {
@@ -708,5 +733,23 @@ func shortRedirect(c *gin.Context) {
 		c.Redirect(http.StatusFound, redirectUri)
 	}
 	c.Abort()
+}
+func autoAddPassword(c *gin.Context) {
+	oldDirPwd := c.PostForm("oldDirPwd")
+	oldDirPwd, _ = url.QueryUnescape(oldDirPwd)
+	newDirPwd := service.AutoAddPassword(oldDirPwd)
+	c.JSON(http.StatusOK, gin.H{
+		"newDirPwd": newDirPwd,
+	})
+}
+func autoRemovePassword(c *gin.Context) {
+	cookieDirPwd := c.PostForm("cookieDirPwd")
+	fileId := c.PostForm("fileId")
+	cookieDirPwd, _ = url.QueryUnescape(cookieDirPwd)
+	fileId, _ = url.QueryUnescape(fileId)
+	newDirPwd := service.AutoRemovePassword(cookieDirPwd, fileId)
+	c.JSON(http.StatusOK, gin.H{
+		"newDirPwd": newDirPwd,
+	})
 }
 func unescaped(x string) interface{} { return template.HTML(x) }

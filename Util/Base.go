@@ -136,31 +136,58 @@ func DetermineEncoding(r *bufio.Reader) encoding.Encoding {
 	return simplifiedchinese.GBK
 }
 
-func CheckPwd(PwdDirIds, path, pwd string) (bool, bool) {
+func CheckPwdOld(PwdDirIds, fileId, pwd string) (bool, bool) {
 	hasPath := false
 	pwdOk := false
 	s := strings.Split(PwdDirIds, ",")
-	if PwdDirIds == "" {
-		return hasPath, pwdOk
-	}
 	for _, v := range s {
-		if strings.Split(v, ":")[0] == path {
+		if strings.Split(v, ":")[0] == fileId {
 			hasPath = true
 		}
-		if v == path+":"+pwd {
+		if pwd == strings.Split(v, ":")[1] {
 			pwdOk = true
 		}
 	}
 	return hasPath, pwdOk
 }
-func GetPwdFromCookie(pwd, pathName string) string {
-	if pathName == "/" {
-		pathName = "/d_0"
+func CheckPwd(configPwd, fileId, cookiePwd string) (bool, bool, string) {
+	hasPwd := false
+	msg := ""
+	pwd := GetPwdFromCookie(cookiePwd, fileId)
+	pwdOk := false
+	s := strings.Split(configPwd, ",")
+	for _, v := range s {
+		if strings.Split(v, ":")[0] == fileId {
+			hasPwd = true
+			if strings.Split(v, ":")[1] == pwd {
+				pwdOk = true
+			}
+		}
 	}
+	if pwd != "" && !pwdOk {
+		msg = "密码错误"
+	}
+	return hasPwd, pwdOk, msg
+}
+func CheckHide(fileId, hideIds string) bool {
+	hideOk := false
+	if hideIds != "" {
+		s := strings.Split(hideIds, ",")
+		for _, v := range s {
+			r := strings.HasPrefix(fileId, v)
+			if r {
+				hideOk = true
+				break
+			}
+		}
+	}
+	return hideOk
+}
+func GetPwdFromCookie(pwd, fileId string) string {
 	s := strings.Split(pwd, ",")
 	if len(s) > 0 {
 		for _, v := range s {
-			if strings.Split(v, ":")[0] == pathName {
+			if strings.Split(v, ":")[0] == fileId {
 				return strings.Split(v, ":")[1]
 			}
 		}

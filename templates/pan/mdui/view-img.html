@@ -9,7 +9,7 @@
         var path = $("#file_link").attr("data-path");
         var mode = $("#file_link").attr("data-mode");
         var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
-        if(mode == "native"){
+        if(mode == "native" || mode == "ftp" || mode == "webdav"){
             $("#view_link").attr("src", fullUrl);
         }
     </script>

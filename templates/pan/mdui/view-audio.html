@@ -12,7 +12,7 @@
         var mode = $("#file_link").attr("data-mode");
         var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
         var url = "{{.DownloadUrl}}";
-        if(mode == "native"){
+        if(mode == "native" || mode == "ftp" || mode == "webdav"){
             url = fullUrl;
         }
         var n = '{{ (index .List 0).FileName }}';

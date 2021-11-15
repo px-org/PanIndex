@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
 	<meta name="renderer" content="webkit"/>
-{{- if eq .Mode "aliyundrive"}}
+{{- if or (eq .Mode "aliyundrive") (.SearchKey)}}
 	<meta name="referrer" content="no-referrer">
 {{- end}}
 	<meta name="force-rendering" content="webkit"/>
@@ -37,8 +37,8 @@
 	{{ $SurportFolderDown := .SurportFolderDown }}
 </head>
 <body class="mdui-theme-layout-{{- if eq .Theme "mdui"}}auto{{end}}{{- if eq .Theme "mdui-dark"}}dark{{- end}}{{- if eq .Theme "mdui-light"}}light{{- end}}">
-<div class="mdui-container">
-	<div class="mdui-card" style="min-height: 600px">
+<div class="mdui-container" >
+	<div class="mdui-card" style="min-height: 600px;">
 		<div class="mdui-card-content">
 			<div style="padding: 0px 5px 12px;">
 				<div class="mdui-chip">
@@ -74,7 +74,7 @@
 				{{- end}}
 			</div>
 			{{- if and (.HasHead) (not .HasPwd)}}
-			<div id="headContent" class="mdui-typo mdui-shadow-2" style="padding: 15px;margin: 10px;">
+			<div id="headContent" class="mdui-typo mdui-shadow-2" style="display: none;padding: 15px;margin: 10px;">
 				<div class="mdui-chip head" style="display: none">
 					<span class="mdui-chip-icon">M</span>
 					<i class="mdui-icon material-icons">notifications_active</i>
@@ -85,7 +85,8 @@
 				<script>
 					var c = $("#head").val();
 					if(c != ""){
-						$("#headContent").append(marked(c));
+						$("#headContent").append(marked.parse(c));
+						$("table").addClass("mdui-table");
 						$("#headContent").toggle();
 					}else{
 						var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw/HEAD.md");
@@ -94,7 +95,7 @@
 							url: fullUrl,
 							success: function (data) {
 								if(data != ""){
-									$("#headContent").append(marked(data));
+									$("#headContent").append(marked.parse(data));
 									$("table").addClass("mdui-table");
 									$("#headContent").toggle();
 								}
@@ -200,50 +201,32 @@
 						<div class="mdui-textfield mdui-textfield-floating-label{{if .PwdErrorMsg}} mdui-textfield-invalid{{- end}}">
 							<i id="inpsw-icon-lock" class="mdui-icon material-icons">lock</i>
 							<label class="mdui-textfield-label">请输入密码</label>
-							<input id="input-password" type="password" data-path="{{$.DIndex}}{{.Path}}" class="mdui-textfield-input" required style="border-bottom: 1px solid rgba(0, 0, 0, 0.42); width: calc(100% - 95px);">
-							<a class="mdui-btn mdui-btn-icon mdui-icon" style="right: 0px;" href="javascript:promptPwd('{{$.DIndex}}{{.Path}}');">
+							<input id="input-password" type="password" data-file-id="{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}" class="mdui-textfield-input" required style="border-bottom: 1px solid rgba(0, 0, 0, 0.42); width: calc(100% - 95px);">
+							<a class="mdui-btn mdui-btn-icon mdui-icon" style="right: 0px;" href="javascript:promptPwd('{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}');">
 								<i class="mdui-icon material-icons" style="padding: 0px;">fingerprint</i>
 							</a>
 							{{- if .PwdErrorMsg}}
 								<div class="mdui-textfield-error">{{.PwdErrorMsg}}</div>
 								<script>
-									removePwd('{{$.DIndex}}{{.Path}}');
-									function removePwd(path) {
-										var dp = $.cookie("dir_pwd");
-										var dpArr = dp.split(",");
-										var newArr = [];
-										var c = "";
-										if(path == "/"){
-											path = "/d_0";
-										}else{
-											if(endWith(path, "/")){
-												path = path.substring(0, path.Length-1);
-											}
+									removePwd('{{- if .isFile}}{{(index .List 0).FileId}}{{- else}}{{(index .List 0).ParentId}}{{- end}}');
+									function removePwd(dfi){
+										if(dfi == ""){
+											dfi = "all";
 										}
-										if(dp != ""){
-											$.each(dpArr, function (i, item) {
-												if(item.split(":")[0] != path){
-													newArr.push(item);
+										var cookieDirPwd = $.cookie("dir_pwd");
+										var newDirPwd = [];
+										if(cookieDirPwd != ""){
+											$.each(cookieDirPwd.split(","), function (i, item){
+												var fileId = item.split(":")[0]
+												if(fileId != dfi){
+													newDirPwd.push(item);
 												}
 											});
 										}
-										if(newArr.length > 1){
-											c = newArr.join(",");
-										}else if(newArr.length == 1){
-											c = newArr[0];
+										if (newDirPwd.length > 0){
+											$.cookie("dir_pwd", newDirPwd.join(","), {expires : 3650, path:"/"});
 										}else{
-											c = null;
-										}
-										$.cookie("dir_pwd", c, {expires : 3650, path:"/"});
-									}
-									function endWith (path, param) {
-										if (param == null || param == "" || path.length == 0 || param.length > path.length) {
-											return false;
-										}
-										if (path.substring(path.length - param.length) == param) {
-											return true;
-										} else {
-											return false;
+											$.removeCookie('dir_pwd', { path: '/' });
 										}
 									}
 								</script>
@@ -252,7 +235,7 @@
 					</div>
 				{{- else}}
 					{{- if not .List}}
-						<div class="mdui-valign ">
+						<div class="mdui-valign" style="height: 500px">
 							<div class="mdui-center">
 								<img class="mdui-center" src="/static/img/empty-folder.png" style="width: 53px;height: 56px">
 								<p class="mdui-center">网盘空空如也</p>
@@ -326,7 +309,8 @@
 			<script>
 				var c = $("#readme").val();
 				if(c != ""){
-					$("#content").append(marked(c));
+					$("#content").append(marked.parse(c));
+					$("table").addClass("mdui-table");
 					$("#content").toggle();
 				}else{
 					var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/public/raw/README.md");
@@ -335,7 +319,7 @@
 						url: fullUrl,
 						success: function (data) {
 							if(data != ""){
-								$("#content").append(marked(data));
+								$("#content").append(marked.parse(data));
 								$("table").addClass("mdui-table");
 								$("#content").toggle();
 							}
@@ -361,7 +345,7 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
-<script src="/static/js/main.js?v=206"></script>
+<script src="/static/js/main.js?v=208"></script>
 {{- if ne .Config.Js ""}}
 {{.Config.Js | unescaped}}
 {{- end}}
