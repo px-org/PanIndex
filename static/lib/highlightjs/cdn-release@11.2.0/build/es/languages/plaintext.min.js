@@ -1,0 +1,2 @@
+var hljsGrammar=(()=>{"use strict";return t=>({name:"Plain text",
+aliases:["text","txt"],disableAutodetect:!0})})();export default hljsGrammar;

@@ -1,3 +1,11 @@
+### [v2.0.9](https://github.com/libsgh/PanIndex/compare/v2.0.8...v2.0.9) (2021-12-20)
+
+##### Bug Fixes
+
+**此版本大概是2.x系列最后一个版本，主要是紧急应对jsdelivr在国内无法访问的问题**
+
+- 修改mdui主题及后台引用的js、css从本地读取
+
 ### [v2.0.8](https://github.com/libsgh/PanIndex/compare/v2.0.7...v2.0.8) (2021-11-15)
 
 ##### Bug Fixes

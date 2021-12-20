@@ -1,0 +1,3 @@
+var hljsGrammar=(()=>{"use strict";return a=>({name:"VBScript in HTML",
+subLanguage:"xml",contains:[{begin:"<%",end:"%>",subLanguage:"vbscript"}]})})()
+;export default hljsGrammar;

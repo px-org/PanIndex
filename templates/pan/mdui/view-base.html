@@ -17,11 +17,16 @@
     <link rel="icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/static/img/favicon-{{.Mode}}.ico" type="image/x-icon" />
 {{- end}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"/>
     <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js"></script> -->
+    <link rel="stylesheet" href="/static/lib/aplayer@1.10.1/dist/APlayer.min.css">
+    <link rel="stylesheet" href="/static/lib/mdui@1.0.1/css/mdui.min.css"/>
+    <script src="/static/lib/mdui@1.0.1/js/mdui.min.js"></script>
+    <script src="/static/lib/jquery@3.5.1/jquery.min.js"></script>
+    <script src="/static/lib/jquery.cookie@1.4.1/jquery.cookie.js"></script>
     <link rel="stylesheet" href="/static/css/index.css">
 {{- if ne .Config.Css ""}}
     {{.Config.Css | unescaped}}
@@ -192,7 +197,7 @@
     {{- end}}
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+<script src="/static/lib/clipboard@2.0.8/clipboard.min.js"></script>
 <script src="/static/js/mdui-view.js?v=208"></script>
 {{- if ne .Config.Js ""}}
 {{.Config.Js | unescaped}}

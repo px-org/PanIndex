@@ -2,11 +2,11 @@
     {{template "pan/mdui/view-base.html" .}}
 {{end}}
 {{define "content-audio"}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+    <link rel="stylesheet" href="/static/lib/aplayer@1.10.1/dist/APlayer.min.css">
     <div class="mdui-valign" style="min-height: 300px">
         <div id="aplayer" class="mdui-center" style="width: 500px"></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+    <script src="/static/lib/aplayer@1.10.1/dist/APlayer.min.js"></script>
     <script>
         var path = $("#file_link").attr("data-path");
         var mode = $("#file_link").attr("data-mode");

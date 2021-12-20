@@ -14,11 +14,16 @@
     <link rel="icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
     {{- end}}
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"/>
+   <!--  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"/>
     <script src="//cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/loadingio/ldbutton@v1.0.1/dist/ldbtn.min.css"/>
     <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/gh/loadingio/loading.css@v2.0.0/dist/loading.min.css"/>
-    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script> -->
+    <link rel="stylesheet" href="/static/lib/mdui@1.0.1/css/mdui.min.css"/>
+    <script src="/static/lib/mdui@1.0.1/js/mdui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/lib/ldbutton@v1.0.1/dist/ldbtn.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/lib/loading.css@v2.0.0/dist/loading.min.css"/>
+    <script src="/static/lib/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
     <style>
         .version{
             position: fixed;
@@ -141,7 +146,7 @@
 <script>
     var ApiToken = '{{.Config.ApiToken}}';
 </script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="/static/lib/sortablejs@1.14.0/Sortable.min.js"></script>
 <script src="/static/js/admin.js?v=208"></script>
 </body>
 </html>
