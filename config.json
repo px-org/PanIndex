@@ -1,0 +1,11 @@
+{
+  "host": "0.0.0.0",
+  "port": 5238,
+  "log_level": "info",
+  "data_path": "",
+  "cert_file": "",
+  "key_file": "",
+  "config_query": "",
+  "db_type": "postgres",
+  "dsn": "host=localhost user=postgres password=1234 dbname=pan-index port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+}

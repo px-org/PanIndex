@@ -1,0 +1,78 @@
+{{define "templates/pan/admin/cache.html"}}
+    {{template "templates/pan/admin/base.html" .}}
+{{end}}
+{{define "admin-cache"}}
+<div class="mdui-m-t-2">
+    <div class="mdui-typo mdui-p-b-2">
+        <h3> 缓存管理 <small>列表只展示部分信息，更详细的信息请使用搜索功能</small></h3>
+    </div>
+    <div class="mdui-table-fluid">
+        <div class="mdui-toolbar">
+            <div class="mdui-toolbar-spacer"></div>
+            <div class="mdui-textfield mdui-textfield-expandable mdui-float-left">
+                <button class="mdui-textfield-icon mdui-btn mdui-btn-icon" mdui-tooltip="{content: '搜索'}"><i class="mdui-icon material-icons">search</i></button>
+                <input id="searchKey" class="mdui-textfield-input" type="text" value="{{$.search_key}}" placeholder="请输入路径"/>
+                <button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
+            </div>
+        </div>
+
+        <table class="mdui-table mdui-table-hoverable mdui-table-selectable ">
+            <thead>
+            <tr>
+                <th>文件（夹）路径</th>
+                <th>缓存策略</th>
+                <th>缓存时间</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{- range $.cache}}
+            <tr>
+                <td>{{.FilePath}}</td>
+                <td>{{.CachePolicy}}</td>
+                <td>{{.CacheTime}}</td>
+                <td>
+                    <a href="javascript:void(0)" data-path="{{.FilePath}}" class="clearCacheBtn mdui-btn mdui-btn-icon mdui-btn-dense" mdui-tooltip="{content: '清理'}">
+                        <i class="mdui-icon material-icons">clear</i>
+                    </a>
+                    <a target="_blank" href="/api/v3/admin/cache?path={{.FilePath}}" class="mdui-btn mdui-btn-icon mdui-btn-dense" mdui-tooltip="{content: '查看数据（JSON）'}">
+                        <i class="mdui-icon material-icons">pageview</i>
+                    </a>
+                </td>
+            </tr>
+            {{- end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="cache_dialog" class="mdui-dialog">
+    <form id="configForm" onsubmit="return saveClearCache()">
+        <div class="mdui-dialog-content">
+            <div id="title" class="mdui-dialog-title">清理条件</div>
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">文件（夹）路径</label>
+                <input class="mdui-textfield-input" type="text" name="path" required>
+                <div class="mdui-textfield-helper mdui-typo mdui-text-color-purple">db缓存策略，清理后会重建</div>
+            </div>
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">是否递归清理子目录</label>
+                <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
+                    <label class="mdui-radio mdui-col">
+                        <input type="radio" name="isLoopChildren" checked value="0" />
+                        <i class="mdui-radio-icon"></i>
+                        是
+                    </label>
+                    <label class="mdui-radio mdui-col">
+                        <input type="radio" name="isLoopChildren" value="1" />
+                        <i class="mdui-radio-icon"></i>
+                        否
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="mdui-dialog-actions">
+            <button type="submit" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 保存</button>
+        </div>
+    </form>
+</div>
+{{end}}

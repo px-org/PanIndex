@@ -1,5 +1,5 @@
-{{define "pan/admin/common.html"}}
-    {{template "pan/admin/base.html" .}}
+{{define "templates/pan/admin/common.html"}}
+    {{template "templates/pan/admin/base.html" .}}
 {{end}}
 {{define "admin-common"}}
 <div class="mdui-m-t-2">
@@ -8,30 +8,25 @@
     </div>
     <form id="configForm">
         <div class="mdui-textfield">
-            <label class="mdui-textfield-label">绑定Host</label>
-            <input class="mdui-textfield-input" type="text" name="host" value="{{.Config.Host}}" required />
-            <div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
-        </div>
-        <div class="mdui-textfield">
-            <label class="mdui-textfield-label">绑定端口</label>
-            <input class="mdui-textfield-input" type="text" name="port" value="{{.Config.Port}}" required />
-            <div class="mdui-textfield-helper mdui-text-color-purple">重启生效</div>
-        </div>
-        <div class="mdui-textfield">
             <label class="mdui-textfield-label">网站标题</label>
-            <input class="mdui-textfield-input" type="text" name="site_name" value="{{.Config.SiteName}}" />
+            <input class="mdui-textfield-input" type="text" name="site_name" value="{{$.config.SiteName}}" />
             <div class="mdui-textfield-helper mdui-text-color-purple">显示优先于网盘名称</div>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">后台管理地址</label>
+            <input class="mdui-textfield-input" type="text" name="admin_path" value="{{$.config.AdminPath}}" />
+            <div class="mdui-textfield-helper mdui-text-color-purple">自定义后台地址，默认为<code>/admin</code></div>
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">首页账号切换</label>
             <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
                 <label class="mdui-radio mdui-col">
-                    <input type="radio" name="account_choose" {{if or (eq .Config.AccountChoose "default") (eq .Config.AccountChoose "") }}checked="checked"{{end}} value="default" />
+                    <input type="radio" name="account_choose" {{if or (eq $.config.AccountChoose "default") (eq $.config.AccountChoose "") }}checked="checked"{{end}} value="default" />
                     <i class="mdui-radio-icon"></i>
                     默认账号
                 </label>
                 <label class="mdui-radio mdui-col">
-                    <input type="radio" name="account_choose" {{if eq .Config.AccountChoose "display" }}checked="checked"{{end}} value="display" />
+                    <input type="radio" name="account_choose" {{if eq $.config.AccountChoose "display" }}checked="checked"{{end}} value="display" />
                     <i class="mdui-radio-icon"></i>
                     全部账号
                 </label>
@@ -39,25 +34,41 @@
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">后台登录密码</label>
-            <input class="mdui-textfield-input" type="password" name="admin_password" value="{{.Config.AdminPassword}}" placeholder="默认密码：PanIndex" required />
+            <input class="mdui-textfield-input" type="password" name="admin_password" value="{{$.config.AdminPassword}}" placeholder="默认密码：PanIndex" required />
             <div class="mdui-textfield-helper mdui-text-color-purple">如果是第一次运行，请务必修改默认密码！</div>
-        </div>
-        <div class="mdui-textfield">
-            <label class="mdui-textfield-label">接口 token</label>
-            <input class="mdui-textfield-input" type="text" name="api_token" value="{{.Config.ApiToken}}" placeholder="用于接口调用" required />
         </div>
         <div>
             <label class="mdui-textfield-label">排序</label>
             <select name="s_column" class="mdui-select" mdui-select="{position:'bottom'}">
-                <option value="default" {{- if eq .Config.SColumn "default"}}selected{{- end}}>网盘默认</option>
-                <option value="file_name" {{- if eq .Config.SColumn "file_name"}}selected{{- end}}>文件名</option>
-                <option value="file_size" {{- if eq .Config.SColumn "file_size"}}selected{{- end}}>文件大小</option>
+                <option value="default" {{- if eq $.config.SColumn "default"}}selected{{- end}}>网盘默认</option>
+                <option value="file_name" {{- if eq $.config.SColumn "file_name"}}selected{{- end}}>文件名</option>
+                <option value="file_size" {{- if eq $.config.SColumn "file_size"}}selected{{- end}}>文件大小</option>
                 <option value="last_op_time">修改时间</option>
             </select>
             <select name="s_order" class="mdui-select" mdui-select="{position:'bottom'}" style="margin-left: 10px">
-                <option value="asc" {{- if eq .Config.SOrder "asc"}}selected{{- end}}>升序</option>
-                <option value="desc" {{- if eq .Config.SOrder "desc"}}selected{{- end}}>降序</option>
+                <option value="asc" {{- if eq $.config.SOrder "asc"}}selected{{- end}}>升序</option>
+                <option value="desc" {{- if eq $.config.SOrder "desc"}}selected{{- end}}>降序</option>
             </select>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">静态资源cdn</label>
+            <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="cdn" {{- if eq $.config.Cdn "0"}}checked="checked"{{- end}} value="0" />
+                    <i class="mdui-radio-icon"></i>
+                    本机
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="cdn" {{- if eq $.config.Cdn "1"}}checked="checked"{{- end}} value="1" />
+                    <i class="mdui-radio-icon"></i>
+                    国内cdn
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="cdn" {{- if eq $.config.Cdn "2"}}checked="checked"{{- end}} value="2" />
+                    <i class="mdui-radio-icon"></i>
+                    jsdelivr
+                </label>
+            </div>
         </div>
         <div class="mdui-row-xs-1" style="margin-top: 20px">
             <div class="mdui-col">

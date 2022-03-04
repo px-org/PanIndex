@@ -73,6 +73,13 @@
     background: white;
 }
 
+@font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/materialicons/v125/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+}
+
 #prev {
     left: 15px;
 }
@@ -309,4 +316,15 @@ input:-webkit-autofill , textarea:-webkit-autofill, select:-webkit-autofill {
 
 input {
     background-color:transparent;
+}
+
+.md-content {
+    border-radius: 10px!important;
+}
+
+.br {
+    border-radius: 10px!important;
+}
+.playlist-active{
+    background-color: #cfd2e1
 }

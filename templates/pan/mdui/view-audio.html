@@ -1,43 +1,37 @@
-{{define "pan/mdui/view-audio.html"}}
-    {{template "pan/mdui/view-base.html" .}}
+{{define "templates/pan/mdui/view-audio.html"}}
+    {{template "templates/pan/mdui/view-base.html" .}}
 {{end}}
 {{define "content-audio"}}
-    <link rel="stylesheet" href="/static/lib/aplayer@1.10.1/dist/APlayer.min.css">
+    <link rel="stylesheet" href="{{index $.config.CdnFiles "APlayer@css"}}">
     <div class="mdui-valign" style="min-height: 300px">
         <div id="aplayer" class="mdui-center" style="width: 500px"></div>
     </div>
-    <script src="/static/lib/aplayer@1.10.1/dist/APlayer.min.js"></script>
+    <script src="{{index $.config.CdnFiles "APlayer@js"}}"></script>
     <script>
-        var path = $("#file_link").attr("data-path");
-        var mode = $("#file_link").attr("data-mode");
+        var path = $("#view_down_link").attr("data-path");
         var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
-        var url = "{{.DownloadUrl}}";
-        if(mode == "native" || mode == "ftp" || mode == "webdav"){
-            url = fullUrl;
-        }
-        var n = '{{ (index .List 0).FileName }}';
+        var n = '{{ (index $.fns 0).FileName }}';
         var formData = new FormData();
-        formData.append("accountId", "{{.AccountId}}");
-        formData.append("parentPath", "{{.ParentPath}}");
-        formData.append("mediaType", "2");
-        formData.append("sColumn", $.cookie("SColumn"));
-        formData.append("sOrder", $.cookie("SOrder"));
+        formData.append("path", "{{$.parent_path}}");
+        formData.append("viewType", "audio");
+        formData.append("sortColumn", Cookies.get("sort_column"));
+        formData.append("sortOrder", Cookies.get("sort_order"));
         var playList = [];
         var index = 0;
         $.ajax({
             method: 'POST',
-            url: "/api/public/files", //上传文件的请求路径必须是绝对路劲
+            url: "/api/v3/public/files", //上传文件的请求路径必须是绝对路劲
             data: formData,
             cache: false,
             contentType: false,
             processData: false,
             success: function (data) {
                 $.each(data.data, function(i, item){
-                    if(item.fileName == n){
+                    if(item.file_name == n){
                         index = i;
                     }
                     var v = {};
-                    var vname = item.fileName.split(".")[0];
+                    var vname = item.file_name.split(".")[0];
                     var ns = vname.split("-");
                     if(ns.length > 1){
                         v.artist = ns[0];
@@ -46,8 +40,8 @@
                         v.name = vname;
                         v.artist = '艺术家';
                     }
-                    v.url = item.fileName;
-                    v.cover = vname + '.jpg';
+                    v.url = item.file_name;
+                    v.cover = '/static/img/music-cover.png';
                     v.lrc = vname + '.lrc';
                     playList.push(v)
                 });
@@ -73,6 +67,5 @@
                 }
             }
         });
-
     </script>
 {{end}}

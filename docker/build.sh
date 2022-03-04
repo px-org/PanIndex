@@ -8,9 +8,9 @@ then
         | grep '"tag_name":' \
         | sed -E 's/.*"([^"]+)".*/\1/'`
 fi
-docker build -t "iicm/pan-index:amd64-${version}" .
+docker build -t "iicm/pan-index:amd64-${version}" --no-cache .
 cd arm64
-docker build -t "iicm/pan-index:arm64-${version}" .
+docker build -t "iicm/pan-index:arm64-${version}" --no-cache .
 docker push "iicm/pan-index:amd64-${version}"
 docker push "iicm/pan-index:arm64-${version}"
 docker manifest create "iicm/pan-index:${version}" "iicm/pan-index:amd64-${version}" "iicm/pan-index:arm64-${version}" --amend

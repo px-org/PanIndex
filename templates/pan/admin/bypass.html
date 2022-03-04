@@ -1,0 +1,74 @@
+{{define "templates/pan/admin/bypass.html"}}
+    {{template "templates/pan/admin/base.html" .}}
+{{end}}
+{{define "admin-bypass"}}
+<div class="mdui-m-t-2">
+    <div class="mdui-typo mdui-p-b-2">
+        <h3> 分流下载 <small>多账号分流访问&下载</small></h3>
+    </div>
+    <div class="mdui-table-fluid">
+        <div class="mdui-toolbar mdui-float-right">
+            <a id="addByPassBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '添加'}">
+                <i class="mdui-icon material-icons">add_circle</i>
+            </a>
+            <a id="updateByPassBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '修改'}">
+                <i class="mdui-icon material-icons">update</i>
+            </a>
+            <a id="delByPassBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '删除'}">
+                <i class="mdui-icon material-icons">remove_circle</i>
+            </a>
+        </div>
+        <table class="mdui-table mdui-table-hoverable mdui-table-selectable ">
+            <thead>
+            <tr>
+                <th>分流名称</th>
+                <th>绑定网盘</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{- range $bp := $.config.BypassList}}
+            <tr>
+                <td data-id="{{$bp.Id}}">{{$bp.Name}}</td>
+                <td data-accounts="{{- range $bp.Accounts}}{{.Id}},{{- end}}">
+                    {{- range $ac := $bp.Accounts}}
+                    <div class="mdui-chip">
+                        <span class="mdui-chip-title">{{$ac.Name}}</span>
+                    </div>
+                    {{- end}}
+                </td>
+            </tr>
+            {{- end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="bypass_dialog" class="mdui-dialog" style="min-height: 464px">
+    <form id="configForm" onsubmit="return saveBypass()">
+        <div class="mdui-dialog-content">
+            <div id="title" class="mdui-dialog-title">添加</div>
+            <div class="mdui-textfield">
+                <label class="mdui-textfield-label">分流名称</label>
+                <input type="hidden" name="id">
+                <input class="mdui-textfield-input" type="text" name="name" required>
+                <div class="mdui-textfield-helper mdui-typo mdui-text-color-purple">用于替代访问路径中的网盘名称, 添加后DB缓存策略的网盘需重新缓存</div>
+            </div>
+             <label class="mdui-textfield-label">绑定网盘</label>
+             <div class="mdui-list mdui-list-dense">
+                    {{- range $.config.Accounts}}
+                    <label class="mdui-list-item mdui-ripple">
+                        <i class="mdui-list-item-icon mdui-icon material-icons">face</i>
+                        <div class="mdui-list-item-content">{{.Name}}</div>
+                        <div class="mdui-checkbox">
+                            <input type="checkbox" name="bind_account" value="{{.Id}}"/>
+                            <i class="mdui-checkbox-icon"></i>
+                        </div>
+                    </label>
+                    {{- end}}
+            </div>
+        </div>
+        <div class="mdui-dialog-actions">
+            <button type="submit" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 保存</button>
+        </div>
+    </form>
+</div>
+{{end}}

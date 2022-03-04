@@ -1,5 +1,5 @@
-{{define "pan/admin/appearance.html"}}
-    {{template "pan/admin/base.html" .}}
+{{define "templates/pan/admin/appearance.html"}}
+    {{template "templates/pan/admin/base.html" .}}
 {{end}}
 {{define "admin-appearance"}}
 <div class="mdui-m-t-2">
@@ -10,29 +10,28 @@
         <div>
             <label class="mdui-textfield-label">主题</label>
             <select id="theme" name="theme" class="mdui-select" mdui-select>
-                <option value='mdui' {{if eq .Config.Theme "mdui"}}selected{{else}}{{end}}>mdui</option>
-                <option value='mdui-light' {{if eq .Config.Theme "mdui-light"}}selected{{else}}{{end}}>mdui-light</option>
-                <option value='mdui-dark' {{if eq .Config.Theme "mdui-dark"}}selected{{else}}{{end}}>mdui-dark</option>
-                <option value='bootstrap' {{if eq .Config.Theme "bootstrap"}}selected{{else}}{{end}}>bootstrap</option>
-                <option value='classic' {{if eq .Config.Theme "classic"}}selected{{else}}{{end}}>classic</option>
-                <option value='materialdesign' {{if eq .Config.Theme "materialdesign"}}selected{{else}}{{end}}>materialdesign</option>
+                <option value='mdui' {{if eq $.config.Theme "mdui"}}selected{{else}}{{end}}>mdui</option>
+                <option value='mdui-light' {{if eq $.config.Theme "mdui-light"}}selected{{else}}{{end}}>mdui-light</option>
+                <option value='mdui-dark' {{if eq $.config.Theme "mdui-dark"}}selected{{else}}{{end}}>mdui-dark</option>
+                <option value='bootstrap' {{if eq $.config.Theme "bootstrap"}}selected{{else}}{{end}}>bootstrap</option>
+                <option value='classic' {{if eq $.config.Theme "classic"}}selected{{else}}{{end}}>classic</option>
             </select>
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">网站图标(Favicon)</label>
-            <input class="mdui-textfield-input" type="text" name="favicon_url" placeholder="网站图标Url" value="{{.Config.FaviconUrl}}" />
+            <input class="mdui-textfield-input" type="text" name="favicon_url" placeholder="网站图标Url" value="{{$.config.FaviconUrl}}" />
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">自定义底部信息(Footer)</label>
-            <textarea class="mdui-textfield-input" type="text" name="footer" placeholder="支持html代码">{{.Config.Footer}}</textarea>
+            <textarea class="mdui-textfield-input" type="text" name="footer" placeholder="支持html代码">{{$.config.Footer}}</textarea>
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">自定义CSS</label>
-            <textarea class="mdui-textfield-input" type="text" name="css" placeholder="html代码片段">{{.Config.Css}}</textarea>
+            <textarea class="mdui-textfield-input" type="text" name="css" placeholder="html代码片段">{{$.config.Css}}</textarea>
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">自定义Javascript</label>
-            <textarea class="mdui-textfield-input" type="text" name="js" placeholder="html代码片段">{{.Config.Js}}</textarea>
+            <textarea class="mdui-textfield-input" type="text" name="js" placeholder="html代码片段">{{$.config.Js}}</textarea>
         </div>
         <div class="mdui-row-xs-1">
             <div class="mdui-col">

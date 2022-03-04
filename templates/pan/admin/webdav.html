@@ -1,0 +1,78 @@
+{{define "templates/pan/admin/webdav.html"}}
+    {{template "templates/pan/admin/base.html" .}}
+{{end}}
+{{define "admin-webdav"}}
+<div class="mdui-m-t-2">
+    <div class="mdui-typo mdui-p-b-2">
+        <h3> WebDav <small>可通过RaiDrive等工具挂载成本地磁盘</small> </h3>
+    </div>
+    <form id="configForm">
+        <div>
+            <label class="mdui-textfield-label">是否开启WebDav</label>
+            <label class="mdui-switch">
+                <input type="hidden" name="enable_dav" value="{{$.config.EnableDav}}">
+                <input id="enable_dav" type="checkbox" {{if eq $.config.EnableDav "1"}}checked{{else}}{{end}}/>
+                <i class="mdui-switch-icon"></i>
+            </label>
+        </div>
+        <div class="mdui-textfield">
+            <i class="mdui-icon material-icons">link</i>
+            <label class="mdui-textfield-label">路径</label>
+            <input class="mdui-textfield-input" name="dav_path" placeholder="/dav" required value="{{$.config.DavPath}}" />
+            <div class="mdui-textfield-helper mdui-text-color-purple">请求路径，开启后密码文件将无需授权，重启生效</div>
+        </div>
+        <div class="mdui-textfield">
+            <i class="mdui-icon material-icons">chrome_reader_mode</i>
+            <label class="mdui-textfield-label">访问权限</label>
+            <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
+                <label class="mdui-radio mdui-col">
+                    <input type="hidden" name="dav_mode" value="{{$.config.DavMode}}" />
+                    <input type="radio" name="dav_mode_group" value="0" {{if eq $.config.DavMode "0"}}checked{{else}}{{end}} />
+                    <i class="mdui-radio-icon"></i>
+                    只读
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="dav_mode_group" value="1" {{if eq $.config.DavMode "1"}}checked{{else}}{{end}}/>
+                    <i class="mdui-radio-icon"></i>
+                    读写
+                </label>
+            </div>
+        </div>
+        <div class="mdui-textfield">
+            <i class="mdui-icon material-icons">cloud_download</i>
+            <label class="mdui-textfield-label">下载行为</label>
+            <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
+                <label class="mdui-radio mdui-col">
+                    <input type="hidden" name="dav_down_mode" value="{{$.config.DavDownMode}}" />
+                    <input type="radio" name="dav_down_mode_group" value="0" {{if eq $.config.DavDownMode "0"}}checked{{else}}{{end}} />
+                    <i class="mdui-radio-icon"></i>
+                    302直链
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="dav_down_mode_group" value="1" {{if eq $.config.DavDownMode "1"}}checked{{else}}{{end}}/>
+                    <i class="mdui-radio-icon"></i>
+                    流量中转
+                </label>
+            </div>
+        </div>
+        <div class="mdui-textfield">
+            <i class="mdui-icon material-icons">account_circle</i>
+            <label class="mdui-textfield-label">用户名</label>
+            <input class="mdui-textfield-input" type="text" name="dav_user" value="{{$.config.DavUser}}">
+        </div>
+        <div class="mdui-textfield">
+            <i class="mdui-icon material-icons">lock</i>
+            <label class="mdui-textfield-label">密码</label>
+            <input class="mdui-textfield-input" type="password" name="dav_password" value="{{$.config.DavPassword}}">
+            <div class="mdui-textfield-helper mdui-text-color-purple">默认密码：1234</div>
+        </div>
+        <div class="mdui-row-xs-1 mdui-m-t-3">
+            <div class="mdui-col">
+                <button id="saveDavConfigBtn" type="button" class="mdui-btn mdui-color-brown mdui-ripple" value="1">
+                    <i class="mdui-icon material-icons">save</i> 保存
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{{end}}
