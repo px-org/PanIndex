@@ -1,6 +1,23 @@
-### [v3.0.0](https://github.com/libsgh/PanIndex/compare/v2.0.9...v3.0.0) (2021-12-20)
+### [v3.0.0](https://github.com/libsgh/PanIndex/compare/v2.0.9...v3.0.0) (2022-03-04)
 
-- TODO
+#### 注意：由于新版改动较大，建议重新安装，此为V3测试版本，如遇BUG请及时反馈
+1. 增加缓存策略（No Cache、Memory、Database）
+2. 完善各类网盘操作api（文件夹创建、复制、移动、删除等）
+3. 优化目录缓存慢
+4. 分流下载
+5. 某些浏览器 阿里云盘无法下载的问题
+6. 定时任务错乱
+7. 本地模式支持分片下载
+8. 提供WebDav服务
+9. 略缩图布局切换
+10. 自定义后台地址
+11. windows运行隐藏窗口
+12. mdui主题视频播放支持播放列表（自然排序）
+13. 多数据源支持：mysql、sqlite、postgres
+14. 静态资源CDN配置
+15. classic、bootstrap主题修复
+16. 密码目录访问优化
+17. 流量中转
 
 ### [v2.0.9](https://github.com/libsgh/PanIndex/compare/v2.0.8...v2.0.9) (2021-12-20)
 

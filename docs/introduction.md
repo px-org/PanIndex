@@ -8,7 +8,7 @@
   PanIndex的直链通过路径方式访问网盘中的文件，并可以直接下载，无需登录。
 
 - **支持多种网盘挂载**<br>
-  目前支持本地磁盘、天翼云盘、Teambition项目盘、阿里云盘、OneDrive，更多网盘添加中。
+  目前支持本地磁盘、天翼云盘、Teambition项目盘、阿里云盘、OneDrive，更多网盘不断添加中。
 
 - **多种主题**<br>
   mdui、bootstrap、materialdesign、classic、dark。
