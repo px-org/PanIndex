@@ -99,7 +99,7 @@ func LoadConfig() BootConfig {
 	port, _ := strconv.Atoi(LoadFromEnv("PORT", fmt.Sprintf("%d", *Port)))
 	config.Port = port
 	config.LogLevel = LoadFromEnv("LOG_LEVEL", *LogLevel)
-	config.DataPath = LoadFromEnv("PAN_INDEX_DATA_PATH", *DataPath)
+	config.DataPath = LoadFromEnv("DATA_PATH", *DataPath)
 	config.CertFile = LoadFromEnv("CERT_FILE", *CertFile)
 	config.KeyFile = LoadFromEnv("KEY_FILE", *KeyFile)
 	config.DbType = LoadFromEnv("DB_TYPE", *DbType)
@@ -187,11 +187,10 @@ func InitLog(lvl string) error {
 }
 
 func InitStaticBox(r *gin.Engine, fs embed.FS) {
-	if util.FileExist("./static") {
-		r.Static("/static", "./static")
-	} else {
-		r.StaticFS("/static", http.FS(fs))
-	}
+	r.Any("/static/*filepath", func(c *gin.Context) {
+		staticServer := http.FileServer(http.FS(fs))
+		staticServer.ServeHTTP(c.Writer, c.Request)
+	})
 }
 
 func Templates(fs embed.FS) *template.Template {
