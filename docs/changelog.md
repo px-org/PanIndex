@@ -1,3 +1,7 @@
+### [v3.0.0](https://github.com/libsgh/PanIndex/compare/v2.0.9...v3.0.0) (2021-12-20)
+
+- TODO
+
 ### [v2.0.9](https://github.com/libsgh/PanIndex/compare/v2.0.8...v2.0.9) (2021-12-20)
 
 ##### Bug Fixes

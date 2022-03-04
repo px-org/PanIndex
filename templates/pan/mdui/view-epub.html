@@ -1,17 +1,15 @@
-{{define "pan/mdui/view-epub.html"}}
-    {{template "pan/mdui/view-base.html" .}}
+{{define "templates/pan/mdui/view-epub.html"}}
+    {{template "templates/pan/mdui/view-base.html" .}}
 {{end}}
 {{define "content-epub"}}
-    <div class="mdui-shadow-2 mdui-clearfix" style="padding: 15px;margin: 15px;">
+    <div class="mdui-shadow-2 mdui-clearfix br" style="padding: 15px;margin: 10px;">
         <select id="toc" class="mdui-select mdui-center"></select>
         <div id="viewer" class="mdui-typo"></div>
         <a id="prev" href="#prev" class="arrow">‹</a>
         <a id="next" href="#next" class="arrow">›</a>
     </div>
-   <!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.min.js"></script> -->
-     <script src="/static/lib/jszip@3.1.5/jszip.min.js"></script>
-    <script src="/static/lib/epubjs@0.3.88/dist/epub.min.js"></script>
+    <script src="{{index $.config.CdnFiles "jszip@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "epub@js"}}"></script>
     <script>
         var path = $("#file_link").attr("data-path");
         var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);

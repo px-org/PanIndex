@@ -1,5 +1,5 @@
-{{define "pan/admin/safety.html"}}
-    {{template "pan/admin/base.html" .}}
+{{define "templates/pan/admin/safety.html"}}
+    {{template "templates/pan/admin/base.html" .}}
 {{end}}
 {{define "admin-safety"}}
 <div class="mdui-m-t-2">
@@ -9,21 +9,21 @@
     <form id="configForm">
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">许可域名</label>
-            <input class="mdui-textfield-input" name="only_referrer" value="{{.Config.OnlyReferrer}}" />
-            <div class="mdui-textfield-helper mdui-text-color-purple">允许的 Referrer，英文,分隔，例：baidu.com,noki.icu</div>
+            <input class="mdui-textfield-input" name="only_referrer" value="{{$.config.OnlyReferrer}}" placeholder="支持正则" />
+            <div class="mdui-textfield-helper mdui-text-color-purple">允许的 Referrer，英文<code>,</code>分隔，例：baidu.com,google.com,^[a-zA-Z0-9_]{1,10}\.xxxx\.com</div>
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label"></label>
             <div class="mdui-row-md-3 mdui-row-sm-2" style="margin-left: 50px">
                 <label class="mdui-checkbox mdui-col">
-                    <input type="hidden" name="enable_safety_link" value="{{.Config.EnableSafetyLink}}" />
-                    <input type="checkbox" id="enable_safety_link" {{if eq .Config.EnableSafetyLink "1"}}checked{{else}}{{end}} />
+                    <input type="hidden" name="enable_safety_link" value="{{$.config.EnableSafetyLink}}" />
+                    <input type="checkbox" id="enable_safety_link" {{if eq $.config.EnableSafetyLink "1"}}checked{{else}}{{end}} />
                     <i class="mdui-checkbox-icon"></i>
                     启用防盗链
                 </label>
                 <label class="mdui-checkbox mdui-col">
-                    <input type="hidden" name="is_null_referrer" value="{{.Config.IsNullReferrer}}" />
-                    <input type="checkbox" id="is_null_referrer" {{if eq .Config.IsNullReferrer "1"}}checked{{else}}{{end}} />
+                    <input type="hidden" name="is_null_referrer" value="{{$.config.IsNullReferrer}}" />
+                    <input type="checkbox" id="is_null_referrer" {{if eq $.config.IsNullReferrer "1"}}checked{{else}}{{end}} />
                     <i class="mdui-checkbox-icon"></i>
                     允许空Referrer请求
                 </label>

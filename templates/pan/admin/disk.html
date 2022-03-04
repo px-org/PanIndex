@@ -1,5 +1,5 @@
-{{define "pan/admin/disk.html"}}
-    {{template "pan/admin/base.html" .}}
+{{define "templates/pan/admin/disk.html"}}
+    {{template "templates/pan/admin/base.html" .}}
 {{end}}
 {{define "admin-disk"}}
 <div class="mdui-m-t-2">
@@ -13,6 +13,9 @@
             </a>
             <a id="updateDiskBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '修改'}">
                 <i class="mdui-icon material-icons">update</i>
+            </a>
+            <a id="cacheConfig" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '缓存设置'}">
+                <i class="mdui-icon material-icons">branding_watermark</i>
             </a>
             <a id="openUploadDialog" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件上传'}">
                 <i class="mdui-icon material-icons">cloud_upload</i>
@@ -33,16 +36,17 @@
                 <th>网盘名称</th>
                 <th>网盘类型</th>
                 <th>登录状态</th>
+                <th>缓存策略</th>
                 <th>缓存状态</th>
                 <th>文件总数</th>
-                <th>上一次缓存</th>
+                <th>上一次更新</th>
                 <th>耗时</th>
             </tr>
             </thead>
             <tbody id="items">
-            {{- if gt (len .Config.Accounts) 0 }}
-            {{- range .Config.Accounts}}
-            <tr data-id="{{.Id}}">
+            {{- if gt (len $.config.Accounts) 0 }}
+            {{- range $.config.Accounts}}
+            <tr data-id="{{.Id}}" data-name="{{.Name}}" data-sync-dir="{{.SyncDir}}" data-expire-timespan="{{.ExpireTimeSpan}}" data-sync-child="{{.SyncChild}}" data-cache-policy="{{.CachePolicy}}" data-sync-cron="{{.SyncCron}}">
                 <td>
                     <div class="mdui-chip handle">
                         {{- if eq .Mode "cloud189"}}
@@ -99,26 +103,33 @@
                 {{- end}}
                 </td>
                 <td>
-                    {{- if eq .Mode "native"}}
-                        -
+                    {{- if eq .CookieStatus 1}}
+                    未刷新
+                    {{- else if eq .CookieStatus 2}}
+                    正常
+                    {{- else if eq .CookieStatus 3}}
+                    失效
+                    {{- else if eq .CookieStatus 4}}
+                    登录失败
+                    {{- else if eq .CookieStatus -1}}
+                    刷新中
                     {{- else}}
-                        {{- if eq .CookieStatus 1}}
-                            未刷新
-                        {{- else if eq .CookieStatus 2}}
-                            正常
-                        {{- else if eq .CookieStatus 3}}
-                            失效
-                        {{- else if eq .CookieStatus 4}}
-                            登录失败
-                        {{- else if eq .CookieStatus -1}}
-                            刷新中
-                        {{- else}}
-                            未知
-                        {{- end}}
+                    -
                     {{- end}}
                 </td>
                 <td>
-                    {{- if eq .Mode "native"}}
+                    {{- if eq .CachePolicy "nc"}}
+                    API直连(No Cache)
+                    {{- else if eq .CachePolicy "mc"}}
+                    命中缓存（Memory）
+                    {{- else if eq .CachePolicy "dc"}}
+                    完全缓存（DB）
+                    {{- else}}
+                    -
+                    {{- end}}
+                </td>
+                <td>
+                    {{- if ne .CachePolicy "dc"}}
                         -
                     {{- else}}
                         {{- if eq .Status 1}}
@@ -135,21 +146,21 @@
                     {{- end}}
                 </td>
                 <td>
-                    {{- if eq .Mode "native"}}
+                    {{- if ne .CachePolicy "dc"}}
                     -
                     {{- else}}
                     {{.FilesCount}}
                     {{- end}}
                 </td>
                 <td>
-                    {{- if eq .Mode "native"}}
+                    {{- if ne .CachePolicy "dc"}}
                     -
                     {{- else}}
                     {{.LastOpTime}}
                     {{- end}}
                 </td>
                 <td>
-                    {{- if eq .Mode "native"}}
+                    {{- if ne .CachePolicy "dc"}}
                     -
                     {{- else}}
                     {{.TimeSpan}}
@@ -186,13 +197,13 @@
                 <option value="yun139">和彩云</option>
                 <option value="onedrive">OneDrive</option>
                 <option value="onedrive-cn">OneDrive世纪互联</option>
-                <option value="googledrive">GoogleDrive（测试版）</option>
+                <option value="googledrive">GoogleDrive</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">account_circle</i>
             <label class="mdui-textfield-label" id="user_label">用户名</label>
-            <input class="mdui-textfield-input" type="text" name="user" required>
+            <input class="mdui-textfield-input" type="text" name="user">
         </div>
         <div id="PasswordDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">lock</i>
@@ -208,11 +219,23 @@
             <i class="mdui-icon material-icons">refresh</i>
             <label class="mdui-textfield-label">刷新令牌（Refresh Token）</label>
             <input class="mdui-textfield-input" type="text" name="refresh_token">
+            <div class="mdui-textfield-helper"><a id="aliQrCodeBtn" href="javascript:void(0)">点击获取</a></div>
+        </div>
+        <div id="qrcodeDiv" class="mdui-card" style="margin-left: 50px;width: 92%;height: 202px;display: none">
+            <div class="mdui-card-content">
+                <img id="qrcodeImg" class="mdui-center" style="height: 150px" src="">
+                <button id="refreshQrcodeBtn" class="mdui-btn mdui-btn-dense mdui-color-teal mdui-ripple mdui-center">刷新二维码</button>
+            </div>
         </div>
         <div id="RedirectUriDiv" class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">insert_link</i>
             <label class="mdui-textfield-label">重定向地址</label>
             <input class="mdui-textfield-input" type="text" name="redirect_uri" placeholder="https://mgaa.noki.workers.dev">
+        </div>
+        <div id="SiteIdDiv" class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
+            <i class="mdui-icon material-icons">web</i>
+            <label class="mdui-textfield-label" id="site_label">网站ID</label>
+            <input class="mdui-textfield-input" type="text" name="site_id">
         </div>
         <div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
             <i class="mdui-icon material-icons">folder_open</i>
@@ -220,24 +243,18 @@
             <input class="mdui-textfield-input" type="text" name="root_id" required>
             <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
         </div>
-        <div class="sync-div mdui-textfield mdui-textfield-has-bottom">
-            <i class="mdui-icon material-icons">schedule</i>
-            <label class="mdui-textfield-label">定时刷新缓存</label>
-            <input class="mdui-textfield-input" type="text" name="sync_cron" placeholder="0 0 4 1/1 * ?" value="{{.SyncCron}}" />
-            <div class="mdui-textfield-helper mdui-text-color-purple">为空将关闭定时缓存，<a href="https://cron.qqe2.com/" target="_blank">cron表达式在线生成</a></div>
-        </div>
-        <div class="sync-div mdui-textfield mdui-textfield-has-bottom">
-            <i class="mdui-icon material-icons">folder_open</i>
-            <label class="mdui-textfield-label">定时缓存目录</label>
-            <input class="mdui-textfield-input" type="text" name="sync_dir" value="/" placeholder="/">
-            <div class="mdui-textfield-helper">定时任务只更新某个目录的缓存， 默认缓存全部</div>
-        </div>
-        <div class="sync-div" style="margin-left: 50px;margin-top: 10px;margin-bottom: 10px">
+        <div style="margin-left: 50px;margin-top: 10px;margin-bottom: 10px">
             <label class="mdui-checkbox">
-                <input type="checkbox" name="sync_child" value="0" checked/>
+                <input type="checkbox" name="down_transfer"/>
                 <i class="mdui-checkbox-icon"></i>
-                缓存是否包含子目录
+                流量中转
             </label>
+        </div>
+        <div class="mdui-textfield mdui-textfield-has-bottom">
+            <i class="mdui-icon material-icons">insert_link</i>
+            <label class="mdui-textfield-label">中转地址</label>
+            <input class="mdui-textfield-input" type="text" name="transfer_domain" placeholder="原域名|中转域名">
+            <div class="mdui-textfield-helper">为空将在本机中转， 多个,分隔</div>
         </div>
         </form>
     </div>
@@ -245,6 +262,51 @@
         <button id="saveAccountBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 保存</button>
         <button id="closeAccountBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600"><i class="mdui-icon material-icons">close</i> 关闭</button>
     </div>
+</div>
+<div id="cache_config_dialog" class="mdui-dialog">
+    <form id="cacheConfigForm" onsubmit="return saveCacheConfig()">
+    <div class="mdui-dialog-content">
+        <div class="mdui-dialog-title">缓存配置</div>
+            <div>
+                <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">缓存策略</label>
+                <input type="hidden" name="id" value="">
+                <select id="cachePolicy" name="cache_policy" style="margin-left: 50px">
+                    <option value="nc" selected>Api直连（No Cache）</option>
+                    <option value="mc">命中缓存（Memory Cache）</option>
+                    <option value="dc">完全缓存（Database Cache）</option>
+                </select>
+            </div>
+            <div class="memoryCacheConfigDiv mdui-textfield mdui-textfield-has-bottom">
+                <i class="mdui-icon material-icons">schedule</i>
+                <label class="mdui-textfield-label">内存缓存有效期</label>
+                <input class="mdui-textfield-input" type="text" name="expire_time_span" placeholder="1" value="{{.ExpireTimeSpan}}" />
+                <div class="mdui-textfield-helper mdui-text-color-purple">单位是小时</div>
+            </div>
+            <div class="dbCacheConfigDiv mdui-textfield mdui-textfield-has-bottom">
+                <i class="mdui-icon material-icons">schedule</i>
+                <label class="mdui-textfield-label">定时刷新缓存</label>
+                <input class="mdui-textfield-input" type="text" name="sync_cron" placeholder="0 0 4 1/1 * ?" value="{{.SyncCron}}" />
+                <div class="mdui-textfield-helper mdui-text-color-purple">为空将关闭定时缓存，<a href="https://cron.qqe2.com/" target="_blank">cron表达式在线生成</a></div>
+            </div>
+            <div class="dbCacheConfigDiv mdui-textfield mdui-textfield-has-bottom">
+                <i class="mdui-icon material-icons">folder_open</i>
+                <label class="mdui-textfield-label">定时缓存目录</label>
+                <input class="mdui-textfield-input" type="text" name="sync_dir" value="/" placeholder="/">
+                <div class="mdui-textfield-helper">定时任务只更新某个目录的缓存， 默认缓存全部</div>
+            </div>
+            <div class="dbCacheConfigDiv" style="margin-left: 50px;margin-top: 10px;margin-bottom: 10px">
+                <label class="mdui-checkbox">
+                    <input type="checkbox" name="sync_child" value="0" checked/>
+                    <i class="mdui-checkbox-icon"></i>
+                    缓存是否包含子目录
+                </label>
+            </div>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button type="submit" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 确定</button>
+        <button type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600" mdui-dialog-cancel><i class="mdui-icon material-icons">close</i> 关闭</button>
+    </div>
+    </form>
 </div>
 <div id="refresh_cache_dialog" class="mdui-dialog">
     <div class="mdui-dialog-content">
@@ -255,7 +317,7 @@
                 <label class="mdui-textfield-label">远程目录(PanIndex路径)</label>
                 <input type="hidden" name="account_id" />
                 <input class="mdui-textfield-input" name="cache_folder" type="text" value="/" placeholder="/" required="required"/>
-                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的虚拟路径，不需要带盘符<code>/d_0</code></div>
+                <div class="mdui-textfield-helper"><code>PanIndex</code>的虚拟路径，格式：<code>/{name}/a/b</code></div>
             </div>
         </form>
     </div>
@@ -278,7 +340,7 @@
                 <label class="mdui-textfield-label">远程目录(PanIndex路径)</label>
                 <input type="hidden" name="account_id" />
                 <input class="mdui-textfield-input" name="upload_folder" type="text" value="/" placeholder="/" required="required"/>
-                <div class="mdui-textfield-helper">这里是<code>PanIndex</code>的虚拟路径，不需要带盘符<code>/d_0</code></div>
+                <div class="mdui-textfield-helper"><code>PanIndex</code>的虚拟路径，格式：<code>/{name}/a/b</code></div>
             </div>
         </form>
     </div>

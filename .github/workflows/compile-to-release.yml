@@ -3,12 +3,26 @@ on:
   release:
     types: [created]
 jobs:
-  releases-matrix:
-    name: Release Go Binary
-    runs-on: ubuntu-latest
-   # if: github.event.repository.owner.id == github.event.sender.id
+  release:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        go-version: [1.17]
+    name: PanIndex Release
+    runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: libsgh/PanIndex-release-action@master
+      - name: Setup Go
+        uses: actions/setup-go@v2
         with:
-          github_token: ${{ secrets.GH_TOKEN }}
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          ref: master
+      - name: Build PanIndex
+        uses: libsgh/PanIndex-build-action@main
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: /home/runner/work/PanIndex/PanIndex/dist/compress/*

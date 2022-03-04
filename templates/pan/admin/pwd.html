@@ -1,5 +1,5 @@
-{{define "pan/admin/pwd.html"}}
-    {{template "pan/admin/base.html" .}}
+{{define "templates/pan/admin/pwd.html"}}
+    {{template "templates/pan/admin/base.html" .}}
 {{end}}
 {{define "admin-pwd"}}
 <div class="mdui-m-t-2">
@@ -21,43 +21,39 @@
         <table class="mdui-table mdui-table-hoverable mdui-table-selectable ">
             <thead>
             <tr>
-                <th>文件（夹）ID</th>
+                <th>文件（夹）路径</th>
                 <th>访问密码</th>
             </tr>
             </thead>
             <tbody>
-            {{- if gt (len .PwdDirs) 0 }}
-            {{- range .PwdDirs}}
+            {{- range $filePath, $password := $.config.PwdFiles}}
             <tr>
-                <td>{{.FileId}}</td>
-                <td>{{.Password}}</td>
+                <td>{{$filePath}}</td>
+                <td>{{$password}}</td>
             </tr>
-            {{- end}}
             {{- end}}
             </tbody>
         </table>
     </div>
 </div>
 <div id="pwd_dialog" class="mdui-dialog">
-    <form id="configForm" onsubmit="return savePwddir()">
+    <form id="configForm" onsubmit="return savePwdFile()">
         <div class="mdui-dialog-content">
             <div id="title" class="mdui-dialog-title">添加</div>
-                <input type="hidden" name="pwd_dir_id" value="{{.Config.PwdDirId}}" />
                 <div class="mdui-textfield">
                     <i class="mdui-icon material-icons">folder_open</i>
-                    <label class="mdui-textfield-label">文件（夹）ID</label>
-                    <input class="mdui-textfield-input" type="text" id="file_id" required>
-                    <div class="mdui-textfield-helper mdui-typo">网盘中的原始文件ID，不同的网盘类型格式可能不同，<a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e7%9b%ae%e5%bd%95id%ef%bc%9f" target="_blank">获取方式</a></div>
+                    <label class="mdui-textfield-label">文件（夹）路径</label>
+                    <input class="mdui-textfield-input" type="text" name="file_path" required>
+                    <div class="mdui-textfield-helper mdui-typo"><code>PanIndex</code>的虚拟路径，格式：<code>/{name}/a/b</code></code></div>
                 </div>
                 <div class="mdui-textfield">
                     <i class="mdui-icon material-icons">lock_outline</i>
                     <label class="mdui-textfield-label">访问密码</label>
-                    <input class="mdui-textfield-input" type="text" id="pwd" required>
+                    <input class="mdui-textfield-input" type="text" name="password" required>
                 </div>
-
         </div>
         <div class="mdui-dialog-actions">
-            <button type="submit" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 保存</button>
+            <button type="submit" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown" mdui-dialog-confirm><i class="mdui-icon material-icons">save</i> 保存</button>
         </div>
     </form>
 </div>
