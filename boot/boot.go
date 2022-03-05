@@ -207,8 +207,12 @@ func InitLog(lvl string) error {
 
 func InitStaticBox(r *gin.Engine, fs embed.FS) {
 	r.Any("/static/*filepath", func(c *gin.Context) {
-		staticServer := http.FileServer(http.FS(fs))
-		staticServer.ServeHTTP(c.Writer, c.Request)
+		if util.FileExist("./static") {
+			r.Static("/static", "./static")
+		} else {
+			staticServer := http.FileServer(http.FS(fs))
+			staticServer.ServeHTTP(c.Writer, c.Request)
+		}
 	})
 }
 
