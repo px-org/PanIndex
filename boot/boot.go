@@ -23,9 +23,15 @@ import (
 	"strings"
 )
 
-func Init() BootConfig {
+func Init() (BootConfig, bool) {
 	//load config
 	config := LoadConfig()
+	//Print config
+	configStr, _ := jsoniter.MarshalToString(config)
+	result := PrintConfig(config.ConfigQuery, configStr)
+	if result {
+		return config, true
+	}
 	//Create data dir
 	config = CreatDataDir(config)
 	//int log level
@@ -38,13 +44,26 @@ func Init() BootConfig {
 	InitDb(config)
 	// init global config
 	dao.InitGlobalConfig()
+	configStr, _ = jsoniter.MarshalToString(module.GloablConfig)
+	result = PrintConfig(config.ConfigQuery, configStr)
 	//init accounts auth login
 	for _, account := range module.GloablConfig.Accounts {
 		dao.SyncAccountStatus(account)
 	}
 	//init all jobs
 	jobs.Run()
-	return config
+	return config, result
+}
+
+func PrintConfig(query string, config string) bool {
+	if query != "" {
+		v := jsoniter.Get([]byte(config), query).ToString()
+		if v != "" {
+			fmt.Print(v)
+			return true
+		}
+	}
+	return false
 }
 
 func CreatDataDir(config BootConfig) BootConfig {
@@ -92,7 +111,7 @@ func LoadConfig() BootConfig {
 	var Dsn = flag.String("dsn", "", "database connection url")
 	flag.Parse()
 	config, err := LoadFromFile(*Config)
-	if err == nil {
+	if err == nil && *ConfigQuery != "" && *ConfigQueryOld != "" {
 		return *config
 	}
 	config.Host = LoadFromEnv("HOST", *Host)
