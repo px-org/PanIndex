@@ -5,6 +5,7 @@
 package webdav
 
 import (
+	"fmt"
 	"github.com/libsgh/PanIndex/control/middleware"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -46,10 +47,26 @@ func (fs *FileSystem) File(account module.Account, path, fullPath string) (modul
 }
 
 func (fs *FileSystem) Files(account module.Account, path, fullPath string) []module.FileNode {
-	if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
-		return service.AccountsToNodes()
+	fns := []module.FileNode{}
+	if fullPath == "/" {
+		for _, ac := range module.GloablConfig.Accounts {
+			fn := module.FileNode{
+				FileId:     fmt.Sprintf("/%s", ac.Name),
+				IsFolder:   true,
+				FileName:   ac.Name,
+				FileSize:   int64(ac.FilesCount),
+				SizeFmt:    "-",
+				FileType:   "",
+				Path:       fmt.Sprintf("/%s", ac.Name),
+				ViewType:   "",
+				LastOpTime: ac.LastOpTime,
+				ParentId:   "",
+			}
+			fns = append(fns, fn)
+		}
+		return fns
 	} else {
-		fns := service.Files(account, path, fullPath)
+		fns = service.Files(account, path, fullPath)
 		return fns
 	}
 }
