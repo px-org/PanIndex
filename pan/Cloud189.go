@@ -201,6 +201,7 @@ func (c Cloud189) ToFileNode2(item Cloud189FileResp) (module.FileNode, error) {
 	fn := module.FileNode{}
 	fn.Id = uuid.NewV4().String()
 	fn.FileId = item.FileID
+	fn.ParentId = item.ParentID
 	fn.FileName = item.FileName
 	fn.CreateTime = time.Unix(0, item.CreateTime*int64(time.Millisecond)).Format("2006-01-02 15:04:05")
 	fn.LastOpTime = time.Unix(0, item.LastOpTime*int64(time.Millisecond)).Format("2006-01-02 15:04:05")
