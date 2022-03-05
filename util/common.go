@@ -17,6 +17,7 @@ import (
 	math_rand "math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -711,4 +712,12 @@ func GetOffsetByRange(rangeStr string) uint64 {
 func GetMimeTypeByExt(ext string) string {
 	mimeType := mime.DetectFileExt(ext)
 	return mimeType
+}
+
+func FileExist(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return os.IsExist(err)
+	}
+	return true
 }
