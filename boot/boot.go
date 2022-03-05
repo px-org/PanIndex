@@ -99,43 +99,57 @@ func InitDb(config BootConfig) {
 //config.json > env > flag
 func LoadConfig() BootConfig {
 	var Config = flag.String("c", "config.json", "config.json")
-	var Host = flag.String("host", "0.0.0.0", "bind host, default 0.0.0.0")
-	var Port = flag.Int("port", 5238, "bind port, default 5238")
-	var LogLevel = flag.String("log_level", "info", "log level: debug, info")
+	var Host = flag.String("host", "", "bind host, default 0.0.0.0")
+	var Port = flag.String("port", "", "bind port, default 5238")
+	var LogLevel = flag.String("log_level", "", "log level: debug, info")
 	var DataPath = flag.String("data_path", "", "data storage directory, default program sibling directory")
 	var CertFile = flag.String("cert_file", "", "https cert file, /path/to/test.pem")
 	var KeyFile = flag.String("key_file", "", "https key file, /path/to/test.key")
 	var ConfigQueryOld = flag.String("cq", "", "config query old version, e.g. port")
 	var ConfigQuery = flag.String("config_query", "", "config query new version, e.g. port")
-	var DbType = flag.String("db_type", "sqlite", "dao type, e.g. sqlite,mysql,postgres...")
+	var DbType = flag.String("db_type", "", "dao type, e.g. sqlite,mysql,postgres...")
 	var Dsn = flag.String("dsn", "", "database connection url")
 	flag.Parse()
 	config, err := LoadFromFile(*Config)
 	if err == nil && *ConfigQuery != "" && *ConfigQueryOld != "" {
 		return *config
 	}
-	config.Host = LoadFromEnv("HOST", *Host)
-	port, _ := strconv.Atoi(LoadFromEnv("PORT", fmt.Sprintf("%d", *Port)))
-	config.Port = port
-	config.LogLevel = LoadFromEnv("LOG_LEVEL", *LogLevel)
-	config.DataPath = LoadFromEnv("DATA_PATH", *DataPath)
-	config.CertFile = LoadFromEnv("CERT_FILE", *CertFile)
-	config.KeyFile = LoadFromEnv("KEY_FILE", *KeyFile)
-	config.DbType = LoadFromEnv("DB_TYPE", *DbType)
-	config.Dsn = LoadFromEnv("DSN", *Dsn)
-	config.ConfigQuery = *ConfigQuery
+	config.Host = LoadFromEnv("HOST", *Host, config.Host)
+	if config.Host == "" {
+		config.Host = "0.0.0.0"
+	}
+	portStr := LoadFromEnv("PORT", *Port, strconv.Itoa(config.Port))
+	if portStr == "" {
+		config.Port = 5238
+	} else {
+		port, _ := strconv.Atoi(portStr)
+		config.Port = port
+	}
+	config.LogLevel = LoadFromEnv("LOG_LEVEL", *LogLevel, config.LogLevel)
+	if config.LogLevel == "" {
+		config.LogLevel = "info"
+	}
+	config.DataPath = LoadFromEnv("DATA_PATH", *DataPath, config.DataPath)
+	config.CertFile = LoadFromEnv("CERT_FILE", *CertFile, config.CertFile)
+	config.KeyFile = LoadFromEnv("KEY_FILE", *KeyFile, config.KeyFile)
+	config.DbType = LoadFromEnv("DB_TYPE", *DbType, config.DbType)
+	config.Dsn = LoadFromEnv("DSN", *Dsn, config.Dsn)
+	config.ConfigQuery = LoadFromEnv("CONFIG_QUERY", *ConfigQuery, config.ConfigQuery)
 	if *ConfigQueryOld != "" {
 		config.ConfigQuery = *ConfigQueryOld
 	}
 	return *config
 }
 
-func LoadFromEnv(key string, def string) string {
+func LoadFromEnv(key string, def, cv string) string {
 	value := os.Getenv(key)
 	if value != "" {
 		return value
 	}
-	return def
+	if def != "" {
+		return def
+	}
+	return cv
 }
 
 func LoadFromFile(path string) (*BootConfig, error) {
