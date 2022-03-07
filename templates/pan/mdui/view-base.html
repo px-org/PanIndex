@@ -116,7 +116,7 @@
                                 <a id="view_next" href="{{$.next_file}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '下一个'}"><i class="mdui-icon material-icons">chevron_right</i></a>
                             {{- end}}
                             <button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq $.theme "mdui-dark"}}5{{else}}4{{end}}</i></button>
-                            <button class="mdui-btn mdui-btn-icon" id="history_play_list_btn" mdui-menu="{target: '#history_play_list_menu'}" mdui-tooltip="{content: '播放历史'}"><i class="mdui-icon material-icons">playlist_play</i></button>
+                            <button class="mdui-btn mdui-btn-icon" id="history_play_list_btn" mdui-menu="{target: '#history_play_list_menu'}" mdui-tooltip="{content: '播放历史'}" style="display: none"><i class="mdui-icon material-icons">playlist_play</i></button>
                             <ul class="mdui-menu mdui-menu-cascade" id="history_play_list_menu"></ul>
                             <ul id="share-menu" class="mdui-menu" data-fp="{{ $.full_path }}"  data-file-type="1" data-aid="{{ $.account.Id }}">
                                 <li class="mdui-divider"></li>

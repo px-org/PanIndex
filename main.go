@@ -14,7 +14,10 @@ var fs embed.FS
 
 func main() {
 	//boot init
-	config := boot.Init()
+	config, result := boot.Init()
+	if result {
+		return
+	}
 	r := gin.New()
 	r.Use(gin.Logger(), middleware.RequestCancelRecover())
 	//set html templates

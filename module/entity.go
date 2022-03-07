@@ -158,6 +158,7 @@ type Ali struct {
 type Cloud189 struct {
 	Cloud189Session *resty.Client
 	SessionKey      string `json:"session_key"`
+	AccessToken     string `json:"access_token"`
 	RootId          string `json:"root_id"`
 	FamilyId        string `json:"family_id"`
 }

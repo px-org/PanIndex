@@ -12,6 +12,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 )
@@ -97,7 +98,10 @@ func (c Cloud189) AuthLogin(account *module.Account) (string, error) {
 			return "", err
 		}
 		sessionKey := jsoniter.Get(resp.Body(), "sessionKey").ToString()
-		CLoud189s[account.Id] = module.Cloud189{base, sessionKey, "", ""}
+		resp, err = base.SetRedirectPolicy(resty.FlexibleRedirectPolicy(3)).R().Get("https://api.cloud.189.cn/open/oauth2/ssoH5.action")
+		v, _ := url.ParseQuery(resp.Header().Get("location"))
+		accessToken := v.Get("https://h5.cloud.189.cn/index.html?accessToken")
+		CLoud189s[account.Id] = module.Cloud189{base, sessionKey, accessToken, account.RootId, ""}
 		return fmt.Sprintf("cloud189 login success [%s]", time.Now()), nil
 	} else if restCode == -2 {
 		return "", LoginCaptcha
@@ -201,6 +205,7 @@ func (c Cloud189) ToFileNode2(item Cloud189FileResp) (module.FileNode, error) {
 	fn := module.FileNode{}
 	fn.Id = uuid.NewV4().String()
 	fn.FileId = item.FileID
+	fn.ParentId = item.ParentID
 	fn.FileName = item.FileName
 	fn.CreateTime = time.Unix(0, item.CreateTime*int64(time.Millisecond)).Format("2006-01-02 15:04:05")
 	fn.LastOpTime = time.Unix(0, item.LastOpTime*int64(time.Millisecond)).Format("2006-01-02 15:04:05")
@@ -436,15 +441,23 @@ func (c Cloud189) Copy(account module.Account, fileId, targetFileId string, over
 }
 
 func (c Cloud189) GetDownloadUrl(account module.Account, fileId string) (string, error) {
-	session := CLoud189s[account.Id].Cloud189Session
-	req := session.R()
-	dRedirectRep, err := req.
-		SetHeader("accept", "application/json;charset=UTF-8").
-		SetQueryParams(map[string]string{
-			"noCache": util.Random(),
-			"fileId":  fileId,
+	cloud189 := CLoud189s[account.Id]
+	session := cloud189.Cloud189Session
+	timestamp := fmt.Sprintf("%d", int(time.Now().UTC().UnixNano()/1e6))
+	dRedirectRep, err := resty.New().R().
+		SetHeaders(map[string]string{
+			"accept":      "application/json;charset=UTF-8",
+			"accesstoken": cloud189.AccessToken,
+			"sign-type":   "1",
+			"signature": util.Md5Params(map[string]string{
+				"AccessToken": cloud189.AccessToken,
+				"fileId":      fileId,
+				"Timestamp":   timestamp,
+			}),
+			"timestamp": timestamp,
 		}).
-		Get("https://cloud.189.cn/api/open/file/getFileDownloadUrl.action")
+		SetQueryParam("fileId", fileId).
+		Get("https://api.cloud.189.cn/open/file/getFileDownloadUrl.action")
 	if err != nil {
 		log.Error(err)
 		return "", err

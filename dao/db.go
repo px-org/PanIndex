@@ -308,8 +308,10 @@ func SyncFilesCache(account module.Account) {
 	t1 := time.Now()
 	dbFile := module.FileNode{}
 	result := DB.Raw("select * from file_node where path=? and is_delete=0 and account_id=?", account.SyncDir, account.Id).Take(&dbFile)
+	isRoot := false
 	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		account.RootId = dbFile.FileId
+		isRoot = true
 	}
 	//cache new files
 	LoopCreateFiles(account, account.RootId, account.SyncDir, 0, 0)
@@ -319,15 +321,14 @@ func SyncFilesCache(account module.Account) {
 	status := 3
 	if int(fileNodeCount) > 0 {
 		status = 2
-		/*if account.SyncDir == "/" {
+		if isRoot {
 			//删除旧数据
 			DB.Where("account_id=? and is_delete=0", account.Id).Delete(module.FileNode{})
 			//暴露新数据
 			DB.Table("file_node").Where("account_id=?", account.Id).Update("is_delete", 0)
 		} else {
 			RefreshFileNodes(account.Id, account.RootId)
-		}*/
-		RefreshFileNodes(account.Id, account.RootId)
+		}
 		log.Infoln("[DB cache][" + account.Name + "]refresh >> success")
 	}
 	t2 := time.Now()

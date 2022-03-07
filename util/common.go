@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"github.com/libsgh/PanIndex/module"
@@ -17,6 +18,7 @@ import (
 	math_rand "math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -711,4 +713,24 @@ func GetOffsetByRange(rangeStr string) uint64 {
 func GetMimeTypeByExt(ext string) string {
 	mimeType := mime.DetectFileExt(ext)
 	return mimeType
+}
+
+func FileExist(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		return os.IsExist(err)
+	}
+	return true
+}
+
+func Md5Params(params map[string]string) string {
+	keys := []string{}
+	for k, v := range params {
+		keys = append(keys, k+"="+v)
+	}
+	sort.Strings(keys)
+	signStr := strings.Join(keys, "&")
+	h := md5.New()
+	h.Write([]byte(signStr))
+	return hex.EncodeToString(h.Sum(nil))
 }
