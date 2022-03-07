@@ -307,7 +307,6 @@ func SyncAccountStatus(account module.Account) {
 func SyncFilesCache(account module.Account) {
 	t1 := time.Now()
 	dbFile := module.FileNode{}
-	DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
 	result := DB.Raw("select * from file_node where path=? and is_delete=0 and account_id=?", account.SyncDir, account.Id).Take(&dbFile)
 	isRoot := false
 	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {

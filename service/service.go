@@ -635,6 +635,7 @@ func UpdateCache(account module.Account, cachePath string) string {
 		} else {
 			account.SyncDir = cachePath
 			account.SyncChild = 0
+			dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
 			go dao.SyncFilesCache(account)
 			msg = "正在缓存目录，请稍后刷新页面查看缓存结果！"
 		}
