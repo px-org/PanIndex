@@ -20,7 +20,7 @@ func AdminIndex(c *gin.Context) {
 
 //admin config managent
 func ConfigManagent(c *gin.Context) {
-	middleware.ThemeCheck(c)
+	middleware.AdminThemeCheck(c)
 	theme := c.GetString("theme")
 	fullPath := c.Request.URL.Path
 	adminModule := strings.Split(fullPath, "/")[2]

@@ -195,7 +195,7 @@ func GetIcon(isFolder bool, fileType string) string {
 			fileKey = "exe"
 		}
 	}
-	return iconMap[config.Theme].(KV)[fileKey].(string)
+	return iconMap[GetCurrentTheme(config.Theme)].(KV)[fileKey].(string)
 }
 func GetBetweenStr(str, start, end string) string {
 	n := strings.Index(str, start)
@@ -733,4 +733,10 @@ func Md5Params(params map[string]string) string {
 	h := md5.New()
 	h.Write([]byte(signStr))
 	return hex.EncodeToString(h.Sum(nil))
+}
+func GetCurrentTheme(theme string) string {
+	if strings.HasPrefix(theme, "mdui") {
+		return "mdui"
+	}
+	return theme
 }

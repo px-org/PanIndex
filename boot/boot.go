@@ -231,21 +231,20 @@ func InitStaticBox(r *gin.Engine, fs embed.FS) {
 }
 
 func Templates(fs embed.FS) *template.Template {
-	themes := [6]string{"mdui", "mdui-light", "mdui-dark", "classic", "bootstrap", "materialdesign"}
+	themes := [3]string{"mdui", "classic", "bootstrap"}
 	tmpl := template.New("")
 	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "pwd", "safety", "view", "bypass", "cache", "webdav"}
 	addTemplatesFromFolder("admin", tmpl, fs, templatesFileNames)
 	for _, theme := range themes {
-		tmpName := strings.Join([]string{"templates/pan/", "/index.html"}, theme)
-		tmpFile := strings.ReplaceAll(tmpName, "-dark", "")
-		tmpFile = strings.ReplaceAll(tmpFile, "-light", "")
+		theme = util.GetCurrentTheme(theme)
+		tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, theme)
 		dataBuf, _ := fs.ReadFile(tmpFile)
 		data := string(dataBuf)
 		if util.FileExist("./templates/" + tmpFile) {
 			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
 			data = string(s)
 		}
-		tmpl.New(tmpName).Funcs(template.FuncMap{
+		tmpl.New(tmpFile).Funcs(template.FuncMap{
 			"unescaped":   unescaped,
 			"contains":    strings.Contains,
 			"iconclass":   iconclass,

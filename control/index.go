@@ -16,7 +16,8 @@ import (
 func index(c *gin.Context) {
 	var fns []module.FileNode
 	var isFile bool
-	tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, module.GloablConfig.Theme)
+	tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, util.GetCurrentTheme(module.GloablConfig.Theme))
+	fmt.Println(tmpFile)
 	account, _ := c.Get("account")
 	sortColumn := c.GetString("sort_column")
 	sortOrder := c.GetString("sort_order")
@@ -150,9 +151,7 @@ func DataRroxy(ac module.Account, downUrl, fileName string, c *gin.Context) {
 }
 
 func view(tmpFile *string, viewType string) {
-	theme := strings.ReplaceAll(module.GloablConfig.Theme, "-dark", "")
-	theme = strings.ReplaceAll(theme, "-light", "")
-	*tmpFile = fmt.Sprintf("templates/pan/%s/view-%s.html", theme, viewType)
+	*tmpFile = fmt.Sprintf("templates/pan/%s/view-%s.html", util.GetCurrentTheme(module.GloablConfig.Theme), viewType)
 }
 
 func ShortRedirect(c *gin.Context) {

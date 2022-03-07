@@ -81,9 +81,26 @@ func VerifyPwd(pwd, path, cookiepwd string) (bool, string) {
 func ThemeCheck(c *gin.Context) {
 	theme, err := c.Request.Cookie("theme")
 	if err != nil {
-		c.Set("theme", "mdui")
+		c.Set("theme", module.GloablConfig.Theme)
 	} else {
 		c.Set("theme", theme.Value)
+	}
+}
+
+func AdminThemeCheck(c *gin.Context) {
+	theme, err := c.Request.Cookie("theme")
+	if err != nil {
+		if strings.HasPrefix(module.GloablConfig.Theme, "mdui") {
+			c.Set("theme", module.GloablConfig.Theme)
+		} else {
+			c.Set("theme", "mdui")
+		}
+	} else {
+		if strings.HasPrefix(theme.Value, "mdui") {
+			c.Set("theme", theme.Value)
+		} else {
+			c.Set("theme", "mdui")
+		}
 	}
 }
 
