@@ -110,16 +110,13 @@ func LoadConfig() BootConfig {
 	var DbType = flag.String("db_type", "", "dao type, e.g. sqlite,mysql,postgres...")
 	var Dsn = flag.String("dsn", "", "database connection url")
 	flag.Parse()
-	config, err := LoadFromFile(*Config)
-	if err == nil && *ConfigQuery != "" && *ConfigQueryOld != "" {
-		return *config
-	}
+	config, _ := LoadFromFile(*Config)
 	config.Host = LoadFromEnv("HOST", *Host, config.Host)
 	if config.Host == "" {
 		config.Host = "0.0.0.0"
 	}
 	portStr := LoadFromEnv("PORT", *Port, strconv.Itoa(config.Port))
-	if portStr == "" {
+	if portStr == "" || portStr == "0" {
 		config.Port = 5238
 	} else {
 		port, _ := strconv.Atoi(portStr)
