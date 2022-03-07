@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"github.com/libsgh/PanIndex/module"
@@ -720,4 +721,16 @@ func FileExist(path string) bool {
 		return os.IsExist(err)
 	}
 	return true
+}
+
+func Md5Params(params map[string]string) string {
+	keys := []string{}
+	for k, v := range params {
+		keys = append(keys, k+"="+v)
+	}
+	sort.Strings(keys)
+	signStr := strings.Join(keys, "&")
+	h := md5.New()
+	h.Write([]byte(signStr))
+	return hex.EncodeToString(h.Sum(nil))
 }
