@@ -17,7 +17,6 @@ func index(c *gin.Context) {
 	var fns []module.FileNode
 	var isFile bool
 	tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, util.GetCurrentTheme(module.GloablConfig.Theme))
-	fmt.Println(tmpFile)
 	account, _ := c.Get("account")
 	sortColumn := c.GetString("sort_column")
 	sortOrder := c.GetString("sort_order")
