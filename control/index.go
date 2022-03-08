@@ -115,7 +115,6 @@ func download(ac module.Account, fileNode module.FileNode, c *gin.Context) {
 		}
 	} else {
 		if ac.Mode == "native" {
-			c.Status(200)
 			c.FileAttachment(downUrl, fileNode.FileName)
 		} else if ac.Mode == "ftp" {
 			service.FtpDownload(ac, downUrl, fileNode, c)
