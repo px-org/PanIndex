@@ -188,19 +188,19 @@ docker run -itd \
 
    ![image-20220308124201487](_images/bt/image-20220308124201487.png)
 
-4. 添加一个站点，域名需要先在dns处解析。
+5. 添加一个站点，域名需要先在dns处解析。
 
    ![image-20220308124832398](_images/bt/image-20220308124832398.png)
 
-5. 配置SSL（可选），证书需要在反向代理关闭的状态下申请。
+6. 配置SSL（可选），证书需要在反向代理关闭的状态下申请。
 
    ![image-20220308125234269](_images/bt/image-20220308125234269.png)
 
-5. 配置Nginx反向代理，PanIndex默认端口时5238。
+7. 配置Nginx反向代理，PanIndex默认端口时5238。
 
    ![image-20220308125049690](_images/bt/image-20220308125049690.png)
 
-5. 连接终端下载或上传PanIndex程序
+8. 连接终端下载或上传PanIndex程序
 
    ![image-20220308125445947](_images/bt/image-20220308125445947.png)
 
@@ -212,15 +212,15 @@ docker run -itd \
    # 复制PanIndex文件路径
    ```
 
-5. Supervisor添加守护进程。
+9. Supervisor添加守护进程。
 
    ![image-20220308130013716](_images/bt/image-20220308130013716.png)
 
    ![image-20220308130052222](_images/bt/image-20220308130052222.png)
 
-5.  访问https://test.noki.icu/， 正常显示表示启动成。
+10. 访问https://test.noki.icu/， 正常显示表示启动成功，到此已经可以正常使用。
 
-11.  修改启动端口（或日志级别），修改后记得改下nginx代理。
+11. 修改启动端口（或日志级别），修改后记得改下nginx代理。
 
 在子配置文件中添加环境变量，修改后重启进程生效。
 
