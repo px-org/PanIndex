@@ -130,12 +130,6 @@ $ systemctl status PanIndex #查询服务状态
 $ journalctl -u PanIndex.service -f #滚动查看PanIndex日志
 ```
 
-### （宝塔）Supervisor启动
-
-1. 启动命令那里，要填PanIndex的绝对路径
-![](_images/Supervisor.png)
-2. 如果需要配置环境变量在子配置文件中添加才能生效
-
 ```
 environment=a="1",b="2"
 ```
@@ -156,7 +150,7 @@ $ nohup ./PanIndex &
 ```
 更多平台编译参考：[PanIndex-build-action](https://github.com/libsgh/PanIndex-build-action)
 
-### Docker中运行
+### Docker
 参考下面命令，映射`/app/data`目录到宿主机避免重启docker数据丢失！
 ```bash
 docker pull iicm/pan-index:latest
@@ -170,6 +164,74 @@ docker run -itd \
  -e PORT="5238" \
  iicm/pan-index:latest
 ```
+
+### 宝塔
+1.  安装宝塔。
+
+官网安装教程：https://www.bt.cn/bbs/thread-19376-1-1.html
+
+我这里以Debian 11 x64为例
+
+安装脚本
+
+   ```bash
+   # wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh && bash install.sh
+   ```
+
+2. 登录面板，绑定账号。
+
+3. PanIndex只需要安装nginx即可，其他套件请按需安装。
+
+   ![image-20220308123935128](_images/bt/image-20220308123935128.png)
+
+4. 安装Supervisor。
+
+   ![image-20220308124201487](_images/bt/image-20220308124201487.png)
+
+4. 添加一个站点，域名需要先在dns处解析。
+
+   ![image-20220308124832398](_images/bt/image-20220308124832398.png)
+
+5. 配置SSL（可选），证书需要在反向代理关闭的状态下申请。
+
+   ![image-20220308125234269](_images/bt/image-20220308125234269.png)
+
+5. 配置Nginx反向代理，PanIndex默认端口时5238。
+
+   ![image-20220308125049690](_images/bt/image-20220308125049690.png)
+
+5. 连接终端下载或上传PanIndex程序
+
+   ![image-20220308125445947](_images/bt/image-20220308125445947.png)
+
+   ```bash
+   # cd /www/wwwroot/test.noki.icu
+   # wget https://github.com/libsgh/PanIndex/releases/download/v3.0.4/PanIndex-linux-amd64.tar.gz
+   # tar -zxvf PanIndex-linux-amd64.tar.gz
+   # mv PanIndex-linux-amd64 PanIndex
+   # 复制PanIndex文件路径
+   ```
+
+5. Supervisor添加守护进程。
+
+   ![image-20220308130013716](_images/bt/image-20220308130013716.png)
+
+   ![image-20220308130052222](_images/bt/image-20220308130052222.png)
+
+5.  访问https://test.noki.icu/， 正常显示表示启动成。
+
+11.  修改启动端口（或日志级别），修改后记得改下nginx代理。
+
+在子配置文件中添加环境变量，修改后重启进程生效。
+
+environment=PORT="5239",LOG_LEVEL="debug"
+
+![image-20220308131020227](_images/bt/image-20220308131020227.png)
+
+### 常见问题
+
+- 部署后无法访问的问题排查步骤 
+  PanIndex端口是否被占用 > 反向代理配置 > （非80，443端口）防火墙（服务器+三方服务）> 启动日志 > 程序是否与运行平台一致(一般使用linux-amd64)
 
 ## 其他平台部署
 
