@@ -24,7 +24,10 @@ import (
 type FileSystem struct{}
 
 func (fs *FileSystem) File(account module.Account, path, fullPath string) (module.FileNode, bool) {
-	if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
+	if strings.HasPrefix(util.GetFileName(fullPath), "._") {
+		return module.FileNode{}, false
+	}
+	if fullPath == "/" {
 		//accounts list
 		return module.FileNode{
 			FileId:     "root",
@@ -48,6 +51,9 @@ func (fs *FileSystem) File(account module.Account, path, fullPath string) (modul
 
 func (fs *FileSystem) Files(account module.Account, path, fullPath string) []module.FileNode {
 	fns := []module.FileNode{}
+	if strings.HasPrefix(util.GetFileName(fullPath), "._") {
+		return fns
+	}
 	if fullPath == "/" {
 		for _, ac := range module.GloablConfig.Accounts {
 			fn := module.FileNode{
