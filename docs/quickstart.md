@@ -81,9 +81,10 @@ $ nohup ./PanIndex > PanIndex.log &
 ```bash
 $ mkdir /usr/local/etc/PanIndex
 $ cd /usr/local/etc/PanIndex
-$ wget https://github.com/libsgh/PanIndex/releases/download/v3.0.0/PanIndex-linux-amd64.tar.gz
+$ wget https://github.com/libsgh/PanIndex/releases/download/v3.0.4/PanIndex-linux-amd64.tar.gz
 $ tar -xvf PanIndex-linux-amd64.tar.gz
-$ cp PanIndex* /usr/local/bin/
+$ mv PanIndex-linux-amd64 PanIndex
+$ cp PanIndex /usr/local/bin/
 $ cat > "/usr/local/etc/PanIndex/config.json" << EOF
 {
   "host": "0.0.0.0",
