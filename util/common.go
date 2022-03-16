@@ -93,7 +93,7 @@ func FileNodeAuth(fn *module.FileNode, hide, hasPwd int) {
 func GetViewType(fileType string) string {
 	config := module.GloablConfig
 	if fileType == "" {
-		return ""
+		return "ns"
 	}
 	if strings.Contains(config.Image, fileType) {
 		return "img"
