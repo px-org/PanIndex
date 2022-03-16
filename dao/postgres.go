@@ -1,12 +1,14 @@
 package dao
 
 import (
+	"database/sql"
 	"fmt"
 	gorm_logrus "github.com/onrik/gorm-logrus"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"os"
 )
 
 func init() {
@@ -16,7 +18,14 @@ func init() {
 type Postgres struct{}
 
 func (driver Postgres) CreateDb(dsn string) {
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	dialector := postgres.Open(dsn)
+	if os.Getenv("DATABASE_URL") != "" {
+		db, _ := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+		dialector = postgres.New(postgres.Config{
+			Conn: db,
+		})
+	}
+	database, err := gorm.Open(dialector, &gorm.Config{
 		Logger: gorm_logrus.New(),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
