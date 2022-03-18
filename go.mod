@@ -11,6 +11,7 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/jlaffaye/ftp v0.0.0-20220201222555-02685330ee35
 	github.com/json-iterator/go v1.1.12
+	github.com/lib/pq v1.10.2
 	github.com/libsgh/nic v0.3.3
 	github.com/onrik/gorm-logrus v0.3.0
 	github.com/qingstor/go-mime v0.1.0

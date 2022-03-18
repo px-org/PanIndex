@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	gorm_logrus "github.com/onrik/gorm-logrus"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
