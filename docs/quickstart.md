@@ -82,7 +82,7 @@ $ nohup ./PanIndex > PanIndex.log &
 $ mkdir /usr/local/etc/PanIndex
 $ cd /usr/local/etc/PanIndex
 $ wget https://github.com/libsgh/PanIndex/releases/download/v3.0.4/PanIndex-linux-amd64.tar.gz
-$ tar -xvf PanIndex-linux-amd64.tar.gz
+$ tar --no-same-owner -xvf PanIndex-linux-amd64.tar.gz
 $ mv PanIndex-linux-amd64 PanIndex
 $ cp PanIndex /usr/local/bin/
 $ cat > "/usr/local/etc/PanIndex/config.json" << EOF
