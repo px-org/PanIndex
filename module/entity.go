@@ -147,6 +147,7 @@ type BypassAccounts struct {
 type Cache struct {
 	FilePath    string      `json:"file_path"`
 	CacheTime   string      `json:"cache_time"`
+	ExpireTime  string      `json:"expire_time"`
 	CachePolicy string      `json:"cache_policy"`
 	Data        interface{} `json:"data"`
 }

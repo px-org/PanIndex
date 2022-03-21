@@ -524,12 +524,10 @@ func FindAccountsByPath(path string) ([]module.Account, string) {
 			path = fn.ParentPath
 		}
 	}
-	DB.Distinct("id").
-		Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.path = ?`, path).
+	DB.Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.path = ? group by a.id`, path).
 		Find(&accounts)
 	if len(accounts) == 0 {
-		DB.Distinct("id").
-			Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.parent_path = ?`, path).
+		DB.Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.parent_path = ? group by a.id`, path).
 			Find(&accounts)
 	}
 	return accounts, path

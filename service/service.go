@@ -33,8 +33,13 @@ func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isVi
 	isFile := false
 	var err error
 	if ac.CachePolicy == "nc" {
-		fns, isFile, _ = GetFilesFromApi(ac, path, fullPath, "default", "null")
-		fns = FilterHideFiles(fns)
+		fns, isFile, err = GetFilesFromApi(ac, path, fullPath, "default", "null")
+		if err == nil {
+			fns = FilterHideFiles(fns)
+		} else {
+			isFile = false
+			fns = []module.FileNode{}
+		}
 	} else if ac.CachePolicy == "mc" {
 		if FilesCache.Has(fullPath) {
 			files, err := FilesCache.Get(fullPath)
@@ -49,7 +54,7 @@ func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isVi
 			fns = FilterHideFiles(fns)
 			cacheTime := time.Now().Format("2006-01-02 15:04:05")
 			if err == nil {
-				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, isFile, cacheTime}, time.Hour*time.Duration(ac.ExpireTimeSpan))
+				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, isFile, cacheTime, util.GetExpireTime(cacheTime, time.Hour*time.Duration(ac.ExpireTimeSpan))}, time.Hour*time.Duration(ac.ExpireTimeSpan))
 			}
 		}
 	} else if ac.CachePolicy == "dc" {
@@ -67,14 +72,22 @@ func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isVi
 }
 
 type FilesCacheBean struct {
-	FileNodes []module.FileNode
-	IsFile    bool
-	CacheTime string
+	FileNodes  []module.FileNode
+	IsFile     bool
+	CacheTime  string
+	ExpireTime string
 }
 
 type FileCacheBean struct {
-	FileNode  module.FileNode
-	CacheTime string
+	FileNode   module.FileNode
+	CacheTime  string
+	ExpireTime string
+}
+
+type DownUrlCacheBean struct {
+	Url        string
+	CacheTime  string
+	ExpireTime string
 }
 
 func GetFilesFromApi(ac module.Account, path, fullPath, sortColumn, sortOrder string) ([]module.FileNode, bool, error) {
@@ -115,6 +128,11 @@ func GetFilesFromDb(ac module.Account, path, sortColumn, sortOrder string) ([]mo
 func Search(searchKey string) []module.FileNode {
 	var fns []module.FileNode
 	//only support db cache mode
+	byPassAccounts := []string{}
+	dao.DB.Model(&module.BypassAccounts{}).
+		Select("max(account_id)").
+		Group("bypass_id").
+		Find(&byPassAccounts)
 	sql := `select
 				fn.*
 			from
@@ -122,8 +140,8 @@ func Search(searchKey string) []module.FileNode {
 			left join account a on
 				fn.account_id = a.id
 			where
-				fn.file_name like ?`
-	dao.DB.Raw(sql, "%"+searchKey+"%").First(&fns)
+				fn.file_name like ? and a.id not in ?`
+	dao.DB.Raw(sql, "%"+searchKey+"%", byPassAccounts).Find(&fns)
 	return fns
 }
 
@@ -255,9 +273,9 @@ func GetDownloadUrl(ac module.Account, fileId string) string {
 func (dl *DownLock) GetDownlaodUrl(account module.Account, fileId string) string {
 	var downloadUrl = ""
 	if UrlCache.Has(account.Id + fileId) {
-		cachUrl, err := UrlCache.Get(account.Id + fileId)
+		downUrlCache, err := UrlCache.Get(account.Id + fileId)
 		if err == nil {
-			downloadUrl = cachUrl.(string)
+			downloadUrl = downUrlCache.(DownUrlCacheBean).Url
 			log.Debugf("get download url from cache:%s", downloadUrl)
 		}
 	} else {
@@ -267,11 +285,12 @@ func (dl *DownLock) GetDownlaodUrl(account module.Account, fileId string) string
 			log.Error(err)
 		}
 		downloadUrl = url
+		cacheTime := time.Now().Format("2006-01-02 15:04:05")
 		if downloadUrl != "" {
 			if account.Mode == "aliyundrive" {
-				UrlCache.SetWithExpire(account.Id+fileId, downloadUrl, time.Minute*230)
+				UrlCache.SetWithExpire(account.Id+fileId, DownUrlCacheBean{downloadUrl, cacheTime, util.GetExpireTime(cacheTime, time.Minute*230)}, time.Minute*230)
 			} else {
-				UrlCache.SetWithExpire(account.Id+fileId, downloadUrl, time.Minute*14)
+				UrlCache.SetWithExpire(account.Id+fileId, DownUrlCacheBean{downloadUrl, cacheTime, util.GetExpireTime(cacheTime, time.Minute*14)}, time.Minute*14)
 			}
 			log.Debugf("get download url from api:" + downloadUrl)
 		}
@@ -487,7 +506,7 @@ func GetLastNextFile(ac module.Account, path, fullPath, sortColumn, sortOrder st
 			fns = FilterHideFiles(fns)
 			if err == nil {
 				cacheTime := time.Now().Format("2006-01-02 15:04:05")
-				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, false, cacheTime}, time.Hour*time.Duration(ac.ExpireTimeSpan))
+				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, false, cacheTime, util.GetExpireTime(cacheTime, time.Hour*time.Duration(ac.ExpireTimeSpan))}, time.Hour*time.Duration(ac.ExpireTimeSpan))
 			}
 		}
 	}
@@ -527,7 +546,7 @@ func GetFiles(ac module.Account, path, fullPath, sortColumn, sortOrder, viewType
 			fns = FilterHideFiles(fns)
 			if err == nil {
 				cacheTime := time.Now().Format("2006-01-02 15:04:05")
-				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, false, cacheTime}, time.Hour*time.Duration(ac.ExpireTimeSpan))
+				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, false, cacheTime, util.GetExpireTime(cacheTime, time.Hour*time.Duration(ac.ExpireTimeSpan))}, time.Hour*time.Duration(ac.ExpireTimeSpan))
 			}
 		}
 	}
@@ -545,17 +564,17 @@ func GetCacheData(pathEsc string) []module.Cache {
 		dao.DB.Raw("select * from file_node where is_delete = 0 limit 100").Find(&fns)
 	}
 	for _, fn := range fns {
-		cache = append(cache, module.Cache{fn.Path, fn.CreateTime, "DB", fn})
+		cache = append(cache, module.Cache{fn.Path, fn.CreateTime, "", "DB", fn})
 	}
 	filesCache := FilesCache.GetALL(false)
 	for filePath, data := range filesCache {
 		fc := data.(FilesCacheBean)
 		if pathEsc != "" {
 			if strings.Contains(filePath.(string), pathEsc) {
-				cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, "Memory", fc.FileNodes})
+				cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, fc.ExpireTime, "M-Files", fc.FileNodes})
 			}
 		} else {
-			cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, "Memory", fc.FileNodes})
+			cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, fc.ExpireTime, "M-Files", fc.FileNodes})
 		}
 	}
 	fileCache := FileCache.GetALL(false)
@@ -563,10 +582,21 @@ func GetCacheData(pathEsc string) []module.Cache {
 		fc := data.(FileCacheBean)
 		if pathEsc != "" {
 			if strings.Contains(filePath.(string), pathEsc) {
-				cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, "Memory", fc.FileNode})
+				cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, fc.ExpireTime, "M-File", fc.FileNode})
 			}
 		} else {
-			cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, "Memory", fc.FileNode})
+			cache = append(cache, module.Cache{filePath.(string), fc.CacheTime, fc.ExpireTime, "M-File", fc.FileNode})
+		}
+	}
+	urlCache := UrlCache.GetALL(false)
+	for path, data := range urlCache {
+		downUrlCache := data.(DownUrlCacheBean)
+		if pathEsc != "" {
+			if strings.Contains(path.(string), pathEsc) {
+				cache = append(cache, module.Cache{path.(string), downUrlCache.CacheTime, downUrlCache.ExpireTime, "M-Download", downUrlCache.Url})
+			}
+		} else {
+			cache = append(cache, module.Cache{path.(string), downUrlCache.CacheTime, downUrlCache.ExpireTime, "M-Download", downUrlCache.Url})
 		}
 	}
 	return cache
@@ -577,12 +607,22 @@ func GetCacheByPath(path string) []module.Cache {
 	fn := module.FileNode{}
 	dao.DB.Raw("select * from file_node where is_delete = 0 and path=? limit 100", path).First(&fn)
 	if fn.Path != "" {
-		cache = append(cache, module.Cache{fn.Path, fn.CreateTime, "DB", fn})
+		cache = append(cache, module.Cache{fn.Path, fn.CreateTime, "", "DB", fn})
 	}
-	fileCache, err := FilesCache.Get(path)
+	filesCache, err := FilesCache.Get(path)
 	if err == nil {
-		fc := fileCache.(FilesCacheBean)
-		cache = append(cache, module.Cache{path, fc.CacheTime, "Memory", fc.FileNodes})
+		fc := filesCache.(FilesCacheBean)
+		cache = append(cache, module.Cache{path, fc.CacheTime, fc.ExpireTime, "M-Files", fc.FileNodes})
+	}
+	fileCache, err := FileCache.Get(path)
+	if err == nil {
+		fc := fileCache.(FileCacheBean)
+		cache = append(cache, module.Cache{path, fc.CacheTime, fc.ExpireTime, "M-File", fc.FileNode})
+	}
+	urlCache, err := UrlCache.Get(path)
+	if err == nil {
+		uc := urlCache.(DownUrlCacheBean)
+		cache = append(cache, module.Cache{path, uc.CacheTime, uc.ExpireTime, "M-Download", uc.Url})
 	}
 	return cache
 }
@@ -598,6 +638,8 @@ func CacheClear(path string, isLoopChildren string) {
 	} else {
 		FilesCache.Remove(path)
 	}
+	FileCache.Remove(path)
+	UrlCache.Remove(path)
 	accounts, cachePath := dao.FindAccountsByPath(path)
 	for _, account := range accounts {
 		account.SyncDir = cachePath
@@ -699,7 +741,7 @@ func Files(ac module.Account, path, fullPath string) []module.FileNode {
 			if err == nil {
 				fns = FilterHideFiles(fns)
 				cacheTime := time.Now().Format("2006-01-02 15:04:05")
-				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, isFile, cacheTime}, time.Hour*time.Duration(ac.ExpireTimeSpan))
+				FilesCache.SetWithExpire(fullPath, FilesCacheBean{fns, isFile, cacheTime, util.GetExpireTime(cacheTime, time.Hour*time.Duration(ac.ExpireTimeSpan))}, time.Hour*time.Duration(ac.ExpireTimeSpan))
 			}
 		}
 	} else if ac.CachePolicy == "dc" {
@@ -746,7 +788,7 @@ func File(ac module.Account, path, fullPath string) (module.FileNode, error) {
 		} else {
 			fn, err := GetFileFromApi(ac, path, fullPath)
 			cacheTime := time.Now().Format("2006-01-02 15:04:05")
-			FileCache.SetWithExpire(fullPath, FileCacheBean{fn, cacheTime}, time.Hour*time.Duration(ac.ExpireTimeSpan))
+			FileCache.SetWithExpire(fullPath, FileCacheBean{fn, cacheTime, util.GetExpireTime(cacheTime, time.Hour*time.Duration(ac.ExpireTimeSpan))}, time.Hour*time.Duration(ac.ExpireTimeSpan))
 			return fn, err
 		}
 	} else if ac.CachePolicy == "dc" {

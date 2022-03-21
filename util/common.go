@@ -740,3 +740,12 @@ func GetCurrentTheme(theme string) string {
 	}
 	return theme
 }
+
+func GetExpireTime(timeStr string, d time.Duration) string {
+	t, err := time.Parse(timeStr, "2006-01-02 15:04:05")
+	if err != nil {
+		return ""
+	}
+	t1 := t.Add(d)
+	return t1.Format("2006-01-02 15:04:05")
+}
