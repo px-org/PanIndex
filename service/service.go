@@ -481,7 +481,7 @@ func GetLastNextFile(ac module.Account, path, fullPath, sortColumn, sortOrder st
 		}
 	} else {
 		if ac.CachePolicy == "dc" {
-			fns, _ = GetFilesFromDb(ac, fullPath, sortColumn, sortOrder)
+			fns, _ = GetFilesFromDb(ac, fullPath, "default", "null")
 		} else {
 			fns, _, err = GetFilesFromApi(ac, parentPath, fullPath, sortColumn, sortOrder)
 			fns = FilterHideFiles(fns)
@@ -521,7 +521,7 @@ func GetFiles(ac module.Account, path, fullPath, sortColumn, sortOrder, viewType
 		}
 	} else {
 		if ac.CachePolicy == "dc" {
-			fns, _ = GetFilesFromDb(ac, fullPath, sortColumn, sortOrder)
+			fns, _ = GetFilesFromDb(ac, fullPath, "default", "null")
 		} else {
 			fns, _, err = GetFilesFromApi(ac, path, fullPath, sortColumn, sortOrder)
 			fns = FilterHideFiles(fns)
