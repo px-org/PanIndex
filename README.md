@@ -1,4 +1,5 @@
 # PanIndex
+[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-heroku.git)
 
 ## 简单的网盘目录列表
 - [x] 跨平台、易部署
@@ -14,7 +15,7 @@
 - 天翼云网盘
 - Teambition（国内、国外）
 - 阿里云盘
-- OneDrive（世纪互联）
+- OneDrive（国际版、世纪互联）
 - 和彩云
 - 谷歌云盘
 - WebDav

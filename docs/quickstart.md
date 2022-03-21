@@ -237,7 +237,14 @@ environment=PORT="5239",LOG_LEVEL="debug"
 ## 其他平台部署
 
 ### Heroku
-### Railway
-### Qovery
-### Koyeb
+[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-heroku.git)
 
+https://github.com/libsgh/PanIndex-heroku
+### Railway
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/RYVkB4?referralCode=W9nIBo)
+
+https://github.com/libsgh/PanIndex-railway
+### Okteto
+[![Develop on Okteto](https://okteto.com/develop-okteto.svg)](https://cloud.okteto.com/deploy?repository=https://github.com/libsgh/PanIndex-okteto&branch=main)
+
+https://github.com/libsgh/PanIndex-okteto
