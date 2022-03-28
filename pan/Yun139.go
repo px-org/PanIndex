@@ -141,7 +141,7 @@ func (y Yun139) ToFileNode(item ContentList) (module.FileNode, error) {
 }
 
 func (y Yun139) File(account module.Account, fileId, path string) (module.FileNode, error) {
-	_, _, p, _ := middleware.ParseFullPath(path)
+	_, _, p, _ := middleware.ParseFullPath(path, "")
 	if fileId == account.RootId {
 		return module.FileNode{
 			Id:         uuid.NewV4().String(),

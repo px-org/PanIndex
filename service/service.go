@@ -311,7 +311,7 @@ func ClearFileCache(p string) {
 
 //upload file
 func Upload(accountId, p string, c *gin.Context) string {
-	_, fullPath, path, _ := middleware.ParseFullPath(p)
+	_, fullPath, path, _ := middleware.ParseFullPath(p, "")
 	form, _ := c.MultipartForm()
 	files := form.File["uploadFile"]
 	account := module.Account{}
@@ -422,7 +422,7 @@ func httpClient(r string) *http.Client {
 	return &client
 }
 
-func AccountsToNodes() []module.FileNode {
+func AccountsToNodes(host string) []module.FileNode {
 	fns := []module.FileNode{}
 	ids := map[string]string{}
 	for _, bypass := range module.GloablConfig.BypassList {
@@ -458,7 +458,13 @@ func AccountsToNodes() []module.FileNode {
 				LastOpTime: account.LastOpTime,
 				ParentId:   "",
 			}
-			fns = append(fns, fn)
+			if host != "" && account.Host != "" {
+				if host == account.Host {
+					fns = append(fns, fn)
+				}
+			} else {
+				fns = append(fns, fn)
+			}
 		}
 	}
 	return fns

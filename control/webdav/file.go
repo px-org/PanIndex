@@ -130,8 +130,8 @@ func (fs *FileSystem) Mkdir(account module.Account, path string, fullPath string
 }
 
 func (fs *FileSystem) Copy(src string, dst string, overwrite bool) (int, error) {
-	srcAccount, srcFullPath, srcPath, _ := middleware.ParseFullPath(src)
-	dstAccount, dstFullPath, dstPath, _ := middleware.ParseFullPath(dst)
+	srcAccount, srcFullPath, srcPath, _ := middleware.ParseFullPath(src, "")
+	dstAccount, dstFullPath, dstPath, _ := middleware.ParseFullPath(dst, "")
 	if srcAccount.Id != dstAccount.Id {
 		return http.StatusMethodNotAllowed, ErrNotImplemented
 	}
@@ -151,8 +151,8 @@ func (fs *FileSystem) Move(src string, dst string, overwrite bool) (int, error) 
 	i := strings.Index(src, module.GloablConfig.DavPath) + len(module.GloablConfig.DavPath)
 	src = src[i:]
 	dst = dst[i:]
-	srcAccount, srcFullPath, srcPath, _ := middleware.ParseFullPath(src)
-	dstAccount, dstFullPath, dstPath, _ := middleware.ParseFullPath(dst)
+	srcAccount, srcFullPath, srcPath, _ := middleware.ParseFullPath(src, "")
+	dstAccount, dstFullPath, dstPath, _ := middleware.ParseFullPath(dst, "")
 	if srcAccount.Id != dstAccount.Id {
 		return http.StatusMethodNotAllowed, ErrNotImplemented
 	}

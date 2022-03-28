@@ -135,6 +135,7 @@ type Account struct {
 	TransferDomain string `json:"transfer_domain"`                   //中转地址，为空将使用本地服务器中转
 	CachePolicy    string `json:"cache_policy" gorm:"default:nc"`    //缓存策略：nc（No Cache）,mc（Memory Cache）, dc（Database Cache）
 	ExpireTimeSpan int    `json:"expire_time_span" gorm:"default:1"` //缓存时间单位是小时
+	Host           string `json:"host"`                              //绑定host
 }
 
 type Bypass struct {

@@ -35,7 +35,7 @@ func index(c *gin.Context) {
 	} else {
 		if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
 			//返回账号列表
-			fns = service.AccountsToNodes()
+			fns = service.AccountsToNodes(c.Request.Host)
 		} else {
 			fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortColumn, sortOrder, isView)
 		}
