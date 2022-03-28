@@ -52,6 +52,22 @@ $(".saveConfigBtn").on("click", function () {
             config["enable_preview"] = "0";
         }
     }
+    var enable_lrc = $("#configForm").find("input[name=enable_lrc]");
+    if(enable_lrc && enable_lrc.length > 0){
+        if(enable_lrc.prop('checked')){
+            config["enable_lrc"] = "1";
+        }else{
+            config["enable_lrc"] = "0";
+        }
+    }
+    var enable_subtitle = $("#configForm").find("input[name=enable_subtitle]");
+    if(enable_subtitle && enable_subtitle.length > 0){
+        if(enable_subtitle.prop('checked')){
+            config["enable_subtitle"] = "1";
+        }else{
+            config["enable_subtitle"] = "0";
+        }
+    }
     CommonRequest("/config", "POST", config);
 });
 //网盘挂载-start
@@ -683,11 +699,15 @@ $("#closeUploadBtn").on('click', function (ev){
 //预览配置重置
 $("#resetViewConfig").on('click', function (ev){
     $("#configForm").find("input[name=enable_preview]").prop("checked", true);
+    $("#configForm").find("input[name=enable_subtitle]").prop("checked", false);
+    $("#configForm").find("input[name=enable_lrc]").prop("checked", false);
     $("#configForm").find("input[name=image]").val("png,gif,jpg,bmp,jpeg,ico,svg");
     $("#configForm").find("input[name=video]").val("mp4,mkv,m3u8,ts,avi");
     $("#configForm").find("input[name=audio]").val("mp3,wav,ape,flac");
     $("#configForm").find("input[name=code]").val("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini");
     $("#configForm").find("input[name=other]").val("*");
+    $("#configForm").find("input[name=lrc_path]").val("");
+    $("#configForm").find("input[name=subtitle_path]").val("");
 });
 //手动上传文件-end
 $.fn.serializeObject = function()

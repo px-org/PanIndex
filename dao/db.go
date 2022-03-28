@@ -2,7 +2,6 @@ package dao
 
 import (
 	"errors"
-	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -23,6 +22,8 @@ var InitConfigItems = []module.ConfigItem{
 	{"admin_password", "PanIndex", "common"},
 	{"s_column", "default", "common"},
 	{"s_order", "asc", "common"},
+	{"readme", "1", "common"},
+	{"head", "1", "common"},
 	{"favicon_url", "", "appearance"},
 	{"footer", "", "appearance"},
 	{"css", "", "appearance"},
@@ -35,6 +36,10 @@ var InitConfigItems = []module.ConfigItem{
 	{"code", "txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini", "view"},
 	{"doc", "doc,docx,dotx,ppt,pptx,xls,xlsx", "view"},
 	{"other", "*", "view"},
+	{"enable_lrc", "0", "view"},
+	{"lrc_path", "", "view"},
+	{"enable_subtitle", "0", "view"},
+	{"subtitle_path", "", "view"},
 	{"enable_safety_link", "0", "safety"},
 	{"only_referrer", "", "safety"},
 	{"is_null_referrer", "0", "safety"},
@@ -204,11 +209,11 @@ func FindFileListByPath(ac module.Account, path, sortColumn, sortOrder string) [
 	fns := []module.FileNode{}
 	tx := DB.Where("is_delete=0 and hide =0 and account_id=? and parent_path=?", ac.Id, path)
 	tx.Order("is_folder desc")
-	if sortColumn != "default" && sortOrder != "" {
+	/*if sortColumn != "default" && sortOrder != "" {
 		tx = tx.Order(fmt.Sprintf("%s %s", sortColumn, sortOrder))
 	} else {
 		tx = tx.Order(fmt.Sprintf("last_op_time asc"))
-	}
+	}*/
 	tx.Find(&fns)
 	return fns
 }

@@ -4,6 +4,8 @@
 {{define "content-video"}}
 <div class="mdui-shadow-2 mdui-clearfix br" style="padding: 15px;margin: 10px;">
     <button id="playlistBtn" data-account-id="{{$.account.Id}}"
+            data-config-enablle-subtitle="{{$.config.EnableSubtitle}}"
+            data-config-subtitle-path="{{$.config.SubtitlePath}}"
             data-file-name="{{(index $.fns 0).FileName}}" data-path="{{(index $.fns 0).Path}}"
             data-file-type="{{(index $.fns 0).FileType}}" data-mode="{{$.account.Mode}}" data-parent-path="{{$.parent_path}}"
             data-file-id="{{(index $.fns 0).FileId}}" class="mdui-btn mdui-btn-block mdui-color-indigo-50 br" style="margin-bottom: 15px">
@@ -14,7 +16,9 @@
         <i class="mdui-icon material-icons mdui-float-right" mdui-tooltip="{content: '播放列表', position: 'left'}" style="margin-top: 10px;margin-right: 8px;">playlist_play</i>
     </button>
     <ul class="mdui-menu mdui-menu-cascade br" id="playlist_menu" style="width: 40%"></ul>
-    <div class="artplayer-app"  style="width: 100%;height: 33.75rem"></div>
+    <div class="mdui-video-container">
+        <div class="artplayer-app mdui-video-fluid"></div>
+    </div>
 </div>
 <script src="{{index $.config.CdnFiles "hls@js"}}"></script>
 <script src="{{index $.config.CdnFiles "flv@js"}}"></script>
