@@ -9,11 +9,12 @@
             data-file-name="{{(index $.fns 0).FileName}}" data-path="{{(index $.fns 0).Path}}"
             data-file-type="{{(index $.fns 0).FileType}}" data-mode="{{$.account.Mode}}" data-parent-path="{{$.parent_path}}"
             data-file-id="{{(index $.fns 0).FileId}}" class="mdui-btn mdui-btn-block mdui-color-indigo-50 br" style="margin-bottom: 15px">
-        <span id="titleBtn">{{FormateName (index $.fns 0).FileName}}</span>
+        <span class="titleBtn mdui-hidden-md-up" title="{{FormateName (index $.fns 0).FileName}}">{{TruncateName (FormateName (index $.fns 0).FileName)}}</span>
+        <span class="titleBtn mdui-hidden-sm-down" title="{{FormateName (index $.fns 0).FileName}}">{{FormateName (index $.fns 0).FileName}}</span>
         {{- if eq $.account.Mode "aliyundrive"}}
         <i id="transcodeBtn" class="mdui-icon material-icons mdui-float-right" mdui-tooltip="{content: '云转码', position: 'right'}" style="margin-top: 8px">cloud</i>
         {{- end}}
-        <i class="mdui-icon material-icons mdui-float-right" mdui-tooltip="{content: '播放列表', position: 'left'}" style="margin-top: 10px;margin-right: 8px;">playlist_play</i>
+        <i class="mdui-icon material-icons mdui-float-right" mdui-tooltip="{content: '播放列表', position: 'left'}" style="margin-top: 8px;margin-right: 8px;">playlist_play</i>
     </button>
     <ul class="mdui-menu mdui-menu-cascade br" id="playlist_menu" style="width: 40%"></ul>
     <div class="mdui-video-container">

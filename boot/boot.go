@@ -242,10 +242,11 @@ func Templates(fs embed.FS) *template.Template {
 			data = string(s)
 		}
 		tmpl.New(tmpFile).Funcs(template.FuncMap{
-			"unescaped":   unescaped,
-			"contains":    strings.Contains,
-			"iconclass":   iconclass,
-			"FormateName": FormateName,
+			"unescaped":    unescaped,
+			"contains":     strings.Contains,
+			"iconclass":    iconclass,
+			"FormateName":  FormateName,
+			"TruncateName": TruncateName,
 		}).Parse(data)
 	}
 	//添加详情模板
@@ -259,10 +260,11 @@ func Templates(fs embed.FS) *template.Template {
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{
-			"unescaped":   unescaped,
-			"contains":    strings.Contains,
-			"iconclass":   iconclass,
-			"FormateName": FormateName,
+			"unescaped":    unescaped,
+			"contains":     strings.Contains,
+			"iconclass":    iconclass,
+			"FormateName":  FormateName,
+			"TruncateName": TruncateName,
 		}).Parse(data)
 	}
 	return tmpl
@@ -278,11 +280,12 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{
-			"unescaped":   unescaped,
-			"contains":    strings.Contains,
-			"iconclass":   iconclass,
-			"isLast":      isLast,
-			"FormateName": FormateName,
+			"unescaped":    unescaped,
+			"contains":     strings.Contains,
+			"iconclass":    iconclass,
+			"isLast":       isLast,
+			"FormateName":  FormateName,
+			"TruncateName": TruncateName,
 		}).Parse(data)
 	}
 }
@@ -314,4 +317,12 @@ func FormateName(filename string) string {
 	fileSuffix := path.Ext(filename)
 	filePrefix := filenameAll[0 : len(filenameAll)-len(fileSuffix)]
 	return filePrefix
+}
+
+func TruncateName(filename string) string {
+	nameRune := []rune(filename)
+	if len(nameRune) > 20 {
+		return string(nameRune[0:20]) + "..."
+	}
+	return filename
 }
