@@ -120,7 +120,7 @@ function initVideo(container, qas, title){
             //quality: qas,
             autoSize: true,
             fullscreen: true,
-            fullscreenWeb: true,
+            fullscreenWeb: false,
             //pip: true,
             autoplay: false,
             autoSize: true,
@@ -256,7 +256,19 @@ function chgVideo(fid, p, name, type) {
     var qas = getQas(accountId, fileId, fileType);
     art.destroy();
     art = initVideo(".artplayer-app", qas, fileName);
-    $("#titleBtn").text(fileName.substring(0, fileName.lastIndexOf(".")));
+    $(".titleBtn").each(function (i, item){
+        if($(this).hasClass("mdui-hidden-md-up")){
+            var fn = fileName.substring(0, fileName.lastIndexOf("."))
+            if(fn.length > 20){
+                var t = fn.substring(0, 20);
+                t = t + '...';
+                $(this).text(t);
+            }
+        }else{
+            $(this).text(fileName.substring(0, fileName.lastIndexOf(".")));
+        }
+        console.log($(this).attr("class"));
+    });
     $("li").removeClass("playlist-active");
     $(".playing").text("");
     $("#"+md5(path)).find("i").text("play_circle_outline");

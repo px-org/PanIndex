@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -128,6 +129,10 @@ func GetPwdFromCookie(pwd, fullPath string) string {
 }
 
 func ParseFullPath(path string) (module.Account, string, string, string) {
+	if strings.HasPrefix(path, "/d_") {
+		//old path
+		path = OldParseFullPath(path)
+	}
 	if path == "" {
 		path = "/"
 	}
@@ -151,6 +156,13 @@ func ParseFullPath(path string) (module.Account, string, string, string) {
 		fullPath = fullPath[0 : len(fullPath)-1]
 	}
 	return account, fullPath, path, bypassName
+}
+
+func OldParseFullPath(path string) string {
+	iStr := util.GetBetweenStr(path, "_", "/")
+	index, _ := strconv.Atoi(iStr)
+	account := module.GloablConfig.Accounts[index]
+	return strings.ReplaceAll(path, "/d_"+iStr, "/"+account.Name)
 }
 
 func GetCurrentAccount(name string) (module.Account, string) {
