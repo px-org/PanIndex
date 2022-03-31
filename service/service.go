@@ -659,16 +659,7 @@ func CacheClear(path string, isLoopChildren string) {
 }
 
 func GetBypassByAccountId(accountId string) module.Bypass {
-	bypass := module.Bypass{}
-	dao.DB.Raw(`select
-						b.*
-					from
-						bypass_accounts ba
-					left join bypass b on
-						ba.bypass_id = b.id
-					where
-						ba.account_id = ?`, accountId).Find(&bypass)
-	return bypass
+	return dao.SelectBypassByAccountId(accountId)
 }
 
 func UpdateCache(account module.Account, cachePath string) string {
@@ -678,15 +669,53 @@ func UpdateCache(account module.Account, cachePath string) string {
 	} else if account.CachePolicy == "mc" {
 		ClearFileCache(cachePath)
 	} else {
-		if account.Status == -1 {
-			msg = "目录缓存中，请勿重复操作！"
+		if dao.SYNC_STATUS == 1 {
+			msg = "缓存任务正在执行，请稍后重试！"
 		} else {
-			account.SyncDir = cachePath
-			account.SyncChild = 0
-			dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-			go dao.SyncFilesCache(account)
-			msg = "正在缓存目录，请稍后刷新页面查看缓存结果！"
+			if account.Status == -1 {
+				msg = "目录缓存中，请勿重复操作！"
+			} else {
+				account.SyncDir = cachePath
+				account.SyncChild = 0
+				dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
+				dao.SYNC_STATUS = 1
+				go dao.SyncFilesCache(account)
+				go dao.InitGlobalConfig()
+				msg = "正在缓存目录，请稍后刷新页面查看缓存结果！"
+			}
 		}
+	}
+	return msg
+}
+
+func UpdateAllCache() string {
+	msg := "缓存清理成功"
+	if dao.SYNC_STATUS == 1 {
+		msg = "缓存任务正在执行，请稍后重试！"
+	} else {
+		go func() {
+			for _, account := range module.GloablConfig.Accounts {
+				bypass := GetBypassByAccountId(account.Id)
+				cachePath := "/" + account.Name
+				if bypass.Name != "" {
+					cachePath = "/" + bypass.Name
+				}
+				if account.CachePolicy == "nc" {
+				} else if account.CachePolicy == "mc" {
+					ClearFileCache(cachePath)
+				} else {
+					if account.Status != -1 {
+						account.SyncDir = cachePath
+						account.SyncChild = 0
+						dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
+						dao.SYNC_STATUS = 1
+						go dao.InitGlobalConfig()
+						dao.SyncFilesCache(account)
+					}
+				}
+			}
+		}()
+		msg = "正在缓存目录，请稍后刷新页面查看缓存结果！"
 	}
 	return msg
 }

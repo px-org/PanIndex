@@ -569,6 +569,25 @@ $("#refreshTokenBtn").on('click', function (ev){
 });
 //手动刷新令牌-end
 //手动刷新目录缓存-start
+$("#refreshAllCacheBtn").on('click', function (ev){
+    mdui.confirm('确认刷新全部挂载盘的缓存吗？', '', function(){
+        $.ajax({
+            method: 'GET',
+            url: AdminApiUrl + '/cache/update/all',
+            success: function (data) {
+                var d = JSON.parse(data);
+                mdui.snackbar({
+                    message: d.msg,
+                    timeout: 3000
+                });
+            }
+        });
+    },function(){
+    }, {
+        "confirmText": "确认",
+        "cancelText": "取消",
+    });
+});
 $("#refreshCacheBtn").on('click', function (ev){
     var selectRecords = $('.mdui-table-row-selected');
     if(selectRecords.length != 1){

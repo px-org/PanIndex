@@ -31,6 +31,7 @@ func SetRouters(r *gin.Engine) {
 		adminApi.DELETE("/accounts", DeleteAccounts)       //del accounts
 		adminApi.POST("/accounts/sort", SortAccounts)      //sort accounts
 		adminApi.POST("/cache/update", UpdateCache)        //update cache
+		adminApi.GET("/cache/update/all", UpdateAllCache)  //update all cache
 		adminApi.POST("/refresh/login", RefreshLogin)      //refresh login status
 		adminApi.POST("/upload", Upload)                   //simple upload file
 		adminApi.POST("/hide/file", Hide)                  //add hide file

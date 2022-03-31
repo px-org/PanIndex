@@ -309,6 +309,8 @@ func SyncAccountStatus(account module.Account) {
 }
 
 //sync files cache
+var SYNC_STATUS = 0
+
 func SyncFilesCache(account module.Account) {
 	t1 := time.Now()
 	dbFile := module.FileNode{}
@@ -344,6 +346,7 @@ func SyncFilesCache(account module.Account) {
 		"time_span": util.ShortDur(d),
 	})
 	InitGlobalConfig()
+	SYNC_STATUS = 0
 }
 
 func RefreshFileNodes(accountId, fileId string) {
@@ -539,17 +542,27 @@ func FindAccountsByPath(path string) ([]module.Account, string) {
 }
 
 func UpdateCacheConfig(account module.Account) {
+	account.Status = -1
+	DB.Where("account_id = ?", account.Id).Delete(module.FileNode{})
+	if account.CachePolicy == "dc" {
+		if SYNC_STATUS == 0 {
+			ac := GetAccountById(account.Id)
+			bypass := SelectBypassByAccountId(account.Id)
+			cachePath := "/" + ac.Name
+			if bypass.Name != "" {
+				cachePath = "/" + bypass.Name
+			}
+			ac.SyncDir = cachePath
+			go SyncFilesCache(ac)
+			go SaveCacheCron(ac)
+		}
+	} else {
+		account.Status = 2
+	}
 	DB.Model(&[]module.Account{}).
-		Select("CachePolicy", "SyncDir", "SyncChild", "ExpireTimeSpan", "SyncCron").
+		Select("CachePolicy", "SyncDir", "SyncChild", "ExpireTimeSpan", "SyncCron", "Status").
 		Where("id=?", account.Id).
 		Updates(&account)
-	if account.CachePolicy == "dc" {
-		ac := GetAccountById(account.Id)
-		go SyncFilesCache(ac)
-		go SaveCacheCron(ac)
-	} else {
-		DB.Where("account_id = ?", account.Id).Delete(module.FileNode{})
-	}
 	InitGlobalConfig()
 }
 
@@ -629,4 +642,17 @@ func AccountNameExist(id, name string) bool {
 		return true
 	}
 	return false
+}
+
+func SelectBypassByAccountId(accountId string) module.Bypass {
+	bypass := module.Bypass{}
+	DB.Raw(`select
+						b.*
+					from
+						bypass_accounts ba
+					left join bypass b on
+						ba.bypass_id = b.id
+					where
+						ba.account_id = ?`, accountId).Find(&bypass)
+	return bypass
 }
