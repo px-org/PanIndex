@@ -4,11 +4,13 @@
 {{define "content-audio"}}
     <link rel="stylesheet" href="{{index $.config.CdnFiles "APlayer@css"}}">
     <div class="mdui-valign" style="min-height: 300px">
-        <div id="aplayer" class="mdui-center" style="width: 500px"></div>
+        <div id="aplayer" class="mdui-center" style="width: 500px" data-lrc-path="{{$.config.LrcPath}}" data-enable-lrc="{{$.config.EnableLrc}}"></div>
     </div>
     <script src="{{index $.config.CdnFiles "APlayer@js"}}"></script>
     <script>
         var path = $("#view_down_link").attr("data-path");
+        var enableLrc = $("#aplayer").attr("data-enable-lrc");
+        var lrcPath = $("#aplayer").attr("data-lrc-path");
         var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
         var n = '{{ (index $.fns 0).FileName }}';
         var formData = new FormData();
@@ -26,6 +28,10 @@
             contentType: false,
             processData: false,
             success: function (data) {
+                var lrcType = 0
+                if(enableLrc == "1"){
+                    lrcType = 3;
+                }
                 $.each(data.data, function(i, item){
                     if(item.file_name == n){
                         index = i;
@@ -42,7 +48,9 @@
                     }
                     v.url = item.file_name;
                     v.cover = '/static/img/music-cover.png';
-                    v.lrc = vname + '.lrc';
+                    if(enableLrc == "1"){
+                        v.lrc = lrcPath + vname + '.lrc';
+                    }
                     playList.push(v)
                 });
                 const ap = new APlayer({
@@ -54,7 +62,7 @@
                     preload: 'auto',
                     loop: 'all',
                     order: 'list',
-                    lrcType: 3,
+                    lrcType: lrcType,
                     audio: playList
                 });
                 ap.list.switch(index);

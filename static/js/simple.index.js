@@ -1,4 +1,6 @@
 $(document).ready(function() {
+    var enableLrc = $("#aplayer").attr("data-enable-lrc");
+    var lrcPath = $("#aplayer").attr("data-lrc-path");
     var clipboard = new ClipboardJS('.copyBtn', {
         text: function(trigger) {
             var path = $(trigger).data("path");
@@ -28,6 +30,7 @@ $(document).ready(function() {
         var dvt = $(this).attr("data-view-type");
         var preview = $(this).attr("data-preview");
         var fileType = $(this).attr("data-file-type");
+        var parentPath = $(this).attr("data-parent-path");
         var fullUrl = window.location.protocol+"//"+window.location.host + dURL;
         if(preview == "0"){
             window.location.href = fullUrl;
@@ -58,7 +61,7 @@ $(document).ready(function() {
                 backdrop: true,
                 didOpen: () => {
                     var qas = buildOriginalVideo(fullUrl, fileType);
-                    art = initVideo(".artplayer-app", qas, title)
+                    art = initVideo(".artplayer-app", qas, title, parentPath)
                 },
                 willClose: () => {
                     art.destroy();
@@ -66,17 +69,23 @@ $(document).ready(function() {
             });
             return;
         }else if(dvt == "audio"){
+            var lrcType = 0
+            var lrc = dURL.split('.')[0] + '.lrc';
+            if(enableLrc == "1"){
+                lrcType = 3;
+                lrc = lrcPath + dURL.split('.')[0] + '.lrc';
+            }
             const ap = new APlayer({
                 container: document.getElementById('aplayer'),
                 fixed: true,
-                lrcType: 3,
+                lrcType: lrcType,
                 autoplay: true,
                 audio: [{
                     name: title,
                     artist: 'artist',
                     url: dURL,
                     cover: '/static/img/music-cover.png',
-                    lrc: dURL.split('.')[0] + '.lrc'
+                    lrc: lrc
                 }]
             });
             return;

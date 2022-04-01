@@ -2,7 +2,6 @@ package dao
 
 import (
 	"errors"
-	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -23,6 +22,8 @@ var InitConfigItems = []module.ConfigItem{
 	{"admin_password", "PanIndex", "common"},
 	{"s_column", "default", "common"},
 	{"s_order", "asc", "common"},
+	{"readme", "1", "common"},
+	{"head", "1", "common"},
 	{"favicon_url", "", "appearance"},
 	{"footer", "", "appearance"},
 	{"css", "", "appearance"},
@@ -30,11 +31,17 @@ var InitConfigItems = []module.ConfigItem{
 	{"theme", "mdui", "appearance"},
 	{"enable_preview", "1", "view"},
 	{"image", "png,gif,jpg,bmp,jpeg,ico", "view"},
-	{"video", "mp4,mkv,m3u8,ts,avi", "view"},
+	{"video", "mp4,mkv,m3u8,flv,avi", "view"},
 	{"audio", "mp3,wav,flac,ape", "view"},
 	{"code", "txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini", "view"},
 	{"doc", "doc,docx,dotx,ppt,pptx,xls,xlsx", "view"},
 	{"other", "*", "view"},
+	{"enable_lrc", "0", "view"},
+	{"lrc_path", "", "view"},
+	{"subtitle", "", "view"},
+	{"subtitle_path", "", "view"},
+	{"danmuku", "0", "view"},
+	{"danmuku_path", "", "view"},
 	{"enable_safety_link", "0", "safety"},
 	{"only_referrer", "", "safety"},
 	{"is_null_referrer", "0", "safety"},
@@ -204,11 +211,11 @@ func FindFileListByPath(ac module.Account, path, sortColumn, sortOrder string) [
 	fns := []module.FileNode{}
 	tx := DB.Where("is_delete=0 and hide =0 and account_id=? and parent_path=?", ac.Id, path)
 	tx.Order("is_folder desc")
-	if sortColumn != "default" && sortOrder != "" {
+	/*if sortColumn != "default" && sortOrder != "" {
 		tx = tx.Order(fmt.Sprintf("%s %s", sortColumn, sortOrder))
 	} else {
 		tx = tx.Order(fmt.Sprintf("last_op_time asc"))
-	}
+	}*/
 	tx.Find(&fns)
 	return fns
 }
@@ -304,6 +311,8 @@ func SyncAccountStatus(account module.Account) {
 }
 
 //sync files cache
+var SYNC_STATUS = 0
+
 func SyncFilesCache(account module.Account) {
 	t1 := time.Now()
 	dbFile := module.FileNode{}
@@ -339,6 +348,7 @@ func SyncFilesCache(account module.Account) {
 		"time_span": util.ShortDur(d),
 	})
 	InitGlobalConfig()
+	SYNC_STATUS = 0
 }
 
 func RefreshFileNodes(accountId, fileId string) {
@@ -524,29 +534,37 @@ func FindAccountsByPath(path string) ([]module.Account, string) {
 			path = fn.ParentPath
 		}
 	}
-	DB.Distinct("id").
-		Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.path = ?`, path).
+	DB.Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.path = ? group by a.id`, path).
 		Find(&accounts)
 	if len(accounts) == 0 {
-		DB.Distinct("id").
-			Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.parent_path = ?`, path).
+		DB.Raw(`select a.* from file_node fn left join account a on a.id = fn.account_id where fn.parent_path = ? group by a.id`, path).
 			Find(&accounts)
 	}
 	return accounts, path
 }
 
 func UpdateCacheConfig(account module.Account) {
+	account.Status = -1
+	DB.Where("account_id = ?", account.Id).Delete(module.FileNode{})
+	if account.CachePolicy == "dc" {
+		if SYNC_STATUS == 0 {
+			ac := GetAccountById(account.Id)
+			bypass := SelectBypassByAccountId(account.Id)
+			cachePath := "/" + ac.Name
+			if bypass.Name != "" {
+				cachePath = "/" + bypass.Name
+			}
+			ac.SyncDir = cachePath
+			go SyncFilesCache(ac)
+			go SaveCacheCron(ac)
+		}
+	} else {
+		account.Status = 2
+	}
 	DB.Model(&[]module.Account{}).
-		Select("CachePolicy", "SyncDir", "SyncChild", "ExpireTimeSpan", "SyncCron").
+		Select("CachePolicy", "SyncDir", "SyncChild", "ExpireTimeSpan", "SyncCron", "Status").
 		Where("id=?", account.Id).
 		Updates(&account)
-	if account.CachePolicy == "dc" {
-		ac := GetAccountById(account.Id)
-		go SyncFilesCache(ac)
-		go SaveCacheCron(ac)
-	} else {
-		DB.Where("account_id = ?", account.Id).Delete(module.FileNode{})
-	}
 	InitGlobalConfig()
 }
 
@@ -600,7 +618,7 @@ func SaveAccount(account module.Account) string {
 		account.LastOpTime = time.Now().Format("2006-01-02 15:04:05")
 		DB.Model(&[]module.Account{}).
 			Select("Id", "Name", "Mode", "User", "Password", "RefreshToken", "AccessToken",
-				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl").
+				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host").
 			Where("id=?", account.Id).
 			Updates(&account)
 	}
@@ -626,4 +644,17 @@ func AccountNameExist(id, name string) bool {
 		return true
 	}
 	return false
+}
+
+func SelectBypassByAccountId(accountId string) module.Bypass {
+	bypass := module.Bypass{}
+	DB.Raw(`select
+						b.*
+					from
+						bypass_accounts ba
+					left join bypass b on
+						ba.bypass_id = b.id
+					where
+						ba.account_id = ?`, accountId).Find(&bypass)
+	return bypass
 }

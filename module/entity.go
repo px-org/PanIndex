@@ -71,21 +71,29 @@ type Config struct {
 	Code             string            `json:"code"`           //代码
 	Doc              string            `json:"doc"`            //文档
 	Other            string            `json:"other"`          //other
-	SColumn          string            `json:"s_column"`       //排序字段
-	SOrder           string            `json:"s_order"`        //排序顺序
-	PwdFiles         map[string]string `json:"pwd_files"`      //文件id:pwd
-	HideFiles        map[string]string `json:"hide_files"`     //隐藏文件
-	AdminPath        string            `json:"admin_path"`     //后台管理路径前缀
-	Cdn              string            `json:"cdn"`            //cdn
-	CdnFiles         map[string]string `json:"cdn_files"`      //cdn files
-	BypassList       []Bypass          `json:"bypass_list"`    //分流列表
-	EnableDav        string            `json:"enable_dav"`     //dav enabled 1 disabled 0
-	DavPath          string            `json:"dav_path"`       //dav path
-	DavMode          string            `json:"dav_mode"`       //0 read-only, 1 read-write
-	DavDownMode      string            `json:"dav_down_mode"`  //0 302 downloadurl, 1 proxy
-	DavUser          string            `json:"dav_user"`       //dav user
-	DavPassword      string            `json:"dav_password"`   //dav password
-	Proxy            string            `json:"proxy"`
+	EnableLrc        string            `json:"enable_lrc"`
+	LrcPath          string            `json:"lrc_path"`
+	Subtitle         string            `json:"subtitle"`
+	SubtitlePath     string            `json:"subtitle_path"`
+	Danmuku          string            `json:"danmuku"`
+	DanmukuPath      string            `json:"danmuku_path"`
+	SColumn          string            `json:"s_column"`      //排序字段
+	SOrder           string            `json:"s_order"`       //排序顺序
+	PwdFiles         map[string]string `json:"pwd_files"`     //文件id:pwd
+	HideFiles        map[string]string `json:"hide_files"`    //隐藏文件
+	AdminPath        string            `json:"admin_path"`    //后台管理路径前缀
+	Cdn              string            `json:"cdn"`           //cdn
+	CdnFiles         map[string]string `json:"cdn_files"`     //cdn files
+	BypassList       []Bypass          `json:"bypass_list"`   //分流列表
+	EnableDav        string            `json:"enable_dav"`    //dav enabled 1 disabled 0
+	DavPath          string            `json:"dav_path"`      //dav path
+	DavMode          string            `json:"dav_mode"`      //0 read-only, 1 read-write
+	DavDownMode      string            `json:"dav_down_mode"` //0 302 downloadurl, 1 proxy
+	DavUser          string            `json:"dav_user"`      //dav user
+	DavPassword      string            `json:"dav_password"`  //dav password
+	Proxy            string            `json:"proxy"`         //google api prxoy
+	Readme           string            `json:"readme"`        //show or hide readme
+	Head             string            `json:"head"`          //show or hide head
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key
@@ -129,6 +137,7 @@ type Account struct {
 	TransferDomain string `json:"transfer_domain"`                   //中转地址，为空将使用本地服务器中转
 	CachePolicy    string `json:"cache_policy" gorm:"default:nc"`    //缓存策略：nc（No Cache）,mc（Memory Cache）, dc（Database Cache）
 	ExpireTimeSpan int    `json:"expire_time_span" gorm:"default:1"` //缓存时间单位是小时
+	Host           string `json:"host"`                              //绑定host
 }
 
 type Bypass struct {
@@ -147,6 +156,7 @@ type BypassAccounts struct {
 type Cache struct {
 	FilePath    string      `json:"file_path"`
 	CacheTime   string      `json:"cache_time"`
+	ExpireTime  string      `json:"expire_time"`
 	CachePolicy string      `json:"cache_policy"`
 	Data        interface{} `json:"data"`
 }

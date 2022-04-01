@@ -46,7 +46,7 @@ func WebDAVAuth() gin.HandlerFunc {
 func ServeWebDAV(c *gin.Context) {
 	//not support bypass
 	p := c.Param("path")
-	account, fullPath, path, _ := middleware.ParseFullPath(p)
+	account, fullPath, path, _ := middleware.ParseFullPath(p, "")
 	handler := &webdav.Handler{
 		Prefix:     "/",
 		FileSystem: webdav.FileSystem{},

@@ -87,6 +87,11 @@ func UpdateCache(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": service.UpdateCache(account, cachePath)})
 }
 
+// admin update all cache
+func UpdateAllCache(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": service.UpdateAllCache()})
+}
+
 // admin refresh login status
 func RefreshLogin(c *gin.Context) {
 	id := c.Query("id")

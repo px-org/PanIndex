@@ -35,7 +35,7 @@ func index(c *gin.Context) {
 	} else {
 		if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
 			//返回账号列表
-			fns = service.AccountsToNodes()
+			fns = service.AccountsToNodes(c.Request.Host)
 		} else {
 			fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortColumn, sortOrder, isView)
 		}
@@ -43,6 +43,7 @@ func index(c *gin.Context) {
 			if isView {
 				view(&tmpFile, fns[0].ViewType)
 			} else {
+				fmt.Println(c.GetBool("has_pwd"))
 				download(ac, fns[0], c)
 				c.Abort()
 				return
@@ -96,6 +97,10 @@ func download(ac module.Account, fileNode module.FileNode, c *gin.Context) {
 	if isForbidden {
 		c.String(http.StatusForbidden, "403 Hotlink Forbidden")
 		c.Abort()
+		return
+	}
+	if c.GetBool("has_pwd") {
+		c.String(http.StatusForbidden, "401 Unauthorized")
 		return
 	}
 	downUrl := service.GetDownloadUrl(ac, fileNode.FileId)

@@ -52,6 +52,14 @@ $(".saveConfigBtn").on("click", function () {
             config["enable_preview"] = "0";
         }
     }
+    var enable_lrc = $("#configForm").find("input[name=enable_lrc]");
+    if(enable_lrc && enable_lrc.length > 0){
+        if(enable_lrc.prop('checked')){
+            config["enable_lrc"] = "1";
+        }else{
+            config["enable_lrc"] = "0";
+        }
+    }
     CommonRequest("/config", "POST", config);
 });
 //网盘挂载-start
@@ -109,6 +117,7 @@ function dynamicChgMode(mode){
         $(".sync-div").hide();
         $("#ApiUrlDiv").hide();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "cloud189"){
         $("#RedirectUriDiv").hide();
@@ -122,6 +131,7 @@ function dynamicChgMode(mode){
         $("#user_label").text("用户名");
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("-11");
     }else if (mode == "teambition"){
         $("#RedirectUriDiv").hide();
@@ -136,6 +146,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
         $("#accountForm").find("input[name=root_id]").val("");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "teambition-us"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -149,6 +160,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
         $("#accountForm").find("input[name=root_id]").val("");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "aliyundrive"){
         $("#RedirectUriDiv").hide();
         $("#ApiUrlDiv").hide();
@@ -157,6 +169,7 @@ function dynamicChgMode(mode){
         $("#PasswordDiv").hide();
         $(".sync-div").show();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").show();
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#accountForm").find("input[name=root_id]").val("root");
     }else if (mode == "onedrive"){
@@ -170,6 +183,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "onedrive-cn"){
         $("#RedirectUriDiv").show();
@@ -182,6 +196,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "ftp"){
         $("#RedirectUriDiv").hide();
@@ -197,6 +212,7 @@ function dynamicChgMode(mode){
         $("#api_url").attr("placeholder", "192.168.1.1:21");
         $("#SiteIdDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "webdav"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -211,6 +227,7 @@ function dynamicChgMode(mode){
         $("#api_url").attr("placeholder", "https://webdav.mydomain.me");
         $("#SiteIdDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "yun139"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -223,6 +240,7 @@ function dynamicChgMode(mode){
         $("#password_label").text("COOKIE");
         $("#accountForm").find("input[name=password]").attr("type", "text");
         $("#accountForm").find("input[name=root_id]").val("00019700101000000001");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "googledrive"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
@@ -235,6 +253,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("");
+        $("#aliQrCodeBtn").hide();
     }
     diskd.handleUpdate();
 }
@@ -254,6 +273,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=down_transfer]").prop("checked",false);
     $("#accountForm").find("input[name=transfer_domain]").val("");
     $("#accountForm").find("input[name=site_label]").val("");
+    $("#accountForm").find("input[name=host]").val("");
     modeSelect.handleUpdate();
     dynamicChgMode("native");
     mdui.updateTextFields();
@@ -288,6 +308,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=root_id]").val(account.root_id);
                 $("#accountForm").find("input[name=transfer_domain]").val(account.transfer_domain);
                 $("#accountForm").find("input[name=site_label]").val(account.site_id);
+                $("#accountForm").find("input[name=host]").val(account.host);
                 modeSelect.handleUpdate();
                 if(account.down_transfer == 1){
                     $("#accountForm").find("input[name=down_transfer]").prop("checked",true);
@@ -551,6 +572,25 @@ $("#refreshTokenBtn").on('click', function (ev){
 });
 //手动刷新令牌-end
 //手动刷新目录缓存-start
+$("#refreshAllCacheBtn").on('click', function (ev){
+    mdui.confirm('确认刷新全部挂载盘的缓存吗？', '', function(){
+        $.ajax({
+            method: 'GET',
+            url: AdminApiUrl + '/cache/update/all',
+            success: function (data) {
+                var d = JSON.parse(data);
+                mdui.snackbar({
+                    message: d.msg,
+                    timeout: 3000
+                });
+            }
+        });
+    },function(){
+    }, {
+        "confirmText": "确认",
+        "cancelText": "取消",
+    });
+});
 $("#refreshCacheBtn").on('click', function (ev){
     var selectRecords = $('.mdui-table-row-selected');
     if(selectRecords.length != 1){
@@ -683,11 +723,16 @@ $("#closeUploadBtn").on('click', function (ev){
 //预览配置重置
 $("#resetViewConfig").on('click', function (ev){
     $("#configForm").find("input[name=enable_preview]").prop("checked", true);
+    $("#configForm").find("input[name=subtitle][value='']").prop('checked',true);
+    $("#configForm").find("input[name=danmuku][value='']").prop('checked',true);
+    $("#configForm").find("input[name=enable_lrc]").prop("checked", false);
     $("#configForm").find("input[name=image]").val("png,gif,jpg,bmp,jpeg,ico,svg");
     $("#configForm").find("input[name=video]").val("mp4,mkv,m3u8,ts,avi");
     $("#configForm").find("input[name=audio]").val("mp3,wav,ape,flac");
     $("#configForm").find("input[name=code]").val("txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini");
     $("#configForm").find("input[name=other]").val("*");
+    $("#configForm").find("input[name=lrc_path]").val("");
+    $("#configForm").find("input[name=subtitle_path]").val("");
 });
 //手动上传文件-end
 $.fn.serializeObject = function()

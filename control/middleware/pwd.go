@@ -7,12 +7,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
 func Check(c *gin.Context) {
 	fullPath := c.Request.URL.Path
-	account, fullPath, path, bypassName := ParseFullPath(fullPath)
+	account, fullPath, path, bypassName := ParseFullPath(fullPath, c.Request.Host)
 	c.Set("account", account)
 	c.Set("path", path)
 	c.Set("full_path", fullPath)
@@ -127,7 +128,11 @@ func GetPwdFromCookie(pwd, fullPath string) string {
 	return ""
 }
 
-func ParseFullPath(path string) (module.Account, string, string, string) {
+func ParseFullPath(path, host string) (module.Account, string, string, string) {
+	if strings.HasPrefix(path, "/d_") {
+		//old path
+		path = OldParseFullPath(path)
+	}
 	if path == "" {
 		path = "/"
 	}
@@ -144,7 +149,7 @@ func ParseFullPath(path string) (module.Account, string, string, string) {
 	}
 	paths := strings.Split(path, "/")
 	accountName := paths[1]
-	account, bypassName := GetCurrentAccount(accountName)
+	account, bypassName := GetCurrentAccount(accountName, host)
 	path = strings.Join(paths[2:], "/")
 	path = "/" + path
 	if fullPath != "/" && fullPath[len(fullPath)-1:] == "/" {
@@ -153,7 +158,14 @@ func ParseFullPath(path string) (module.Account, string, string, string) {
 	return account, fullPath, path, bypassName
 }
 
-func GetCurrentAccount(name string) (module.Account, string) {
+func OldParseFullPath(path string) string {
+	iStr := util.GetBetweenStr(path, "_", "/")
+	index, _ := strconv.Atoi(iStr)
+	account := module.GloablConfig.Accounts[index]
+	return strings.ReplaceAll(path, "/d_"+iStr, "/"+account.Name)
+}
+
+func GetCurrentAccount(name, host string) (module.Account, string) {
 	//get account from bypass
 	var bypass module.Bypass
 	if len(module.GloablConfig.BypassList) > 0 {
@@ -185,8 +197,15 @@ func GetCurrentAccount(name string) (module.Account, string) {
 	} else {
 		for _, ac := range module.GloablConfig.Accounts {
 			if ac.Name == name {
-				account = ac
-				break
+				if ac.Host != "" && host != "" {
+					if ac.Host == host {
+						account = ac
+						break
+					}
+				} else {
+					account = ac
+					break
+				}
 			}
 		}
 	}

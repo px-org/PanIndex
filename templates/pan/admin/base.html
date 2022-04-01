@@ -51,7 +51,7 @@
         <a href="{{$.config.AdminPath}}" class="mdui-typo-title">配置</a>
         <div class="mdui-toolbar-spacer"></div>
         {{- if ne $.redirect_url "login"}}
-        <a target="_blank" href="/api/v3/admin/config" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上传配置（JSON）'}"><i class="mdui-icon material-icons">cloud_upload</i></a>
+        <!--<a target="_blank" href="/api/v3/admin/config" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上传配置（JSON）'}"><i class="mdui-icon material-icons">cloud_upload</i></a>-->
         <a target="_blank" href="/api/v3/admin/config" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '导出配置（JSON）'}"><i class="mdui-icon material-icons">settings</i></a>
         {{- end}}
         <a id="theme-toggle" href="JavaScript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{- if eq $.theme "mdui-dark"}}5{{- else}}4{{- end}}</i></a>

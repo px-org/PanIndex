@@ -68,11 +68,11 @@
                 {{- range $index, $item := $.pre_paths}}
                 <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
                 <div class="mdui-chip" onclick="window.open('{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
-                    <span class="mdui-chip-title">{{.PathName}}</span>
+                    <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
                 </div>
                 {{- end}}
             </div>
-            {{- if not $.has_pwd}}
+            {{- if and (not $.has_pwd) (eq $.config.Head "1")}}
             <div id="headDiv" class="mdui-typo" style="display: none">
                 <pre id="headContent" class="pure-pre md-content"></pre>
                 <input id="head" type="hidden" value="{{.HeadContent}}" />

@@ -55,7 +55,7 @@
              <label class="mdui-textfield-label">绑定网盘</label>
              <div class="mdui-list mdui-list-dense">
                     {{- range $.config.Accounts}}
-                    <label class="mdui-list-item mdui-ripple">
+                    <label class="mdui-list-item mdui-ripple" style="max-height: 500px;overflow: auto">
                         <i class="mdui-list-item-icon mdui-icon material-icons">face</i>
                         <div class="mdui-list-item-content">{{.Name}}</div>
                         <div class="mdui-checkbox">

@@ -209,17 +209,17 @@ $(document).ready(function() {
         $("#history_play_list_menu").attr("style", "width:22%;max-height: 200px;overflow:scroll");
     });
     initPlayHistoryList();
-});
-$("#input-password").bind('keydown', function(event) {
-    if (event.key === "Enter") {
-        var dfp = $(this).attr("data-file-path");
-        promptPwd(dfp);
-    }
+    $("#input-password").on('keydown', function(event) {
+        if (event.key === "Enter") {
+            var dfp = $(this).attr("data-file-path");
+            promptPwd(dfp);
+        }
+    });
 });
 function promptPwd(){
     var pwd = $("#input-password").val();
     var fullPath = $("#input-password").attr("data-file-path");
-    if(pwd && pwd != "" && pwd != null && pwd != "null"){
+    if(pwd && pwd != "" && pwd != null && pwd != "null" && pwd.length < 30){
         var result = Cookies.get("file_pwd");
         var ppwd = md5(fullPath) + ":" + pwd;
         if (result && result != null && result != "null" && result != ""){

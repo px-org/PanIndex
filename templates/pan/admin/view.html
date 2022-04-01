@@ -7,6 +7,7 @@
         <h3> 文件预览 <small>多个后缀名，半角英文逗号分隔</small></h3>
     </div>
     <form id="configForm">
+        <div class="mdui-text-color-theme mdui-typo-subheading mdui-p-b-2">文件后缀</div>
         <div>
             <label class="mdui-textfield-label">是否开启预览</label>
             <label class="mdui-switch">
@@ -38,6 +39,81 @@
             <label class="mdui-textfield-label">其他（other）</label>
             <input class="mdui-textfield-input" type="text" name="other" value="{{$.config.Other}}" />
             <div class="mdui-textfield-helper mdui-typo">这部分文件不支持预览， 但是也可以跳转到预览页</div>
+        </div>
+        <div class="mdui-text-color-purple mdui-typo-subheading mdui-p-b-2 mdui-p-t-2">播放增强</div>
+        <div>
+            <label class="mdui-textfield-label">歌词(lrc)</label>
+            <label class="mdui-switch">
+                <input type="checkbox" name="enable_lrc" {{if eq $.config.EnableLrc "1"}}checked{{else}}{{end}}/>
+                <i class="mdui-switch-icon"></i>
+            </label>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">歌词路径(path)</label>
+            <input class="mdui-textfield-input" type="text" name="lrc_path" value="{{$.config.LrcPath}}" placeholder="lrc/" />
+            <div class="mdui-textfield-helper mdui-typo">相对路径，开启后将自动加载歌词， 歌词文件需要和歌曲文件同名, LRC</div>
+        </div>
+        <div>
+            <label class="mdui-textfield-label">字幕（subtitle）</label>
+            <div class="mdui-row-md-4">
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="" {{if eq $.config.Subtitle ""}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        关闭
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="srt" {{if eq $.config.Subtitle "srt"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        srt
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="vtt" {{if eq $.config.Subtitle "vtt"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        vtt
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="ass" {{if eq $.config.Subtitle "ass"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        ass
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">字幕路径(path)</label>
+            <input class="mdui-textfield-input" type="text" name="subtitle_path" value="{{$.config.SubtitlePath}}" placeholder="subtitle/" />
+            <div class="mdui-textfield-helper mdui-typo">相对路径，开启后将自动加载字幕，字幕文件需要和视频文件同名</div>
+        </div>
+        <div>
+            <label class="mdui-textfield-label">弹幕（danmuku）</label>
+            <div class="mdui-row-md-4">
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="danmuku" value="1" {{if eq $.config.Danmuku "1"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        开启
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="danmuku" value="0" {{if eq $.config.Danmuku "0"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        关闭
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">弹幕路径(path)</label>
+            <input class="mdui-textfield-input" type="text" name="danmuku_path" value="{{$.config.DanmukuPath}}" placeholder="danmuku/" />
+            <div class="mdui-textfield-helper mdui-typo">相对路径，弹幕文件需要和视频文件同名，video.xml</div>
         </div>
         <div class="mdui-row-xs-1">
             <div class="mdui-col">

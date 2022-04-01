@@ -237,15 +237,17 @@ func Templates(fs embed.FS) *template.Template {
 		tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, theme)
 		dataBuf, _ := fs.ReadFile(tmpFile)
 		data := string(dataBuf)
-		if util.FileExist("./templates/" + tmpFile) {
-			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
+		if util.FileExist("./" + tmpFile) {
+			s, _ := ioutil.ReadFile("./" + tmpFile)
 			data = string(s)
+
 		}
 		tmpl.New(tmpFile).Funcs(template.FuncMap{
-			"unescaped":   unescaped,
-			"contains":    strings.Contains,
-			"iconclass":   iconclass,
-			"FormateName": FormateName,
+			"unescaped":    unescaped,
+			"contains":     strings.Contains,
+			"iconclass":    iconclass,
+			"FormateName":  FormateName,
+			"TruncateName": TruncateName,
 		}).Parse(data)
 	}
 	//添加详情模板
@@ -254,15 +256,16 @@ func Templates(fs embed.FS) *template.Template {
 		tmpName := fmt.Sprintf("templates/pan/%s/view-%s.html", "mdui", vt)
 		dataBuf, _ := fs.ReadFile(tmpName)
 		data := string(dataBuf)
-		if util.FileExist("./templates/" + tmpName) {
-			s, _ := ioutil.ReadFile("./templates/" + tmpName)
+		if util.FileExist("./" + tmpName) {
+			s, _ := ioutil.ReadFile("./" + tmpName)
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{
-			"unescaped":   unescaped,
-			"contains":    strings.Contains,
-			"iconclass":   iconclass,
-			"FormateName": FormateName,
+			"unescaped":    unescaped,
+			"contains":     strings.Contains,
+			"iconclass":    iconclass,
+			"FormateName":  FormateName,
+			"TruncateName": TruncateName,
 		}).Parse(data)
 	}
 	return tmpl
@@ -273,16 +276,17 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 		tmpName := fmt.Sprintf("templates/pan/%s/%s.html", folder, vt)
 		dataBuf, _ := fs.ReadFile(tmpName)
 		data := string(dataBuf)
-		if util.FileExist("./templates/" + tmpName) {
-			s, _ := ioutil.ReadFile("./templates/" + tmpName)
+		if util.FileExist("./" + tmpName) {
+			s, _ := ioutil.ReadFile("./" + tmpName)
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{
-			"unescaped":   unescaped,
-			"contains":    strings.Contains,
-			"iconclass":   iconclass,
-			"isLast":      isLast,
-			"FormateName": FormateName,
+			"unescaped":    unescaped,
+			"contains":     strings.Contains,
+			"iconclass":    iconclass,
+			"isLast":       isLast,
+			"FormateName":  FormateName,
+			"TruncateName": TruncateName,
 		}).Parse(data)
 	}
 }
@@ -314,4 +318,12 @@ func FormateName(filename string) string {
 	fileSuffix := path.Ext(filename)
 	filePrefix := filenameAll[0 : len(filenameAll)-len(fileSuffix)]
 	return filePrefix
+}
+
+func TruncateName(filename string) string {
+	nameRune := []rune(filename)
+	if len(nameRune) > 20 {
+		return string(nameRune[0:20]) + "..."
+	}
+	return filename
 }

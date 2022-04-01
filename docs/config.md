@@ -27,6 +27,20 @@
   ```html
    ©2022 <a href="https://github.com/libsgh" target="_blank">libsgh</a>. All rights reserved.
   ```
+  * 借助于Footer添加评论系统
+    * [valine](https://valine.js.org/)
+    ```html
+     <script src='//unpkg.com/valine/dist/Valine.min.js'></script>
+     <div id="vcomments" class="mdui-p-a-2"></div>
+     <script>
+        new Valine({
+          el: '#vcomments',
+          appId: '',
+          appKey: ''
+        })
+     </script>
+     ©2021 <a href="https://github.com/libsgh/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
+  ```
 * 自定义CSS：定义在页面head部分的html片段，可以是style，也可以指定外部css样式表。
     ```html
     <style>

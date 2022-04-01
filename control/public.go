@@ -53,7 +53,7 @@ func Raw(c *gin.Context) {
 		CommonResp(c, "unauthorized", 401, nil)
 		return
 	}
-	account, fullpath, path, _ := middleware.ParseFullPath(p)
+	account, fullpath, path, _ := middleware.ParseFullPath(p, "")
 	fileName := util.GetFileName(fullpath)
 	fileId := service.GetFileIdByPath(account, path, fullpath)
 	downloadUrl := service.GetDownloadUrl(account, fileId)
@@ -88,7 +88,7 @@ func Files(c *gin.Context) {
 	viewType := c.PostForm("viewType")
 	sColumn := c.PostForm("sortColumn")
 	sOrder := c.PostForm("sortOrder")
-	account, fullPath, p, _ := middleware.ParseFullPath(path)
+	account, fullPath, p, _ := middleware.ParseFullPath(path, "")
 	files := service.GetFiles(account, p, fullPath, sColumn, sOrder, viewType)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",

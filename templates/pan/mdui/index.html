@@ -67,11 +67,11 @@
 				{{- range $.pre_paths}}
 				<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
 				<div class="mdui-chip" onclick="window.open('{{.PathUrl}}','_self')">
-					<span class="mdui-chip-title">{{.PathName}}</span>
+					<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
 				</div>
 				{{- end}}
 			</div>
-			{{- if not $.has_pwd}}
+			{{- if and (not $.has_pwd) (eq $.config.Head "1")}}
 			<div id="headDiv" class="mdui-typo" style="display: none">
 				<pre id="headContent" class="pure-pre md-content"></pre>
 				<input id="head" type="hidden" value="{{.HeadContent}}" />
@@ -243,7 +243,7 @@
 							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">
 								{{iconclass .IsFolder .FileType}}
 							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
-							<a href="{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon">file_download</a>
+							<a href="{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon" style="font-size: 30px">file_download</a>
 							{{- end}}
 						</div>
 						{{- if .IsFolder}}
@@ -252,7 +252,7 @@
 							{{.SizeFmt}} / {{.LastOpTime}}
 						</div>
 						{{- end}}
-						{{- if $.SearchKey}}
+						{{- if $.search_key}}
 						<div class="mdui-list-item-text mdui-list-item-one-line">
 							{{.Path}}
 						</div>
@@ -264,7 +264,7 @@
 				{{- end}}
 			</ul>
 		</div>
-		{{- if not $.has_pwd}}
+		{{- if and (not $.has_pwd) (eq $.config.Readme "1")}}
 		<div id="content" class="md-content mdui-typo mdui-shadow-2" style="display: none;padding: 15px;margin: 10px;">
 			<div class="mdui-chip readme">
 				<span class="mdui-chip-icon">M</span>
