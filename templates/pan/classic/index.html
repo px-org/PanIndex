@@ -34,6 +34,7 @@
     <script src="{{index $.config.CdnFiles "hls@js"}}"></script>
     <script src="{{index $.config.CdnFiles "flv@js"}}"></script>
     <script src="{{index $.config.CdnFiles "artplayer@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "artplayer-danmuku@js"}}"></script>
     <script src="{{index $.config.CdnFiles "clipboard@js"}}"></script>
     <script src="{{index $.config.CdnFiles "video@simple@js"}}?v={{$.version}}"></script>
     <script src="{{index $.config.CdnFiles "simple@index@js"}}?v={{$.version}}"></script>
@@ -108,9 +109,9 @@
         {{- end}}
     </p>
 </div>
-<template id="video-modal" data-config-subtitle="{{$.config.Subtitle}}"
-          data-config-subtitle-path="{{$.config.SubtitlePath}}"></template>
 {{end}}
 <div id="aplayer" data-lrc-path="{{$.config.LrcPath}}" data-enable-lrc="{{$.config.EnableLrc}}"></div>
+<template id="video-modal" data-config-subtitle="{{$.config.Subtitle}}" data-config-danmuku="{{$.config.Danmuku}}"
+          data-config-danmuku-path="{{$.config.DanmukuPath}}" data-config-subtitle-path="{{$.config.SubtitlePath}}"></template>
 </body>
 </html>

@@ -89,7 +89,31 @@
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">字幕路径(path)</label>
             <input class="mdui-textfield-input" type="text" name="subtitle_path" value="{{$.config.SubtitlePath}}" placeholder="subtitle/" />
-            <div class="mdui-textfield-helper mdui-typo">相对路径，开启后将自动加载字幕，字幕文件需要和视频文件同名，SRT</div>
+            <div class="mdui-textfield-helper mdui-typo">相对路径，开启后将自动加载字幕，字幕文件需要和视频文件同名</div>
+        </div>
+        <div>
+            <label class="mdui-textfield-label">弹幕（danmuku）</label>
+            <div class="mdui-row-md-4">
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="danmuku" value="1" {{if eq $.config.Danmuku "1"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        开启
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="danmuku" value="0" {{if eq $.config.Danmuku "0"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        关闭
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">弹幕路径(path)</label>
+            <input class="mdui-textfield-input" type="text" name="danmuku_path" value="{{$.config.DanmukuPath}}" placeholder="danmuku/" />
+            <div class="mdui-textfield-helper mdui-typo">相对路径，弹幕文件需要和视频文件同名，video.xml</div>
         </div>
         <div class="mdui-row-xs-1">
             <div class="mdui-col">

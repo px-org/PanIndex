@@ -713,6 +713,7 @@ $("#closeUploadBtn").on('click', function (ev){
 $("#resetViewConfig").on('click', function (ev){
     $("#configForm").find("input[name=enable_preview]").prop("checked", true);
     $("#configForm").find("input[name=subtitle][value='']").prop('checked',true);
+    $("#configForm").find("input[name=danmuku][value='']").prop('checked',true);
     $("#configForm").find("input[name=enable_lrc]").prop("checked", false);
     $("#configForm").find("input[name=image]").val("png,gif,jpg,bmp,jpeg,ico,svg");
     $("#configForm").find("input[name=video]").val("mp4,mkv,m3u8,ts,avi");

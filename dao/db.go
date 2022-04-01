@@ -40,6 +40,8 @@ var InitConfigItems = []module.ConfigItem{
 	{"lrc_path", "", "view"},
 	{"subtitle", "", "view"},
 	{"subtitle_path", "", "view"},
+	{"danmuku", "0", "view"},
+	{"danmuku_path", "", "view"},
 	{"enable_safety_link", "0", "safety"},
 	{"only_referrer", "", "safety"},
 	{"is_null_referrer", "0", "safety"},

@@ -75,6 +75,8 @@ type Config struct {
 	LrcPath          string            `json:"lrc_path"`
 	Subtitle         string            `json:"subtitle"`
 	SubtitlePath     string            `json:"subtitle_path"`
+	Danmuku          string            `json:"danmuku"`
+	DanmukuPath      string            `json:"danmuku_path"`
 	SColumn          string            `json:"s_column"`      //排序字段
 	SOrder           string            `json:"s_order"`       //排序顺序
 	PwdFiles         map[string]string `json:"pwd_files"`     //文件id:pwd

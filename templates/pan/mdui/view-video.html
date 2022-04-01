@@ -6,6 +6,8 @@
     <button id="playlistBtn" data-account-id="{{$.account.Id}}"
             data-config-subtitle="{{$.config.Subtitle}}"
             data-config-subtitle-path="{{$.config.SubtitlePath}}"
+            data-config-danmuku="{{$.config.Danmuku}}"
+            data-config-danmuku-path="{{$.config.DanmukuPath}}"
             data-file-name="{{(index $.fns 0).FileName}}" data-path="{{(index $.fns 0).Path}}"
             data-file-type="{{(index $.fns 0).FileType}}" data-mode="{{$.account.Mode}}" data-parent-path="{{$.parent_path}}"
             data-file-id="{{(index $.fns 0).FileId}}" class="mdui-btn mdui-btn-block mdui-color-indigo-50 br" style="margin-bottom: 15px">
@@ -24,6 +26,7 @@
 <script src="{{index $.config.CdnFiles "hls@js"}}"></script>
 <script src="{{index $.config.CdnFiles "flv@js"}}"></script>
 <script src="{{index $.config.CdnFiles "artplayer@js"}}"></script>
+<script src="{{index $.config.CdnFiles "artplayer-danmuku@js"}}"></script>
 <script src="{{index $.config.CdnFiles "natural@compare@js"}}"></script>
 <script src="{{index $.config.CdnFiles "video@mdui@js"}}"></script>
 {{end}}

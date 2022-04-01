@@ -51,6 +51,11 @@ function initVideo(container, qas, title, parentPath){
     var vname = title.split(".")[0];
     var subtitle = $("#video-modal").attr("data-config-subtitle");
     var subtitlePath = $("#video-modal").attr("data-config-subtitle-path");
+    var danmuku = $("#video-modal").attr("data-config-danmuku");
+    var danmukuPath = $("#video-modal").attr("data-config-danmuku-path");
+    if(parentPath == "/"){
+        parentPath = "";
+    }
     var settings = [
         {
             html: '选择画质',
@@ -64,7 +69,7 @@ function initVideo(container, qas, title, parentPath){
         }
     ];
     if(subtitle != ""){
-        vname =  subtitlePath + vname;
+        var vpath =  subtitlePath + vname;
         var subtitlePlugin = {
             html: '选择字幕',
             width: 250,
@@ -73,7 +78,7 @@ function initVideo(container, qas, title, parentPath){
                 {
                     default: true,
                     html: '<span style="color:yellow">字幕 01</span>',
-                    url: parentPath + "/" + vname + '.' + subtitle
+                    url: parentPath + "/" + vpath + '.' + subtitle
                 }
             ],
             onSelect: function(item, $dom) {
@@ -87,6 +92,44 @@ function initVideo(container, qas, title, parentPath){
             },
         };
         settings.push(subtitlePlugin);
+    }
+    var plugins = [];
+    if(danmuku != ""){
+        var danmukuPath = subtitlePath + vname + ".xml";
+        var danmukuPlugin = {
+            html: '弹幕',
+            width: 250,
+            selector: [
+                {
+                    default: true,
+                    html: '<span style="color:green">显示</span>',
+                    status: 1,
+                },
+                {
+                    default: false,
+                    html: '<span style="color:red">隐藏</span>',
+                    status: 0,
+                }
+            ],
+            onSelect: function(item, $dom) {
+                if(item.status == 0){
+                    art.plugins.artplayerPluginDanmuku.hide();
+                }else{
+                    art.plugins.artplayerPluginDanmuku.show();
+                }
+                return item.html;
+            }
+        };
+        settings.push(danmukuPlugin);
+        plugins.push(artplayerPluginDanmuku({
+            danmuku: parentPath + "/" + danmukuPath,
+            speed: 5,
+            maxlength: 50,
+            margin: [10, 100],
+            opacity: 1,
+            fontSize: 25,
+            synchronousPlayback: false,
+        }));
     }
     if(qas.length > 0){
         $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
@@ -125,6 +168,7 @@ function initVideo(container, qas, title, parentPath){
             theme: '#23ade5',
             settings: settings,
             whitelist: ['*'],
+            plugins: plugins
         });
         return art;
     }
