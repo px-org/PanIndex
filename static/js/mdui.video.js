@@ -74,6 +74,7 @@ function initVideo(container, qas, title){
     }
     var id = md5(currentUrl);
     if(qas.length > 0){
+        $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
         var art = new Artplayer({
             title: title,
             container: container,
