@@ -117,6 +117,7 @@ function dynamicChgMode(mode){
         $(".sync-div").hide();
         $("#ApiUrlDiv").hide();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "cloud189"){
         $("#RedirectUriDiv").hide();
@@ -130,6 +131,7 @@ function dynamicChgMode(mode){
         $("#user_label").text("用户名");
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("-11");
     }else if (mode == "teambition"){
         $("#RedirectUriDiv").hide();
@@ -144,6 +146,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
         $("#accountForm").find("input[name=root_id]").val("");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "teambition-us"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -157,6 +160,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#password_label").text("密码");
         $("#accountForm").find("input[name=root_id]").val("");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "aliyundrive"){
         $("#RedirectUriDiv").hide();
         $("#ApiUrlDiv").hide();
@@ -165,6 +169,7 @@ function dynamicChgMode(mode){
         $("#PasswordDiv").hide();
         $(".sync-div").show();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").show();
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#accountForm").find("input[name=root_id]").val("root");
     }else if (mode == "onedrive"){
@@ -178,6 +183,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "onedrive-cn"){
         $("#RedirectUriDiv").show();
@@ -190,6 +196,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
         $("#SiteIdDiv").hide();
+        $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "ftp"){
         $("#RedirectUriDiv").hide();
@@ -205,6 +212,7 @@ function dynamicChgMode(mode){
         $("#api_url").attr("placeholder", "192.168.1.1:21");
         $("#SiteIdDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "webdav"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -219,6 +227,7 @@ function dynamicChgMode(mode){
         $("#api_url").attr("placeholder", "https://webdav.mydomain.me");
         $("#SiteIdDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "yun139"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -231,6 +240,7 @@ function dynamicChgMode(mode){
         $("#password_label").text("COOKIE");
         $("#accountForm").find("input[name=password]").attr("type", "text");
         $("#accountForm").find("input[name=root_id]").val("00019700101000000001");
+        $("#aliQrCodeBtn").hide();
     }else if (mode == "googledrive"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
@@ -243,6 +253,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("");
+        $("#aliQrCodeBtn").hide();
     }
     diskd.handleUpdate();
 }
