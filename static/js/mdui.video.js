@@ -7,7 +7,7 @@ var fileType = $("#playlistBtn").attr("data-file-type");
 var fileName = $("#playlistBtn").attr("data-file-name");
 var parentPath = $("#playlistBtn").attr("data-parent-path");
 var path = $("#playlistBtn").attr("data-path");
-var enablleSubtitle = $("#playlistBtn").attr("data-config-enablle-subtitle");
+var subtitle = $("#playlistBtn").attr("data-config-subtitle");
 var subtitlePath = $("#playlistBtn").attr("data-config-subtitle-path");
 var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
 var qas = getQas(accountId, fileId, fileType);
@@ -43,27 +43,26 @@ function initVideo(container, qas, title){
             },
         }
     ];
-    if(enablleSubtitle == "1"){
+    if(subtitle != ""){
         vname =  subtitlePath + vname;
         var subtitlePlugin = {
             html: '选择字幕',
-                width: 250,
+            width: 250,
             tooltip: '字幕',
             selector: [
             {
                 default: true,
                 html: '<span style="color:yellow">字幕 01</span>',
-                url: vname + '.srt',
+                url: vname + '.' + subtitle,
             }
         ],
             onSelect: function(item, $dom) {
             art.subtitle.url = item.url;
             art.subtitle.encoding = "utf-8";
             art.subtitle.bilingual = true;
-            art.subtitle.style = {
-                color: '#03A9F4',
+            art.subtitle.style({
                 'font-size': '30px',
-            };
+            });
             return item.html;
         },
         };
@@ -75,7 +74,6 @@ function initVideo(container, qas, title){
     }
     var id = md5(currentUrl);
     if(qas.length > 0){
-        $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
         var art = new Artplayer({
             title: title,
             container: container,

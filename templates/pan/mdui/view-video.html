@@ -4,7 +4,7 @@
 {{define "content-video"}}
 <div class="mdui-shadow-2 mdui-clearfix br" style="padding: 15px;margin: 10px;">
     <button id="playlistBtn" data-account-id="{{$.account.Id}}"
-            data-config-enablle-subtitle="{{$.config.EnableSubtitle}}"
+            data-config-subtitle="{{$.config.Subtitle}}"
             data-config-subtitle-path="{{$.config.SubtitlePath}}"
             data-file-name="{{(index $.fns 0).FileName}}" data-path="{{(index $.fns 0).Path}}"
             data-file-type="{{(index $.fns 0).FileType}}" data-mode="{{$.account.Mode}}" data-parent-path="{{$.parent_path}}"

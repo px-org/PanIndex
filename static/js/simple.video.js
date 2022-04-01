@@ -47,10 +47,49 @@ function buildOriginalVideo(url, ft){
     qas.push(qa);
     return qas;
 }
-
-function initVideo(container, qas, title){
+function initVideo(container, qas, title, parentPath){
     var vname = title.split(".")[0];
+    var subtitle = $("#video-modal").attr("data-config-subtitle");
+    var subtitlePath = $("#video-modal").attr("data-config-subtitle-path");
+    var settings = [
+        {
+            html: '选择画质',
+            width: 150,
+            tooltip: qas[0].html,
+            selector: qas,
+            onSelect: function(item, $dom) {
+                art.switchQuality(item.url, item.html);
+                return item.html;
+            },
+        }
+    ];
+    if(subtitle != ""){
+        vname =  subtitlePath + vname;
+        var subtitlePlugin = {
+            html: '选择字幕',
+            width: 250,
+            tooltip: '字幕',
+            selector: [
+                {
+                    default: true,
+                    html: '<span style="color:yellow">字幕 01</span>',
+                    url: parentPath + "/" + vname + '.' + subtitle
+                }
+            ],
+            onSelect: function(item, $dom) {
+                art.subtitle.url = item.url;
+                art.subtitle.encoding = "utf-8";
+                art.subtitle.bilingual = true;
+                art.subtitle.style({
+                    'font-size': '30px',
+                });
+                return item.html;
+            },
+        };
+        settings.push(subtitlePlugin);
+    }
     if(qas.length > 0){
+        $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
         var art = new Artplayer({
             title: title,
             container: container,
@@ -71,26 +110,21 @@ function initVideo(container, qas, title){
                 },
             },
             quality: qas,
+            //quality: qas,
+            autoSize: true,
             fullscreen: true,
-            fullscreenWeb: true,
-            pip: true,
-            autoplay: true,
+            fullscreenWeb: false,
+            //pip: true,
+            autoplay: false,
             autoSize: true,
             playbackRate: true,
             aspectRatio: true,
-            screenshot: true,
+            //screenshot: true,
             setting: true,
             miniProgressBar: true,
-            subtitle: {
-                url: vname + '.vtt',
-                type: 'srt',
-                encoding: 'utf-8',
-                bilingual: true,
-                style: {
-                    color: '#03A9F4',
-                    'font-size': '30px',
-                },
-            },
+            theme: '#23ade5',
+            settings: settings,
+            whitelist: ['*'],
         });
         return art;
     }

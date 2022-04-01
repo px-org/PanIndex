@@ -49,12 +49,10 @@
                     v.url = item.file_name;
                     v.cover = '/static/img/music-cover.png';
                     if(enableLrc == "1"){
-                        enableLrc
                         v.lrc = lrcPath + vname + '.lrc';
                     }
                     playList.push(v)
                 });
-                console.log(playList);
                 const ap = new APlayer({
                     container: document.getElementById('aplayer'),
                     mini: false,

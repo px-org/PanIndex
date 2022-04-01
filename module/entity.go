@@ -73,7 +73,7 @@ type Config struct {
 	Other            string            `json:"other"`          //other
 	EnableLrc        string            `json:"enable_lrc"`
 	LrcPath          string            `json:"lrc_path"`
-	EnableSubtitle   string            `json:"enable_subtitle"`
+	Subtitle         string            `json:"subtitle"`
 	SubtitlePath     string            `json:"subtitle_path"`
 	SColumn          string            `json:"s_column"`      //排序字段
 	SOrder           string            `json:"s_order"`       //排序顺序

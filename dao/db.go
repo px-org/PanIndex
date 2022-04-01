@@ -38,7 +38,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"other", "*", "view"},
 	{"enable_lrc", "0", "view"},
 	{"lrc_path", "", "view"},
-	{"enable_subtitle", "0", "view"},
+	{"subtitle", "", "view"},
 	{"subtitle_path", "", "view"},
 	{"enable_safety_link", "0", "safety"},
 	{"only_referrer", "", "safety"},

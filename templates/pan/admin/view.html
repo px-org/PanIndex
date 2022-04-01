@@ -55,10 +55,36 @@
         </div>
         <div>
             <label class="mdui-textfield-label">字幕（subtitle）</label>
-            <label class="mdui-switch">
-                <input type="checkbox" name="enable_subtitle" {{if eq $.config.EnableSubtitle "1"}}checked{{else}}{{end}}/>
-                <i class="mdui-switch-icon"></i>
-            </label>
+            <div class="mdui-row-md-4">
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="" {{if eq $.config.Subtitle ""}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        关闭
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="srt" {{if eq $.config.Subtitle "srt"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        srt
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="vtt" {{if eq $.config.Subtitle "vtt"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        vtt
+                    </label>
+                </div>
+                <div class="mdui-col">
+                    <label class="mdui-radio">
+                        <input type="radio" name="subtitle" value="ass" {{if eq $.config.Subtitle "ass"}}checked{{end}} />
+                        <i class="mdui-radio-icon"></i>
+                        ass
+                    </label>
+                </div>
+            </div>
         </div>
         <div class="mdui-textfield">
             <label class="mdui-textfield-label">字幕路径(path)</label>

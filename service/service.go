@@ -133,7 +133,8 @@ func Search(searchKey string) []module.FileNode {
 		Select("max(account_id)").
 		Group("bypass_id").
 		Find(&byPassAccounts)
-	sql := `select
+	if len(byPassAccounts) > 0 {
+		sql := `select
 				fn.*
 			from
 				file_node fn
@@ -141,7 +142,18 @@ func Search(searchKey string) []module.FileNode {
 				fn.account_id = a.id
 			where
 				fn.file_name like ? and a.id not in ?`
-	dao.DB.Raw(sql, "%"+searchKey+"%", byPassAccounts).Find(&fns)
+		dao.DB.Raw(sql, "%"+searchKey+"%", byPassAccounts).Find(&fns)
+	} else {
+		sql := `select
+				fn.*
+			from
+				file_node fn
+			left join account a on
+				fn.account_id = a.id
+			where
+				fn.file_name like ?`
+		dao.DB.Raw(sql, "%"+searchKey+"%").Find(&fns)
+	}
 	return fns
 }
 

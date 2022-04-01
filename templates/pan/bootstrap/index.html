@@ -24,7 +24,7 @@
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 		}
 		#heading {
-			margin: 0px 20px 0px 0px;
+			margin: 0px 0px 0px 0px;
 			font-weight: 400;
 		}
 		.file-name a {
@@ -122,12 +122,12 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-sm-12 table-responsive">
-					<table class="table table-hover">
+					<table class="table table-hover text-nowrap">
 						<thead>
 						<tr>
 							<th class="file-name"><span class="table-head" data-order-seq="" data-order-type="file-name" style="cursor: default;">Name</span></th>
 							<th class="file-size"><span class="table-head" data-order-seq="" data-order-type="file-size" style="cursor: default;">Size</span></th>
-							<th class="file-date-modified"><span class="table-head" data-order-seq="" data-order-type="file-date-modified" style="cursor: default;">Date Modified</span></th></th>
+							<th class="file-date-modified d-none d-md-block d-lg-block"><span class="table-head" data-order-seq="" data-order-type="file-date-modified" style="cursor: default;">Date Modified</span></th></th>
 							<th class="text-center">Download</th>
 						</tr>
 						</thead>
@@ -138,7 +138,7 @@
 										<a class="icon icon-up" href="{{$.parent_path}}"><i class="fa fa-chevron-left" aria-hidden="true"></i>&nbsp;&nbsp;..</a>
 									</td>
 									<td class="file-size"></td>
-									<td class="file-date-modified"></td>
+									<td class="file-date-modified d-none d-md-block d-lg-block"></td>
 									<td class="file-size"></td>
 								</tr>
 							{{end}}
@@ -150,22 +150,22 @@
 											<i class="{{iconclass .IsFolder .FileType}}"></i>&nbsp;&nbsp;{{.FileName}}
 										</a>
 									{{- if $.search_key}}
-										<br><p style="margin-left: 30px">{{.Path}}</p>
+										<br><i class="fas fa-link"></i> {{.Path}}
 									{{- end}}
 									</td>
 									{{- else}}
 									<td class="file-name">
-										<a class="icon icon-file" data-file-type="{{.FileType}}" data-preview="{{$.config.EnablePreview}}" data-view-type="{{.ViewType}}" data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);">
+										<a class="icon icon-file" data-file-type="{{.FileType}}" data-preview="{{$.config.EnablePreview}}" data-view-type="{{.ViewType}}" data-title="{{.FileName}}" data-parent-path="{{.ParentPath}}" data-url="{{.Path}}" href="javascript:void(0);">
 											<i class="{{iconclass .IsFolder .FileType}}"></i>
 											&nbsp;&nbsp;{{.FileName}}
 										</a>
 										{{- if $.search_key}}
-											<br><p style="margin-left: 30px">{{.Path}}</p>
+											<br><i class="fas fa-link"></i> {{.Path}}
 										{{- end}}
 									</td>
 									{{- end}}
 									<td class="file-size">{{.SizeFmt}}</td>
-									<td class="file-date-modified">{{.LastOpTime}}</td>
+									<td class="file-date-modified d-none d-md-block d-lg-block">{{.LastOpTime}}</td>
 									<td class="text-center">
 										<a href="javascript:void(0)" data-path="{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" class="copyBtn">
 											<i class="fa fa-copy" aria-hidden="true"></i>
@@ -181,35 +181,31 @@
 						</tbody>
 					</table>
 				</div>
-				{{if .HasReadme}}
-					<div class="col-sm-12">
+				{{if and (not $.has_pwd) (eq $.config.Readme "1")}}
+					<div id="readmeDiv" class="col-sm-12" style="display: none;">
 						<div class="card" style="width: 100%">
 							<div class="card-header">
 								README.md
 							</div>
 							<div class="card-body">
-								<input id="readme" type="hidden" value="{{.ReadmeContent}}" />
 								<script src="{{index $.config.CdnFiles "marked@js"}}"></script>
 								<p id="content" class="card-text">
 								</p>
 								<script>
-									var c = $("#readme").val();
-									if(c != ""){
-										$("#content").append(marked(c));
-										$("#content").show();
-									}else{
-										var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw/README.md");
-										$.ajax({
-											method: 'GET',
-											url: fullUrl,
-											success: function (data) {
-												if(data != ""){
-													$("#content").append(marked(data));
-													$("#content").show();
-												}
-											}
-										});
+									var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}/README.md");
+									if("{{$.path}}" == "/"){
+										fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}README.md");
 									}
+									$.ajax({
+										method: 'GET',
+										url: fullUrl,
+										success: function (data) {
+											if(data && !data.status){
+												$("#content").html(marked.parse(data));
+												$("#readmeDiv").show();
+											}
+										}
+									});
 								</script>
 							</div>
 						</div>
@@ -228,7 +224,8 @@
 			</div>
 		</div>
 		{{end}}
-		<div id="aplayer"></div>
-		<template id="video-modal"></template>
+		<div id="aplayer" data-lrc-path="{{$.config.LrcPath}}" data-enable-lrc="{{$.config.EnableLrc}}"></div>
+		<template id="video-modal" data-config-subtitle="{{$.config.Subtitle}}"
+				  data-config-subtitle-path="{{$.config.SubtitlePath}}"></template>
 	</body>
 </html>
