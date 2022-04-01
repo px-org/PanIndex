@@ -210,7 +210,6 @@ $(document).ready(function() {
     });
     initPlayHistoryList();
     $("#input-password").on('keydown', function(event) {
-        debugger;
         if (event.key === "Enter") {
             var dfp = $(this).attr("data-file-path");
             promptPwd(dfp);
@@ -220,7 +219,7 @@ $(document).ready(function() {
 function promptPwd(){
     var pwd = $("#input-password").val();
     var fullPath = $("#input-password").attr("data-file-path");
-    if(pwd && pwd != "" && pwd != null && pwd != "null" && pwd.length > 30){
+    if(pwd && pwd != "" && pwd != null && pwd != "null" && pwd.length < 30){
         var result = Cookies.get("file_pwd");
         var ppwd = md5(fullPath) + ":" + pwd;
         if (result && result != null && result != "null" && result != ""){
