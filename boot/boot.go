@@ -237,9 +237,10 @@ func Templates(fs embed.FS) *template.Template {
 		tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, theme)
 		dataBuf, _ := fs.ReadFile(tmpFile)
 		data := string(dataBuf)
-		if util.FileExist("./templates/" + tmpFile) {
-			s, _ := ioutil.ReadFile("./templates/" + tmpFile)
+		if util.FileExist("./" + tmpFile) {
+			s, _ := ioutil.ReadFile("./" + tmpFile)
 			data = string(s)
+
 		}
 		tmpl.New(tmpFile).Funcs(template.FuncMap{
 			"unescaped":    unescaped,
@@ -255,8 +256,8 @@ func Templates(fs embed.FS) *template.Template {
 		tmpName := fmt.Sprintf("templates/pan/%s/view-%s.html", "mdui", vt)
 		dataBuf, _ := fs.ReadFile(tmpName)
 		data := string(dataBuf)
-		if util.FileExist("./templates/" + tmpName) {
-			s, _ := ioutil.ReadFile("./templates/" + tmpName)
+		if util.FileExist("./" + tmpName) {
+			s, _ := ioutil.ReadFile("./" + tmpName)
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{
@@ -275,8 +276,8 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 		tmpName := fmt.Sprintf("templates/pan/%s/%s.html", folder, vt)
 		dataBuf, _ := fs.ReadFile(tmpName)
 		data := string(dataBuf)
-		if util.FileExist("./templates/" + tmpName) {
-			s, _ := ioutil.ReadFile("./templates/" + tmpName)
+		if util.FileExist("./" + tmpName) {
+			s, _ := ioutil.ReadFile("./" + tmpName)
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{
