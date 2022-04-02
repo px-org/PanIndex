@@ -46,9 +46,9 @@
 		<div class="mdui-card-content">
 			<div style="padding: 0px 5px 12px;">
 				<div class="mdui-chip">
-					<span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#example-1'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
+					<span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#account-menu'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
 					{{- if gt (len $.accounts) 1 }}
-					<ul class="mdui-menu" id="example-1" style="max-height: 500px">
+					<ul class="mdui-menu" id="account-menu">
 						{{range $i, $a := $.accounts}}
 						<li class="mdui-menu-item">
 							<a href="/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq $a.Mode "cloud189"}}cyan{{else}}{{end}}{{if eq $a.Mode "onedrive"}}blue-200{{else}}{{end}}{{if eq $a.Mode "teambition"}}blue{{else}}{{end}}{{if eq $a.Mode "teambition-us"}}blue{{else}}{{end}}{{if eq $a.Mode "native"}}blue-grey{{else}}{{end}}{{if eq $a.Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>

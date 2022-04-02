@@ -215,6 +215,9 @@ $(document).ready(function() {
             promptPwd(dfp);
         }
     });
+    document.getElementById('account-menu').addEventListener('open.mdui.menu', function () {
+        $("#account-menu").attr("style", "max-height: "+$(".mdui-card-content").height()+"px; transform-origin: 0px 50%; position: absolute; top: -4px; left: 21px;");
+    });
 });
 function promptPwd(){
     var pwd = $("#input-password").val();
