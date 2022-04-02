@@ -529,7 +529,6 @@ $("#saveSafetyConfigBtn").on('click', function (ev){
 //防盗链-end
 function configSave() {
     var config = $("#configForm").serializeObject();
-    console.log(config);
     $.ajax({
         method: 'POST',
         url: AdminApiUrl + '/config',
@@ -884,7 +883,6 @@ $("#cachePolicy").on('change', function () {
 function saveCacheConfig(){
     var formData = $("#cacheConfigForm").serializeArray();
     var d = parseFormData(formData);
-    console.log(d);
     d["expire_time_span"] =  parseInt(d["expire_time_span"]);
     d["sync_child"] =  parseInt(d["sync_child"]);
     CommonRequest("/cache/config", "POST", d);
