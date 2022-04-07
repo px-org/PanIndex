@@ -123,8 +123,16 @@ func InitGlobalConfig() {
 	c.PwdFiles = GetPwdFilesMap()
 	c.BypassList = GetBypassList()
 	c.CdnFiles = util.GetCdnFilesMap(c.Cdn, module.VERSION)
+	c.ShareInfoList = GetShareInfoList()
 	module.GloablConfig = c
 	RoundRobin()
+}
+
+//share info all list
+func GetShareInfoList() []module.ShareInfo {
+	shareInfoList := []module.ShareInfo{}
+	DB.Where("1 = 1").Find(&shareInfoList)
+	return shareInfoList
 }
 
 //pwd files to map
@@ -473,7 +481,7 @@ func SaveBypass(bypass module.Bypass) string {
 		//check account bind
 		for _, account := range bypass.Accounts {
 			acs := []module.BypassAccounts{}
-			DB.Where("account_id = ? and and bypass_id!=?", account.Id, bypass.Id).Find(&acs)
+			DB.Where("account_id = ? and bypass_id!=?", account.Id, bypass.Id).Find(&acs)
 			if len(acs) > 0 {
 				return "保存失败，网盘已被其他分流绑定！"
 			}
@@ -657,4 +665,16 @@ func SelectBypassByAccountId(accountId string) module.Bypass {
 					where
 						ba.account_id = ?`, accountId).Find(&bypass)
 	return bypass
+}
+
+func SaveShareInfo(info module.ShareInfo) {
+	err := DB.Where("file_path=? and account_id=?", info.FilePath, info.AccountId).First(&module.ShareInfo{}).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		DB.Create(&info)
+	} else {
+		DB.Model(&[]module.ShareInfo{}).
+			Select("ShortCode", "IsFile").
+			Where("file_path=? and account_id=?", info.FilePath, info.AccountId).
+			Updates(&info)
+	}
 }

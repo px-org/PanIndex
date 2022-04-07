@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/qingstor/go-mime"
 	"github.com/robfig/cron/v3"
@@ -752,4 +753,40 @@ func GetExpireTime(timeStr string, d time.Duration) string {
 	}
 	t1 := t.Add(d)
 	return t1.Format("2006-01-02 15:04:05")
+}
+
+func ConfigToItem(obj interface{}) map[string]interface{} {
+	json, _ := jsoniter.MarshalToString(obj)
+	m := make(map[string]interface{})
+	err := jsoniter.Unmarshal([]byte(json), &m)
+	if err != nil {
+		log.Error(err)
+	}
+	return m
+}
+
+func AccountToMap(account module.Account) map[string]interface{} {
+	return map[string]interface{}{
+		"id":               account.Id,
+		"name":             account.Name,
+		"user":             account.User,
+		"password":         account.Password,
+		"access_token":     account.RefreshToken,
+		"redirect_uri":     account.RedirectUri,
+		"api_url":          account.ApiUrl,
+		"root_id":          account.RootId,
+		"seq":              account.Seq,
+		"files_count":      account.FilesCount,
+		"status":           account.Status,
+		"cookie_status":    account.CookieStatus,
+		"time_span":        account.TimeSpan,
+		"last_op_time":     account.LastOpTime,
+		"sync_dir":         account.SyncDir,
+		"sync_child":       account.SyncChild,
+		"sync_cron":        account.SyncCron,
+		"down_transfer":    account.DownTransfer,
+		"cache_policy":     account.CachePolicy,
+		"expire_time_span": account.ExpireTimeSpan,
+		"host":             account.Host,
+	}
 }

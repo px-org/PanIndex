@@ -7,8 +7,21 @@ var ud = new mdui.Dialog("#upload_dialog", {modal:true});
 var bypassd = new mdui.Dialog("#bypass_dialog");
 var clearCached = new mdui.Dialog("#cache_dialog");
 var cacheConfigd = new mdui.Dialog("#cache_config_dialog", {modal:true});
+var uploadConfigd = new mdui.Dialog("#upload_config_dialog", {modal:true});
 var modeSelect = new mdui.Select('#mode');
 var cachePolicySelect = new mdui.Select('#cachePolicy');
+var copyConfigClipboard = new ClipboardJS('#copyConfigBtn', {
+    text: function(trigger) {
+        var configJson = $("#uploadConfigForm").find("textarea[name=config_json]").val();
+        return configJson;
+    }
+});
+copyConfigClipboard.on('success', function(e) {
+    mdui.snackbar({
+        message: "配置已复制到剪切板"
+    });
+    e.clearSelection();
+});
 function CommonRequest(urlPath, method, d) {
     $.ajax({
         method: method,
@@ -38,6 +51,39 @@ $('#theme-toggle').on('click', function(){
         $('#theme-toggle i').text('brightness_5');
         Cookies.set("theme", "mdui-dark", {expires : 3650, path:"/"});
     }
+});
+$('#upload-config-btn').on('click', function(){
+    $.ajax({
+        method: 'GET',
+        url: AdminApiUrl + '/config',
+        contentType: 'application/json',
+        success: function (data) {
+            $("#uploadConfigForm").find("textarea[name=config_json]").val(data);
+            uploadConfigd.toggle();
+        }
+    });
+});
+$("#closeUploadConfigBtn").on('click', function (ev){
+    uploadConfigd.close();
+});
+$("#confirmUploadConfigBtn").on('click', function (ev){
+    var configJson = $("#uploadConfigForm").find("textarea[name=config_json]").val();
+    $.ajax({
+        method: 'POST',
+        url: AdminApiUrl + '/config/upload',
+        data: configJson,
+        contentType: 'application/json',
+        success: function (data) {
+            var d = JSON.parse(data);
+            mdui.snackbar({
+                message: d.msg,
+                timeout: 2000,
+                onClose: function(){
+                    uploadConfigd.toggle();
+                }
+            });
+        }
+    });
 });
 $(".saveConfigBtn").on("click", function () {
     var config = $("#configForm").serializeObject();

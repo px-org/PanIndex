@@ -948,3 +948,55 @@ func WebDavDownload(ac module.Account, downUrl string, fileNode module.FileNode,
 			util.GetMimeTypeByExt(fileNode.FileType), r, extraHeaders)
 	}
 }
+
+func UploadConfig(config module.Config) string {
+	//common config
+	configItem := util.ConfigToItem(config)
+	for k, v := range configItem {
+		val, ok := v.(string)
+		if ok {
+			dao.DB.Table("config_item").Where("k=?", k).Update("v", val)
+		}
+	}
+	//accounts
+	if len(config.Accounts) > 0 {
+		for _, account := range config.Accounts {
+			ac := module.Account{}
+			err := dao.DB.Table("account").Where("id=?", account.Id).First(&ac).Error
+			if err == gorm.ErrRecordNotFound {
+				//insert
+				dao.DB.Table("account").Create(util.AccountToMap(account))
+			} else {
+				//update
+				dao.DB.Table("account").Where("id=?", account.Id).Updates(util.AccountToMap(account))
+			}
+		}
+	}
+	//bypass
+	if len(config.BypassList) > 0 {
+		for _, bypass := range config.BypassList {
+			dao.SaveBypass(bypass)
+		}
+	}
+	//short_info
+	if len(config.ShareInfoList) > 0 {
+		for _, shareInfo := range config.ShareInfoList {
+			dao.SaveShareInfo(shareInfo)
+		}
+	}
+	//pwd
+	if len(config.PwdFiles) > 0 {
+		for k, v := range config.PwdFiles {
+			dao.SavePwdFile(module.PwdFiles{
+				k, v,
+			})
+		}
+	}
+	//hide
+	if len(config.HideFiles) > 0 {
+		for hf, _ := range config.HideFiles {
+			dao.SaveHideFile(hf)
+		}
+	}
+	return "配置导入成功，如有密码修改，请重新登录"
+}

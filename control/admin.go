@@ -54,7 +54,9 @@ func SaveConfig(c *gin.Context) {
 
 // admin get config
 func GetConfig(c *gin.Context) {
-	c.JSON(http.StatusOK, module.GloablConfig)
+	config := module.GloablConfig
+	config.ShareInfoList = dao.GetShareInfoList()
+	c.JSON(http.StatusOK, config)
 }
 
 // admin get account
@@ -238,5 +240,17 @@ func SaveAccount(c *gin.Context) {
 	data := module.Account{}
 	c.BindJSON(&data)
 	msg := dao.SaveAccount(data)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
+}
+
+func UploadConfig(c *gin.Context) {
+	config := module.Config{}
+	err := c.BindJSON(&config)
+	msg := ""
+	if err == nil {
+		msg = service.UploadConfig(config)
+	} else {
+		msg = "导入失败，配置不是标准格式"
+	}
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
