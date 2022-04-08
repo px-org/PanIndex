@@ -273,7 +273,7 @@ environment=PORT="5239",LOG_LEVEL="debug"
 ## 其他平台部署
 
 ### Heroku
-[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-heroku.git)
+[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-h.git)
 
 https://github.com/libsgh/PanIndex-heroku
 ### Railway
