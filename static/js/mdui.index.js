@@ -211,9 +211,11 @@ $(document).ready(function() {
     $(".search").bind('keydown', function(event) {
         var key = $(this).val();
         key = key.replace(/(^\s*)|(\s*$)/g,"")
-        if (event.key === "Enter") {
-            if( $(this).val() != ""){
-                window.location.href = "/?search=" + key;
+        if(key.length < 30){
+            if (event.key === "Enter") {
+                if( $(this).val() != ""){
+                    window.location.href = "/?search=" + key;
+                }
             }
         }
     });

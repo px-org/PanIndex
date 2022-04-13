@@ -104,12 +104,14 @@ $(document).ready(function() {
     $(".search").on("keydown", function(event) {
         var accountHome = $(this).attr("data-index");
         var key = $(this).val();
-        key = key.replace(/(^\s*)|(\s*$)/g,"")
-        if (event.key === "Enter") {
-            if( $(this).val() != ""){
-                window.location.href = "/?search=" + key;
-            }else{
-                window.location.href = accountHome;
+        key = key.replace(/(^\s*)|(\s*$)/g,"");
+        if(key.length < 30){
+            if (event.key === "Enter") {
+                if( $(this).val() != ""){
+                    window.location.href = "/?search=" + key;
+                }else{
+                    window.location.href = accountHome;
+                }
             }
         }
     });
@@ -134,9 +136,11 @@ $(document).ready(function() {
     $(".search").bind('keydown', function(event) {
         var key = $(this).val();
         key = key.replace(/(^\s*)|(\s*$)/g,"")
-        if (event.key === "Enter") {
-            if( $(this).val() != ""){
-                window.location.href = "/?search=" + key;
+        if(key.length < 30){
+            if (event.key === "Enter") {
+                if( $(this).val() != ""){
+                    window.location.href = "/?search=" + key;
+                }
             }
         }
     });
