@@ -64,11 +64,20 @@
 						{{- end}}
 					</span>
 				</div>
-				{{- range $.pre_paths}}
-				<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
-				<div class="mdui-chip" onclick="window.open('{{.PathUrl}}','_self')">
-					<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
-				</div>
+				{{- range $i, $a := $.pre_paths}}
+					{{- if and (eq (len $.accounts) 1) (eq $.config.AccountChoose "default")}}
+						{{- if gt $i 0}}
+							<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+							<div class="mdui-chip" onclick="window.open('{{$a.PathUrl}}','_self')">
+								<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{$a.PathName}}">{{$a.PathName}}</span>
+							</div>
+						{{- end}}
+					{{- else}}
+						<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+						<div class="mdui-chip" onclick="window.open('{{$a.PathUrl}}','_self')">
+							<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{$a.PathName}}">{{$a.PathName}}</span>
+						</div>
+					{{- end}}
 				{{- end}}
 			</div>
 			{{- if and (not $.has_pwd) (eq $.config.Head "1")}}

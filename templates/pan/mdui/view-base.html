@@ -66,10 +66,19 @@
                 </div>
                 {{$lenPaths := len $.pre_paths}}
                 {{- range $index, $item := $.pre_paths}}
-                <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
-                <div class="mdui-chip" onclick="window.open('{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
-                    <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
-                </div>
+                    {{- if and (eq (len $.accounts) 1) (eq $.config.AccountChoose "default")}}
+                        {{- if gt $index 0}}
+                            <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+                            <div class="mdui-chip" onclick="window.open('{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
+                                <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
+                            </div>
+                        {{- end}}
+                    {{- else}}
+                        <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+                        <div class="mdui-chip" onclick="window.open('{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
+                            <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
+                        </div>
+                    {{- end}}
                 {{- end}}
             </div>
             {{- if and (not $.has_pwd) (eq $.config.Head "1")}}
