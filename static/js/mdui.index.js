@@ -82,6 +82,7 @@ $(document).ready(function() {
     });
     if(document.getElementById('share-menu')){
         document.getElementById('share-menu').addEventListener('open.mdui.menu', function () {
+            $(".mdui-card").attr("style","min-height:403px");
             var formData = new FormData();
             var prefix = window.location.protocol + "//"+window.location.host + "/s/";
             formData.append("accountId", $(this).attr("data-aid"));
@@ -113,6 +114,17 @@ $(document).ready(function() {
                     });
                 }
             });
+        });
+        document.getElementById('share-menu').addEventListener('closed.mdui.menu', function () {
+            $(".mdui-card").removeAttr('style');
+        });
+    }
+    if(document.getElementById('sort-menu')){
+        document.getElementById('sort-menu').addEventListener('open.mdui.menu', function () {
+            $(".mdui-card").attr("style","min-height:322px");
+        });
+        document.getElementById('sort-menu').addEventListener('closed.mdui.menu', function () {
+            $(".mdui-card").removeAttr('style');
         });
     }
     $("#image-preview-list").empty();
