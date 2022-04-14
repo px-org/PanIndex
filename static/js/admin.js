@@ -314,6 +314,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=refresh_token]").val("");
     $("#accountForm").find("input[name=redirect_uri]").val("");
     $("#accountForm").find("input[name=root_id]").val("");
+    $("#accountForm").find("input[name=site_id]").val("");
     $("#accountForm").find("select[name=mode]").val("native");
     $("#accountForm").find("input[name=api_url]").val("");
     $("#accountForm").find("input[name=down_transfer]").prop("checked",false);
@@ -353,7 +354,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
                 $("#accountForm").find("input[name=root_id]").val(account.root_id);
                 $("#accountForm").find("input[name=transfer_domain]").val(account.transfer_domain);
-                $("#accountForm").find("input[name=site_label]").val(account.site_id);
+                $("#accountForm").find("input[name=site_id]").val(account.site_id);
                 $("#accountForm").find("input[name=host]").val(account.host);
                 modeSelect.handleUpdate();
                 if(account.down_transfer == 1){
