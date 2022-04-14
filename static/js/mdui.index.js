@@ -229,9 +229,11 @@ $(document).ready(function() {
             promptPwd(dfp);
         }
     });
-    document.getElementById('account-menu').addEventListener('open.mdui.menu', function () {
-        $("#account-menu").attr("style", "max-height: "+$(".mdui-card-content").height()+"px; transform-origin: 0px 50%; position: absolute; top: -4px; left: 21px;");
-    });
+    if(document.getElementById('account-menu')){
+        document.getElementById('account-menu').addEventListener('open.mdui.menu', function () {
+            $("#account-menu").attr("style", "max-height: "+$(".mdui-card-content").height()+"px; transform-origin: 0px 50%; position: absolute; top: -4px; left: 21px;");
+        });
+    }
 });
 function promptPwd(){
     var pwd = $("#input-password").val();
@@ -332,4 +334,23 @@ function formatSeconds(value) {
         result = '00:' + result;
     }
     return result;
+}
+function mdContent(fullUrl, key, doc, isMark) {
+    $.ajax({
+        method: 'GET',
+        url: fullUrl,
+        success: function (data) {
+            if(data && !data.status){
+                localStorage.setItem(key, data);
+                if(isMark){
+                    $("#"+doc).append(marked.parse(data));
+                    $("table").addClass("mdui-table");
+                    $("#"+doc).toggle();
+                }
+            }else{
+                localStorage.removeItem(key);
+                $("#emptyList").attr("style", "height: 500px;");
+            }
+        }
+    });
 }

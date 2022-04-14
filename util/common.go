@@ -341,7 +341,7 @@ func SortFileNodeNew(sortColumn, sortOrder string, list []module.FileNode) {
 }
 func SortFileNode(sortColumn, sortOrder string, list []module.FileNode) {
 	if sortColumn == "default" {
-		sortColumn = "last_op_time"
+		sortColumn = "file_name"
 	}
 	if sortOrder == "null" {
 		sortColumn = "asc"

@@ -214,3 +214,20 @@ function sortTable(sort_order, data_type){
         return (sort_order === "down") ? 0-rt : rt;
     });
 }
+function mdContent(fullUrl, key, isMark) {
+    $.ajax({
+        method: 'GET',
+        url: fullUrl,
+        success: function (data) {
+            if(data && !data.status){
+                localStorage.setItem(key, data);
+                if(isMark){
+                    $("#content").html(marked.parse(c));
+                    $("#readmeDiv").show();
+                }
+            }else{
+                localStorage.removeItem(key);
+            }
+        }
+    });
+}

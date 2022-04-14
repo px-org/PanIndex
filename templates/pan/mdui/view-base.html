@@ -81,33 +81,6 @@
                     {{- end}}
                 {{- end}}
             </div>
-            {{- if and (not $.has_pwd) (eq $.config.Head "1")}}
-            <div id="headDiv" class="mdui-typo" style="display: none">
-                <pre id="headContent" class="pure-pre md-content"></pre>
-                <input id="head" type="hidden" value="{{.HeadContent}}" />
-                <script>
-                    var c = $("#head").val();
-                    if(c != ""){
-                        $("#headContent").append(marked.parse(c));
-                        $("table").addClass("mdui-table");
-                        $("#headDiv").toggle();
-                    }else{
-                        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path | unescaped}}/HEAD.md");
-                        $.ajax({
-                            method: 'GET',
-                            url: fullUrl,
-                            success: function (data) {
-                                if(data && !data.status){
-                                    $("#headContent").append(marked.parse(data));
-                                    $("table").addClass("mdui-table");
-                                    $("#headDiv").toggle();
-                                }
-                            }
-                        });
-                    }
-                </script>
-            </div>
-            {{- end}}
             <ul class="mdui-list">
                 <li class="mdui-list-item">
                     <div class="mdui-list-item-content">

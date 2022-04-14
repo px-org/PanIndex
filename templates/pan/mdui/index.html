@@ -81,29 +81,28 @@
 				{{- end}}
 			</div>
 			{{- if and (not $.has_pwd) (eq $.config.Head "1")}}
-			<div id="headDiv" class="mdui-typo" style="display: none">
-				<pre id="headContent" class="pure-pre md-content"></pre>
-				<input id="head" type="hidden" value="{{.HeadContent}}" />
+			<div id="headContent" class="md-content mdui-typo mdui-shadow-2" style="display: none;padding:15px;margin: 10px;">
+				<div class="mdui-chip readme">
+					<span class="mdui-chip-icon">H</span>
+					<span class="mdui-chip-title">HEAD.md</span>
+				</div>
+				<hr class="readme" />
 				<script>
-					var c = $("#head").val();
-					if(c != ""){
-						$("#headContent").append(marked.parse(c));
-						$("table").addClass("mdui-table");
-						$("#headDiv").toggle();
-					}else{
-						var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path | unescaped}}/HEAD.md");
-						$.ajax({
-							method: 'GET',
-							url: fullUrl,
-							success: function (data) {
-								if(data && !data.status){
-									$("#headContent").append(marked.parse(data));
-									$("table").addClass("mdui-table");
-									$("#headDiv").toggle();
-								}
-							}
-						});
+					var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}/HEAD.md");
+					if("{{$.path}}" == "/"){
+						fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}HEAD.md");
 					}
+					var hKey = md5(fullUrl);
+					var hc = localStorage.getItem(hKey);
+					if(hc && hc != null && hc != ""){
+						$("#headContent").append(marked.parse(hc));
+						$("table").addClass("mdui-table");
+						$("#headContent").toggle();
+						mdContent(fullUrl, hKey, "headContent", false);
+					}else{
+						mdContent(fullUrl, hKey, "headContent", true);
+					}
+
 				</script>
 			</div>
 			{{- end}}
@@ -285,22 +284,20 @@
 				if("{{$.path}}" == "/"){
 					fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}README.md");
 				}
-				$.ajax({
-					method: 'GET',
-					url: fullUrl,
-					success: function (data) {
-						if(data && !data.status){
-							$("#content").append(marked.parse(data));
-							$("table").addClass("mdui-table");
-							$("#content").toggle();
-						}else{
-							$("#emptyList").attr("style", "height: 500px;");
-						}
-					}
-				});
+				var key = md5(fullUrl);
+				var c = localStorage.getItem(key);
+				if(c && c != null && c != ""){
+					$("#content").append(marked.parse(c));
+					$("table").addClass("mdui-table");
+					$("#content").toggle();
+					mdContent(fullUrl, key, "content", false);
+				}else{
+					mdContent(fullUrl, key, "content", true);
+				}
 			</script>
 		</div>
 		{{- else}}
+		<script>$(function () { $("#emptyList").toggle();})</script>
 		{{- end}}
 		<div id="image-preview-list" style="display: none;"></div>
 	</div>
