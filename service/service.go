@@ -690,7 +690,9 @@ func UpdateCache(account module.Account, cachePath string) string {
 				account.SyncDir = cachePath
 				account.SyncChild = 0
 				dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-				dao.SYNC_STATUS = 1
+				if _, ok := dao.GetDb("sqlite"); ok {
+					dao.SYNC_STATUS = 1
+				}
 				go dao.SyncFilesCache(account)
 				go dao.InitGlobalConfig()
 				msg = "正在缓存目录，请稍后刷新页面查看缓存结果！"
@@ -720,7 +722,9 @@ func UpdateAllCache() string {
 						account.SyncDir = cachePath
 						account.SyncChild = 0
 						dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-						dao.SYNC_STATUS = 1
+						if _, ok := dao.GetDb("sqlite"); ok {
+							dao.SYNC_STATUS = 1
+						}
 						go dao.InitGlobalConfig()
 						dao.SyncFilesCache(account)
 					}

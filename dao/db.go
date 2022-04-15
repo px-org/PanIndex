@@ -325,10 +325,10 @@ func SyncFilesCache(account module.Account) {
 	t1 := time.Now()
 	dbFile := module.FileNode{}
 	result := DB.Raw("select * from file_node where path=? and is_delete=0 and account_id=?", account.SyncDir, account.Id).Take(&dbFile)
-	isRoot := false
+	isRoot := true
 	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		account.RootId = dbFile.FileId
-		isRoot = true
+		isRoot = false
 	}
 	//cache new files
 	LoopCreateFiles(account, account.RootId, account.SyncDir, 0, 0)
