@@ -1,3 +1,18 @@
+### [v3.0.7](https://github.com/libsgh/PanIndex/compare/v3.0.6...v3.0.7) (2022-04-19)
+
+##### Bug Fixes
+
+- 刷新全部缓存丢失文件
+- 页面工具栏菜单展示不全
+- 【Teambition】项目盘项目ID无法保存
+- 中转域名保修改无效
+
+##### Features
+- 配置支持导入导出
+- HEAD.md、README.md渲染优化
+- 预览页去除ID信息
+
+
 ### [v3.0.6](https://github.com/libsgh/PanIndex/compare/v3.0.0...v3.0.6) (2022-04-01)
 
 ##### Bug Fixes

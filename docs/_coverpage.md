@@ -1,6 +1,6 @@
 ![logo](_media/index.png)
 
-# PanIndex <small>v3.0.6</small>
+# PanIndex <small>v3.0.7</small>
 
 > 一个简易的网盘目录列表.
 >
@@ -11,6 +11,7 @@
 - 防盗链
 - 短链、分享
 - 访问控制
+- 分流
 
 
 [GitHub](https://github.com/libsgh/PanIndex)
