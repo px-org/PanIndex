@@ -16,6 +16,7 @@
     {{- end}}
     <link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@css"}}"/>
     <script src="{{index $.config.CdnFiles "mdui@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "clipboard@js"}}"></script>
     <script src="{{index $.config.CdnFiles "cookie@js"}}"></script>
     <style>
         .version{
@@ -51,8 +52,8 @@
         <a href="{{$.config.AdminPath}}" class="mdui-typo-title">配置</a>
         <div class="mdui-toolbar-spacer"></div>
         {{- if ne $.redirect_url "login"}}
-        <!--<a target="_blank" href="/api/v3/admin/config" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上传配置（JSON）'}"><i class="mdui-icon material-icons">cloud_upload</i></a>-->
-        <a target="_blank" href="/api/v3/admin/config" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '导出配置（JSON）'}"><i class="mdui-icon material-icons">settings</i></a>
+        <a id="upload-config-btn" href="javascript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '配置（JSON）'}"><i class="mdui-icon material-icons">settings</i></a>
+        <!--<a target="_blank" href="/api/v3/admin/config" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '导出配置（JSON）'}"><i class="mdui-icon material-icons">settings</i></a>-->
         {{- end}}
         <a id="theme-toggle" href="JavaScript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{- if eq $.theme "mdui-dark"}}5{{- else}}4{{- end}}</i></a>
         <a href="{{$.config.AdminPath}}/logout" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
@@ -173,6 +174,23 @@
     {{- else if eq $.redirect_url "webdav"}}
         {{block "admin-webdav" .}}{{end}}
     {{- end}}
+</div>
+<div id="upload_config_dialog" class="mdui-dialog">
+    <div class="mdui-dialog-content">
+        <div class="mdui-dialog-title">配置导入</div>
+        <form id="uploadConfigForm">
+            <div class="mdui-textfield mdui-typo">
+                <label class="mdui-textfield-label">后台配置JSON</label>
+                <textarea class="mdui-textfield-input" name="config_json" rows="5"></textarea>
+                <div class="mdui-textfield-helper">配置导入会覆盖现有配置，请谨慎操作，导入之前先备份原有配置</div>
+            </div>
+        </form>
+    </div>
+    <div class="mdui-dialog-actions">
+        <button id="copyConfigBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-blue-accent"><i class="mdui-icon material-icons">content_copy</i> 复制</button>
+        <button id="confirmUploadConfigBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 确定</button>
+        <button id="closeUploadConfigBtn" type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600"><i class="mdui-icon material-icons">close</i> 关闭</button>
+    </div>
 </div>
 <script>
     var AdminApiUrl = '/api/v3{{$.config.AdminPath}}';

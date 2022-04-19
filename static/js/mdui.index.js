@@ -1,8 +1,9 @@
 $(document).ready(function() {
     var idClipboard = new ClipboardJS('.copyIDBtn', {
         text: function(trigger) {
-            var c = $(trigger).data("content");
-            return c;
+            var filePath = $(trigger).data("content");
+            var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + filePath);
+            return fullUrl;
         }
     });
     var clipboard = new ClipboardJS('.copyBtn', {
@@ -82,6 +83,7 @@ $(document).ready(function() {
     });
     if(document.getElementById('share-menu')){
         document.getElementById('share-menu').addEventListener('open.mdui.menu', function () {
+            $(".mdui-card").attr("style","min-height:403px");
             var formData = new FormData();
             var prefix = window.location.protocol + "//"+window.location.host + "/s/";
             formData.append("accountId", $(this).attr("data-aid"));
@@ -113,6 +115,17 @@ $(document).ready(function() {
                     });
                 }
             });
+        });
+        document.getElementById('share-menu').addEventListener('closed.mdui.menu', function () {
+            $(".mdui-card").removeAttr('style');
+        });
+    }
+    if(document.getElementById('sort-menu')){
+        document.getElementById('sort-menu').addEventListener('open.mdui.menu', function () {
+            $(".mdui-card").attr("style","min-height:322px");
+        });
+        document.getElementById('sort-menu').addEventListener('closed.mdui.menu', function () {
+            $(".mdui-card").removeAttr('style');
         });
     }
     $("#image-preview-list").empty();
@@ -199,9 +212,11 @@ $(document).ready(function() {
     $(".search").bind('keydown', function(event) {
         var key = $(this).val();
         key = key.replace(/(^\s*)|(\s*$)/g,"")
-        if (event.key === "Enter") {
-            if( $(this).val() != ""){
-                window.location.href = "/?search=" + key;
+        if(key.length < 30){
+            if (event.key === "Enter") {
+                if( $(this).val() != ""){
+                    window.location.href = "/?search=" + key;
+                }
             }
         }
     });
@@ -215,6 +230,11 @@ $(document).ready(function() {
             promptPwd(dfp);
         }
     });
+    if(document.getElementById('account-menu')){
+        document.getElementById('account-menu').addEventListener('open.mdui.menu', function () {
+            $("#account-menu").attr("style", "max-height: "+$(".mdui-card-content").height()+"px; transform-origin: 0px 50%; position: absolute; top: -4px; left: 21px;");
+        });
+    }
 });
 function promptPwd(){
     var pwd = $("#input-password").val();
@@ -315,4 +335,23 @@ function formatSeconds(value) {
         result = '00:' + result;
     }
     return result;
+}
+function mdContent(fullUrl, key, doc, isMark) {
+    $.ajax({
+        method: 'GET',
+        url: fullUrl,
+        success: function (data) {
+            if(data && !data.status){
+                localStorage.setItem(key, data);
+                if(isMark){
+                    $("#"+doc).append(marked.parse(data));
+                    $("table").addClass("mdui-table");
+                    $("#"+doc).toggle();
+                }
+            }else{
+                localStorage.removeItem(key);
+                $("#emptyList").attr("style", "height: 500px;");
+            }
+        }
+    });
 }

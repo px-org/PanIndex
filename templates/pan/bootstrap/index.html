@@ -67,12 +67,12 @@
 		<script src="{{index $.config.CdnFiles "artplayer-danmuku@js"}}"></script>
 		<script src="{{index $.config.CdnFiles "clipboard@js"}}"></script>
 		<script src="{{index $.config.CdnFiles "video@simple@js"}}?v={{$.version}}"></script>
+		<script src="{{index $.config.CdnFiles "md5@js"}}"></script>
 		<script src="{{index $.config.CdnFiles "simple@index@js"}}?v={{$.version}}"></script>
 	</head>
 	<body>
 	{{- if $.has_pwd}}
 	<script src="{{index $.config.CdnFiles "cookie@js"}}"></script>
-	<script src="{{index $.config.CdnFiles "md5@js"}}"></script>
 	<script>
 		promptPwd("{{$.pwd_path}}", "{{$.pwd_err_msg}}");
 	</script>
@@ -197,16 +197,15 @@
 									if("{{$.path}}" == "/"){
 										fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}README.md");
 									}
-									$.ajax({
-										method: 'GET',
-										url: fullUrl,
-										success: function (data) {
-											if(data && !data.status){
-												$("#content").html(marked.parse(data));
-												$("#readmeDiv").show();
-											}
-										}
-									});
+									var key = md5(fullUrl);
+									var c = localStorage.getItem(key);
+									if(c && c != null && c != ""){
+										$("#content").html(marked.parse(c));
+										$("#readmeDiv").show();
+										mdContent(fullUrl, key, false);
+									}else{
+										mdContent(fullUrl, key, true);
+									}
 								</script>
 							</div>
 						</div>

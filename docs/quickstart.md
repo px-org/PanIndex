@@ -166,6 +166,41 @@ docker run -itd \
  iicm/pan-index:latest
 ```
 
+### 反向代理
+
+- Nginx
+   ```
+   location / {
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_pass http://127.0.0.1:5238;
+      client_max_body_size    1000m;
+   }
+   ```
+- Caddy
+   ```
+   :80 {
+       reverse_proxy 127.0.0.1:5238
+   }
+   ```
+- Apache
+   ```
+   <VirtualHost *:80>
+       ServerName exmple.noki.icu
+       ProxyRequests Off
+       ProxyPreserveHost On
+       <Proxy *>
+           Order deny,allow
+           Allow from all
+       </Proxy>
+       <Location />
+          ProxyPass http://localhost:5238/
+          ProxyPassReverse http://localhost:5238/
+       </Location>
+   </VirtualHost>
+   ```
+
 ### 宝塔
 1.  安装宝塔。
 
@@ -237,7 +272,7 @@ environment=PORT="5239",LOG_LEVEL="debug"
 ## 其他平台部署
 
 ### Heroku
-[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-heroku.git)
+[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-h.git)
 
 https://github.com/libsgh/PanIndex-heroku
 ### Railway

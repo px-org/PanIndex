@@ -46,9 +46,9 @@
 		<div class="mdui-card-content">
 			<div style="padding: 0px 5px 12px;">
 				<div class="mdui-chip">
-					<span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#example-1'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
+					<span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#account-menu'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
 					{{- if gt (len $.accounts) 1 }}
-					<ul class="mdui-menu" id="example-1" style="max-height: 500px">
+					<ul class="mdui-menu" id="account-menu">
 						{{range $i, $a := $.accounts}}
 						<li class="mdui-menu-item">
 							<a href="/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq $a.Mode "cloud189"}}cyan{{else}}{{end}}{{if eq $a.Mode "onedrive"}}blue-200{{else}}{{end}}{{if eq $a.Mode "teambition"}}blue{{else}}{{end}}{{if eq $a.Mode "teambition-us"}}blue{{else}}{{end}}{{if eq $a.Mode "native"}}blue-grey{{else}}{{end}}{{if eq $a.Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>
@@ -64,37 +64,45 @@
 						{{- end}}
 					</span>
 				</div>
-				{{- range $.pre_paths}}
-				<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
-				<div class="mdui-chip" onclick="window.open('{{.PathUrl}}','_self')">
-					<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
-				</div>
+				{{- range $i, $a := $.pre_paths}}
+					{{- if and (eq (len $.accounts) 1) (eq $.config.AccountChoose "default")}}
+						{{- if gt $i 0}}
+							<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+							<div class="mdui-chip" onclick="window.open('{{$a.PathUrl}}','_self')">
+								<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{$a.PathName}}">{{$a.PathName}}</span>
+							</div>
+						{{- end}}
+					{{- else}}
+						<i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+						<div class="mdui-chip" onclick="window.open('{{$a.PathUrl}}','_self')">
+							<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{$a.PathName}}">{{$a.PathName}}</span>
+						</div>
+					{{- end}}
 				{{- end}}
 			</div>
 			{{- if and (not $.has_pwd) (eq $.config.Head "1")}}
-			<div id="headDiv" class="mdui-typo" style="display: none">
-				<pre id="headContent" class="pure-pre md-content"></pre>
-				<input id="head" type="hidden" value="{{.HeadContent}}" />
+			<div id="headContent" class="md-content mdui-typo mdui-shadow-2" style="display: none;padding:15px;margin: 10px;">
+				<div class="mdui-chip readme">
+					<span class="mdui-chip-icon">H</span>
+					<span class="mdui-chip-title">HEAD.md</span>
+				</div>
+				<hr class="readme" />
 				<script>
-					var c = $("#head").val();
-					if(c != ""){
-						$("#headContent").append(marked.parse(c));
-						$("table").addClass("mdui-table");
-						$("#headDiv").toggle();
-					}else{
-						var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path | unescaped}}/HEAD.md");
-						$.ajax({
-							method: 'GET',
-							url: fullUrl,
-							success: function (data) {
-								if(data && !data.status){
-									$("#headContent").append(marked.parse(data));
-									$("table").addClass("mdui-table");
-									$("#headDiv").toggle();
-								}
-							}
-						});
+					var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}/HEAD.md");
+					if("{{$.path}}" == "/"){
+						fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}HEAD.md");
 					}
+					var hKey = md5(fullUrl);
+					var hc = localStorage.getItem(hKey);
+					if(hc && hc != null && hc != ""){
+						$("#headContent").append(marked.parse(hc));
+						$("table").addClass("mdui-table");
+						$("#headContent").toggle();
+						mdContent(fullUrl, hKey, "headContent", false);
+					}else{
+						mdContent(fullUrl, hKey, "headContent", true);
+					}
+
 				</script>
 			</div>
 			{{- end}}
@@ -190,7 +198,7 @@
 					</div>
 				</li>
 				{{- if $.has_pwd}}
-				<div class="mdui-card-media mdui-center" style="margin-top:150px; width: 350px; max-width: 100%;">
+				<div class="mdui-card-media mdui-center" style="width: 350px; max-width: 100%;">
 					<div class="mdui-textfield mdui-textfield-floating-label{{if $.pwd_err_msg}} mdui-textfield-invalid{{- end}}">
 						<i id="inpsw-icon-lock" class="mdui-icon material-icons">lock</i>
 						<label class="mdui-textfield-label">请输入密码</label>
@@ -276,22 +284,20 @@
 				if("{{$.path}}" == "/"){
 					fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path}}{{$.path}}README.md");
 				}
-				$.ajax({
-					method: 'GET',
-					url: fullUrl,
-					success: function (data) {
-						if(data && !data.status){
-							$("#content").append(marked.parse(data));
-							$("table").addClass("mdui-table");
-							$("#content").toggle();
-						}else{
-							$("#emptyList").attr("style", "height: 500px;");
-						}
-					}
-				});
+				var key = md5(fullUrl);
+				var c = localStorage.getItem(key);
+				if(c && c != null && c != ""){
+					$("#content").append(marked.parse(c));
+					$("table").addClass("mdui-table");
+					$("#content").toggle();
+					mdContent(fullUrl, key, "content", false);
+				}else{
+					mdContent(fullUrl, key, "content", true);
+				}
 			</script>
 		</div>
 		{{- else}}
+		<script>$(function () { $("#emptyList").toggle();})</script>
 		{{- end}}
 		<div id="image-preview-list" style="display: none;"></div>
 	</div>

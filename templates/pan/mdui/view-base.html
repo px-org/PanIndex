@@ -46,9 +46,9 @@
         <div class="mdui-card-content">
             <div style="padding: 0px 5px 12px;">
                 <div class="mdui-chip">
-                    <span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#example-1'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
+                    <span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#account-menu'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
                     {{- if gt (len $.accounts) 1 }}
-                    <ul class="mdui-menu" id="example-1" style="max-height: 500px">
+                    <ul class="mdui-menu" id="account-menu">
                         {{range $i, $a := $.accounts}}
                         <li class="mdui-menu-item">
                             <a href="/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq $a.Mode "cloud189"}}cyan{{else}}{{end}}{{if eq $a.Mode "onedrive"}}blue-200{{else}}{{end}}{{if eq $a.Mode "teambition"}}blue{{else}}{{end}}{{if eq $a.Mode "teambition-us"}}blue{{else}}{{end}}{{if eq $a.Mode "native"}}blue-grey{{else}}{{end}}{{if eq $a.Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>
@@ -66,39 +66,21 @@
                 </div>
                 {{$lenPaths := len $.pre_paths}}
                 {{- range $index, $item := $.pre_paths}}
-                <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
-                <div class="mdui-chip" onclick="window.open('{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
-                    <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
-                </div>
+                    {{- if and (eq (len $.accounts) 1) (eq $.config.AccountChoose "default")}}
+                        {{- if gt $index 0}}
+                            <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+                            <div class="mdui-chip" onclick="window.open('{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
+                                <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
+                            </div>
+                        {{- end}}
+                    {{- else}}
+                        <i class="mdui-icon material-icons mdui-icon-dark">chevron_right</i>
+                        <div class="mdui-chip" onclick="window.open('{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
+                            <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
+                        </div>
+                    {{- end}}
                 {{- end}}
             </div>
-            {{- if and (not $.has_pwd) (eq $.config.Head "1")}}
-            <div id="headDiv" class="mdui-typo" style="display: none">
-                <pre id="headContent" class="pure-pre md-content"></pre>
-                <input id="head" type="hidden" value="{{.HeadContent}}" />
-                <script>
-                    var c = $("#head").val();
-                    if(c != ""){
-                        $("#headContent").append(marked.parse(c));
-                        $("table").addClass("mdui-table");
-                        $("#headDiv").toggle();
-                    }else{
-                        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw{{$.account_path | unescaped}}/HEAD.md");
-                        $.ajax({
-                            method: 'GET',
-                            url: fullUrl,
-                            success: function (data) {
-                                if(data && !data.status){
-                                    $("#headContent").append(marked.parse(data));
-                                    $("table").addClass("mdui-table");
-                                    $("#headDiv").toggle();
-                                }
-                            }
-                        });
-                    }
-                </script>
-            </div>
-            {{- end}}
             <ul class="mdui-list">
                 <li class="mdui-list-item">
                     <div class="mdui-list-item-content">
@@ -157,9 +139,9 @@
                             <div class="mdui-typo-body-1-opacity"><b>名称：</b>{{ (index $.fns 0).FileName }}</div>
                             <div class="mdui-typo-body-1-opacity"><b>大小：</b>{{ (index $.fns 0).SizeFmt }}</div>
                             <div class="mdui-typo-body-1-opacity"><b>日期：</b>{{ (index $.fns 0).LastOpTime }}</div>
-                            <div class="mdui-typo-body-1-opacity"><b>文件ID：</b>{{ (index $.fns 0).FileId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).FileId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
-                            <div class="mdui-typo-body-1-opacity"><b>目录ID：</b>{{ (index $.fns 0).ParentId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).ParentId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
-                            <div class="mdui-typo-body-1-opacity"><b>链接：</b><a id="file_link" href="javascript:void(0)" data-path="{{ (index $.fns 0).Path }}"></a></div>
+                            <!--<div class="mdui-typo-body-1-opacity"><b>文件ID：</b>{{ (index $.fns 0).FileId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).FileId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
+                            <div class="mdui-typo-body-1-opacity"><b>目录ID：</b>{{ (index $.fns 0).ParentId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).ParentId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>-->
+                            <div class="mdui-typo-body-1-opacity"><b>链接：</b><a id="file_link" href="javascript:void(0)" data-path="{{ (index $.fns 0).Path }}"></a> <a href="javascript:void(0)" data-content="{{ (index $.fns 0).Path }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
                         </div>
                     </div>
                 </div>

@@ -123,8 +123,16 @@ func InitGlobalConfig() {
 	c.PwdFiles = GetPwdFilesMap()
 	c.BypassList = GetBypassList()
 	c.CdnFiles = util.GetCdnFilesMap(c.Cdn, module.VERSION)
+	c.ShareInfoList = GetShareInfoList()
 	module.GloablConfig = c
 	RoundRobin()
+}
+
+//share info all list
+func GetShareInfoList() []module.ShareInfo {
+	shareInfoList := []module.ShareInfo{}
+	DB.Where("1 = 1").Find(&shareInfoList)
+	return shareInfoList
 }
 
 //pwd files to map
@@ -317,10 +325,10 @@ func SyncFilesCache(account module.Account) {
 	t1 := time.Now()
 	dbFile := module.FileNode{}
 	result := DB.Raw("select * from file_node where path=? and is_delete=0 and account_id=?", account.SyncDir, account.Id).Take(&dbFile)
-	isRoot := false
+	isRoot := true
 	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		account.RootId = dbFile.FileId
-		isRoot = true
+		isRoot = false
 	}
 	//cache new files
 	LoopCreateFiles(account, account.RootId, account.SyncDir, 0, 0)
@@ -473,7 +481,7 @@ func SaveBypass(bypass module.Bypass) string {
 		//check account bind
 		for _, account := range bypass.Accounts {
 			acs := []module.BypassAccounts{}
-			DB.Where("account_id = ? and and bypass_id!=?", account.Id, bypass.Id).Find(&acs)
+			DB.Where("account_id = ? and bypass_id!=?", account.Id, bypass.Id).Find(&acs)
 			if len(acs) > 0 {
 				return "保存失败，网盘已被其他分流绑定！"
 			}
@@ -618,7 +626,7 @@ func SaveAccount(account module.Account) string {
 		account.LastOpTime = time.Now().Format("2006-01-02 15:04:05")
 		DB.Model(&[]module.Account{}).
 			Select("Id", "Name", "Mode", "User", "Password", "RefreshToken", "AccessToken",
-				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host").
+				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host", "TransferDomain").
 			Where("id=?", account.Id).
 			Updates(&account)
 	}
@@ -657,4 +665,16 @@ func SelectBypassByAccountId(accountId string) module.Bypass {
 					where
 						ba.account_id = ?`, accountId).Find(&bypass)
 	return bypass
+}
+
+func SaveShareInfo(info module.ShareInfo) {
+	err := DB.Where("file_path=? and account_id=?", info.FilePath, info.AccountId).First(&module.ShareInfo{}).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		DB.Create(&info)
+	} else {
+		DB.Model(&[]module.ShareInfo{}).
+			Select("ShortCode", "IsFile").
+			Where("file_path=? and account_id=?", info.FilePath, info.AccountId).
+			Updates(&info)
+	}
 }

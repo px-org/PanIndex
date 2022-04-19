@@ -1,3 +1,36 @@
+### [v3.0.7](https://github.com/libsgh/PanIndex/compare/v3.0.6...v3.0.7) (2022-04-19)
+
+##### Bug Fixes
+
+- 刷新全部缓存丢失文件
+- 页面工具栏菜单展示不全
+- 【Teambition】项目盘项目ID无法保存
+- 中转域名保修改无效
+
+##### Features
+- 配置支持导入导出
+- HEAD.md、README.md渲染优化
+- 预览页去除ID信息
+
+
+### [v3.0.6](https://github.com/libsgh/PanIndex/compare/v3.0.0...v3.0.6) (2022-04-01)
+
+##### Bug Fixes
+
+- 手机端视频无法播放
+- 音频文件无法播放
+- 分流列表展示不全
+- UI文件本地修改无效
+- 密码文件下载直链访问控制
+
+##### Features
+- 一键缓存全部账号
+- 网盘HOST绑定，文件列表过滤
+- 回车输入提交访问密码
+- 配置项：`README.md`、`HEADME.md`增加渲染开关
+- 配置项：音频、视频字幕加载、弹幕库支持
+- 兼容2.x文件直链访问，`/d_0/xx`
+
 ### [v3.0.0](https://github.com/libsgh/PanIndex/compare/v2.0.9...v3.0.0) (2022-03-04)
 
 #### 注意：由于新版改动较大，建议重新安装，此为V3测试版本，如遇BUG请及时反馈

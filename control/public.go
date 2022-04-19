@@ -73,9 +73,7 @@ func Raw(c *gin.Context) {
 		} else {
 			c.FileAttachment(downloadUrl, fileName)
 		}
-
 	}
-
 }
 
 func Files(c *gin.Context) {

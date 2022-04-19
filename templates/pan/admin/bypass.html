@@ -42,7 +42,7 @@
         </table>
     </div>
 </div>
-<div id="bypass_dialog" class="mdui-dialog" style="min-height: 464px">
+<div id="bypass_dialog" class="mdui-dialog">
     <form id="configForm" onsubmit="return saveBypass()">
         <div class="mdui-dialog-content">
             <div id="title" class="mdui-dialog-title">添加</div>
@@ -53,9 +53,9 @@
                 <div class="mdui-textfield-helper mdui-typo mdui-text-color-purple">用于替代访问路径中的网盘名称, 添加后DB缓存策略的网盘需重新缓存</div>
             </div>
              <label class="mdui-textfield-label">绑定网盘</label>
-             <div class="mdui-list mdui-list-dense">
+             <div class="mdui-list mdui-list-dense" style="max-height: 500px;overflow: auto">
                     {{- range $.config.Accounts}}
-                    <label class="mdui-list-item mdui-ripple" style="max-height: 500px;overflow: auto">
+                    <label class="mdui-list-item mdui-ripple">
                         <i class="mdui-list-item-icon mdui-icon material-icons">face</i>
                         <div class="mdui-list-item-content">{{.Name}}</div>
                         <div class="mdui-checkbox">

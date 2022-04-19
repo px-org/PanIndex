@@ -1,5 +1,5 @@
 # PanIndex
-[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-heroku.git)
+[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-h.git)
 
 ## 简单的网盘目录列表
 - [x] 跨平台、易部署
@@ -22,7 +22,7 @@
 - FTP
 
 ## 示例
-- [在线演示](https://t1.netrss.icu "https://t1.netrss.icu")
+- [在线演示](https://t1.noki.icu "https://t1.noki.icu")
  
 ## 文档
 [在线文档](https://libsgh.github.io/PanIndex/)
@@ -34,3 +34,6 @@
 
 ## 声明
 本程序旨在分享网盘文件，方便下载，请勿滥用。在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等。
+
+## License
+AGPL-V3

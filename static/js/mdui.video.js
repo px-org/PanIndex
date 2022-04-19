@@ -307,7 +307,6 @@ function chgVideo(fid, p, name, type) {
         }else{
             $(this).text(fileName.substring(0, fileName.lastIndexOf(".")));
         }
-        console.log($(this).attr("class"));
     });
     $("li").removeClass("playlist-active");
     $(".playing").text("");

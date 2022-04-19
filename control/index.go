@@ -43,7 +43,6 @@ func index(c *gin.Context) {
 			if isView {
 				view(&tmpFile, fns[0].ViewType)
 			} else {
-				fmt.Println(c.GetBool("has_pwd"))
 				download(ac, fns[0], c)
 				c.Abort()
 				return

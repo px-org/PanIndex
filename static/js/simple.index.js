@@ -104,12 +104,14 @@ $(document).ready(function() {
     $(".search").on("keydown", function(event) {
         var accountHome = $(this).attr("data-index");
         var key = $(this).val();
-        key = key.replace(/(^\s*)|(\s*$)/g,"")
-        if (event.key === "Enter") {
-            if( $(this).val() != ""){
-                window.location.href = "/?search=" + key;
-            }else{
-                window.location.href = accountHome;
+        key = key.replace(/(^\s*)|(\s*$)/g,"");
+        if(key.length < 30){
+            if (event.key === "Enter") {
+                if( $(this).val() != ""){
+                    window.location.href = "/?search=" + key;
+                }else{
+                    window.location.href = accountHome;
+                }
             }
         }
     });
@@ -134,9 +136,11 @@ $(document).ready(function() {
     $(".search").bind('keydown', function(event) {
         var key = $(this).val();
         key = key.replace(/(^\s*)|(\s*$)/g,"")
-        if (event.key === "Enter") {
-            if( $(this).val() != ""){
-                window.location.href = "/?search=" + key;
+        if(key.length < 30){
+            if (event.key === "Enter") {
+                if( $(this).val() != ""){
+                    window.location.href = "/?search=" + key;
+                }
             }
         }
     });
@@ -208,5 +212,22 @@ function sortTable(sort_order, data_type){
         let data_a = $(a).find("td[class='"+data_type+"']").text(), data_b = $(b).find("td[class='"+data_type+"']").text();
         let rt = data_a.localeCompare(data_b);
         return (sort_order === "down") ? 0-rt : rt;
+    });
+}
+function mdContent(fullUrl, key, isMark) {
+    $.ajax({
+        method: 'GET',
+        url: fullUrl,
+        success: function (data) {
+            if(data && !data.status){
+                localStorage.setItem(key, data);
+                if(isMark){
+                    $("#content").html(marked.parse(c));
+                    $("#readmeDiv").show();
+                }
+            }else{
+                localStorage.removeItem(key);
+            }
+        }
     });
 }

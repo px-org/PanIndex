@@ -7,8 +7,21 @@ var ud = new mdui.Dialog("#upload_dialog", {modal:true});
 var bypassd = new mdui.Dialog("#bypass_dialog");
 var clearCached = new mdui.Dialog("#cache_dialog");
 var cacheConfigd = new mdui.Dialog("#cache_config_dialog", {modal:true});
+var uploadConfigd = new mdui.Dialog("#upload_config_dialog", {modal:true});
 var modeSelect = new mdui.Select('#mode');
 var cachePolicySelect = new mdui.Select('#cachePolicy');
+var copyConfigClipboard = new ClipboardJS('#copyConfigBtn', {
+    text: function(trigger) {
+        var configJson = $("#uploadConfigForm").find("textarea[name=config_json]").val();
+        return configJson;
+    }
+});
+copyConfigClipboard.on('success', function(e) {
+    mdui.snackbar({
+        message: "配置已复制到剪切板"
+    });
+    e.clearSelection();
+});
 function CommonRequest(urlPath, method, d) {
     $.ajax({
         method: method,
@@ -38,6 +51,39 @@ $('#theme-toggle').on('click', function(){
         $('#theme-toggle i').text('brightness_5');
         Cookies.set("theme", "mdui-dark", {expires : 3650, path:"/"});
     }
+});
+$('#upload-config-btn').on('click', function(){
+    $.ajax({
+        method: 'GET',
+        url: AdminApiUrl + '/config',
+        contentType: 'application/json',
+        success: function (data) {
+            $("#uploadConfigForm").find("textarea[name=config_json]").val(data);
+            uploadConfigd.toggle();
+        }
+    });
+});
+$("#closeUploadConfigBtn").on('click', function (ev){
+    uploadConfigd.close();
+});
+$("#confirmUploadConfigBtn").on('click', function (ev){
+    var configJson = $("#uploadConfigForm").find("textarea[name=config_json]").val();
+    $.ajax({
+        method: 'POST',
+        url: AdminApiUrl + '/config/upload',
+        data: configJson,
+        contentType: 'application/json',
+        success: function (data) {
+            var d = JSON.parse(data);
+            mdui.snackbar({
+                message: d.msg,
+                timeout: 2000,
+                onClose: function(){
+                    uploadConfigd.toggle();
+                }
+            });
+        }
+    });
 });
 $(".saveConfigBtn").on("click", function () {
     var config = $("#configForm").serializeObject();
@@ -268,6 +314,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=refresh_token]").val("");
     $("#accountForm").find("input[name=redirect_uri]").val("");
     $("#accountForm").find("input[name=root_id]").val("");
+    $("#accountForm").find("input[name=site_id]").val("");
     $("#accountForm").find("select[name=mode]").val("native");
     $("#accountForm").find("input[name=api_url]").val("");
     $("#accountForm").find("input[name=down_transfer]").prop("checked",false);
@@ -307,7 +354,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=redirect_uri]").val(account.redirect_uri);
                 $("#accountForm").find("input[name=root_id]").val(account.root_id);
                 $("#accountForm").find("input[name=transfer_domain]").val(account.transfer_domain);
-                $("#accountForm").find("input[name=site_label]").val(account.site_id);
+                $("#accountForm").find("input[name=site_id]").val(account.site_id);
                 $("#accountForm").find("input[name=host]").val(account.host);
                 modeSelect.handleUpdate();
                 if(account.down_transfer == 1){
@@ -529,7 +576,6 @@ $("#saveSafetyConfigBtn").on('click', function (ev){
 //防盗链-end
 function configSave() {
     var config = $("#configForm").serializeObject();
-    console.log(config);
     $.ajax({
         method: 'POST',
         url: AdminApiUrl + '/config',
@@ -884,7 +930,6 @@ $("#cachePolicy").on('change', function () {
 function saveCacheConfig(){
     var formData = $("#cacheConfigForm").serializeArray();
     var d = parseFormData(formData);
-    console.log(d);
     d["expire_time_span"] =  parseInt(d["expire_time_span"]);
     d["sync_child"] =  parseInt(d["sync_child"]);
     CommonRequest("/cache/config", "POST", d);
