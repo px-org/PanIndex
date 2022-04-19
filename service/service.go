@@ -718,16 +718,17 @@ func UpdateAllCache() string {
 				} else if account.CachePolicy == "mc" {
 					ClearFileCache(cachePath)
 				} else {
-					if account.Status != -1 {
-						account.SyncDir = cachePath
-						account.SyncChild = 0
-						dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-						if _, ok := dao.GetDb("sqlite"); ok {
-							dao.SYNC_STATUS = 1
-						}
-						go dao.InitGlobalConfig()
+					account.SyncDir = cachePath
+					account.SyncChild = 0
+					dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
+					if _, ok := dao.GetDb("sqlite"); ok {
+						dao.InitGlobalConfig()
 						dao.SyncFilesCache(account)
+					} else {
+						go dao.InitGlobalConfig()
+						go dao.SyncFilesCache(account)
 					}
+
 				}
 			}
 		}()
