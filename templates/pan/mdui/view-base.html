@@ -139,9 +139,9 @@
                             <div class="mdui-typo-body-1-opacity"><b>名称：</b>{{ (index $.fns 0).FileName }}</div>
                             <div class="mdui-typo-body-1-opacity"><b>大小：</b>{{ (index $.fns 0).SizeFmt }}</div>
                             <div class="mdui-typo-body-1-opacity"><b>日期：</b>{{ (index $.fns 0).LastOpTime }}</div>
-                            <div class="mdui-typo-body-1-opacity"><b>文件ID：</b>{{ (index $.fns 0).FileId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).FileId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
-                            <div class="mdui-typo-body-1-opacity"><b>目录ID：</b>{{ (index $.fns 0).ParentId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).ParentId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
-                            <div class="mdui-typo-body-1-opacity"><b>链接：</b><a id="file_link" href="javascript:void(0)" data-path="{{ (index $.fns 0).Path }}"></a></div>
+                            <!--<div class="mdui-typo-body-1-opacity"><b>文件ID：</b>{{ (index $.fns 0).FileId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).FileId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
+                            <div class="mdui-typo-body-1-opacity"><b>目录ID：</b>{{ (index $.fns 0).ParentId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).ParentId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>-->
+                            <div class="mdui-typo-body-1-opacity"><b>链接：</b><a id="file_link" href="javascript:void(0)" data-path="{{ (index $.fns 0).Path }}"></a> <a href="javascript:void(0)" data-content="{{ (index $.fns 0).Path }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
                         </div>
                     </div>
                 </div>

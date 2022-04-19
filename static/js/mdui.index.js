@@ -1,8 +1,9 @@
 $(document).ready(function() {
     var idClipboard = new ClipboardJS('.copyIDBtn', {
         text: function(trigger) {
-            var c = $(trigger).data("content");
-            return c;
+            var filePath = $(trigger).data("content");
+            var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + filePath);
+            return fullUrl;
         }
     });
     var clipboard = new ClipboardJS('.copyBtn', {
