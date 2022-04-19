@@ -626,7 +626,7 @@ func SaveAccount(account module.Account) string {
 		account.LastOpTime = time.Now().Format("2006-01-02 15:04:05")
 		DB.Model(&[]module.Account{}).
 			Select("Id", "Name", "Mode", "User", "Password", "RefreshToken", "AccessToken",
-				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host").
+				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host", "TransferDomain").
 			Where("id=?", account.Id).
 			Updates(&account)
 	}
