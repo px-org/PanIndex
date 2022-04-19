@@ -57,6 +57,10 @@ func Init() (BootConfig, bool) {
 
 func PrintConfig(query string, config string) bool {
 	if query != "" {
+		if query == "version" {
+			fmt.Print(module.VERSION)
+			return true
+		}
 		v := jsoniter.Get([]byte(config), query).ToString()
 		if v != "" {
 			fmt.Print(v)
