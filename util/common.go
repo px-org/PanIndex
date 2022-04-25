@@ -769,8 +769,10 @@ func AccountToMap(account module.Account) map[string]interface{} {
 	return map[string]interface{}{
 		"id":               account.Id,
 		"name":             account.Name,
+		"mode":             account.Mode,
 		"user":             account.User,
 		"password":         account.Password,
+		"refresh_token":    account.RefreshToken,
 		"access_token":     account.RefreshToken,
 		"redirect_uri":     account.RedirectUri,
 		"api_url":          account.ApiUrl,
