@@ -228,7 +228,8 @@ function dynamicChgMode(mode){
         $("#password_label").text("客户端密码（Client Secret）");
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
-        $("#SiteIdDiv").hide();
+        $("#site_label").text("网站ID（/xxx.sharepoint.com:/sites/xxx）");
+        $("#SiteIdDiv").show();
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "onedrive-cn"){
@@ -241,7 +242,8 @@ function dynamicChgMode(mode){
         $("#password_label").text("客户端密码（Client Secret）");
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#ApiUrlDiv").hide();
-        $("#SiteIdDiv").hide();
+        $("#site_label").text("网站ID（/xxx.sharepoint.com:/sites/xxx）");
+        $("#SiteIdDiv").show();
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
     }else if (mode == "ftp"){

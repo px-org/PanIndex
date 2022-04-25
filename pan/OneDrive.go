@@ -57,9 +57,14 @@ func (o OneDrive) AuthLogin(account *module.Account) (string, error) {
 		log.Errorln(err)
 		return "", err
 	}
+	//fmt.Println(auth.AccessToken)
 	auth.Mode = account.Mode
 	driveId := o.GetDriveId(auth)
 	auth.DriveId = driveId
+	OneDrives[account.Id] = auth
+	if account.SiteId != "" {
+		auth.Sharepoint = o.SharePointId(account)
+	}
 	OneDrives[account.Id] = auth
 	return auth.RefreshToken, nil
 }
@@ -67,7 +72,7 @@ func (o OneDrive) AuthLogin(account *module.Account) (string, error) {
 func (o OneDrive) Files(account module.Account, fileId, path, sortColumn, sortOrder string) ([]module.FileNode, error) {
 	fileNodes := make([]module.FileNode, 0)
 	od := OneDrives[account.Id]
-	url := BuildODRequestUrl(od.Mode, fileId, "children?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file,createdDateTime")
+	url := BuildODRequestUrl(od.Mode, SitePath(od), fileId, "/children?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file,createdDateTime")
 	var err error
 	for {
 		var filesResp OnedriveFilesResp
@@ -111,7 +116,7 @@ func (o OneDrive) File(account module.Account, fileId, path string) (module.File
 		SetResult(&fileResp).
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
-		Get(zones[od.Mode].Api + "/v1.0/me/drive/root:" + fileId + "?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file,createdDateTime")
+		Get(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/root:" + fileId + "?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file,createdDateTime")
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -157,7 +162,7 @@ func (o OneDrive) Rename(account module.Account, fileId, name string) (bool, int
 			},
 			"name": name,
 		}).
-		Patch(zones[od.Mode].Api + "/v1.0/me/drive/items/" + itemId)
+		Patch(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/items/" + itemId)
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -174,7 +179,7 @@ func (o OneDrive) Remove(account module.Account, fileId string) (bool, interface
 	resp, err := client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
-		Delete(zones[od.Mode].Api + "/v1.0/me/drive/items/" + itemId)
+		Delete(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/items/" + itemId)
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -197,7 +202,7 @@ func (o OneDrive) Mkdir(account module.Account, parentFileId, name string) (bool
 			"folder":                            KV{},
 			"@microsoft.graph.conflictBehavior": "rename",
 		}).
-		Post(zones[od.Mode].Api + "/v1.0/me/drive/items/" + itemId + "/children")
+		Post(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/items/" + itemId + "/children")
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -223,7 +228,7 @@ func (o OneDrive) Move(account module.Account, fileId, targetFileId string, over
 			},
 			"name": fileName,
 		}).
-		Patch(zones[od.Mode].Api + "/v1.0/me/drive/items/" + itemId)
+		Patch(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/items/" + itemId)
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -250,7 +255,7 @@ func (o OneDrive) Copy(account module.Account, fileId, targetFileId string, over
 			},
 			"name": fileName,
 		}).
-		Post(zones[od.Mode].Api + "/v1.0/me/drive/items/" + itemId + "/copy")
+		Post(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/items/" + itemId + "/copy")
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -275,7 +280,7 @@ func (o OneDrive) GetSpaceSzie(account module.Account) (int64, int64) {
 	resp, err := client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
-		Get(zones[od.Mode].Api + "/v1.0/me/drive")
+		Get(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive")
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -314,7 +319,7 @@ func (o OneDrive) GetDriveId(od module.OneDriveAuthInfo) string {
 	resp, err := client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
-		Get(zones[od.Mode].Api + "/v1.0/me/drive")
+		Get(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive")
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -330,11 +335,32 @@ func (o OneDrive) GetItemId(account module.Account, fileId string) (string, erro
 		SetResult(&fileResp).
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
-		Get(zones[od.Mode].Api + "/v1.0/me/drive/root:" + fileId + "?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file,createdDateTime")
+		Get(zones[od.Mode].Api + "/v1.0/" + SitePath(od) + "/drive/root:" + fileId + "?select=id,name,size,folder,@microsoft.graph.downloadUrl,lastModifiedDateTime,file,createdDateTime")
 	if err != nil {
 		log.Errorln(err)
 	}
 	return fileResp.ID, err
+}
+
+func (o OneDrive) SharePointId(account *module.Account) string {
+	od := OneDrives[account.Id]
+	resp, err := client.R().
+		SetAuthToken(od.AccessToken).
+		SetHeader("Content-Type", "application/json").
+		Get(zones[account.Mode].Api + "/v1.0/sites/" + account.SiteId)
+	if err != nil {
+		log.Errorln(err)
+		return ""
+	}
+	id := jsoniter.Get(resp.Body(), "id").ToString()
+	return id
+}
+
+func SitePath(od module.OneDriveAuthInfo) string {
+	if od.Sharepoint != "" {
+		return "/sites/" + od.Sharepoint
+	}
+	return "/me"
 }
 
 func OneExchangeToken(zone, clientId, redirectUri, clientSecret, code string) string {
@@ -383,7 +409,7 @@ func CreateUploadSession(accountId, filePath string) string {
 	resp, err := client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
-		Post(zones[od.Mode].Api + "/v1.0/me/drive/root:" + filePath + ":/createUploadSession")
+		Post(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/root:" + filePath + ":/createUploadSession")
 	if err != nil {
 		log.Error(err)
 	}
@@ -409,11 +435,11 @@ func ReadBlock(fileChunkSize int, file *module.UploadInfo) []BlockFile {
 	return bfs
 }
 
-func BuildODRequestUrl(mode, path, query string) string {
+func BuildODRequestUrl(mode, sitePath, path, query string) string {
 	if path != "" && path != "/" {
-		path = fmt.Sprintf(":%s:/", path)
+		return zones[mode].Api + "/v1.0" + sitePath + "/drive/root:" + path + ":" + query
 	}
-	return zones[mode].Api + "/v1.0" + "/me/drive/root" + path + query
+	return zones[mode].Api + "/v1.0" + sitePath + "/drive/root" + query
 }
 
 type OnedriveFilesResp struct {
