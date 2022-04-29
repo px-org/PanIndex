@@ -158,6 +158,8 @@ function initVideo(container, qas, title, parentPath){
             fullscreen: true,
             fullscreenWeb: false,
             //pip: true,
+            lock: true,
+            fastForward: true,
             autoplay: false,
             autoSize: true,
             playbackRate: true,
