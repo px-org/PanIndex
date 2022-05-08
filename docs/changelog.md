@@ -1,3 +1,20 @@
+### [v3.0.8](https://github.com/libsgh/PanIndex/compare/v3.0.7...v3.0.8) (2022-05-08)
+
+##### Bug Fixes
+
+- 天翼云中转无法下载
+- 配置导入账号部分配置丢失
+
+##### Features
+- 支持Sharepoint挂载
+- 更新js依赖及部分npm cdn来源
+
+#### Dev Plan
+- 纯直链系统（屏蔽、目录访问、文件预览）
+- 新增网盘支持
+- 分页、搜索优化
+- 播放增强
+
 ### [v3.0.7](https://github.com/libsgh/PanIndex/compare/v3.0.6...v3.0.7) (2022-04-19)
 
 ##### Bug Fixes

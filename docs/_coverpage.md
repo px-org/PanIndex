@@ -1,6 +1,6 @@
 ![logo](_media/index.png)
 
-# PanIndex <small>v3.0.7</small>
+# PanIndex <small>v3.0.8</small>
 
 > 一个简易的网盘目录列表.
 >
