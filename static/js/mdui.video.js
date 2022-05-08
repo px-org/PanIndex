@@ -52,26 +52,36 @@ function initVideo(container, qas, title){
             width: 250,
             tooltip: '字幕',
             selector: [
-            {
-                default: true,
-                html: '<span style="color:yellow">字幕 01</span>',
-                url: vpath + '.' + subtitle,
-            }
-        ],
+                {
+                    default: true,
+                    html: '<span style="color:red">关闭</span>',
+                    url: '',
+                },
+                {
+                    default: false,
+                    html: '<span style="color:yellow">字幕</span>',
+                    url: vpath + '.' + subtitle,
+                }
+            ],
             onSelect: function(item, $dom) {
-            art.subtitle.url = item.url;
-            art.subtitle.encoding = "utf-8";
-            art.subtitle.bilingual = true;
-            art.subtitle.style({
-                'font-size': '30px',
-            });
-            return item.html;
-        },
+                if(item.url == ''){
+                    art.subtitle.show = false;
+                    return "";
+                }
+                art.subtitle.show = true;
+                art.subtitle.url = item.url;
+                art.subtitle.encoding = "utf-8";
+                art.subtitle.bilingual = true;
+                art.subtitle.style({
+                    'font-size': '30px',
+                });
+                return item.html;
+            }
         };
         settings.push(subtitlePlugin);
     }
     var plugins = [];
-    if(danmuku != ""){
+    if(danmuku == "1"){
         var danmukuPath = subtitlePath + vname + ".xml";
         var danmukuPlugin = {
             html: '弹幕',
@@ -115,7 +125,8 @@ function initVideo(container, qas, title){
     var id = md5(currentUrl);
     if(qas.length > 0){
         $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
-        var art = new Artplayer({
+        art = new Artplayer({
+            lang: "zh-cn",
             title: title,
             container: container,
             url: qas[0].url,
@@ -136,18 +147,20 @@ function initVideo(container, qas, title){
                     hls.on(Hls.Events.ERROR, function (event, data) {
                        switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done"){
+                               if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
                                     const lastTime = art.currentTime;
                                     var qas = buildTranscodeInfo(accountId, fileId);
-                                    hls.destroy();
-                                    art.switchQuality(qas[0].url);
-                                    art.once('video:canplay', () => {
-                                        art.seek = lastTime;
-                                    });
+                                    if(qas.length != 0){
+                                        hls.stopLoad();
+                                        art.switchQuality(qas[0].url);
+                                        art.once('video:canplay', () => {
+                                            art.seek = lastTime;
+                                        });
+                                    }
                                 }
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
-                                hls.recoverMediaError();
+                                //hls.recoverMediaError();
                                 break;
                             default:
                                 hls.destroy();
@@ -159,9 +172,12 @@ function initVideo(container, qas, title){
             //quality: qas,
             autoSize: true,
             fullscreen: true,
-            fullscreenWeb: false,
+            fullscreenWeb: true,
             //pip: true,
             autoplay: false,
+            lock: true,
+            fastForward: true,
+            autoOrientation: true,
             autoSize: true,
             playbackRate: true,
             aspectRatio: true,
@@ -171,6 +187,9 @@ function initVideo(container, qas, title){
             theme: '#23ade5',
             settings: settings,
             whitelist: ['*'],
+            moreVideoAttr: {
+                crossOrigin: 'anonymous',
+            },
             plugins: plugins
         });
        art.on('video:play', (...args) => {

@@ -134,6 +134,7 @@ function initVideo(container, qas, title, parentPath){
     if(qas.length > 0){
         $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
         var art = new Artplayer({
+            lang: 'zh-cn',
             title: title,
             container: container,
             url: qas[0].url,
@@ -158,6 +159,9 @@ function initVideo(container, qas, title, parentPath){
             fullscreen: true,
             fullscreenWeb: false,
             //pip: true,
+            lock: true,
+            fastForward: true,
+            autoOrientation: true,
             autoplay: false,
             autoSize: true,
             playbackRate: true,

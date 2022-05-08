@@ -8,6 +8,7 @@ import (
 	"github.com/libsgh/PanIndex/pan"
 	"github.com/libsgh/PanIndex/service"
 	"github.com/libsgh/PanIndex/util"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"strings"
@@ -131,12 +132,20 @@ func download(ac module.Account, fileNode module.FileNode, c *gin.Context) {
 func DataRroxy(ac module.Account, downUrl, fileName string, c *gin.Context) {
 	client := util.GetClient(20)
 	req, err := http.NewRequest("GET", downUrl, nil)
-	req.Header.Add("Range", c.GetHeader("Range"))
+	reqRange := c.GetHeader("Range")
+	if reqRange != "" {
+		req.Header.Add("Range", c.GetHeader("Range"))
+	}
 	if ac.Mode == "googledrive" {
 		req.Header.Add("Authorization", "Bearer "+pan.GoogleDrives[ac.Id].AccessToken)
 	}
 	response, err := client.Do(req)
-	defer response.Body.Close()
+	defer func() {
+		err = response.Body.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 	if err != nil {
 		c.Status(http.StatusServiceUnavailable)
 		return

@@ -326,8 +326,8 @@ func FormateName(filename string) string {
 
 func TruncateName(filename string) string {
 	nameRune := []rune(filename)
-	if len(nameRune) > 20 {
-		return string(nameRune[0:20]) + "..."
+	if len(nameRune) > 15 {
+		return string(nameRune[0:15]) + "..."
 	}
 	return filename
 }

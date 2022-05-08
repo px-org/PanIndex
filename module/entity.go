@@ -224,6 +224,7 @@ type AliPartInfo struct {
 	ContentType       string `json:"content_type"`
 }
 type OneDriveAuthInfo struct {
+	Sharepoint   string `json:"sharepoint"`
 	DriveId      string `json:"drive_id"`
 	TokenType    string `json:"token_type"`
 	Scope        string `json:"scope"`
