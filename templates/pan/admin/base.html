@@ -49,7 +49,9 @@
     <div class="mdui-toolbar mdui-color-indigo">
         <a href="javascript:;" class="mdui-btn mdui-btn-icon" {{- if ne $.redirect_url "login"}}mdui-drawer="{target: '#main-drawer', swipe: true}"{{- end}}><i class="mdui-icon material-icons">menu</i></a>
         <a href="/" class="mdui-typo-headline mdui-hidden-xs" target="_blank">PanIndex</a>
+        {{- if ne $.redirect_url "login"}}
         <a href="{{$.config.AdminPath}}" class="mdui-typo-title">配置</a>
+        {{- end}}
         <div class="mdui-toolbar-spacer"></div>
         {{- if ne $.redirect_url "login"}}
         <a id="upload-config-btn" href="javascript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '配置（JSON）'}"><i class="mdui-icon material-icons">settings</i></a>
@@ -109,6 +111,11 @@
                 <div class="mdui-list-item-content">安全</div><i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
             </div>
             <div class="mdui-collapse-item-body mdui-list">
+                <a href="{{$.config.AdminPath}}/access" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "access"}}mdui-list-item-active{{end}}">
+                <div class="mdui-list-item-content">
+                    <div class="mdui-list-item-title">访问控制</div>
+                </div>
+                </a>
                 <a href="{{$.config.AdminPath}}/pwd" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "pwd"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">文件夹加密</div>
@@ -159,6 +166,8 @@
         {{block "admin-view" .}}{{end}}
     {{- else if eq $.redirect_url "login"}}
         {{block "admin-login" .}}{{end}}
+    {{- else if eq $.redirect_url "access"}}
+        {{block "admin-access" .}}{{end}}
     {{- else if eq $.redirect_url "pwd"}}
         {{block "admin-pwd" .}}{{end}}
     {{- else if eq $.redirect_url "hide"}}

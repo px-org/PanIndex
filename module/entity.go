@@ -95,6 +95,7 @@ type Config struct {
 	Readme           string            `json:"readme"`          //show or hide readme
 	Head             string            `json:"head"`            //show or hide head
 	ShareInfoList    []ShareInfo       `json:"share_info_list"` //分享信息列表
+	Access           string            `json:"access"`          //access
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key

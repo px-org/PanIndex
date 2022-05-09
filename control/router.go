@@ -65,6 +65,7 @@ func SetRouters(r *gin.Engine) {
 		auth.GET("/bypass", ConfigManagent)     //bypass download
 		auth.GET("/cache", ConfigManagent)      //cache
 		auth.GET("/webdav", ConfigManagent)     //webdav
+		auth.GET("/access", ConfigManagent)     //access
 	}
 	r.GET("/s/*shortCode", ShortRedirect)
 	dav := r.Group(module.GloablConfig.DavPath)
@@ -80,6 +81,9 @@ func SetRouters(r *gin.Engine) {
 		dav.Handle("COPY", "/*path", ServeWebDAV)
 		dav.Handle("MOVE", "/*path", ServeWebDAV)
 	}
-	r.NoRoute(middleware.Check, index)
-
+	if module.GloablConfig.Access == "3" {
+		r.NoRoute(middleware.Check, jwt.MiddlewareFunc(), index)
+	} else {
+		r.NoRoute(middleware.Check, index)
+	}
 }

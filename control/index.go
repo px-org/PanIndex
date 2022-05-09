@@ -33,12 +33,20 @@ func index(c *gin.Context) {
 	var lastFile, nextFile = "", ""
 	if isSearch {
 		fns = service.Search(searchKey)
+		t := Redirect404(c, false)
+		if t != "" {
+			tmpFile = t
+		}
 	} else {
 		if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
 			//返回账号列表
 			fns = service.AccountsToNodes(c.Request.Host)
 		} else {
 			fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortColumn, sortOrder, isView)
+		}
+		t := Redirect404(c, isFile)
+		if t != "" {
+			tmpFile = t
 		}
 		if isFile {
 			if isView {
@@ -73,6 +81,31 @@ func index(c *gin.Context) {
 		"last_file":    lastFile,
 		"next_file":    nextFile,
 	})
+}
+
+func Redirect404(c *gin.Context, flag bool) string {
+	_, isView := c.GetQuery("v")
+	_, isSearch := c.GetQuery("search")
+	t := "templates/pan/admin/404.html"
+	if module.GloablConfig.Access == "0" {
+		//公开
+		c.Next()
+	} else if module.GloablConfig.Access == "1" {
+		//仅直链
+		if isView || isSearch || !flag {
+			c.Abort()
+			return t
+		}
+	} else if module.GloablConfig.Access == "2" {
+		//直链 + 预览
+		if isSearch || !flag {
+			c.Abort()
+			return t
+		}
+	} else if module.GloablConfig.Access == "3" {
+		//登录
+	}
+	return ""
 }
 
 func CurrentTitle(ac module.Account, config module.Config, bypassName string) string {
@@ -163,7 +196,9 @@ func DataRroxy(ac module.Account, downUrl, fileName string, c *gin.Context) {
 }
 
 func view(tmpFile *string, viewType string) {
-	*tmpFile = fmt.Sprintf("templates/pan/%s/view-%s.html", util.GetCurrentTheme(module.GloablConfig.Theme), viewType)
+	if !strings.Contains(*tmpFile, "404.html") {
+		*tmpFile = fmt.Sprintf("templates/pan/%s/view-%s.html", util.GetCurrentTheme(module.GloablConfig.Theme), viewType)
+	}
 }
 
 func ShortRedirect(c *gin.Context) {
