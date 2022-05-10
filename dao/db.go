@@ -43,6 +43,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"danmuku", "0", "view"},
 	{"danmuku_path", "", "view"},
 	{"access", "0", "safety"},
+	{"short_action", "0", "safety"},
 	{"enable_safety_link", "0", "safety"},
 	{"only_referrer", "", "safety"},
 	{"is_null_referrer", "0", "safety"},

@@ -96,6 +96,7 @@ type Config struct {
 	Head             string            `json:"head"`            //show or hide head
 	ShareInfoList    []ShareInfo       `json:"share_info_list"` //分享信息列表
 	Access           string            `json:"access"`          //access
+	ShortAction      string            `json:"short_action"`    //短链行为
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key

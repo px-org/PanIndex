@@ -490,7 +490,7 @@ func GetRedirectUri(shorCode string) string {
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			if !si.IsFile {
 				redirectUri = si.FilePath
-			} else if si.IsFile && module.GloablConfig.EnablePreview == "0" {
+			} else if si.IsFile && (module.GloablConfig.EnablePreview == "0" || module.GloablConfig.ShortAction == "1") {
 				redirectUri = si.FilePath
 			} else {
 				redirectUri = si.FilePath + "?v"
