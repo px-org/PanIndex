@@ -86,7 +86,6 @@ $(document).ready(function() {
             $(".mdui-card").attr("style","min-height:403px");
             var formData = new FormData();
             var prefix = window.location.protocol + "//"+window.location.host + "/s/";
-            formData.append("accountId", $(this).attr("data-aid"));
             formData.append("prefix", prefix);
             formData.append("path", $(this).attr("data-fp"));
             formData.append("isFile", $(this).attr("data-file-type"));

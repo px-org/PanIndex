@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/control/middleware"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/util"
 	"github.com/libsgh/nic"
@@ -141,7 +140,7 @@ func (y Yun139) ToFileNode(item ContentList) (module.FileNode, error) {
 }
 
 func (y Yun139) File(account module.Account, fileId, path string) (module.FileNode, error) {
-	_, _, p, _ := middleware.ParseFullPath(path, "")
+	_, _, p, _ := util.ParseFullPath(path, "")
 	if fileId == account.RootId {
 		return module.FileNode{
 			Id:         uuid.NewV4().String(),

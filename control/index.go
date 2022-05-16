@@ -201,16 +201,24 @@ func view(tmpFile *string, viewType string) {
 	}
 }
 
-func ShortRedirect(c *gin.Context) {
+func ShortRedirect(c *gin.Context, r *gin.Engine) {
 	pathName := c.Request.URL.Path
-	//_, isView := c.GetQuery("v")
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
 		pathName = pathName[0 : len(pathName)-1]
 	}
 	paths := strings.Split(pathName, "/")
 	if len(paths) == 3 && paths[1] == "s" {
-		redirectUri := service.GetRedirectUri(paths[2])
-		c.Redirect(http.StatusFound, redirectUri)
+		redirectUri, v := service.GetRedirectUri(paths[2])
+		if redirectUri == "" {
+			t := "templates/pan/admin/404.html"
+			c.HTML(http.StatusOK, t, gin.H{})
+		} else {
+			c.Request.URL.Path = redirectUri
+			q := c.Request.URL.Query()
+			q.Add(v, "")
+			c.Request.URL.RawQuery = q.Encode()
+			r.HandleContext(c)
+		}
 	}
 	c.Abort()
 }

@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Init() (BootConfig, bool) {
@@ -63,7 +64,6 @@ func PrintConfig(query string, config string) bool {
 		}
 		v := jsoniter.Get([]byte(config), query).ToString()
 		if v != "" {
-			fmt.Print(v)
 			return true
 		}
 	}
@@ -252,6 +252,7 @@ func Templates(fs embed.FS) *template.Template {
 			"iconclass":    iconclass,
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
+			"FormateUnix":  FormateUnix,
 		}).Parse(data)
 	}
 	//添加详情模板
@@ -270,6 +271,7 @@ func Templates(fs embed.FS) *template.Template {
 			"iconclass":    iconclass,
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
+			"FormateUnix":  FormateUnix,
 		}).Parse(data)
 	}
 	return tmpl
@@ -291,6 +293,7 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 			"isLast":       isLast,
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
+			"FormateUnix":  FormateUnix,
 		}).Parse(data)
 	}
 }
@@ -330,4 +333,12 @@ func TruncateName(filename string) string {
 		return string(nameRune[0:15]) + "..."
 	}
 	return filename
+}
+
+func FormateUnix(timeUnix int64) string {
+	if timeUnix == 0 {
+		return "-"
+	} else {
+		return time.Unix(timeUnix, 0).Format("2006-01-02 15:04:05")
+	}
 }

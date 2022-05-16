@@ -3,6 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>404 - Page not found</title>
+    {{- if ne $.config.FaviconUrl ""}}
+    <link rel="icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+    {{- else}}
+    <link rel="icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+    {{- end}}
     <style class="cp-pen-styles">
         .me404 {
             width: 1000px;

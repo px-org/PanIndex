@@ -95,6 +95,23 @@ func InitDb() {
 		configItem := module.ConfigItem{K: "api_token", V: ApiToken, G: "common"}
 		DB.Create(configItem)
 	}
+	//兼容旧版本密码规则
+	UpdateOldPassword()
+}
+
+func UpdateOldPassword() {
+	var pwdFiles []module.PwdFiles
+	c := DB.Where("1=1").Find(&pwdFiles).RowsAffected
+	if c != 0 {
+		for _, file := range pwdFiles {
+			if file.Id == "" {
+				file.Id = uuid.NewV4().String()
+				DB.Table("pwd_files").Where("file_path=?", file.FilePath).Updates(map[string]interface{}{
+					"expire_at": 0, "id": file.Id,
+				})
+			}
+		}
+	}
 }
 
 func SaveConfigItems(items []module.ConfigItem) {
@@ -122,7 +139,7 @@ func InitGlobalConfig() {
 	DB.Raw("select * from account order by seq asc").Find(&accounts)
 	c.Accounts = accounts
 	c.HideFiles = GetHideFilesMap()
-	c.PwdFiles = GetPwdFilesMap()
+	c.PwdFiles = FindPwdList()
 	c.BypassList = GetBypassList()
 	c.CdnFiles = util.GetCdnFilesMap(c.Cdn, module.VERSION)
 	c.ShareInfoList = GetShareInfoList()
@@ -164,13 +181,32 @@ func GetPwdFilesMap() map[string]string {
 }
 
 //get pwd from full path
-func GetPwdFromPath(path string) (module.PwdFiles, bool) {
+func GetPwdFromPath(path string) ([]string, string, bool) {
+	pwdfiles := []string{}
 	pwdfile := module.PwdFiles{}
-	result := DB.Where("? like file_path", path+"%").First(&pwdfile)
-	if result.Error != nil {
-		return pwdfile, false
+	filePath := ""
+	now := time.Now().Unix()
+	likeSql := ""
+	if _, ok := GetDb("sqlite"); ok {
+		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE file_path || '%' AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
+	} else if _, ok := GetDb("postgres"); ok {
+		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE concat_ws(file_path, '%') AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
+	} else {
+		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE concat(file_path, '%') AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
 	}
-	return pwdfile, true
+	result := DB.Table("pwd_files").Select("password").Where("file_path = ? AND (expire_at =0 or expire_at >= ?)", path, now).Find(&pwdfiles)
+	if result.RowsAffected == 0 {
+		result = DB.Raw(likeSql, path, now).First(&pwdfile)
+		if result.RowsAffected == 0 {
+			return pwdfiles, filePath, false
+		} else {
+			filePath = pwdfile.FilePath
+			result = DB.Table("pwd_files").Select("password").Where("file_path = ? AND (expire_at =0 or expire_at >= ?)", pwdfile.FilePath, now).Find(&pwdfiles)
+		}
+	} else {
+		filePath = path
+	}
+	return pwdfiles, filePath, true
 }
 
 //find account by name
@@ -272,7 +308,6 @@ func DeleteAccounts(ids []string) {
 		var a module.Account
 		var si module.ShareInfo
 		a.Id = id
-		si.AccountId = id
 		DB.Model(module.Account{}).Where("1=1").Delete(a)
 		//delete share info
 		DB.Model(module.ShareInfo{}).Where("1=1").Delete(si)
@@ -294,7 +329,7 @@ func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd i
 		log.Errorln(err)
 	}
 	for _, fn := range fileNodes {
-		util.FileNodeAuth(&fn, hide, hasPwd)
+		FileNodeAuth(&fn, hide, hasPwd)
 		if fn.IsFolder && account.SyncChild == 0 {
 			LoopCreateFiles(account, fn.FileId, fn.Path, fn.Hide, fn.HasPwd)
 		}
@@ -436,20 +471,22 @@ func DeleteHideFiles(filePaths []string) {
 
 //save pwd file
 func SavePwdFile(pwdFile module.PwdFiles) {
-	err := DB.Where("file_path=?", pwdFile.FilePath).First(&module.PwdFiles{}).Error
-	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		DB.Create(&pwdFile)
-	} else {
-		DB.Table("pwd_files").Where("file_path=?", pwdFile.FilePath).Update("password", pwdFile.Password)
+	if pwdFile.Password == "" {
+		pwdFile.Password = util.RandomPassword(8)
 	}
-	InitGlobalConfig()
+	if pwdFile.Id != "" {
+		DB.Table("pwd_files").Where("id=?", pwdFile.Id).Updates(pwdFile)
+	} else {
+		pwdFile.Id = uuid.NewV4().String()
+		DB.Create(&pwdFile)
+	}
 }
 
 //delete hide file
-func DeletePwdFiles(filePaths []string) {
-	for _, filePath := range filePaths {
-		c := DB.Where("file_path=?", filePath).Delete(&module.PwdFiles{}).RowsAffected
-		log.Debugf("delete pwd file [%s], result [%d]", filePath, c)
+func DeletePwdFiles(delIds []string) {
+	for _, id := range delIds {
+		c := DB.Where("id=?", id).Delete(&module.PwdFiles{}).RowsAffected
+		log.Debugf("delete pwd file [%s], result [%d]", id, c)
 	}
 	InitGlobalConfig()
 }
@@ -670,13 +707,42 @@ func SelectBypassByAccountId(accountId string) module.Bypass {
 }
 
 func SaveShareInfo(info module.ShareInfo) {
-	err := DB.Where("file_path=? and account_id=?", info.FilePath, info.AccountId).First(&module.ShareInfo{}).Error
+	err := DB.Where("file_path=?", info.FilePath).First(&module.ShareInfo{}).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		DB.Create(&info)
 	} else {
 		DB.Model(&[]module.ShareInfo{}).
 			Select("ShortCode", "IsFile").
-			Where("file_path=? and account_id=?", info.FilePath, info.AccountId).
+			Where("file_path=?", info.FilePath).
 			Updates(&info)
+	}
+}
+
+func FindPwdList() []module.PwdFiles {
+	pwdFiles := []module.PwdFiles{}
+	DB.Raw("select * from pwd_files where 1=1").Find(&pwdFiles)
+	return pwdFiles
+}
+
+func FileNodeAuth(fn *module.FileNode, hide, hasPwd int) {
+	if hide == 1 {
+		fn.Hide = hide
+	} else {
+		_, ok := module.GloablConfig.HideFiles[fn.FileId]
+		if ok {
+			fn.Hide = 1
+		} else {
+			fn.Hide = 0
+		}
+	}
+	if hasPwd == 1 {
+		fn.HasPwd = hasPwd
+	} else {
+		_, _, ok := GetPwdFromPath(fn.Path)
+		if ok {
+			fn.HasPwd = 1
+		} else {
+			fn.HasPwd = 0
+		}
 	}
 }

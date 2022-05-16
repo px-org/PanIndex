@@ -7,7 +7,6 @@ import (
 	"github.com/bluele/gcache"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/control/middleware"
 	"github.com/libsgh/PanIndex/dao"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -323,7 +322,7 @@ func ClearFileCache(p string) {
 
 //upload file
 func Upload(accountId, p string, c *gin.Context) string {
-	_, fullPath, path, _ := middleware.ParseFullPath(p, "")
+	_, fullPath, path, _ := util.ParseFullPath(p, "")
 	form, _ := c.MultipartForm()
 	files := form.File["uploadFile"]
 	account := module.Account{}
@@ -375,29 +374,25 @@ func Async(accountId, path string) string {
 }
 
 //short url & qrcode
-func ShortInfo(accountId, path, prefix, fileType string) (string, string, string) {
+func ShortInfo(path, prefix string) (string, string, string) {
 	si := module.ShareInfo{}
-	dao.DB.Raw("select * from share_info where account_id = ? and file_path=?", accountId, path).First(&si)
+	dao.DB.Raw("select * from share_info where file_path = ?", path).First(&si)
 	shortUrl := ""
-	if accountId == "" || path == "" {
+	if path == "" {
 		return "", "", "无效的id"
 	}
 	shortCode := ""
-	isFile := false
-	if fileType == "1" {
-		isFile = true
-	}
 	if si.ShortCode != "" {
 		shortCode = si.ShortCode
 	} else {
-		shortCodes, err := util.Transform(accountId + path)
+		shortCodes, err := util.Transform(path)
 		if err != nil {
 			log.Errorln(err)
 			return "", "", "短链生成失败"
 		}
 		shortCode = shortCodes[0]
 		dao.DB.Create(module.ShareInfo{
-			accountId, path, shortCode, isFile,
+			path, shortCode,
 		})
 	}
 	shortUrl = prefix + shortCode
@@ -482,23 +477,22 @@ func AccountsToNodes(host string) []module.FileNode {
 	return fns
 }
 
-func GetRedirectUri(shorCode string) string {
+func GetRedirectUri(shorCode string) (string, string) {
 	redirectUri := "/"
+	v := ""
 	si := module.ShareInfo{}
 	result := dao.DB.Raw("select * from share_info where short_code=?", shorCode).First(&si)
 	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			if !si.IsFile {
-				redirectUri = si.FilePath
-			} else if si.IsFile && (module.GloablConfig.EnablePreview == "0" || module.GloablConfig.ShortAction == "1") {
+			if module.GloablConfig.EnablePreview == "0" || module.GloablConfig.ShortAction == "1" {
 				redirectUri = si.FilePath
 			} else {
-				redirectUri = si.FilePath + "?v"
+				v = "v"
+				redirectUri = si.FilePath
 			}
-
 		}
 	}
-	return redirectUri
+	return redirectUri, v
 }
 
 //path: filePath
@@ -991,10 +985,8 @@ func UploadConfig(config module.Config) string {
 	}
 	//pwd
 	if len(config.PwdFiles) > 0 {
-		for k, v := range config.PwdFiles {
-			dao.SavePwdFile(module.PwdFiles{
-				k, v,
-			})
+		for _, pd := range config.PwdFiles {
+			dao.SavePwdFile(pd)
 		}
 	}
 	//hide
@@ -1004,4 +996,43 @@ func UploadConfig(config module.Config) string {
 		}
 	}
 	return "配置导入成功，如有密码修改，请重新登录"
+}
+
+func UploadPwdFile(content string) {
+	if content != "" {
+		lines := strings.Split(content, "\n")
+		for _, line := range lines {
+			columns := strings.Split(line, "\t")
+			pwdFile := module.PwdFiles{}
+			if len(columns) > 0 {
+				pwdFile.FilePath = strings.TrimSpace(columns[0])
+				if len(columns) > 1 {
+					pwdFile.Password = columns[1]
+				} else {
+					pwdFile.Password = util.RandomPassword(8)
+					pwdFile.ExpireAt = 0
+				}
+				if len(columns) > 2 {
+					ex, _ := time.ParseInLocation("2006-01-02 15:04:05", columns[2], time.Local)
+					pwdFile.ExpireAt = ex.UTC().Unix()
+				}
+				if len(columns) > 3 {
+					pwdFile.Info = columns[3]
+				}
+				dao.SavePwdFile(pwdFile)
+				dao.InitGlobalConfig()
+			}
+		}
+	}
+}
+
+func ShareInfo(urlPrefix, pwdId string) string {
+	//1. pwd
+	pwdFile := module.PwdFiles{}
+	dao.DB.Where("id=?", pwdId).First(&pwdFile)
+	fileName := util.GetFileName(pwdFile.FilePath)
+	//2. share
+	shortUrl, _, _ := ShortInfo(pwdFile.FilePath, urlPrefix)
+	msg := fmt.Sprintf("「%s」%s 密码: %s", fileName, shortUrl, pwdFile.Password)
+	return msg
 }

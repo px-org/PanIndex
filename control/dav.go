@@ -2,9 +2,9 @@ package control
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/control/middleware"
 	"github.com/libsgh/PanIndex/control/webdav"
 	"github.com/libsgh/PanIndex/module"
+	"github.com/libsgh/PanIndex/util"
 	"net/http"
 )
 
@@ -46,7 +46,7 @@ func WebDAVAuth() gin.HandlerFunc {
 func ServeWebDAV(c *gin.Context) {
 	//not support bypass
 	p := c.Param("path")
-	account, fullPath, path, _ := middleware.ParseFullPath(p, "")
+	account, fullPath, path, _ := util.ParseFullPath(p, "")
 	handler := &webdav.Handler{
 		Prefix:     "/",
 		FileSystem: webdav.FileSystem{},
