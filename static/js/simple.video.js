@@ -77,11 +77,21 @@ function initVideo(container, qas, title, parentPath){
             selector: [
                 {
                     default: true,
-                    html: '<span style="color:yellow">字幕 01</span>',
-                    url: parentPath + "/" + vpath + '.' + subtitle
+                    html: '<span style="color:red">关闭</span>',
+                    url: '',
+                },
+                {
+                    default: false,
+                    html: '<span style="color:yellow">字幕</span>',
+                    url: vpath + '.' + subtitle,
                 }
             ],
             onSelect: function(item, $dom) {
+                if(item.url == ''){
+                    art.subtitle.show = false;
+                    return "";
+                }
+                art.subtitle.show = true;
                 art.subtitle.url = item.url;
                 art.subtitle.encoding = "utf-8";
                 art.subtitle.bilingual = true;
@@ -89,7 +99,7 @@ function initVideo(container, qas, title, parentPath){
                     'font-size': '30px',
                 });
                 return item.html;
-            },
+            }
         };
         settings.push(subtitlePlugin);
     }

@@ -141,32 +141,36 @@ function initVideo(container, qas, title){
                     flvPlayer.load();
                 },
                 m3u8: function (video, url) {
-                    var hls = new Hls();
-                    hls.loadSource(url);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.ERROR, function (event, data) {
-                       switch (data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                               if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
-                                    const lastTime = art.currentTime;
-                                    var qas = buildTranscodeInfo(accountId, fileId);
-                                    if(qas.length != 0){
-                                        hls.stopLoad();
-                                        art.switchQuality(qas[0].url);
-                                        art.once('video:canplay', () => {
-                                            art.seek = lastTime;
-                                        });
+                    if (Artplayer.utils.isiOS) {
+                        video.src = url;
+                    } else {
+                        var hls = new Hls();
+                        hls.loadSource(url);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.ERROR, function (event, data) {
+                            switch (data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
+                                        const lastTime = art.currentTime;
+                                        var qas = buildTranscodeInfo(accountId, fileId);
+                                        if(qas.length != 0){
+                                            hls.stopLoad();
+                                            art.switchQuality(qas[0].url);
+                                            art.once('video:canplay', () => {
+                                                art.seek = lastTime;
+                                            });
+                                        }
                                     }
-                                }
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                //hls.recoverMediaError();
-                                break;
-                            default:
-                                hls.destroy();
-                                break;
-                        }
-                    });
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    //hls.recoverMediaError();
+                                    break;
+                                default:
+                                    hls.destroy();
+                                    break;
+                            }
+                        });
+                    }
                 },
             },
             //quality: qas,
@@ -192,14 +196,26 @@ function initVideo(container, qas, title){
             },
             plugins: plugins
         });
+        art.on('video:error', (...args) => {
+            if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done"){
+                const lastTime = art.currentTime;
+                var qas = buildTranscodeInfo(accountId, fileId);
+                if(qas.length != 0){
+                    art.switchQuality(qas[0].url);
+                    art.once('video:canplay', () => {
+                        art.seek = lastTime;
+                    });
+                }
+            }
+        });
        art.on('video:play', (...args) => {
             var cur = getCurrentTime(id);
             if (cur){
                 art.seek = cur;
             }
             autoUpdateCurrentTime(art, id);
-        });
-        art.on('play', (...args) => {
+       });
+       art.on('play', (...args) => {
             //set play history
             var cur = getCurrentTime(id);
             removeVideo(id);
