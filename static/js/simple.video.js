@@ -166,16 +166,17 @@ function initVideo(container, qas, title, parentPath){
             quality: qas,
             //quality: qas,
             autoSize: true,
-            fullscreen: true,
-            fullscreenWeb: false,
+            fullscreen: true, //全屏
+            fullscreenWeb: true, //网页全屏
             //pip: true,
+            autoplay: false, //自动播放
             lock: true,
-            fastForward: true,
-            autoOrientation: true,
-            autoplay: false,
+            isLock: true, //移动端锁屏操作
+            fastForward: true, //移动端添加长按视频快进
+            autoOrientation: true, //全屏自动翻转
             autoSize: true,
-            playbackRate: true,
-            aspectRatio: true,
+            playbackRate: true,//显示视频播放速度
+            aspectRatio: true,//显示视频长宽比
             //screenshot: true,
             setting: true,
             miniProgressBar: true,

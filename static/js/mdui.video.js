@@ -13,7 +13,14 @@ var danmuku = $("#playlistBtn").attr("data-config-danmuku");
 var danmukuPath = $("#playlistBtn").attr("data-config-danmuku-path");
 var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
 var qas = getQas(accountId, fileId, fileType);
-var art = initVideo(".artplayer-app", qas, fileName);
+var art;
+if(isWeiXin()){
+    document.addEventListener("WeixinJSBridgeReady", function() {
+        art = initVideo(".artplayer-app", qas, fileName);
+    }, false);
+}else{
+    art = initVideo(".artplayer-app", qas, fileName);
+}
 var inval;
 initPlayList(parentPath);
 function buildOriginalVideo(url, ft){
@@ -141,13 +148,19 @@ function initVideo(container, qas, title){
                     flvPlayer.load();
                 },
                 m3u8: function (video, url) {
-                    if (Artplayer.utils.isiOS) {
-                        video.src = url;
+                    if (!Hls.isSupported()) {
+                        const canPlay = video.canPlayType('application/vnd.apple.mpegurl');
+                        if (canPlay === 'probably' || canPlay == 'maybe') {
+                            video.src = url;
+                        } else {
+                            art.notice.show = 'Does not support playback of m3u8';
+                        }
                     } else {
                         var hls = new Hls();
                         hls.loadSource(url);
                         hls.attachMedia(video);
                         hls.on(Hls.Events.ERROR, function (event, data) {
+                            console.log(data);
                             switch (data.type) {
                                 case Hls.ErrorTypes.NETWORK_ERROR:
                                     if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
@@ -175,16 +188,17 @@ function initVideo(container, qas, title){
             },
             //quality: qas,
             autoSize: true,
-            fullscreen: true,
-            fullscreenWeb: true,
+            fullscreen: true, //全屏
+            fullscreenWeb: true, //网页全屏
             //pip: true,
-            autoplay: false,
+            autoplay: false, //自动播放
             lock: true,
-            fastForward: true,
-            autoOrientation: true,
+            isLock: true, //移动端锁屏操作
+            fastForward: true, //移动端添加长按视频快进
+            autoOrientation: true, //全屏自动翻转
             autoSize: true,
-            playbackRate: true,
-            aspectRatio: true,
+            playbackRate: true,//显示视频播放速度
+            aspectRatio: true,//显示视频长宽比
             //screenshot: true,
             setting: true,
             miniProgressBar: true,
@@ -197,14 +211,19 @@ function initVideo(container, qas, title){
             plugins: plugins
         });
         art.on('video:error', (...args) => {
-            if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done"){
-                const lastTime = art.currentTime;
-                var qas = buildTranscodeInfo(accountId, fileId);
-                if(qas.length != 0){
-                    art.switchQuality(qas[0].url);
-                    art.once('video:canplay', () => {
-                        art.seek = lastTime;
-                    });
+            if (!Hls.isSupported()) {
+                const canPlay = video.canPlayType('application/vnd.apple.mpegurl');
+                if (canPlay === 'probably' || canPlay == 'maybe') {
+                    if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done"){
+                        const lastTime = art.currentTime;
+                        var qas = buildTranscodeInfo(accountId, fileId);
+                        if(qas.length != 0){
+                            art.switchQuality(qas[0].url);
+                            art.once('video:canplay', () => {
+                                art.seek = lastTime;
+                            });
+                        }
+                    }
                 }
             }
         });
@@ -212,8 +231,8 @@ function initVideo(container, qas, title){
             var cur = getCurrentTime(id);
             if (cur){
                 art.seek = cur;
+                autoUpdateCurrentTime(art, id);
             }
-            autoUpdateCurrentTime(art, id);
        });
        art.on('play', (...args) => {
             //set play history
@@ -449,4 +468,13 @@ function autoUpdateCurrentTime(art, id) {
    inval = setInterval(function(){
        updateVideoTime(art.currentTime, id);
     }, 5000);
+}
+
+function isWeiXin() {
+    var ua = window.navigator.userAgent.toLowerCase();
+    if (ua.match(/MicroMessenger/i) == 'micromessenger') {
+        return true;
+    } else {
+        return false;
+    }
 }
