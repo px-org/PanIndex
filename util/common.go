@@ -385,7 +385,7 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 	if version == "" {
 		version = "main"
 	}
-	jp := "https://cdn.jsdelivr.net/gh/libsgh/PanIndex@" + version
+	jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
 	m := map[string]string{}
 	cdnMap := KV{
 		"0": KV{
@@ -409,8 +409,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"sweetalert2@js":             "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     "/static/lib/hls.js@1.1.2/dist/hls.min.js",
 			"flv@js":                     "/static/lib/flv.js@1.6.2/dist/flv.min.js",
-			"artplayer@js":               "/static/lib/artplayer@4.4.1/artplayer.js",
-			"artplayer-danmuku@js":       "/static/lib/artplayer@4.4.1/artplayer-plugin-danmuku.js",
+			"artplayer@js":               "/static/lib/artplayer@4.4.2/artplayer.js",
+			"artplayer-danmuku@js":       "/static/lib/artplayer@4.4.2/artplayer-plugin-danmuku.js",
 			"video@mdui@js":              "/static/js/mdui.video.js",
 			"video@simple@js":            "/static/js/simple.video.js",
 			"simple@index@js":            "/static/js/simple.index.js",
@@ -448,8 +448,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"sweetalert2@js":             "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     "//cdn.staticfile.org/hls.js/1.1.2/hls.min.js",
 			"flv@js":                     "//cdn.staticfile.org/flv.js/1.6.2/flv.min.js",
-			"artplayer@js":               "//npm.elemecdn.com/artplayer@4.4.1/dist/artplayer.js",
-			"artplayer-danmuku@js":       "//npm.elemecdn.com/artplayer-plugin-danmuku@4.4.1/dist/artplayer-plugin-danmuku.js",
+			"artplayer@js":               "//npm.elemecdn.com/artplayer@4.4.2/dist/artplayer.js",
+			"artplayer-danmuku@js":       "//npm.elemecdn.com/artplayer-plugin-danmuku@4.4.2/dist/artplayer-plugin-danmuku.js",
 			"video@mdui@js":              "/static/js/mdui.video.js",
 			"video@simple@js":            "/static/js/simple.video.js",
 			"simple@index@js":            "/static/js/simple.index.js",

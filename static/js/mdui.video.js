@@ -189,7 +189,7 @@ function initVideo(container, qas, title){
             //quality: qas,
             autoSize: true,
             fullscreen: true, //全屏
-            fullscreenWeb: true, //网页全屏
+            //fullscreenWeb: true, //网页全屏
             //pip: true,
             autoplay: false, //自动播放
             lock: true,
