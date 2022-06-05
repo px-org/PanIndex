@@ -14,12 +14,18 @@ var danmukuPath = $("#playlistBtn").attr("data-config-danmuku-path");
 var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
 var qas = getQas(accountId, fileId, fileType);
 var art;
-if(isWeiXin()){
-    document.addEventListener("WeixinJSBridgeReady", function() {
+videoInit();
+function videoInit(){
+    if(art){
+        art.destroy();
+    }
+    if(isWeiXin()){
+        document.addEventListener("WeixinJSBridgeReady", function() {
+            art = initVideo(".artplayer-app", qas, fileName);
+        }, false);
+    }else{
         art = initVideo(".artplayer-app", qas, fileName);
-    }, false);
-}else{
-    art = initVideo(".artplayer-app", qas, fileName);
+    }
 }
 var inval;
 initPlayList(parentPath);
@@ -90,6 +96,10 @@ function initVideo(container, qas, title){
     var plugins = [];
     if(danmuku == "1"){
         var danmukuPath = subtitlePath + vname + ".xml";
+        var theme = 'light';
+        if($('body').hasClass('mdui-theme-layout-dark')){
+            theme = 'dark';
+        }
         var danmukuPlugin = {
             html: '弹幕',
             width: 250,
@@ -123,6 +133,8 @@ function initVideo(container, qas, title){
             opacity: 1,
             fontSize: 25,
             synchronousPlayback: false,
+            theme: theme,
+            mount: document.querySelector('.danmuinput'),
         }));
     }
     var currentUrl = encodeURI(window.location.protocol + "//"+window.location.host + parentPath + "/" +title);
@@ -278,7 +290,7 @@ $(document).ready(function() {
         }
     });
     document.getElementById('playlist_menu').addEventListener('open.mdui.menu', function () {
-        $("#playlist_menu").attr("style", "width:40%;max-height: 500px;overflow:scroll");
+        $("#playlist_menu").attr("style", "width:70%;max-height: 500px;overflow:scroll");
     });
     $("#transcodeBtn").click(function(ev){
         if(ev.target.textContent != "cloud" && ev.target.textContent != "cloud_done") return;
@@ -294,7 +306,7 @@ $(document).ready(function() {
             Cookies.set("transcode", "0", {expires : 3650, path:"/"});
             var qas = buildOriginalVideo(fullUrl, fileType);
             art.destroy();
-            art = initVideo(".artplayer-app", qas, fileName);
+           art = initVideo(".artplayer-app", qas, fileName);
         }
     });
 });

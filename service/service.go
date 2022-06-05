@@ -23,9 +23,9 @@ import (
 	"time"
 )
 
-var UrlCache = gcache.New(5000).LRU().Build()
-var FilesCache = gcache.New(5000).LRU().Build()
-var FileCache = gcache.New(5000).LRU().Build()
+var UrlCache = gcache.New(100000).LRU().Build()
+var FilesCache = gcache.New(100000).LRU().Build()
+var FileCache = gcache.New(100000).LRU().Build()
 
 func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isView bool) ([]module.FileNode, bool, string, string) {
 	fns := []module.FileNode{}
@@ -44,12 +44,15 @@ func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isVi
 			files, err := FilesCache.Get(fullPath)
 			if err == nil {
 				fcb := files.(FilesCacheBean)
-				log.Debugf("get file from cache:%s", fullPath)
+				log.Infof("get file from cache:%s", fullPath)
 				fns = fcb.FileNodes
 				isFile = fcb.IsFile
 			}
 		} else {
+			log.Infof("get file from api:%s", fullPath)
 			fns, isFile, err = GetFilesFromApi(ac, path, fullPath, "default", "null")
+			log.Infof("get file from api result:%d", len(fns))
+			log.Info(err)
 			fns = FilterHideFiles(fns)
 			cacheTime := time.Now().Format("2006-01-02 15:04:05")
 			if err == nil {
