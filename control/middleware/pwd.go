@@ -52,15 +52,21 @@ func SortCheck(c *gin.Context) {
 func PwdCheck(c *gin.Context, fullPath string) {
 	pwds, filePath, ok := dao.GetPwdFromPath(fullPath)
 	if ok {
-		pwdCookie, err := c.Request.Cookie("file_pwd")
-		if err != nil {
-			//redirect input pwd
+		pwd := c.Query("pwd")
+		if pwd != "" && util.In(pwd, pwds) {
 			c.Set("pwd_err_msg", "")
-			c.Set("has_pwd", true)
+			c.Set("has_pwd", false)
 		} else {
-			result, msg := VerifyPwd(pwds, filePath, pwdCookie.Value)
-			c.Set("pwd_err_msg", msg)
-			c.Set("has_pwd", result)
+			pwdCookie, err := c.Request.Cookie("file_pwd")
+			if err != nil {
+				//redirect input pwd
+				c.Set("pwd_err_msg", "")
+				c.Set("has_pwd", true)
+			} else {
+				result, msg := VerifyPwd(pwds, filePath, pwdCookie.Value)
+				c.Set("pwd_err_msg", msg)
+				c.Set("has_pwd", result)
+			}
 		}
 		c.Set("pwd_path", filePath)
 	} else {
