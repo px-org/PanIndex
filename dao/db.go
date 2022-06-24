@@ -16,6 +16,7 @@ import (
 )
 
 var DB *gorm.DB
+var NewPassword = ""
 var InitConfigItems = []module.ConfigItem{
 	{"site_name", "", "common"},
 	{"account_choose", "default", "common"},
@@ -94,6 +95,14 @@ func InitDb() {
 		ApiToken := strconv.Itoa(rand.Intn(10000000))
 		configItem := module.ConfigItem{K: "api_token", V: ApiToken, G: "common"}
 		DB.Create(configItem)
+	}
+	if NewPassword != "" {
+		configItem := module.ConfigItem{}
+		DB.Where("k=?", "admin_password").First(&configItem)
+		OldPassword := configItem.V
+		configItem.V = NewPassword
+		DB.Where("k=?", "admin_password").Updates(configItem)
+		log.Infof("reset password success, old [%s], new [%s] ", OldPassword, NewPassword)
 	}
 	//兼容旧版本密码规则
 	UpdateOldPassword()

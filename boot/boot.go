@@ -47,6 +47,9 @@ func Init() (BootConfig, bool) {
 	dao.InitGlobalConfig()
 	configStr, _ = jsoniter.MarshalToString(module.GloablConfig)
 	result = PrintConfig(config.ConfigQuery, configStr)
+	if result {
+		return config, true
+	}
 	//init accounts auth login
 	for _, account := range module.GloablConfig.Accounts {
 		dao.SyncAccountStatus(account)
@@ -64,6 +67,7 @@ func PrintConfig(query string, config string) bool {
 		}
 		v := jsoniter.Get([]byte(config), query).ToString()
 		if v != "" {
+			fmt.Print(v)
 			return true
 		}
 	}
@@ -113,7 +117,9 @@ func LoadConfig() BootConfig {
 	var ConfigQuery = flag.String("config_query", "", "config query new version, e.g. port")
 	var DbType = flag.String("db_type", "", "dao type, e.g. sqlite,mysql,postgres...")
 	var Dsn = flag.String("dsn", "", "database connection url")
+	var ResetPassword = flag.String("rest_password", "", "start whith new password, default:PanIndex")
 	flag.Parse()
+	dao.NewPassword = *ResetPassword
 	config, _ := LoadFromFile(*Config)
 	config.Host = LoadFromEnv("HOST", *Host, config.Host)
 	if config.Host == "" {
