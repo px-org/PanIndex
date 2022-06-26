@@ -568,10 +568,10 @@ $("#sharePwdFileBtn").on('click', function (ev){
                 }
                 navigator.clipboard.writeText(d.msg)
                 .then(() => {
-                    console.log("Text copied to clipboard...")
+                    /*console.log("Text copied to clipboard...");*/
                 })
                 .catch(err => {
-                    console.log('Something went wrong', err);
+                    /*console.log('Something went wrong', err);*/
                 });
                 mdui.snackbar({
                     message: title,
@@ -1002,19 +1002,23 @@ $("#cacheConfig").on('click', function (event) {
         if(data.syncChild == 0){
             $("#cacheConfigForm").find("input[name=sync_child]").prop("checked", true);
         }
-        var name = data.name;
-        $.ajax({
-            method: 'GET',
-            url: AdminApiUrl + '/bypass'+'?account_id='+data.id,
-            success: function (data) {
-                var d = JSON.parse(data);
-                if (d.data.name != ""){
-                    $("#cacheConfigForm").find("input[name=sync_dir]").val("/"+d.data.name);
-                }else{
-                    $("#cacheConfigForm").find("input[name=sync_dir]").val("/"+name);
+        if(data.syncDir && data.syncDir != ""){
+            $("#cacheConfigForm").find("textarea[name=sync_dir]").val(data.syncDir);
+        }else{
+            var name = data.name;
+            $.ajax({
+                method: 'GET',
+                url: AdminApiUrl + '/bypass'+'?account_id='+data.id,
+                success: function (data) {
+                    var d = JSON.parse(data);
+                    if (d.data.name != ""){
+                        $("#cacheConfigForm").find("textarea[name=sync_dir]").val("/"+d.data.name);
+                    }else{
+                        $("#cacheConfigForm").find("textarea[name=sync_dir]").val("/"+name);
+                    }
                 }
-            }
-        });
+            });
+        }
         cacheConfigd.toggle();
     }
 });
@@ -1023,12 +1027,12 @@ $("#cachePolicy").on('change', function () {
     dynamicCachePolicy(cachePolicy);
     cacheConfigd.handleUpdate();
 });
-function saveCacheConfig(){
+function saveCacheConfig(t){
     var formData = $("#cacheConfigForm").serializeArray();
     var d = parseFormData(formData);
     d["expire_time_span"] =  parseInt(d["expire_time_span"]);
     d["sync_child"] =  parseInt(d["sync_child"]);
-    CommonRequest("/cache/config", "POST", d);
+    CommonRequest("/cache/config?t="+t, "POST", d);
     cacheConfigd.toggle();
     return false;
 }

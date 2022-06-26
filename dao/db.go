@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -368,39 +369,43 @@ func SyncAccountStatus(account module.Account) {
 var SYNC_STATUS = 0
 
 func SyncFilesCache(account module.Account) {
-	t1 := time.Now()
-	dbFile := module.FileNode{}
-	result := DB.Raw("select * from file_node where path=? and is_delete=0 and account_id=?", account.SyncDir, account.Id).Take(&dbFile)
-	isRoot := true
-	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		account.RootId = dbFile.FileId
-		isRoot = false
-	}
-	//cache new files
-	LoopCreateFiles(account, account.RootId, account.SyncDir, 0, 0)
-	//handle old files && update account status
-	var fileNodeCount int64
-	DB.Model(&module.FileNode{}).Where("account_id=? and is_delete=1", account.Id).Count(&fileNodeCount)
-	status := 3
-	if int(fileNodeCount) > 0 {
-		status = 2
-		if isRoot {
-			//删除旧数据
-			DB.Where("account_id=? and is_delete=0", account.Id).Delete(module.FileNode{})
-			//暴露新数据
-			DB.Table("file_node").Where("account_id=?", account.Id).Update("is_delete", 0)
-		} else {
-			RefreshFileNodes(account.Id, account.RootId)
+	log.Info(account.SyncDir)
+	syncDirs := strings.Split(account.SyncDir, ",")
+	for _, syncDir := range syncDirs {
+		t1 := time.Now()
+		dbFile := module.FileNode{}
+		result := DB.Raw("select * from file_node where path=? and is_delete=0 and account_id=?", syncDir, account.Id).Take(&dbFile)
+		isRoot := true
+		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			account.RootId = dbFile.FileId
+			isRoot = false
 		}
-		log.Infoln("[DB cache][" + account.Name + "]refresh >> success")
+		//cache new files
+		LoopCreateFiles(account, account.RootId, syncDir, 0, 0)
+		//handle old files && update account status
+		var fileNodeCount int64
+		DB.Model(&module.FileNode{}).Where("account_id=? and is_delete=1", account.Id).Count(&fileNodeCount)
+		status := 3
+		if int(fileNodeCount) > 0 {
+			status = 2
+			if isRoot {
+				//删除旧数据
+				DB.Where("account_id=? and is_delete=0", account.Id).Delete(module.FileNode{})
+				//暴露新数据
+				DB.Table("file_node").Where("account_id=?", account.Id).Update("is_delete", 0)
+			} else {
+				RefreshFileNodes(account.Id, account.RootId)
+			}
+			log.Infoln("[DB cache][" + account.Name + "]refresh >> success")
+		}
+		t2 := time.Now()
+		d := t2.Sub(t1)
+		now := time.Now().UTC().Add(8 * time.Hour)
+		DB.Table("account").Where("id=?", account.Id).Updates(map[string]interface{}{
+			"status": status, "files_count": int(fileNodeCount), "last_op_time": now.Format("2006-01-02 15:04:05"),
+			"time_span": util.ShortDur(d),
+		})
 	}
-	t2 := time.Now()
-	d := t2.Sub(t1)
-	now := time.Now().UTC().Add(8 * time.Hour)
-	DB.Table("account").Where("id=?", account.Id).Updates(map[string]interface{}{
-		"status": status, "files_count": int(fileNodeCount), "last_op_time": now.Format("2006-01-02 15:04:05"),
-		"time_span": util.ShortDur(d),
-	})
 	InitGlobalConfig()
 	SYNC_STATUS = 0
 }
@@ -599,21 +604,27 @@ func FindAccountsByPath(path string) ([]module.Account, string) {
 	return accounts, path
 }
 
-func UpdateCacheConfig(account module.Account) {
+func UpdateCacheConfig(account module.Account, t string) {
 	account.Status = -1
-	DB.Where("account_id = ?", account.Id).Delete(module.FileNode{})
+	ac := GetAccountById(account.Id)
+	if t == "1" {
+		DB.Where("account_id = ?", account.Id).Delete(module.FileNode{})
+	}
 	if account.CachePolicy == "dc" {
-		if SYNC_STATUS == 0 {
-			ac := GetAccountById(account.Id)
-			bypass := SelectBypassByAccountId(account.Id)
-			cachePath := "/" + ac.Name
-			if bypass.Name != "" {
-				cachePath = "/" + bypass.Name
+		if t == "1" {
+			if SYNC_STATUS == 0 {
+				bypass := SelectBypassByAccountId(account.Id)
+				cachePath := "/" + ac.Name
+				if bypass.Name != "" {
+					cachePath = "/" + bypass.Name
+				}
+				ac.SyncDir = cachePath
+				go SyncFilesCache(ac)
 			}
-			ac.SyncDir = cachePath
-			go SyncFilesCache(ac)
-			go SaveCacheCron(ac)
+		} else {
+			account.Status = 2
 		}
+
 	} else {
 		account.Status = 2
 	}
@@ -621,6 +632,7 @@ func UpdateCacheConfig(account module.Account) {
 		Select("CachePolicy", "SyncDir", "SyncChild", "ExpireTimeSpan", "SyncCron", "Status").
 		Where("id=?", account.Id).
 		Updates(&account)
+	go SaveCacheCron(ac)
 	InitGlobalConfig()
 }
 
@@ -634,6 +646,7 @@ func SaveCacheCron(ac module.Account) {
 			util.Cron.Remove(c)
 			entryId, err := util.Cron.AddFunc(ac.SyncCron, func() {
 				SyncFilesCache(ac)
+				//log.Debugf("[%s] [%s] [%s] [%s] [%s]", ac.Name, ac.Mode, ac.CachePolicy, ac.SyncCron, ac.SyncDir)
 			})
 			if err == nil {
 				util.CacheCronMap[ac.Id] = entryId
@@ -644,6 +657,7 @@ func SaveCacheCron(ac module.Account) {
 			util.Cron.Remove(c)
 			entryId, err := util.Cron.AddFunc(ac.SyncCron, func() {
 				SyncFilesCache(ac)
+				//log.Debugf("[%s] [%s] [%s] [%s] [%s]", ac.Name, ac.Mode, ac.CachePolicy, ac.SyncCron, ac.SyncDir)
 			})
 			if err == nil {
 				util.CacheCronMap[ac.Id] = entryId

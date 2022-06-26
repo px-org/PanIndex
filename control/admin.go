@@ -215,7 +215,8 @@ func GetBypass(c *gin.Context) {
 func CacheConfig(c *gin.Context) {
 	data := module.Account{}
 	c.BindJSON(&data)
-	dao.UpdateCacheConfig(data)
+	t := c.Query("t")
+	dao.UpdateCacheConfig(data, t)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置成功！"})
 }
 
