@@ -78,6 +78,8 @@
     {{$OpenSafe = true}}
 {{- else if eq $.redirect_url "safety"}}
     {{$OpenSafe = true}}
+{{- else if eq $.redirect_url "access"}}
+    {{$OpenSafe = true}}
 {{- else}}
 {{end}}
 <div class="mdui-drawer" id="main-drawer">

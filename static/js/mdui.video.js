@@ -16,6 +16,13 @@ var qas = getQas(accountId, fileId, fileType);
 var art;
 videoInit();
 function videoInit(){
+    if(Artplayer.utils.isMobile){
+        $("#video_content").attr("class", "");
+        $("#video_content").attr("style", "");
+    }else{
+        $("#video_content").attr("class", "mdui-shadow-2 mdui-clearfix br");
+        $("#video_content").attr("style", "padding: 15px;margin: 10px;");
+    }
     if(art){
         art.destroy();
     }
@@ -95,38 +102,13 @@ function initVideo(container, qas, title){
     }
     var plugins = [];
     if(danmuku == "1"){
-        var danmukuPath = subtitlePath + vname + ".xml";
+        var dmkp = danmukuPath + vname + ".xml";
         var theme = 'light';
         if($('body').hasClass('mdui-theme-layout-dark')){
             theme = 'dark';
         }
-        var danmukuPlugin = {
-            html: '弹幕',
-            width: 250,
-            selector: [
-                {
-                    default: true,
-                    html: '<span style="color:green">显示</span>',
-                    status: 1,
-                },
-                {
-                    default: false,
-                    html: '<span style="color:red">隐藏</span>',
-                    status: 0,
-                }
-            ],
-            onSelect: function(item, $dom) {
-                if(item.status == 0){
-                    art.plugins.artplayerPluginDanmuku.hide();
-                }else{
-                    art.plugins.artplayerPluginDanmuku.show();
-                }
-                return item.html;
-            }
-        };
-        settings.push(danmukuPlugin);
         plugins.push(artplayerPluginDanmuku({
-            danmuku: danmukuPath,
+            danmuku: dmkp,
             speed: 5,
             maxlength: 50,
             margin: [10, 100],
@@ -143,7 +125,7 @@ function initVideo(container, qas, title){
     }
     var id = md5(currentUrl);
     if(qas.length > 0){
-        $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
+        $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight()+"200");
         art = new Artplayer({
             lang: "zh-cn",
             title: title,
@@ -204,11 +186,12 @@ function initVideo(container, qas, title){
             //fullscreenWeb: true, //网页全屏
             //pip: true,
             autoplay: false, //自动播放
+            autoPlayback: true,
             lock: true,
             isLock: true, //移动端锁屏操作
             fastForward: true, //移动端添加长按视频快进
             autoOrientation: true, //全屏自动翻转
-            autoSize: true,
+            //autoSize: true,
             playbackRate: true,//显示视频播放速度
             aspectRatio: true,//显示视频长宽比
             //screenshot: true,
@@ -239,7 +222,7 @@ function initVideo(container, qas, title){
                 }
             }
         });
-       art.on('video:play', (...args) => {
+       /*art.on('video:play', (...args) => {
             var cur = getCurrentTime(id);
             if (cur){
                 art.seek = cur;
@@ -278,7 +261,46 @@ function initVideo(container, qas, title){
         });
         art.on('video:ended', (...args) => {
             removeVideo(id);
+        });*//*art.on('video:play', (...args) => {
+            var cur = getCurrentTime(id);
+            if (cur){
+                art.seek = cur;
+                autoUpdateCurrentTime(art, id);
+            }
+       });
+       art.on('play', (...args) => {
+            //set play history
+            var cur = getCurrentTime(id);
+            removeVideo(id);
+            var play_history_list = localStorage.getItem('play_history_list');
+            var play_history_list_arr = [];
+            if(play_history_list && play_history_list != null && play_history_list != ""){
+                play_history_list_arr = JSON.parse(play_history_list);
+            }
+            var video = {};
+            video.url = currentUrl;
+            video.title = title;
+            if(cur){
+                video.currentTime = cur;
+            }else{
+                video.currentTime = art.currentTime;
+            }
+            video.id = md5(video.url);
+            play_history_list_arr.unshift(video);
+            localStorage.setItem('play_history_list', JSON.stringify(play_history_list_arr));
         });
+        art.on('seek', (...args) => {
+            updateVideoTime(art.currentTime, id);
+        });
+        art.on('pause', (...args) => {
+            updateVideoTime(art.currentTime, id);
+        });
+        art.on('destroy', (...args) => {
+            updateVideoTime(art.currentTime, id);
+        });
+        art.on('video:ended', (...args) => {
+            removeVideo(id);
+        });*/
         return art;
     }
 }

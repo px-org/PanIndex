@@ -2,7 +2,7 @@
 {{template "templates/pan/mdui/view-base.html" .}}
 {{end}}
 {{define "content-video"}}
-<div class="mdui-shadow-2 mdui-clearfix br" style="padding: 15px;margin: 10px;">
+<div id="video_content" class="mdui-shadow-2 mdui-clearfix br" style="padding: 15px;margin: 10px;">
     <button id="playlistBtn" data-account-id="{{$.account.Id}}"
             data-config-subtitle="{{$.config.Subtitle}}"
             data-config-subtitle-path="{{$.config.SubtitlePath}}"
@@ -20,7 +20,7 @@
     </button>
     <ul class="mdui-menu mdui-menu-cascade br" id="playlist_menu" style="width: 40%"></ul>
     <div class="mdui-video-container">
-        <div class="artplayer-app mdui-video-fluid"></div>
+        <div class="artplayer-app"></div>
     </div>
     <div class="mdui-textfield danmuinput">
         <!--<input class="mdui-textfield-input" type="text" placeholder="发个弹幕见证当下"/>-->
