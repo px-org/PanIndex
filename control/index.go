@@ -31,6 +31,7 @@ func index(c *gin.Context) {
 	_, isView := c.GetQuery("v")
 	searchKey, isSearch := c.GetQuery("search")
 	var lastFile, nextFile = "", ""
+	status := http.StatusOK
 	if isSearch {
 		fns = service.Search(searchKey)
 		t := Redirect404(c, false)
@@ -43,6 +44,10 @@ func index(c *gin.Context) {
 			fns = service.AccountsToNodes(c.Request.Host)
 		} else {
 			fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortColumn, sortOrder, isView)
+		}
+		if len(fns) == 0 {
+			tmpFile = "templates/pan/admin/404.html"
+			status = http.StatusNotFound
 		}
 		t := Redirect404(c, isFile)
 		if t != "" {
@@ -59,7 +64,7 @@ func index(c *gin.Context) {
 		}
 	}
 	hasParent, parentPath := service.HasParent(fullPath)
-	c.HTML(http.StatusOK, tmpFile, gin.H{
+	c.HTML(status, tmpFile, gin.H{
 		"title":        CurrentTitle(ac, module.GloablConfig, bypassName),
 		"path":         path,
 		"full_path":    fullPath,
