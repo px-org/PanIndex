@@ -45,10 +45,6 @@ func index(c *gin.Context) {
 		} else {
 			fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortColumn, sortOrder, isView)
 		}
-		if len(fns) == 0 {
-			tmpFile = "templates/pan/admin/404.html"
-			status = http.StatusNotFound
-		}
 		t := Redirect404(c, isFile)
 		if t != "" {
 			tmpFile = t
