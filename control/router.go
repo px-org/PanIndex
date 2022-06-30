@@ -24,6 +24,7 @@ func SetRouters(r *gin.Engine) {
 	}
 	adminApi := api.Group(module.GloablConfig.AdminPath, jwt.MiddlewareFunc())
 	{
+		adminApi.GET("/refresh_token", jwt.RefreshHandler)
 		adminApi.POST("/config/upload", UploadConfig)         //upload config
 		adminApi.POST("/config", SaveConfig)                  //save config
 		adminApi.GET("/config", GetConfig)                    //get config info
