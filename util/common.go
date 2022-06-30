@@ -95,7 +95,7 @@ func GetViewType(fileType string) string {
 }
 
 func GetExt(name string) string {
-	ext := strings.TrimLeft(filepath.Ext(name), ".")
+	ext := strings.ToLower(strings.TrimLeft(filepath.Ext(name), "."))
 	return ext
 }
 
