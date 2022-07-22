@@ -72,6 +72,7 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ matrix.branch }}
+          fetch-depth: 0
       - name: Build PanIndex
         uses: libsgh/PanIndex-build-action@main
         with:
