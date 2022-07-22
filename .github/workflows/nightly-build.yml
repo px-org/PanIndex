@@ -23,9 +23,8 @@ jobs:
           persist-credentials: false
           ref: dev
       - name: Build PanIndex
-        uses: libsgh/PanIndex-build-action@main
-      - name: upload artifact
-        uses: actions/upload-artifact@v2
-          with:
-            name: PanIndex-artifact
-            path: /home/runner/work/PanIndex/PanIndex/dist/compress/*
+        - uses: libsgh/PanIndex-build-action@main
+        - uses: actions/upload-artifact@v2
+            with:
+              name: PanIndex-artifact
+              path: /home/runner/work/PanIndex/PanIndex/dist/compress/*
