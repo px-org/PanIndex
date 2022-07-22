@@ -1,17 +1,67 @@
-name: PanIndex Release
+name: Nightly Build
 on:
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        description: 'choose build target'
+        options:
+          - linux-amd64
+          - linux-386
+          - linux-arm-5
+          - linux-arm-6
+          - linux-arm-7
+          - linux-arm64
+          - windows-4.0-386
+          - windows-4.0-amd64
+        default: linux-amd64
+      branch:
+        type: choice
+        description: 'choose build branch'
+        options:
+          - main
+          - dev
+        default: dev
   push:
     branches: [ dev ]
   pull_request:
     branches: [ dev ]
 jobs:
-  release:
+  setup:
+    if: contains('["libsgh"]', github.actor)
+    name: build setup
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.setup.outputs.target }}
+      branch: ${{ steps.setup.outputs.branch }}
+    steps:
+      - name: setup
+        id: setup
+        run: |
+          if ${{ github.event.inputs.target == ''}}; then
+            target='["linux-amd64"]'
+          else
+            target='["${{ github.event.inputs.target }}"]'
+          fi
+          list=$(echo ${target} | jq -c)
+          echo "::set-output name=target::${list}"
+          if ${{ github.event.inputs.branch == ''}}; then
+            branch='["dev"]'
+          else
+            branch='["${{ github.event.inputs.branch }}"]'
+          fi
+          b=$(echo ${branch} | jq -c)
+          echo "::set-output name=branch::${b}"
+  build:
+    if: contains('["libsgh"]', github.actor)
+    needs: setup
     strategy:
       matrix:
-        platform: [ubuntu-latest]
+        target: ${{ fromJson(needs.setup.outputs.target) }}
+        branch: ${{ fromJson(needs.setup.outputs.branch) }}
         go-version: [1.18]
-    name: PanIndex Release
-    runs-on: ${{ matrix.platform }}
+    name: build
+    runs-on: ubuntu-latest
     steps:
       - name: Setup Go
         uses: actions/setup-go@v2
@@ -21,11 +71,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           persist-credentials: false
-          ref: dev
+          ref: ${{ matrix.branch }}
       - name: Build PanIndex
         uses: libsgh/PanIndex-build-action@main
+        with:
+          target: ${{ matrix.target }}
       - name: upload-PanIndex
         uses: actions/upload-artifact@v3
         with:
-          name: PanIndex-artifact
-          path: /home/runner/work/PanIndex/PanIndex/dist/compress/*
+          name: PanIndex-${{ matrix.target }}
+          path: /home/runner/work/PanIndex/PanIndex/dist/*
