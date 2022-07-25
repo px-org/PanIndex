@@ -56,12 +56,14 @@ jobs:
           fi
           if ${{ github.event.inputs.achitectures == ''}}; then
             achitectures="amd64"
+            target='["linux/amd64", "linux/arm64", "windows/amd64"]'
+            name='["linux-amd64", "linux-arm64", "windows-amd64"]'
           else
             achitectures="${{ github.event.inputs.achitectures }}"
+            target='["'${platforms}'/'${achitectures}'"]'
+            name='["'${platforms}'-'${achitectures}'"]'
           fi
-          target='["'${platforms}'/'${achitectures}'"]'
           list=$(echo ${target} | jq -c)
-          name='["'${platforms}'-'${achitectures}'"]'
           name_list=$(echo ${name} | jq -c)
           echo "::set-output name=target::${list}"
           echo "::set-output name=artifact_name::${name_list}"
