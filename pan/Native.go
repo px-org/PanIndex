@@ -12,7 +12,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -47,9 +46,9 @@ func (n Native) Files(account module.Account, fileId, path, sortColumn, sortOrde
 					FileName:   fileInfo.Name(),
 					FileSize:   fileInfo.Size(),
 					SizeFmt:    util.FormatFileSize(fileInfo.Size()),
-					FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
+					FileType:   util.GetExt(fileInfo.Name()),
 					Path:       PathJoin(path, fileInfo.Name()),
-					ViewType:   util.GetViewType(strings.TrimLeft(filepath.Ext(fileInfo.Name()), ".")),
+					ViewType:   util.GetViewType(util.GetExt(fileInfo.Name())),
 					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 					ParentId:   fileId,
 					ParentPath: path,
@@ -77,9 +76,9 @@ func (n Native) File(account module.Account, fileId, path string) (module.FileNo
 			FileName:   fileInfo.Name(),
 			FileSize:   fileInfo.Size(),
 			SizeFmt:    util.FormatFileSize(fileInfo.Size()),
-			FileType:   strings.TrimLeft(filepath.Ext(fileInfo.Name()), "."),
+			FileType:   util.GetExt(fileInfo.Name()),
 			Path:       path,
-			ViewType:   util.GetViewType(strings.TrimLeft(filepath.Ext(fileInfo.Name()), ".")),
+			ViewType:   util.GetViewType(util.GetExt(fileInfo.Name())),
 			LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 			ParentId:   filepath.Dir(fileId),
 			ParentPath: util.GetParentPath(path),

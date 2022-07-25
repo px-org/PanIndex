@@ -123,8 +123,8 @@ func (a Ali) ToFileNode(item Items) (module.FileNode, error) {
 	kind := item.Type
 	if kind == "file" {
 		fn.IsFolder = false
-		fn.FileType = item.FileExtension
-		fn.ViewType = util.GetViewType(item.FileExtension)
+		fn.FileType = strings.ToLower(item.FileExtension)
+		fn.ViewType = util.GetViewType(fn.FileType)
 		fn.FileSize = int64(item.Size)
 		fn.SizeFmt = util.FormatFileSize(fn.FileSize)
 		fn.Thumbnail = item.Thumbnail
