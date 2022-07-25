@@ -7,6 +7,7 @@ import (
 	"github.com/libsgh/PanIndex/module"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -58,7 +59,14 @@ func JWTMiddlewar() (*jwt.GinJWTMiddleware, error) {
 			return false
 		},
 		LoginResponse: func(c *gin.Context, code int, token string, expire time.Time) {
-			c.Redirect(http.StatusFound, module.GloablConfig.AdminPath+"/common")
+			//c.Redirect(http.StatusFound, module.GloablConfig.AdminPath+"/common")
+			referer := c.Request.Header.Get("Referer")
+			u, _ := url.Parse(referer)
+			if strings.HasPrefix(u.Path, module.GloablConfig.AdminPath) {
+				c.Redirect(http.StatusFound, module.GloablConfig.AdminPath+"/common")
+			} else {
+				c.Redirect(http.StatusFound, c.Request.Header.Get("Referer"))
+			}
 		},
 		LogoutResponse: func(c *gin.Context, code int) {
 			c.HTML(http.StatusOK, "templates/pan/admin/login.html", gin.H{

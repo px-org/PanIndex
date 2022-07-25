@@ -1,9 +1,10 @@
 module github.com/libsgh/PanIndex
 
-go 1.17
+go 1.18
 
 require (
 	github.com/appleboy/gin-jwt/v2 v2.7.0
+	github.com/aws/aws-sdk-go v1.44.34
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e
 	github.com/bluele/gcache v0.0.2
 	github.com/gabriel-vasile/mimetype v1.4.0
@@ -23,7 +24,7 @@ require (
 	github.com/smallnest/weighted v0.0.0-20201102054551-85ac5c79528c
 	github.com/studio-b12/gowebdav v0.0.0-20220128162035-c7b1ff8a5e62
 	github.com/unrolled/secure v1.0.9
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	gorm.io/driver/mysql v1.2.1
 	gorm.io/driver/postgres v1.2.3
 	gorm.io/driver/sqlite v1.2.6
@@ -50,6 +51,7 @@ require (
 	github.com/jackc/pgx/v4 v4.14.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.3 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v1.14.9 // indirect

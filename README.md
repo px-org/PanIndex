@@ -25,7 +25,7 @@
 - [在线演示](https://t1.noki.icu "https://t1.noki.icu")
  
 ## 文档
-[在线文档](https://libsgh.github.io/PanIndex/)
+[在线文档](https://pan-index-docs.vercel.app)
 
 ## 鸣谢
 - 前端框架：[mdui](https://www.mdui.org/)

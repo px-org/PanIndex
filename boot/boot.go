@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Init() (BootConfig, bool) {
@@ -46,6 +47,9 @@ func Init() (BootConfig, bool) {
 	dao.InitGlobalConfig()
 	configStr, _ = jsoniter.MarshalToString(module.GloablConfig)
 	result = PrintConfig(config.ConfigQuery, configStr)
+	if result {
+		return config, true
+	}
 	//init accounts auth login
 	for _, account := range module.GloablConfig.Accounts {
 		dao.SyncAccountStatus(account)
@@ -113,7 +117,9 @@ func LoadConfig() BootConfig {
 	var ConfigQuery = flag.String("config_query", "", "config query new version, e.g. port")
 	var DbType = flag.String("db_type", "", "dao type, e.g. sqlite,mysql,postgres...")
 	var Dsn = flag.String("dsn", "", "database connection url")
+	var ResetPassword = flag.String("rest_password", "", "start whith new password, default:PanIndex")
 	flag.Parse()
+	dao.NewPassword = *ResetPassword
 	config, _ := LoadFromFile(*Config)
 	config.Host = LoadFromEnv("HOST", *Host, config.Host)
 	if config.Host == "" {
@@ -234,7 +240,7 @@ func InitStaticBox(r *gin.Engine, fs embed.FS) {
 func Templates(fs embed.FS) *template.Template {
 	themes := [3]string{"mdui", "classic", "bootstrap"}
 	tmpl := template.New("")
-	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "pwd", "safety", "view", "bypass", "cache", "webdav"}
+	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "access", "pwd", "safety", "view", "bypass", "cache", "webdav", "404"}
 	addTemplatesFromFolder("admin", tmpl, fs, templatesFileNames)
 	for _, theme := range themes {
 		theme = util.GetCurrentTheme(theme)
@@ -252,6 +258,7 @@ func Templates(fs embed.FS) *template.Template {
 			"iconclass":    iconclass,
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
+			"FormateUnix":  FormateUnix,
 		}).Parse(data)
 	}
 	//添加详情模板
@@ -270,6 +277,7 @@ func Templates(fs embed.FS) *template.Template {
 			"iconclass":    iconclass,
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
+			"FormateUnix":  FormateUnix,
 		}).Parse(data)
 	}
 	return tmpl
@@ -291,6 +299,7 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 			"isLast":       isLast,
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
+			"FormateUnix":  FormateUnix,
 		}).Parse(data)
 	}
 }
@@ -330,4 +339,12 @@ func TruncateName(filename string) string {
 		return string(nameRune[0:15]) + "..."
 	}
 	return filename
+}
+
+func FormateUnix(timeUnix int64) string {
+	if timeUnix == 0 {
+		return "-"
+	} else {
+		return time.Unix(timeUnix, 0).Format("2006-01-02 15:04:05")
+	}
 }

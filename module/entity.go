@@ -37,10 +37,9 @@ type FileNode struct {
 	HasPwd      int    `json:"has_pwd"`                         //是否是密码文件（包含）
 }
 type ShareInfo struct {
-	AccountId string `json:"account_id"` //文件所属账号
 	FilePath  string `json:"file_path"`  //PanIndex文件路径
 	ShortCode string `json:"short_code"` //短链接code
-	IsFile    bool   `json:"is_file"`    //是否是文件（文件根据配置跳转预览或下载，目录直接打开）
+	//IsFile    bool   `json:"is_file"`    //是否是文件（文件根据配置跳转预览或下载，目录直接打开）
 }
 type SearchNode struct {
 	FileNode
@@ -60,26 +59,26 @@ type Config struct {
 	OnlyReferrer     string            `json:"only_referrer"`
 	EnableSafetyLink string            `json:"enable_safety_link"`
 	IsNullReferrer   string            `json:"is_null_referrer"`
-	FaviconUrl       string            `json:"favicon_url"`    //网站图标
-	Footer           string            `json:"footer"`         //网站底部信息
-	Css              string            `json:"css"`            //自定义css
-	Js               string            `json:"js"`             //自定义js
-	EnablePreview    string            `json:"enable_preview"` //是否开启文件预览
-	Image            string            `json:"image"`          //图片
-	Audio            string            `json:"audio"`          //音频
-	Video            string            `json:"video"`          //视频
-	Code             string            `json:"code"`           //代码
-	Doc              string            `json:"doc"`            //文档
-	Other            string            `json:"other"`          //other
-	EnableLrc        string            `json:"enable_lrc"`
-	LrcPath          string            `json:"lrc_path"`
-	Subtitle         string            `json:"subtitle"`
-	SubtitlePath     string            `json:"subtitle_path"`
-	Danmuku          string            `json:"danmuku"`
-	DanmukuPath      string            `json:"danmuku_path"`
+	FaviconUrl       string            `json:"favicon_url"`     //网站图标
+	Footer           string            `json:"footer"`          //网站底部信息
+	Css              string            `json:"css"`             //自定义css
+	Js               string            `json:"js"`              //自定义js
+	EnablePreview    string            `json:"enable_preview"`  //是否开启文件预览
+	Image            string            `json:"image"`           //图片
+	Audio            string            `json:"audio"`           //音频
+	Video            string            `json:"video"`           //视频
+	Code             string            `json:"code"`            //代码
+	Doc              string            `json:"doc"`             //文档
+	Other            string            `json:"other"`           //other
+	EnableLrc        string            `json:"enable_lrc"`      //是否开启歌词
+	LrcPath          string            `json:"lrc_path"`        //歌词路径
+	Subtitle         string            `json:"subtitle"`        //字幕
+	SubtitlePath     string            `json:"subtitle_path"`   //字幕路径
+	Danmuku          string            `json:"danmuku"`         //弹幕
+	DanmukuPath      string            `json:"danmuku_path"`    //弹幕路径
 	SColumn          string            `json:"s_column"`        //排序字段
 	SOrder           string            `json:"s_order"`         //排序顺序
-	PwdFiles         map[string]string `json:"pwd_files"`       //文件id:pwd
+	PwdFiles         []PwdFiles        `json:"pwd_files"`       //密码文件列表
 	HideFiles        map[string]string `json:"hide_files"`      //隐藏文件
 	AdminPath        string            `json:"admin_path"`      //后台管理路径前缀
 	Cdn              string            `json:"cdn"`             //cdn
@@ -95,6 +94,8 @@ type Config struct {
 	Readme           string            `json:"readme"`          //show or hide readme
 	Head             string            `json:"head"`            //show or hide head
 	ShareInfoList    []ShareInfo       `json:"share_info_list"` //分享信息列表
+	Access           string            `json:"access"`          //access
+	ShortAction      string            `json:"short_action"`    //短链行为
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key
@@ -104,8 +105,11 @@ type ConfigItem struct {
 
 // table pwd_files
 type PwdFiles struct {
+	Id       string `json:"id"`        //主键id
 	FilePath string `json:"file_path"` //文件路径
 	Password string `json:"password"`  //密码
+	ExpireAt int64  `json:"expire_at"` //失效时间
+	Info     string `json:"info"`      //密码备注
 }
 
 // table hide_files

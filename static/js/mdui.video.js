@@ -13,7 +13,27 @@ var danmuku = $("#playlistBtn").attr("data-config-danmuku");
 var danmukuPath = $("#playlistBtn").attr("data-config-danmuku-path");
 var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
 var qas = getQas(accountId, fileId, fileType);
-var art = initVideo(".artplayer-app", qas, fileName);
+var art;
+videoInit();
+function videoInit(){
+    if(Artplayer.utils.isMobile){
+        $("#video_content").attr("class", "");
+        $("#video_content").attr("style", "");
+    }else{
+        $("#video_content").attr("class", "mdui-shadow-2 mdui-clearfix br");
+        $("#video_content").attr("style", "padding: 15px;margin: 10px;");
+    }
+    if(art){
+        art.destroy();
+    }
+    if(isWeiXin()){
+        document.addEventListener("WeixinJSBridgeReady", function() {
+            art = initVideo(".artplayer-app", qas, fileName);
+        }, false);
+    }else{
+        art = initVideo(".artplayer-app", qas, fileName);
+    }
+}
 var inval;
 initPlayList(parentPath);
 function buildOriginalVideo(url, ft){
@@ -82,40 +102,21 @@ function initVideo(container, qas, title){
     }
     var plugins = [];
     if(danmuku == "1"){
-        var danmukuPath = subtitlePath + vname + ".xml";
-        var danmukuPlugin = {
-            html: '弹幕',
-            width: 250,
-            selector: [
-                {
-                    default: true,
-                    html: '<span style="color:green">显示</span>',
-                    status: 1,
-                },
-                {
-                    default: false,
-                    html: '<span style="color:red">隐藏</span>',
-                    status: 0,
-                }
-            ],
-            onSelect: function(item, $dom) {
-                if(item.status == 0){
-                    art.plugins.artplayerPluginDanmuku.hide();
-                }else{
-                    art.plugins.artplayerPluginDanmuku.show();
-                }
-                return item.html;
-            }
-        };
-        settings.push(danmukuPlugin);
+        var dmkp = danmukuPath + vname + ".xml";
+        var theme = 'light';
+        if($('body').hasClass('mdui-theme-layout-dark')){
+            theme = 'dark';
+        }
         plugins.push(artplayerPluginDanmuku({
-            danmuku: danmukuPath,
+            danmuku: dmkp,
             speed: 5,
             maxlength: 50,
             margin: [10, 100],
             opacity: 1,
             fontSize: 25,
             synchronousPlayback: false,
+            theme: theme,
+            mount: document.querySelector('.danmuinput'),
         }));
     }
     var currentUrl = encodeURI(window.location.protocol + "//"+window.location.host + parentPath + "/" +title);
@@ -124,7 +125,7 @@ function initVideo(container, qas, title){
     }
     var id = md5(currentUrl);
     if(qas.length > 0){
-        $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight());
+        $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight()+"200");
         art = new Artplayer({
             lang: "zh-cn",
             title: title,
@@ -141,46 +142,58 @@ function initVideo(container, qas, title){
                     flvPlayer.load();
                 },
                 m3u8: function (video, url) {
-                    var hls = new Hls();
-                    hls.loadSource(url);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.ERROR, function (event, data) {
-                       switch (data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                               if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
-                                    const lastTime = art.currentTime;
-                                    var qas = buildTranscodeInfo(accountId, fileId);
-                                    if(qas.length != 0){
-                                        hls.stopLoad();
-                                        art.switchQuality(qas[0].url);
-                                        art.once('video:canplay', () => {
-                                            art.seek = lastTime;
-                                        });
-                                    }
-                                }
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                //hls.recoverMediaError();
-                                break;
-                            default:
-                                hls.destroy();
-                                break;
+                    if (!Hls.isSupported()) {
+                        const canPlay = video.canPlayType('application/vnd.apple.mpegurl');
+                        if (canPlay === 'probably' || canPlay == 'maybe') {
+                            video.src = url;
+                        } else {
+                            art.notice.show = 'Does not support playback of m3u8';
                         }
-                    });
+                    } else {
+                        var hls = new Hls();
+                        hls.loadSource(url);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.ERROR, function (event, data) {
+                            console.log(data);
+                            switch (data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
+                                        const lastTime = art.currentTime;
+                                        var qas = buildTranscodeInfo(accountId, fileId);
+                                        if(qas.length != 0){
+                                            hls.stopLoad();
+                                            art.switchQuality(qas[0].url);
+                                            art.once('video:canplay', () => {
+                                                art.seek = lastTime;
+                                            });
+                                        }
+                                    }
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    //hls.recoverMediaError();
+                                    break;
+                                default:
+                                    hls.destroy();
+                                    break;
+                            }
+                        });
+                    }
                 },
             },
             //quality: qas,
             autoSize: true,
-            fullscreen: true,
-            fullscreenWeb: true,
+            fullscreen: true, //全屏
+            //fullscreenWeb: true, //网页全屏
             //pip: true,
-            autoplay: false,
+            autoplay: false, //自动播放
+            autoPlayback: true,
             lock: true,
-            fastForward: true,
-            autoOrientation: true,
-            autoSize: true,
-            playbackRate: true,
-            aspectRatio: true,
+            isLock: true, //移动端锁屏操作
+            fastForward: true, //移动端添加长按视频快进
+            autoOrientation: true, //全屏自动翻转
+            //autoSize: true,
+            playbackRate: true,//显示视频播放速度
+            aspectRatio: true,//显示视频长宽比
             //screenshot: true,
             setting: true,
             miniProgressBar: true,
@@ -192,14 +205,31 @@ function initVideo(container, qas, title){
             },
             plugins: plugins
         });
-       art.on('video:play', (...args) => {
+        art.on('video:error', (...args) => {
+            if (!Hls.isSupported()) {
+                const canPlay = video.canPlayType('application/vnd.apple.mpegurl');
+                if (canPlay === 'probably' || canPlay == 'maybe') {
+                    if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done"){
+                        const lastTime = art.currentTime;
+                        var qas = buildTranscodeInfo(accountId, fileId);
+                        if(qas.length != 0){
+                            art.switchQuality(qas[0].url);
+                            art.once('video:canplay', () => {
+                                art.seek = lastTime;
+                            });
+                        }
+                    }
+                }
+            }
+        });
+       /*art.on('video:play', (...args) => {
             var cur = getCurrentTime(id);
             if (cur){
                 art.seek = cur;
+                autoUpdateCurrentTime(art, id);
             }
-            autoUpdateCurrentTime(art, id);
-        });
-        art.on('play', (...args) => {
+       });
+       art.on('play', (...args) => {
             //set play history
             var cur = getCurrentTime(id);
             removeVideo(id);
@@ -231,7 +261,46 @@ function initVideo(container, qas, title){
         });
         art.on('video:ended', (...args) => {
             removeVideo(id);
+        });*//*art.on('video:play', (...args) => {
+            var cur = getCurrentTime(id);
+            if (cur){
+                art.seek = cur;
+                autoUpdateCurrentTime(art, id);
+            }
+       });
+       art.on('play', (...args) => {
+            //set play history
+            var cur = getCurrentTime(id);
+            removeVideo(id);
+            var play_history_list = localStorage.getItem('play_history_list');
+            var play_history_list_arr = [];
+            if(play_history_list && play_history_list != null && play_history_list != ""){
+                play_history_list_arr = JSON.parse(play_history_list);
+            }
+            var video = {};
+            video.url = currentUrl;
+            video.title = title;
+            if(cur){
+                video.currentTime = cur;
+            }else{
+                video.currentTime = art.currentTime;
+            }
+            video.id = md5(video.url);
+            play_history_list_arr.unshift(video);
+            localStorage.setItem('play_history_list', JSON.stringify(play_history_list_arr));
         });
+        art.on('seek', (...args) => {
+            updateVideoTime(art.currentTime, id);
+        });
+        art.on('pause', (...args) => {
+            updateVideoTime(art.currentTime, id);
+        });
+        art.on('destroy', (...args) => {
+            updateVideoTime(art.currentTime, id);
+        });
+        art.on('video:ended', (...args) => {
+            removeVideo(id);
+        });*/
         return art;
     }
 }
@@ -243,7 +312,7 @@ $(document).ready(function() {
         }
     });
     document.getElementById('playlist_menu').addEventListener('open.mdui.menu', function () {
-        $("#playlist_menu").attr("style", "width:40%;max-height: 500px;overflow:scroll");
+        $("#playlist_menu").attr("style", "width:70%;max-height: 500px;overflow:scroll");
     });
     $("#transcodeBtn").click(function(ev){
         if(ev.target.textContent != "cloud" && ev.target.textContent != "cloud_done") return;
@@ -259,7 +328,7 @@ $(document).ready(function() {
             Cookies.set("transcode", "0", {expires : 3650, path:"/"});
             var qas = buildOriginalVideo(fullUrl, fileType);
             art.destroy();
-            art = initVideo(".artplayer-app", qas, fileName);
+           art = initVideo(".artplayer-app", qas, fileName);
         }
     });
 });
@@ -433,4 +502,13 @@ function autoUpdateCurrentTime(art, id) {
    inval = setInterval(function(){
        updateVideoTime(art.currentTime, id);
     }, 5000);
+}
+
+function isWeiXin() {
+    var ua = window.navigator.userAgent.toLowerCase();
+    if (ua.match(/MicroMessenger/i) == 'micromessenger') {
+        return true;
+    } else {
+        return false;
+    }
 }

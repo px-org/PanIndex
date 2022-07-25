@@ -2,18 +2,20 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/libsgh/PanIndex/dao"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/util"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
 func Check(c *gin.Context) {
 	fullPath := c.Request.URL.Path
-	account, fullPath, path, bypassName := ParseFullPath(fullPath, c.Request.Host)
+	if strings.HasPrefix(fullPath, "/api/v3/public/raw") {
+		fullPath = strings.ReplaceAll(fullPath, "/api/v3/public/raw", "")
+	}
+	account, fullPath, path, bypassName := util.ParseFullPath(fullPath, c.Request.Host)
 	c.Set("account", account)
 	c.Set("path", path)
 	c.Set("full_path", fullPath)
@@ -48,19 +50,25 @@ func SortCheck(c *gin.Context) {
 }
 
 func PwdCheck(c *gin.Context, fullPath string) {
-	filePwd, ok := util.GetPwdFromPath(fullPath)
+	pwds, filePath, ok := dao.GetPwdFromPath(fullPath)
 	if ok {
-		pwdCookie, err := c.Request.Cookie("file_pwd")
-		if err != nil {
-			//redirect input pwd
+		pwd := c.Query("pwd")
+		if pwd != "" && util.In(pwd, pwds) {
 			c.Set("pwd_err_msg", "")
-			c.Set("has_pwd", true)
+			c.Set("has_pwd", false)
 		} else {
-			result, msg := VerifyPwd(filePwd.Password, filePwd.FilePath, pwdCookie.Value)
-			c.Set("pwd_err_msg", msg)
-			c.Set("has_pwd", result)
+			pwdCookie, err := c.Request.Cookie("file_pwd")
+			if err != nil {
+				//redirect input pwd
+				c.Set("pwd_err_msg", "")
+				c.Set("has_pwd", true)
+			} else {
+				result, msg := VerifyPwd(pwds, filePath, pwdCookie.Value)
+				c.Set("pwd_err_msg", msg)
+				c.Set("has_pwd", result)
+			}
 		}
-		c.Set("pwd_path", filePwd.FilePath)
+		c.Set("pwd_path", filePath)
 	} else {
 		c.Set("pwd_err_msg", "")
 		c.Set("has_pwd", false)
@@ -68,11 +76,11 @@ func PwdCheck(c *gin.Context, fullPath string) {
 	}
 }
 
-func VerifyPwd(pwd, path, cookiepwd string) (bool, string) {
+func VerifyPwd(pwds []string, path string, cookiepwd string) (bool, string) {
 	inputPwd := GetPwdFromCookie(cookiepwd, path)
 	if inputPwd == "" {
 		return true, ""
-	} else if inputPwd != pwd {
+	} else if !util.In(inputPwd, pwds) {
 		return true, "密码错误"
 	} else {
 		return false, ""
@@ -126,88 +134,4 @@ func GetPwdFromCookie(pwd, fullPath string) string {
 		}
 	}
 	return ""
-}
-
-func ParseFullPath(path, host string) (module.Account, string, string, string) {
-	if strings.HasPrefix(path, "/d_") {
-		//old path
-		path = OldParseFullPath(path)
-	}
-	if path == "" {
-		path = "/"
-	}
-	if path == "/" && module.GloablConfig.AccountChoose == "default" && len(module.GloablConfig.BypassList) > 0 {
-		path = "/" + module.GloablConfig.BypassList[0].Name
-	} else {
-		if path == "/" && module.GloablConfig.AccountChoose == "default" && len(module.GloablConfig.Accounts) > 0 {
-			path = "/" + module.GloablConfig.Accounts[0].Name
-		}
-	}
-	fullPath := path
-	if path != "/" && path[len(path)-1:] == "/" {
-		path = path[0 : len(path)-1]
-	}
-	paths := strings.Split(path, "/")
-	accountName := paths[1]
-	account, bypassName := GetCurrentAccount(accountName, host)
-	path = strings.Join(paths[2:], "/")
-	path = "/" + path
-	if fullPath != "/" && fullPath[len(fullPath)-1:] == "/" {
-		fullPath = fullPath[0 : len(fullPath)-1]
-	}
-	return account, fullPath, path, bypassName
-}
-
-func OldParseFullPath(path string) string {
-	iStr := util.GetBetweenStr(path, "_", "/")
-	index, _ := strconv.Atoi(iStr)
-	account := module.GloablConfig.Accounts[index]
-	return strings.ReplaceAll(path, "/d_"+iStr, "/"+account.Name)
-}
-
-func GetCurrentAccount(name, host string) (module.Account, string) {
-	//get account from bypass
-	var bypass module.Bypass
-	if len(module.GloablConfig.BypassList) > 0 {
-		if name == "" {
-			bypass = module.GloablConfig.BypassList[0]
-		} else {
-			for _, item := range module.GloablConfig.BypassList {
-				if item.Name == name {
-					bypass = item
-					break
-				}
-			}
-		}
-		if bypass.Name != "" {
-			//get round robin account
-			bypassAccount := bypass.Rw.Next().(module.Account)
-			log.Debugf("access bypass account: %s", bypassAccount.Name)
-			return bypassAccount, bypass.Name
-		}
-	}
-	//get account from accounts
-	var account module.Account
-	if name == "" {
-		if len(module.GloablConfig.Accounts) > 0 {
-			account = module.GloablConfig.Accounts[0]
-		} else {
-			account = module.Account{}
-		}
-	} else {
-		for _, ac := range module.GloablConfig.Accounts {
-			if ac.Name == name {
-				if ac.Host != "" && host != "" {
-					if ac.Host == host {
-						account = ac
-						break
-					}
-				} else {
-					account = ac
-					break
-				}
-			}
-		}
-	}
-	return account, bypass.Name
 }

@@ -2,7 +2,6 @@ package control
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/control/middleware"
 	"github.com/libsgh/PanIndex/dao"
 	"github.com/libsgh/PanIndex/pan"
 	"github.com/libsgh/PanIndex/service"
@@ -23,11 +22,9 @@ func ExchangeToken(c *gin.Context) {
 
 //short url & qrcode
 func ShortInfo(c *gin.Context) {
-	accountId := c.PostForm("accountId")
 	path := c.PostForm("path")
 	prefix := c.PostForm("prefix")
-	isFile := c.PostForm("isFile")
-	url, qrCode, msg := service.ShortInfo(accountId, path, prefix, isFile)
+	url, qrCode, msg := service.ShortInfo(path, prefix)
 	c.JSON(http.StatusOK, gin.H{
 		"short_url": url,
 		"qr_code":   qrCode,
@@ -53,7 +50,7 @@ func Raw(c *gin.Context) {
 		CommonResp(c, "unauthorized", 401, nil)
 		return
 	}
-	account, fullpath, path, _ := middleware.ParseFullPath(p, "")
+	account, fullpath, path, _ := util.ParseFullPath(p, "")
 	fileName := util.GetFileName(fullpath)
 	fileId := service.GetFileIdByPath(account, path, fullpath)
 	downloadUrl := service.GetDownloadUrl(account, fileId)
@@ -86,7 +83,7 @@ func Files(c *gin.Context) {
 	viewType := c.PostForm("viewType")
 	sColumn := c.PostForm("sortColumn")
 	sOrder := c.PostForm("sortOrder")
-	account, fullPath, p, _ := middleware.ParseFullPath(path, "")
+	account, fullPath, p, _ := util.ParseFullPath(path, "")
 	files := service.GetFiles(account, p, fullPath, sColumn, sOrder, viewType)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",

@@ -1,0 +1,59 @@
+{{define "templates/pan/admin/access.html"}}
+    {{template "templates/pan/admin/base.html" .}}
+{{end}}
+{{define "admin-access"}}
+<div class="mdui-m-t-2">
+    <div class="mdui-typo mdui-p-b-2">
+        <h3> 访问控制 <small>列表、预览页面的访问控制</small> </h3>
+    </div>
+    <form id="configForm">
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">短链行为</label>
+            <div class="mdui-row-md-4 mdui-row-sm-2" style="margin-left: 50px">
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="short_action" {{- if eq $.config.ShortAction "0"}}checked="checked"{{- end}} value="0" />
+                    <i class="mdui-radio-icon"></i>
+                    预览
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="short_action" {{- if eq $.config.ShortAction "1"}}checked="checked"{{- end}} value="1" />
+                    <i class="mdui-radio-icon"></i>
+                    下载
+                </label>
+            </div>
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">模式</label>
+            <div class="mdui-row-md-4 mdui-row-sm-2" style="margin-left: 50px">
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="access" {{- if eq $.config.Access "0"}}checked="checked"{{- end}} value="0" />
+                    <i class="mdui-radio-icon"></i>
+                    公开
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="access" {{- if eq $.config.Access "1"}}checked="checked"{{- end}} value="1" />
+                    <i class="mdui-radio-icon"></i>
+                    仅直链
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="access" {{- if eq $.config.Access "2"}}checked="checked"{{- end}} value="2" />
+                    <i class="mdui-radio-icon"></i>
+                    直链 + 预览
+                </label>
+                <label class="mdui-radio mdui-col">
+                    <input type="radio" name="access" {{- if eq $.config.Access "3"}}checked="checked"{{- end}} value="3" />
+                    <i class="mdui-radio-icon"></i>
+                    登录(需重启)
+                </label>
+            </div>
+        </div>
+        <div class="mdui-row-xs-1 mdui-m-t-3">
+            <div class="mdui-col">
+                <button id="saveSafetyConfigBtn" type="button" class="mdui-btn mdui-color-brown mdui-ripple" value="1">
+                    <i class="mdui-icon material-icons">save</i> 保存
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{{end}}

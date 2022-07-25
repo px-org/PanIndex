@@ -81,7 +81,7 @@
     - Teambition国际服：阿里teambition国际盘，目前只有项目文件，目录ID为项目ID
     - 和彩云：由于登录会有验证码，所以不会采用自动登录的方式，请登录网页版复制完整COOKIE并输入手机号，COOKIE有效期为一个月。
     - Aliyundrive：阿里云盘，需要填入**手机端的**的`refresh_token`，点击文本框下方的扫码获取链接。
-    - OneDrive、世纪互联：按照[PanIndex Tool](https://pt.noki.icu/) 教程指引获取授权信息。
+    - OneDrive、世纪互联：按照[PanIndex Tool](https://pt.noki.icu/) 教程指引获取授权信息，其中设置网站ID可挂载SharePoint挂载。
     - GoogleDrive：按照[PanIndex Tool](https://pt.noki.icu/) 教程指引获取授权信息，请务必勾选流量中转，服务器需要特殊网络环境。
     > 由于阿里云的`refresh_token`和`access_token`有效期为2小时，第一次填入后，系统会自动刷新，所以`refresh_token`值会变，但是可以保持有效。
     - 根目录ID(路径)：native、webdav、ftp的ID格式为目录的绝对路径，teambition请分别输入项目ID和目录ID，[如何获取？](https://libsgh.github.io/PanIndex/#/question?id=%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e7%9b%ae%e5%bd%95id%ef%bc%9f)

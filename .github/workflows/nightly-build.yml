@@ -1,0 +1,105 @@
+name: Nightly Build
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        type: choice
+        description: 'choose build branch'
+        options:
+          - main
+          - dev
+        default: dev
+      platforms:
+        type: choice
+        description: 'build platforms'
+        options:
+          - linux
+          - windows
+          - darwin
+        default: linux
+      achitectures:
+        type: choice
+        description: 'build achitectures'
+        options:
+          - 386
+          - amd64
+          - arm-5
+          - arm-6
+          - arm-7
+          - arm64
+          - mips
+          - mipsle
+          - mips64
+          - mips64le
+        default: amd64
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+jobs:
+  setup:
+    if: contains('["libsgh"]', github.actor)
+    name: build setup
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.setup.outputs.branch }}
+      target: ${{ steps.setup.outputs.target }}
+      artifact_name: ${{ steps.setup.outputs.artifact_name }}
+    steps:
+      - name: setup
+        id: setup
+        run: |
+          if ${{ github.event.inputs.platforms == ''}}; then
+            platforms="linux"
+          else
+            platforms="${{ github.event.inputs.platforms }}"
+          fi
+          if ${{ github.event.inputs.achitectures == ''}}; then
+            achitectures="amd64"
+          else
+            achitectures="${{ github.event.inputs.achitectures }}"
+          fi
+          target='["'${platforms}'/'${achitectures}'"]'
+          list=$(echo ${target} | jq -c)
+          name='["'${platforms}'-'${achitectures}'"]'
+          name_list=$(echo ${name} | jq -c)
+          echo "::set-output name=target::${list}"
+          echo "::set-output name=artifact_name::${name_list}"
+          if ${{ github.event.inputs.branch == ''}}; then
+            branch='["dev"]'
+          else
+            branch='["${{ github.event.inputs.branch }}"]'
+          fi
+          b=$(echo ${branch} | jq -c)
+          echo "::set-output name=branch::${b}"
+  build:
+    if: contains('["libsgh"]', github.actor)
+    needs: setup
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.setup.outputs.target) }}
+        artifact_name: ${{ fromJson(needs.setup.outputs.artifact_name) }}
+        branch: ${{ fromJson(needs.setup.outputs.branch) }}
+        go-version: [1.18]
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          ref: ${{ matrix.branch }}
+          fetch-depth: 0
+      - name: Build PanIndex
+        uses: libsgh/PanIndex-build-action@main
+        with:
+          target: ${{ matrix.target }}
+      - name: upload-PanIndex
+        uses: actions/upload-artifact@v3
+        with:
+          name: PanIndex-${{ matrix.artifact_name }}
+          path: ${{ github.workspace }}/dist/*

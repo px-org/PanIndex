@@ -273,7 +273,7 @@
     </div>
 </div>
 <div id="cache_config_dialog" class="mdui-dialog">
-    <form id="cacheConfigForm" onsubmit="return saveCacheConfig()">
+    <form id="cacheConfigForm">
     <div class="mdui-dialog-content">
         <div class="mdui-dialog-title">缓存配置</div>
             <div>
@@ -300,8 +300,8 @@
             <div class="dbCacheConfigDiv mdui-textfield mdui-textfield-has-bottom">
                 <i class="mdui-icon material-icons">folder_open</i>
                 <label class="mdui-textfield-label">定时缓存目录</label>
-                <input class="mdui-textfield-input" type="text" name="sync_dir" value="/" placeholder="/">
-                <div class="mdui-textfield-helper">定时任务只更新某个目录的缓存， 默认缓存全部</div>
+                <textarea class="mdui-textfield-input" type="text" name="sync_dir" value="/" placeholder="/"></textarea>
+                <div class="mdui-textfield-helper">定时任务只更新某些目录的缓存（多个目录逗号分隔）， 默认缓存全部</div>
             </div>
             <div class="dbCacheConfigDiv" style="margin-left: 50px;margin-top: 10px;margin-bottom: 10px">
                 <label class="mdui-checkbox">
@@ -312,7 +312,8 @@
             </div>
     </div>
     <div class="mdui-dialog-actions">
-        <button type="submit" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown"><i class="mdui-icon material-icons">save</i> 确定</button>
+        <button type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown" onclick="saveCacheConfig(1)"><i class="mdui-icon material-icons">save</i> 确定并重置缓存</button>
+        <button type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-brown" onclick="saveCacheConfig(0)"><i class="mdui-icon material-icons">save</i> 确定</button>
         <button type="button" class="mdui-btn mdui-btn-dense mdui-ripple mdui-color-grey-600" mdui-dialog-cancel><i class="mdui-icon material-icons">close</i> 关闭</button>
     </div>
     </form>

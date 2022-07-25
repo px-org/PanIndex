@@ -31,14 +31,23 @@ func index(c *gin.Context) {
 	_, isView := c.GetQuery("v")
 	searchKey, isSearch := c.GetQuery("search")
 	var lastFile, nextFile = "", ""
+	status := http.StatusOK
 	if isSearch {
 		fns = service.Search(searchKey)
+		t := Redirect404(c, false)
+		if t != "" {
+			tmpFile = t
+		}
 	} else {
 		if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
 			//返回账号列表
 			fns = service.AccountsToNodes(c.Request.Host)
 		} else {
 			fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortColumn, sortOrder, isView)
+		}
+		t := Redirect404(c, isFile)
+		if t != "" {
+			tmpFile = t
 		}
 		if isFile {
 			if isView {
@@ -51,7 +60,7 @@ func index(c *gin.Context) {
 		}
 	}
 	hasParent, parentPath := service.HasParent(fullPath)
-	c.HTML(http.StatusOK, tmpFile, gin.H{
+	c.HTML(status, tmpFile, gin.H{
 		"title":        CurrentTitle(ac, module.GloablConfig, bypassName),
 		"path":         path,
 		"full_path":    fullPath,
@@ -73,6 +82,31 @@ func index(c *gin.Context) {
 		"last_file":    lastFile,
 		"next_file":    nextFile,
 	})
+}
+
+func Redirect404(c *gin.Context, flag bool) string {
+	_, isView := c.GetQuery("v")
+	_, isSearch := c.GetQuery("search")
+	t := "templates/pan/admin/404.html"
+	if module.GloablConfig.Access == "0" {
+		//公开
+		c.Next()
+	} else if module.GloablConfig.Access == "1" {
+		//仅直链
+		if isView || isSearch || !flag {
+			c.Abort()
+			return t
+		}
+	} else if module.GloablConfig.Access == "2" {
+		//直链 + 预览
+		if isSearch || !flag {
+			c.Abort()
+			return t
+		}
+	} else if module.GloablConfig.Access == "3" {
+		//登录
+	}
+	return ""
 }
 
 func CurrentTitle(ac module.Account, config module.Config, bypassName string) string {
@@ -163,19 +197,29 @@ func DataRroxy(ac module.Account, downUrl, fileName string, c *gin.Context) {
 }
 
 func view(tmpFile *string, viewType string) {
-	*tmpFile = fmt.Sprintf("templates/pan/%s/view-%s.html", util.GetCurrentTheme(module.GloablConfig.Theme), viewType)
+	if !strings.Contains(*tmpFile, "404.html") {
+		*tmpFile = fmt.Sprintf("templates/pan/%s/view-%s.html", util.GetCurrentTheme(module.GloablConfig.Theme), viewType)
+	}
 }
 
-func ShortRedirect(c *gin.Context) {
+func ShortRedirect(c *gin.Context, r *gin.Engine) {
 	pathName := c.Request.URL.Path
-	//_, isView := c.GetQuery("v")
 	if pathName != "/" && pathName[len(pathName)-1:] == "/" {
 		pathName = pathName[0 : len(pathName)-1]
 	}
 	paths := strings.Split(pathName, "/")
 	if len(paths) == 3 && paths[1] == "s" {
-		redirectUri := service.GetRedirectUri(paths[2])
-		c.Redirect(http.StatusFound, redirectUri)
+		redirectUri, v := service.GetRedirectUri(paths[2])
+		if redirectUri == "" {
+			t := "templates/pan/admin/404.html"
+			c.HTML(http.StatusOK, t, gin.H{})
+		} else {
+			c.Request.URL.Path = redirectUri
+			q := c.Request.URL.Query()
+			q.Add(v, "")
+			c.Request.URL.RawQuery = q.Encode()
+			r.HandleContext(c)
+		}
 	}
 	c.Abort()
 }

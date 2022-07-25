@@ -2,6 +2,7 @@
     {{template "templates/pan/admin/base.html" .}}
 {{end}}
 {{define "admin-pwd"}}
+<script src="/static/lib/laydate/laydate.js"></script>
 <div class="mdui-m-t-2">
     <div class="mdui-typo mdui-p-b-2">
         <h3> 密码文件（夹） <small>文件夹设置密码访问，设置后的文件将无法被搜索到</small></h3>
@@ -17,20 +18,33 @@
             <a id="delPwdDirBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '删除'}">
                 <i class="mdui-icon material-icons">remove_circle</i>
             </a>
+            <a id="sharePwdFileBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '创建短链并复制'}">
+                <i class="mdui-icon material-icons">share</i>
+            </a>
+            <a id="importPwdFile" href="javascript:$('#pwdFile').trigger('click');" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '导入'}">
+                <i class="mdui-icon material-icons">cloud_upload</i>
+            </a>
+            <input type="file" id="pwdFile" style="display:none" onchange="fileChange()">
         </div>
         <table class="mdui-table mdui-table-hoverable mdui-table-selectable ">
             <thead>
             <tr>
                 <th>文件（夹）路径</th>
                 <th>访问密码</th>
+                <th>有效期</th>
+                <th>备注</th>
             </tr>
             </thead>
             <tbody>
-            {{- range $filePath, $password := $.config.PwdFiles}}
-            <tr>
-                <td>{{$filePath}}</td>
-                <td>{{$password}}</td>
+            {{- if gt (len $.config.PwdFiles) 0 }}
+            {{- range $.config.PwdFiles}}
+            <tr data-id="{{.Id}}" data-expire-datetime="{{.ExpireAt}}" data-info="{{.Info}}">
+                <td>{{.FilePath}}</td>
+                <td>{{.Password}}</td>
+                <td>{{FormateUnix .ExpireAt}}</td>
+                <td>{{.Info}}</td>
             </tr>
+            {{- end}}
             {{- end}}
             </tbody>
         </table>
@@ -44,12 +58,25 @@
                     <i class="mdui-icon material-icons">folder_open</i>
                     <label class="mdui-textfield-label">文件（夹）路径</label>
                     <input class="mdui-textfield-input" type="text" name="file_path" required>
+                    <input type="hidden" name="id">
                     <div class="mdui-textfield-helper mdui-typo"><code>PanIndex</code>的虚拟路径，格式：<code>/{name}/a/b</code></code></div>
                 </div>
                 <div class="mdui-textfield">
                     <i class="mdui-icon material-icons">lock_outline</i>
                     <label class="mdui-textfield-label">访问密码</label>
-                    <input class="mdui-textfield-input" type="text" name="password" required>
+                    <input class="mdui-textfield-input" type="text" name="password">
+                    <div class="mdui-textfield-helper mdui-typo">为空将生成随机密码</div>
+                </div>
+                <div class="mdui-textfield">
+                    <i class="mdui-icon material-icons">access_time</i>
+                    <label class="mdui-textfield-label">有效期至</label>
+                    <input id="expireDate" type="text" class="mdui-textfield-input" readonly>
+                    <div class="mdui-textfield-helper mdui-typo">为空则表示永不过期</div>
+                </div>
+                <div class="mdui-textfield">
+                    <i class="mdui-icon material-icons">info</i>
+                    <label class="mdui-textfield-label">备注</label>
+                    <textarea class="mdui-textfield-input" type="text" name="info"></textarea>
                 </div>
         </div>
         <div class="mdui-dialog-actions">

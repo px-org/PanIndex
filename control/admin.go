@@ -9,6 +9,8 @@ import (
 	"github.com/libsgh/PanIndex/pan"
 	"github.com/libsgh/PanIndex/service"
 	"github.com/libsgh/PanIndex/util"
+	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -150,14 +152,15 @@ func PwdFile(c *gin.Context) {
 	pwdFiles := module.PwdFiles{}
 	c.BindJSON(&pwdFiles)
 	dao.SavePwdFile(pwdFiles)
+	dao.InitGlobalConfig()
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "保存成功！"})
 }
 
 //del hide file by path
 func DelPwdFile(c *gin.Context) {
-	delPaths := []string{}
-	c.BindJSON(&delPaths)
-	dao.DeletePwdFiles(delPaths)
+	delIds := []string{}
+	c.BindJSON(&delIds)
+	dao.DeletePwdFiles(delIds)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
 }
 
@@ -212,7 +215,8 @@ func GetBypass(c *gin.Context) {
 func CacheConfig(c *gin.Context) {
 	data := module.Account{}
 	c.BindJSON(&data)
-	dao.UpdateCacheConfig(data)
+	t := c.Query("t")
+	dao.UpdateCacheConfig(data, t)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "配置成功！"})
 }
 
@@ -252,5 +256,39 @@ func UploadConfig(c *gin.Context) {
 	} else {
 		msg = "导入失败，配置不是标准格式"
 	}
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
+}
+
+//upload pwd file
+func UploadPwdFile(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("get form err: %s", err.Error()))
+		return
+	}
+	f, err := file.Open()
+	defer f.Close()
+	msg := "导入成功"
+	if err != nil {
+		log.Error(err)
+		msg = "导入失败"
+	}
+	s, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Error(err)
+		msg = "读取失败"
+	}
+	content := string(s)
+	service.UploadPwdFile(content)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
+}
+
+//share info
+func ShareInfo(c *gin.Context) {
+	paramMap := make(map[string]string)
+	c.BindJSON(&paramMap)
+	id := paramMap["id"]
+	prefix := paramMap["prefix"]
+	msg := service.ShareInfo(prefix, id)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }

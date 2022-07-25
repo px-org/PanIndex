@@ -53,6 +53,7 @@ func RequestCancelRecover() gin.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				log.Debug("client cancel the request...")
+				log.Error(err)
 				c.Request.Context().Done()
 			}
 		}()

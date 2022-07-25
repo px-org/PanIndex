@@ -10,6 +10,15 @@ var cacheConfigd = new mdui.Dialog("#cache_config_dialog", {modal:true});
 var uploadConfigd = new mdui.Dialog("#upload_config_dialog", {modal:true});
 var modeSelect = new mdui.Select('#mode');
 var cachePolicySelect = new mdui.Select('#cachePolicy');
+$(function () {
+    if(typeof(laydate)!="undefined"){
+        laydate.render({
+            lang: 'en',
+            elem: '#expireDate',
+            type: 'datetime'
+        });
+    }
+});
 var copyConfigClipboard = new ClipboardJS('#copyConfigBtn', {
     text: function(trigger) {
         var configJson = $("#uploadConfigForm").find("textarea[name=config_json]").val();
@@ -486,14 +495,25 @@ $("#addPwdDirBtn").on('click', function (ev){
     $("#title").html("添加");
     $("#configForm").find("input[name=file_path]").val("");
     $("#configForm").find("input[name=password]").val("");
+    $("#configForm").find("input[name=id]").val("");
+    $("#configForm").find("textarea[name=info]").val("");
+    $("#expireDate").val("");
     pwdd.toggle();
 });
 function savePwdFile(){
     var filePath = $("#configForm").find("input[name=file_path]").val();
     var password = $("#configForm").find("input[name=password]").val();
+    var id = $("#configForm").find("input[name=id]").val();
+    var info = $("#configForm").find("textarea[name=info]").val();
+    var expireTime = $("#expireDate").val();
+    var expireTime2 = Date.parse(new Date(expireTime));
+    var expireAt = expireTime2 / 1000;
     var d = {};
     d["file_path"] = filePath;
     d["password"] = password;
+    d["id"] = id;
+    d["expire_at"] = expireAt;
+    d["info"] = info;
     CommonRequest("/password/file", "POST", d)
     return false;
 }
@@ -508,9 +528,57 @@ $("#updatePwdDirBtn").on('click', function (ev){
     }else{
         var filePath = selectRecords.find("td").eq(1).html();
         var pwd = selectRecords.find("td").eq(2).html();
+        var id = selectRecords.data("id");
+        var info = selectRecords.data("info");
+        var expireAt = selectRecords.data("expire-datetime");
         $("#configForm").find("input[name=file_path]").val(filePath);
         $("#configForm").find("input[name=password]").val(pwd);
+        $("#configForm").find("input[name=id]").val(id);
+        $("#configForm").find("textarea[name=info]").val(info);
+        if(expireAt && expireAt != 0){
+            var unixTime = new Date(expireAt * 1000).format("yyyy-MM-dd hh:mm:ss");
+            $("#expireDate").val(unixTime);
+        }
         pwdd.toggle();
+    }
+});
+$("#sharePwdFileBtn").on('click', function (ev){
+    var selectRecords = $('.mdui-table-row-selected');
+    if(selectRecords.length > 1 || selectRecords.length == 0){
+        mdui.snackbar({
+            message: "请选择需要分享的文件（夹）",
+            timeout: 2000
+        });
+    }else{
+        var id = selectRecords.data("id");
+        var data = {};
+        var prefix = window.location.protocol + "//"+window.location.host + "/s/";
+        data["prefix"] = prefix;
+        data["id"] = id;
+        $.ajax({
+            method: 'POST',
+            url: AdminApiUrl + "/password/file/share/info",
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (data) {
+                var d = JSON.parse(data);
+                var title = "链接和密码已复制到剪切板";
+                if (!navigator.clipboard) {
+                    title = "该浏览器不支持复制操作";
+                }
+                navigator.clipboard.writeText(d.msg)
+                .then(() => {
+                    /*console.log("Text copied to clipboard...");*/
+                })
+                .catch(err => {
+                    /*console.log('Something went wrong', err);*/
+                });
+                mdui.snackbar({
+                    message: title,
+                    timeout: 1000
+                });
+            }
+        });
     }
 });
 $("#delPwdDirBtn").on('click', function (ev){
@@ -521,14 +589,40 @@ $("#delPwdDirBtn").on('click', function (ev){
             timeout: 2000
         });
     }else{
-        var delPaths = []
+        var delIds = []
         selectRecords.each(function (j, record) {
-            var filePath = $(this).find("td").eq(1).html();
-            delPaths.push(filePath)
+            var id = $(this).data("id");
+            delIds.push(id)
         });
-        CommonRequest("/password/file", "DELETE", delPaths)
+        CommonRequest("/password/file", "DELETE", delIds)
     }
 });
+function fileChange(){
+    var fileObj = $("#pwdFile")[0].files[0];// 获取文件对象
+    var form = new FormData();
+    form.append("file", fileObj);
+    $.ajax({
+        url : AdminApiUrl + "/password/file/upload",
+        method : "POST",
+        contentType: 'multipart/form-data',
+        data: form,
+        async: true,
+        cache: false,
+        processData: false,
+        contentType: false,
+        success : function(data) {
+            $('#pwdFile').replaceWith("<input type='file' id='pwdFile' style='display:none' onchange='fileChange()'>");
+            var joData = JSON.parse(data);
+            mdui.snackbar({
+                message: joData.msg,
+                timeout: 1000,
+                onClose: function(){
+                    location.reload();
+                }
+            });
+        }
+    });
+}
 //密码文件-end
 //隐藏文件-start
 $("#addHideBtn").on('click', function (ev){
@@ -908,19 +1002,23 @@ $("#cacheConfig").on('click', function (event) {
         if(data.syncChild == 0){
             $("#cacheConfigForm").find("input[name=sync_child]").prop("checked", true);
         }
-        var name = data.name;
-        $.ajax({
-            method: 'GET',
-            url: AdminApiUrl + '/bypass'+'?account_id='+data.id,
-            success: function (data) {
-                var d = JSON.parse(data);
-                if (d.data.name != ""){
-                    $("#cacheConfigForm").find("input[name=sync_dir]").val("/"+d.data.name);
-                }else{
-                    $("#cacheConfigForm").find("input[name=sync_dir]").val("/"+name);
+        if(data.syncDir && data.syncDir != ""){
+            $("#cacheConfigForm").find("textarea[name=sync_dir]").val(data.syncDir);
+        }else{
+            var name = data.name;
+            $.ajax({
+                method: 'GET',
+                url: AdminApiUrl + '/bypass'+'?account_id='+data.id,
+                success: function (data) {
+                    var d = JSON.parse(data);
+                    if (d.data.name != ""){
+                        $("#cacheConfigForm").find("textarea[name=sync_dir]").val("/"+d.data.name);
+                    }else{
+                        $("#cacheConfigForm").find("textarea[name=sync_dir]").val("/"+name);
+                    }
                 }
-            }
-        });
+            });
+        }
         cacheConfigd.toggle();
     }
 });
@@ -929,12 +1027,12 @@ $("#cachePolicy").on('change', function () {
     dynamicCachePolicy(cachePolicy);
     cacheConfigd.handleUpdate();
 });
-function saveCacheConfig(){
+function saveCacheConfig(t){
     var formData = $("#cacheConfigForm").serializeArray();
     var d = parseFormData(formData);
     d["expire_time_span"] =  parseInt(d["expire_time_span"]);
     d["sync_child"] =  parseInt(d["sync_child"]);
-    CommonRequest("/cache/config", "POST", d);
+    CommonRequest("/cache/config?t="+t, "POST", d);
     cacheConfigd.toggle();
     return false;
 }
@@ -978,4 +1076,24 @@ function parseFormData(formArray){
        d[item.name] = item.value;
    });
    return d;
+}
+Date.prototype.format = function(fmt) {
+    var o = {
+        "M+" : this.getMonth()+1,                 //月份
+        "d+" : this.getDate(),                    //日
+        "h+" : this.getHours(),                   //小时
+        "m+" : this.getMinutes(),                 //分
+        "s+" : this.getSeconds(),                 //秒
+        "q+" : Math.floor((this.getMonth()+3)/3), //季度
+        "S"  : this.getMilliseconds()             //毫秒
+    };
+    if(/(y+)/.test(fmt)) {
+        fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+    }
+    for(var k in o) {
+        if(new RegExp("("+ k +")").test(fmt)){
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+        }
+    }
+    return fmt;
 }

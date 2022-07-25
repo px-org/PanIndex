@@ -231,6 +231,16 @@ func (c Cloud189) File(account module.Account, fileId, path string) (module.File
 	cloud189 := CLoud189s[account.Id]
 	item := Cloud189FileResp{}
 	fn := module.FileNode{}
+	if fileId == "-11" {
+		return module.FileNode{
+			FileId:     "root",
+			FileName:   "root",
+			FileSize:   0,
+			IsFolder:   true,
+			Path:       "/",
+			LastOpTime: time.Now().Format("2006-01-02 15:04:05"),
+		}, nil
+	}
 	_, err := cloud189.Cloud189Session.R().
 		SetResult(&item).
 		SetQueryParams(map[string]string{

@@ -68,29 +68,6 @@ func UTCTimeFormat(timeStr string) string {
 	return time.Unix(timeUint, 0).Format("2006-01-02 15:04:05")
 }
 
-func FileNodeAuth(fn *module.FileNode, hide, hasPwd int) {
-	if hide == 1 {
-		fn.Hide = hide
-	} else {
-		_, ok := module.GloablConfig.HideFiles[fn.FileId]
-		if ok {
-			fn.Hide = 1
-		} else {
-			fn.Hide = 0
-		}
-	}
-	if hasPwd == 1 {
-		fn.HasPwd = hasPwd
-	} else {
-		_, ok := module.GloablConfig.PwdFiles[fn.FileId]
-		if ok {
-			fn.HasPwd = 1
-		} else {
-			fn.HasPwd = 0
-		}
-	}
-}
-
 func GetViewType(fileType string) string {
 	config := module.GloablConfig
 	if fileType == "" {
@@ -118,7 +95,7 @@ func GetViewType(fileType string) string {
 }
 
 func GetExt(name string) string {
-	ext := strings.TrimLeft(filepath.Ext(name), ".")
+	ext := strings.ToLower(strings.TrimLeft(filepath.Ext(name), "."))
 	return ext
 }
 
@@ -380,7 +357,8 @@ func SortFileNode(sortColumn, sortOrder string, list []module.FileNode) {
 	})
 }
 
-func GetPwdFromPath(path string) (module.PwdFiles, bool) {
+//TODO
+/*func GetPwdFromPath(path string) (module.PwdFiles, bool) {
 	pwdDir := module.PwdFiles{}
 	pwdFile := module.PwdFiles{}
 	pwdMaps := module.GloablConfig.PwdFiles
@@ -401,13 +379,13 @@ func GetPwdFromPath(path string) (module.PwdFiles, bool) {
 		return pwdDir, true
 	}
 	return pwdDir, false
-}
+}*/
 
 func GetCdnFilesMap(cdn, version string) map[string]string {
 	if version == "" {
 		version = "main"
 	}
-	jp := "https://cdn.jsdelivr.net/gh/libsgh/PanIndex@" + version
+	jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
 	m := map[string]string{}
 	cdnMap := KV{
 		"0": KV{
@@ -431,8 +409,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"sweetalert2@js":             "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     "/static/lib/hls.js@1.1.2/dist/hls.min.js",
 			"flv@js":                     "/static/lib/flv.js@1.6.2/dist/flv.min.js",
-			"artplayer@js":               "/static/lib/artplayer@4.3.23/artplayer.min.js",
-			"artplayer-danmuku@js":       "/static/lib/artplayer@4.3.23/artplayer-plugin-danmuku.js",
+			"artplayer@js":               "/static/lib/artplayer/artplayer.js",
+			"artplayer-danmuku@js":       "/static/lib/artplayer/artplayer-plugin-danmuku.js",
 			"video@mdui@js":              "/static/js/mdui.video.js",
 			"video@simple@js":            "/static/js/simple.video.js",
 			"simple@index@js":            "/static/js/simple.index.js",
@@ -470,8 +448,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"sweetalert2@js":             "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     "//cdn.staticfile.org/hls.js/1.1.2/hls.min.js",
 			"flv@js":                     "//cdn.staticfile.org/flv.js/1.6.2/flv.min.js",
-			"artplayer@js":               "//npm.elemecdn.com/artplayer@4.3.23/dist/artplayer.js",
-			"artplayer-danmuku@js":       "//npm.elemecdn.com/artplayer-plugin-danmuku@4.3.23/dist/artplayer-plugin-danmuku.js",
+			"artplayer@js":               "//npm.elemecdn.com/artplayer@4.5.2/dist/artplayer.js",
+			"artplayer-danmuku@js":       "//npm.elemecdn.com/artplayer-plugin-danmuku@4.4.8/dist/artplayer-plugin-danmuku.js",
 			"video@mdui@js":              "/static/js/mdui.video.js",
 			"video@simple@js":            "/static/js/simple.video.js",
 			"simple@index@js":            "/static/js/simple.index.js",
@@ -509,8 +487,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"sweetalert2@js":             jp + "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     jp + "/static/lib/hls.js@1.1.2/dist/hls.min.js",
 			"flv@js":                     jp + "/static/lib/flv.js@1.6.2/dist/flv.min.js",
-			"artplayer@js":               jp + "/static/lib/artplayer@4.3.23/artplayer.min.js",
-			"artplayer-danmuku@js":       jp + "/static/lib/artplayer@4.3.23/artplayer-plugin-danmuku.js",
+			"artplayer@js":               jp + "/static/lib/artplayer/artplayer.js",
+			"artplayer-danmuku@js":       jp + "/static/lib/artplayer/artplayer-plugin-danmuku.js",
 			"video@mdui@js":              jp + "/static/js/mdui.video.js",
 			"video@simple@js":            jp + "/static/js/simple.video.js",
 			"simple@index@js":            jp + "/static/js/simple.index.js",
@@ -790,4 +768,116 @@ func AccountToMap(account module.Account) map[string]interface{} {
 		"expire_time_span": account.ExpireTimeSpan,
 		"host":             account.Host,
 	}
+}
+
+func In(target string, str_array []string) bool {
+	sort.Strings(str_array)
+	index := sort.SearchStrings(str_array, target)
+	if index < len(str_array) && str_array[index] == target {
+		return true
+	}
+	return false
+}
+
+func ParseFullPath(path, host string) (module.Account, string, string, string) {
+	if strings.HasPrefix(path, "/d_") {
+		//old path
+		path = OldParseFullPath(path)
+	}
+	if path == "" {
+		path = "/"
+	}
+	if path == "/" && module.GloablConfig.AccountChoose == "default" && len(module.GloablConfig.BypassList) > 0 {
+		path = "/" + module.GloablConfig.BypassList[0].Name
+	} else {
+		if path == "/" && module.GloablConfig.AccountChoose == "default" && len(module.GloablConfig.Accounts) > 0 {
+			path = "/" + module.GloablConfig.Accounts[0].Name
+		}
+	}
+	fullPath := path
+	if path != "/" && path[len(path)-1:] == "/" {
+		path = path[0 : len(path)-1]
+	}
+	paths := strings.Split(path, "/")
+	accountName := paths[1]
+	account, bypassName := GetCurrentAccount(accountName, host)
+	path = strings.Join(paths[2:], "/")
+	path = "/" + path
+	if fullPath != "/" && fullPath[len(fullPath)-1:] == "/" {
+		fullPath = fullPath[0 : len(fullPath)-1]
+	}
+	return account, fullPath, path, bypassName
+}
+
+func OldParseFullPath(path string) string {
+	iStr := GetBetweenStr(path, "_", "/")
+	index, _ := strconv.Atoi(iStr)
+	account := module.GloablConfig.Accounts[index]
+	return strings.ReplaceAll(path, "/d_"+iStr, "/"+account.Name)
+}
+
+func GetCurrentAccount(name, host string) (module.Account, string) {
+	//get account from bypass
+	var bypass module.Bypass
+	if len(module.GloablConfig.BypassList) > 0 {
+		if name == "" {
+			bypass = module.GloablConfig.BypassList[0]
+		} else {
+			for _, item := range module.GloablConfig.BypassList {
+				if item.Name == name {
+					bypass = item
+					break
+				}
+			}
+		}
+		if bypass.Name != "" {
+			//get round robin account
+			bypassAccount := bypass.Rw.Next().(module.Account)
+			log.Debugf("access bypass account: %s", bypassAccount.Name)
+			return bypassAccount, bypass.Name
+		}
+	}
+	//get account from accounts
+	var account module.Account
+	if name == "" {
+		if len(module.GloablConfig.Accounts) > 0 {
+			account = module.GloablConfig.Accounts[0]
+		} else {
+			account = module.Account{}
+		}
+	} else {
+		for _, ac := range module.GloablConfig.Accounts {
+			if ac.Name == name {
+				if ac.Host != "" && host != "" {
+					if ac.Host == host {
+						account = ac
+						break
+					}
+				} else {
+					account = ac
+					break
+				}
+			}
+		}
+	}
+	return account, bypass.Name
+}
+
+func RandomPassword(length int) string {
+	baseStr := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()[]{}+-*/_=."
+	r := math_rand.New(math_rand.NewSource(time.Now().UnixNano() + math_rand.Int63()))
+	bytes := make([]byte, length, length)
+	l := len(baseStr)
+	for i := 0; i < length; i++ {
+		bytes[i] = baseStr[r.Intn(l)]
+	}
+	return string(bytes)
+}
+
+func Base(path string) string {
+	idx := strings.LastIndex(path, "/")
+	if idx == -1 {
+		return path
+	}
+	return path[idx+1:]
 }
