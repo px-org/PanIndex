@@ -44,7 +44,6 @@ jobs:
     outputs:
       branch: ${{ steps.setup.outputs.branch }}
       target: ${{ steps.setup.outputs.target }}
-      artifact_name: ${{ steps.setup.outputs.artifact_name }}
     steps:
       - name: setup
         id: setup
@@ -57,16 +56,12 @@ jobs:
           if ${{ github.event.inputs.achitectures == ''}}; then
             achitectures="amd64"
             target='["linux/amd64", "linux/arm64", "windows/amd64"]'
-            name='["linux-amd64", "linux-arm64", "windows-amd64"]'
           else
             achitectures="${{ github.event.inputs.achitectures }}"
             target='["'${platforms}'/'${achitectures}'"]'
-            name='["'${platforms}'-'${achitectures}'"]'
           fi
           list=$(echo ${target} | jq -c)
-          name_list=$(echo ${name} | jq -c)
           echo "::set-output name=target::${list}"
-          echo "::set-output name=artifact_name::${name_list}"
           if ${{ github.event.inputs.branch == ''}}; then
             branch='["dev"]'
           else
@@ -80,12 +75,19 @@ jobs:
     strategy:
       matrix:
         target: ${{ fromJson(needs.setup.outputs.target) }}
-        artifact_name: ${{ fromJson(needs.setup.outputs.artifact_name) }}
         branch: ${{ fromJson(needs.setup.outputs.branch) }}
         go-version: [1.18]
     name: build
     runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.artifact.outputs.name }}
     steps:
+      - name: Setup Artifact Name
+        id: artifact
+        run: |
+          tar=${{ matrix.target }}
+          a=${tar//'/'/'-'}
+          echo "::set-output name=name::${a}"
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
@@ -103,5 +105,5 @@ jobs:
       - name: upload-PanIndex
         uses: actions/upload-artifact@v3
         with:
-          name: PanIndex-${{ matrix.artifact_name }}
+          name: PanIndex-${{ steps.artifact.outputs.name }}
           path: ${{ github.workspace }}/dist/*
