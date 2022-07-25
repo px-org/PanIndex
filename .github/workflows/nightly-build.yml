@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           persist-credentials: false
-          ref: ${{ matrix.branch }}
+          ref: dev
           fetch-depth: 0
       - name: Build PanIndex
         uses: libsgh/PanIndex-build-action@main
