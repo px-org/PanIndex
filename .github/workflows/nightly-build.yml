@@ -55,7 +55,7 @@ jobs:
           fi
           if ${{ github.event.inputs.achitectures == ''}}; then
             achitectures="amd64"
-            target='["linux/amd64", "linux/arm64", "windows/amd64"]'
+            target='["linux/386", "linux/amd64", "linux/arm64", "linux/arm5", "linux/arm6", "linux/arm7", "windows/amd64", "window/386", "darwin-10.12/amd64", "darwin-10.12/arm64", "static/ui"]'
           else
             achitectures="${{ github.event.inputs.achitectures }}"
             target='["'${platforms}'/'${achitectures}'"]'
