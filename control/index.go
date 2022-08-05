@@ -154,7 +154,7 @@ func download(ac module.Account, fileNode module.FileNode, c *gin.Context) {
 		}
 	} else {
 		if ac.Mode == "native" {
-			c.FileAttachment(downUrl, fileNode.FileName)
+			c.FileAttachment(downUrl, url.QueryEscape(fileNode.FileName))
 		} else if ac.Mode == "ftp" {
 			service.FtpDownload(ac, downUrl, fileNode, c)
 		} else if ac.Mode == "webdav" {
