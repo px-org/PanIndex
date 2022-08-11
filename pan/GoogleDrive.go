@@ -89,6 +89,7 @@ func (g GoogleDrive) Files(account module.Account, fileId, path, sortColumn, sor
 			} else {
 				fn.Path = path + "/" + fn.FileName
 			}
+			fn.AccountId = account.Id
 			fn.ParentId = fileId
 			fn.ParentPath = path
 			fileNodes = append(fileNodes, fn)
