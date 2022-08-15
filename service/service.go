@@ -154,7 +154,7 @@ func Search(searchKey string) []module.FileNode {
 			left join account a on
 				fn.account_id = a.id
 			where
-				fn.file_name like ?`
+				fn.file_name like ? and fn.hide = 0`
 		if len(keys) > 1 {
 			searchKey = keys[1]
 			sql += " and a.name=?"
@@ -181,7 +181,7 @@ func FilterHideFiles(files []module.FileNode) []module.FileNode {
 func FilterFilesByType(files []module.FileNode, viewType string) []module.FileNode {
 	var fns []module.FileNode
 	for _, file := range files {
-		if file.ViewType == viewType {
+		if viewType == "" || file.ViewType == viewType {
 			fns = append(fns, file)
 		}
 	}

@@ -19,6 +19,7 @@ func main() {
 		return
 	}
 	r := gin.New()
+	r.Use(middleware.Cors())
 	r.Use(gin.Logger(), middleware.RequestCancelRecover())
 	//set html templates
 	r.SetHTMLTemplate(boot.Templates(fs))

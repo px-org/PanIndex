@@ -8,6 +8,8 @@
 ## 下载
 预编译的二进制文件压缩包可在 [Github Release](https://github.com/libsgh/PanIndex/releases "release")下载，解压后方可使用。
 
+基于开发分支的自动构建版本：[Nightly Build](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev "build")，仅构建部分平台
+
 ## 安装
 
 ### Bash脚本

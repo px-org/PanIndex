@@ -1,7 +1,9 @@
-name: PanIndex Docker Build
+name: PanIndex Nightly Docker Build
 on:
-  release:
-    types: [created]
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
 jobs:
   build_docker:
     name: Docker
@@ -9,6 +11,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          ref: dev
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
@@ -31,7 +36,7 @@ jobs:
           push: true
           build-args: |
             VERSION=${{ github.ref }}
-            ARG0=docker
-          tags: ${{ steps.meta.outputs.tags }}
+            ARG0=nightly_docker
+          tags: iicm/pan-index:dev
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64, linux/arm64, linux/ppc64le, linux/s390x, linux/386, linux/arm/v7, linux/arm/v6

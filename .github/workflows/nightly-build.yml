@@ -44,7 +44,6 @@ jobs:
     outputs:
       branch: ${{ steps.setup.outputs.branch }}
       target: ${{ steps.setup.outputs.target }}
-      artifact_name: ${{ steps.setup.outputs.artifact_name }}
     steps:
       - name: setup
         id: setup
@@ -56,15 +55,13 @@ jobs:
           fi
           if ${{ github.event.inputs.achitectures == ''}}; then
             achitectures="amd64"
+            target='["linux/386", "linux/amd64", "linux/arm64", "linux/arm5", "linux/arm6", "linux/arm7", "windows/amd64", "window/386", "darwin-10.12/amd64", "darwin-10.12/arm64", "static/ui"]'
           else
             achitectures="${{ github.event.inputs.achitectures }}"
+            target='["'${platforms}'/'${achitectures}'"]'
           fi
-          target='["'${platforms}'/'${achitectures}'"]'
           list=$(echo ${target} | jq -c)
-          name='["'${platforms}'-'${achitectures}'"]'
-          name_list=$(echo ${name} | jq -c)
           echo "::set-output name=target::${list}"
-          echo "::set-output name=artifact_name::${name_list}"
           if ${{ github.event.inputs.branch == ''}}; then
             branch='["dev"]'
           else
@@ -78,12 +75,19 @@ jobs:
     strategy:
       matrix:
         target: ${{ fromJson(needs.setup.outputs.target) }}
-        artifact_name: ${{ fromJson(needs.setup.outputs.artifact_name) }}
         branch: ${{ fromJson(needs.setup.outputs.branch) }}
         go-version: [1.18]
     name: build
     runs-on: ubuntu-latest
+    outputs:
+      artifact_name: ${{ steps.artifact.outputs.name }}
     steps:
+      - name: Setup Artifact Name
+        id: artifact
+        run: |
+          tar=${{ matrix.target }}
+          a=${tar//'/'/'-'}
+          echo "::set-output name=name::${a}"
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
@@ -101,5 +105,5 @@ jobs:
       - name: upload-PanIndex
         uses: actions/upload-artifact@v3
         with:
-          name: PanIndex-${{ matrix.artifact_name }}
+          name: PanIndex-${{ steps.artifact.outputs.name }}
           path: ${{ github.workspace }}/dist/*

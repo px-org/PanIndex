@@ -1,3 +1,28 @@
+### [v3.0.9](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (Unreleased)
+
+##### Bug Fixes
+
+- 修复文件扩展名为大写时文件类型识别错误 by [wshon](https://github.com/wshon)
+- 更新播放器artplayer
+- 修复跨域访问错误
+- 提高webdav访问兼容性
+
+##### Features
+
+- [配置管理]增加配置-访问控制
+
+- [配置管理]管理接口刷新token
+
+- [配置管理]优化密码配置，有效期、备注、随机密码、导入、生成密码文件短链
+
+- 下载直链支持密码参数，可以直接下载密码文件，http://localhost:5238/a/b.txt?pwd=1234
+
+- 支持密码重置，启动时指定参数`--rest_password=1234`
+
+- 增加404页面
+
+- 基于dev分支的自动构建版本，[nightly](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev)
+
 ### [v3.0.8](https://github.com/libsgh/PanIndex/compare/v3.0.7...v3.0.8) (2022-05-08)
 
 ##### Bug Fixes
@@ -6,10 +31,12 @@
 - 配置导入账号部分配置丢失
 
 ##### Features
+
 - 支持Sharepoint挂载
 - 更新js依赖及部分npm cdn来源
 
 #### Dev Plan
+
 - 纯直链系统（屏蔽、目录访问、文件预览）
 - 新增网盘支持
 - 分页、搜索优化
@@ -25,10 +52,10 @@
 - 中转域名保修改无效
 
 ##### Features
+
 - 配置支持导入导出
 - HEAD.md、README.md渲染优化
 - 预览页去除ID信息
-
 
 ### [v3.0.6](https://github.com/libsgh/PanIndex/compare/v3.0.0...v3.0.6) (2022-04-01)
 
@@ -41,6 +68,7 @@
 - 密码文件下载直链访问控制
 
 ##### Features
+
 - 一键缓存全部账号
 - 网盘HOST绑定，文件列表过滤
 - 回车输入提交访问密码
@@ -51,6 +79,7 @@
 ### [v3.0.0](https://github.com/libsgh/PanIndex/compare/v2.0.9...v3.0.0) (2022-03-04)
 
 #### 注意：由于新版改动较大，建议重新安装，此为V3测试版本，如遇BUG请及时反馈
+
 1. 增加缓存策略（No Cache、Memory、Database）
 2. 完善各类网盘操作api（文件夹创建、复制、移动、删除等）
 3. 优化目录缓存慢
@@ -89,6 +118,7 @@
 - 修复Heroku构建失败
 
 ##### Features
+
 - 新增『FTP』『WebDav』『OneDrive世纪互联』『和彩云』『谷歌云盘』五种网盘模式
 
 ### [v2.0.7](https://github.com/libsgh/PanIndex/compare/v2.0.6...v2.0.7) (2021-10-14)
@@ -106,6 +136,7 @@
 - 『本地模式』打包下载临时文件清理
 
 ##### Features
+
 - 添加分享短链&二维码
 - 添加下载链接一键提取
 - 『阿里云盘』视频支持转码播放
@@ -132,7 +163,7 @@
 
 **若升级后密码文件夹无法访问，请删除cookie重试**
 
-##### Bug Fixes 
+##### Bug Fixes
 
 - 解决访问空目录无法打开的问题
 - 「本地模式」windows下路径错误 
@@ -150,9 +181,7 @@
 - 「后台」增加配置项、首页账号切换、网站标题
 - 预览优化：视频播放支持webvtt字幕、音频播放支持播放列表、pdf、markdown预览
 
-
 ### [v2.0.4](https://github.com/libsgh/PanIndex/compare/v2.0.3...v2.0.4) (2021-07-29)
-
 
 ##### Bug Fixes
 
@@ -171,9 +200,7 @@
 - 本地模式文件类型优化
 - 视频播放支持m3u8
 
-
 ### [v2.0.3](https://github.com/libsgh/PanIndex/compare/v2.0.2...v2.0.3) (2021-07-02)
-
 
 ##### Bug Fixes
 

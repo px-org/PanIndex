@@ -2,6 +2,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/libsgh/PanIndex/total)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/libsgh/PanIndex)
 ![GitHub last commit](https://img.shields.io/github/last-commit/libsgh/PanIndex)
+[![Nightly build](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml)
 ## 特性
 
 - **网盘直链**<br>

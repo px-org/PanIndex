@@ -53,12 +53,18 @@ func (fs *FileSystem) Files(account module.Account, path, fullPath string) []mod
 	if strings.HasPrefix(util.GetFileName(fullPath), "._") {
 		return fns
 	}
+	fileNamePath := module.GloablConfig.DavPath
+	if fullPath != "/" {
+		fileNamePath = fileNamePath + fullPath + "/"
+	} else {
+		fileNamePath = fileNamePath + "/"
+	}
 	if fullPath == "/" {
 		for _, ac := range module.GloablConfig.Accounts {
 			fn := module.FileNode{
 				FileId:     fmt.Sprintf("/%s", ac.Name),
 				IsFolder:   true,
-				FileName:   ac.Name,
+				FileName:   fileNamePath + ac.Name,
 				FileSize:   int64(ac.FilesCount),
 				SizeFmt:    "-",
 				FileType:   "",
@@ -71,7 +77,11 @@ func (fs *FileSystem) Files(account module.Account, path, fullPath string) []mod
 		}
 		return fns
 	} else {
-		fns = service.Files(account, path, fullPath)
+		fns0 := service.Files(account, path, fullPath)
+		for _, fn := range fns0 {
+			fn.FileName = fileNamePath + fn.FileName
+			fns = append(fns, fn)
+		}
 		return fns
 	}
 }
