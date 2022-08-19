@@ -41,7 +41,7 @@ func (fs *FileSystem) File(account module.Account, path, fullPath string) (modul
 		if err != nil {
 			log.Error(err)
 		}
-		if fn.FileId != "" {
+		if fn.FileId != "" || (fn.FileId == "" && path == "/") {
 			return fn, true
 		}
 		return module.FileNode{}, false
