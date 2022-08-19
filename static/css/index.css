@@ -328,3 +328,7 @@ input {
 .playlist-active{
     background-color: #cfd2e1
 }
+.mdui-theme-layout-dark {
+    color: #fff;
+    background-color: #424242;
+}
