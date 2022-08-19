@@ -83,10 +83,11 @@
     - Aliyundrive：阿里云盘，需要填入**手机端的**的`refresh_token`，点击文本框下方的扫码获取链接。
     - OneDrive、世纪互联：按照[PanIndex Tool](https://pt.noki.icu/) 教程指引获取授权信息，其中设置网站ID可挂载SharePoint挂载。
     - GoogleDrive：按照[PanIndex Tool](https://pt.noki.icu/) 教程指引获取授权信息，请务必勾选流量中转，服务器需要特殊网络环境。
+    - S3：基于AWS S3的SDK实现，已通过测试的存储：aws S3、阿里云OSS（virtual hosted）、腾讯云COS、Oracle object-storage，注意配置公开访问权限及跨域设置，根目录ID设置：存储桶根目录留空，子目录格式：test/abc/。
     > 由于阿里云的`refresh_token`和`access_token`有效期为2小时，第一次填入后，系统会自动刷新，所以`refresh_token`值会变，但是可以保持有效。
     - 根目录ID(路径)：native、webdav、ftp的ID格式为目录的绝对路径，teambition请分别输入项目ID和目录ID，[如何获取？](https://libsgh.github.io/PanIndex/#/question?id=%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e7%9b%ae%e5%bd%95id%ef%bc%9f)
   
-    > 这里填写你要分享的目录ID，如果你想分享网盘的根目录，天翼云为`-11`，阿里云盘为`root`，合彩云盘为`00019700101000000001`
+    > 这里填写你要分享的目录ID，如果你想分享网盘的根目录，天翼云为`-11`，阿里云盘为`root`，和彩云盘为`00019700101000000001`，S3留空
     - 流量中转：中转地址为空将使用本机中转，设置的CDN域名会替换下载地址中的域名。
   - 缓存设置
     - 缓存策略：API直连（v3），除几种本地模式外，其他盘仅用于测试，命中缓存（v3）：当访问目录时进行内存级缓存，超过有效期将自动失效，完全缓存：缓存所有文件到数据库，适用于文件不多，修改不频繁的场景。
