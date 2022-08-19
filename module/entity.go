@@ -143,6 +143,7 @@ type Account struct {
 	CachePolicy    string `json:"cache_policy" gorm:"default:nc"`    //缓存策略：nc（No Cache）,mc（Memory Cache）, dc（Database Cache）
 	ExpireTimeSpan int    `json:"expire_time_span" gorm:"default:1"` //缓存时间单位是小时
 	Host           string `json:"host"`                              //绑定host
+	PathStyle      string `json:"path_style"`                        //S3 PathStyle :Path, Virtual Hosting
 }
 
 type Bypass struct {

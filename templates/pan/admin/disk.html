@@ -74,6 +74,8 @@
                             <span class="mdui-chip-icon mdui-color-pink"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "googledrive"}}
                             <span class="mdui-chip-icon mdui-color-amber"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "s3"}}
+                            <span class="mdui-chip-icon mdui-color-orange"><i class="mdui-icon material-icons">face</i></span>
                         {{- else}}
                         {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -102,6 +104,8 @@
                     和彩云
                 {{- else if eq .Mode "googledrive"}}
                     谷歌云盘
+                {{- else if eq .Mode "s3"}}
+                    S3
                 {{- else}}
                 {{- end}}
                 </td>
@@ -201,6 +205,7 @@
                 <option value="onedrive">OneDrive</option>
                 <option value="onedrive-cn">OneDrive世纪互联</option>
                 <option value="googledrive">GoogleDrive</option>
+                <option value="s3">S3</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
@@ -240,10 +245,17 @@
             <label class="mdui-textfield-label" id="site_label">网站ID</label>
             <input class="mdui-textfield-input" type="text" name="site_id">
         </div>
+        <div id="S3PathDiv">
+            <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">S3ForcePathStyle</label>
+            <select id="path_style" name="path_style" style="margin-left: 50px">
+                <option value="Path" selected>path-style bucket</option>
+                <option value="VirtualHosting">virtual hosted bucket</option>
+            </select>
+        </div>
         <div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
             <i class="mdui-icon material-icons">folder_open</i>
             <label class="mdui-textfield-label">根目录ID(路径)</label>
-            <input class="mdui-textfield-input" type="text" name="root_id" required>
+            <input class="mdui-textfield-input" type="text" name="root_id">
             <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
         </div>
         <div class="mdui-textfield mdui-textfield-has-bottom">

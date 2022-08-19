@@ -369,7 +369,6 @@ func SyncAccountStatus(account module.Account) {
 var SYNC_STATUS = 0
 
 func SyncFilesCache(account module.Account) {
-	log.Info(account.SyncDir)
 	syncDirs := strings.Split(account.SyncDir, ",")
 	for _, syncDir := range syncDirs {
 		t1 := time.Now()
@@ -688,7 +687,7 @@ func SaveAccount(account module.Account) string {
 		account.LastOpTime = time.Now().Format("2006-01-02 15:04:05")
 		DB.Model(&[]module.Account{}).
 			Select("Id", "Name", "Mode", "User", "Password", "RefreshToken", "AccessToken", "SiteId",
-				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host", "TransferDomain").
+				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host", "TransferDomain", "PathStyle").
 			Where("id=?", account.Id).
 			Updates(&account)
 	}

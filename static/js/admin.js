@@ -9,6 +9,7 @@ var clearCached = new mdui.Dialog("#cache_dialog");
 var cacheConfigd = new mdui.Dialog("#cache_config_dialog", {modal:true});
 var uploadConfigd = new mdui.Dialog("#upload_config_dialog", {modal:true});
 var modeSelect = new mdui.Select('#mode');
+var pathStyleSelect = new mdui.Select('#path_style');
 var cachePolicySelect = new mdui.Select('#cachePolicy');
 $(function () {
     if(typeof(laydate)!="undefined"){
@@ -122,13 +123,13 @@ $(".saveConfigBtn").on("click", function () {
 var accountStatus = 0;
 $("#saveAccountBtn").on("click", function () {
     var account = $("#accountForm").serializeObject();
-    if(!account.root_id){
+    /*if(!account.root_id){
         mdui.snackbar({
             message: "请输入根目录ID",
             timeout: 2000
         });
         return false;
-    }
+    }*/
     var df = $("#accountForm").find("input[name=down_transfer]").prop('checked');
     if(accountStatus == 1){
         return false;
@@ -174,6 +175,7 @@ function dynamicChgMode(mode){
         $("#SiteIdDiv").hide();
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
+        $("#S3PathDiv").hide();
     }else if (mode == "cloud189"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -188,6 +190,7 @@ function dynamicChgMode(mode){
         $("#password_label").text("密码");
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("-11");
+        $("#S3PathDiv").hide();
     }else if (mode == "teambition"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -216,6 +219,7 @@ function dynamicChgMode(mode){
         $("#password_label").text("密码");
         $("#accountForm").find("input[name=root_id]").val("");
         $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
     }else if (mode == "aliyundrive"){
         $("#RedirectUriDiv").hide();
         $("#ApiUrlDiv").hide();
@@ -227,6 +231,7 @@ function dynamicChgMode(mode){
         $("#aliQrCodeBtn").show();
         $("#accountForm").find("input[name=password]").attr("type", "password");
         $("#accountForm").find("input[name=root_id]").val("root");
+        $("#S3PathDiv").hide();
     }else if (mode == "onedrive"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
@@ -241,6 +246,8 @@ function dynamicChgMode(mode){
         $("#SiteIdDiv").show();
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
+        $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "bucket");
+        $("#S3PathDiv").hide();
     }else if (mode == "onedrive-cn"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
@@ -255,6 +262,8 @@ function dynamicChgMode(mode){
         $("#SiteIdDiv").show();
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
+        $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "https://mgaa.noki.workers.dev");
+        $("#S3PathDiv").hide();
     }else if (mode == "ftp"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -270,6 +279,7 @@ function dynamicChgMode(mode){
         $("#SiteIdDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
         $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
     }else if (mode == "webdav"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -285,6 +295,7 @@ function dynamicChgMode(mode){
         $("#SiteIdDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
         $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
     }else if (mode == "yun139"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -298,6 +309,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=password]").attr("type", "text");
         $("#accountForm").find("input[name=root_id]").val("00019700101000000001");
         $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
     }else if (mode == "googledrive"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
@@ -311,6 +323,26 @@ function dynamicChgMode(mode){
         $("#ApiUrlDiv").hide();
         $("#accountForm").find("input[name=root_id]").val("");
         $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
+    }else if (mode == "s3"){
+        $("#RedirectUriDiv").show();
+        $("#RefreshTokenDiv").hide();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#SiteIdDiv").show();
+        $("#site_label").text("Region（us-east-1）");
+        $("#user_label").text("用户ID");
+        $("#password_label").text("密钥");
+        $("#accountForm").find("input[name=password]").attr("type", "text");
+        $("#ApiUrlDiv").show();
+        $("#api_url_label").text("端点（Endpoint）");
+        $("#api_url").attr("placeholder", "https://s3.amazonaws.com");
+        $("#RedirectUriDiv").find("label").text("桶（Bucket）");
+        $("#accountForm").find("input[name=root_id]").val("");
+        $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").show();
+        $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "bucket");
     }
     diskd.handleUpdate();
 }
@@ -327,12 +359,14 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=root_id]").val("");
     $("#accountForm").find("input[name=site_id]").val("");
     $("#accountForm").find("select[name=mode]").val("native");
+    $("#accountForm").find("select[name=path_style]").val("Path");
     $("#accountForm").find("input[name=api_url]").val("");
     $("#accountForm").find("input[name=down_transfer]").prop("checked",false);
     $("#accountForm").find("input[name=transfer_domain]").val("");
     $("#accountForm").find("input[name=site_label]").val("");
     $("#accountForm").find("input[name=host]").val("");
     modeSelect.handleUpdate();
+    pathStyleSelect.handleUpdate();
     dynamicChgMode("native");
     mdui.updateTextFields();
     diskd.toggle();
@@ -359,6 +393,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=name]").val(account.name);
                 $("#accountForm").find("input[name=password]").val(account.password);
                 $("#accountForm").find("select[name=mode]").val(account.mode);
+                $("#accountForm").find("select[name=path_style]").val(account.path_style);
                 $("#accountForm").find("input[name=user]").val(account.user);
                 $("#accountForm").find("input[name=api_url]").val(account.api_url);
                 $("#accountForm").find("input[name=refresh_token]").val(account.refresh_token);
@@ -368,6 +403,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=site_id]").val(account.site_id);
                 $("#accountForm").find("input[name=host]").val(account.host);
                 modeSelect.handleUpdate();
+                pathStyleSelect.handleUpdate();
                 if(account.down_transfer == 1){
                     $("#accountForm").find("input[name=down_transfer]").prop("checked",true);
                 }else{

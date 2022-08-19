@@ -50,8 +50,34 @@
 					{{- if gt (len $.accounts) 1 }}
 					<ul class="mdui-menu" id="account-menu">
 						{{range $i, $a := $.accounts}}
+						{{$color := ""}}
+						{{- if eq $a.Mode "cloud189" }}
+						{{ $color = "cyan" }}
+						{{- else if eq $a.Mode "onedrive" }}
+						{{ $color = "blue-200" }}
+						{{- else if eq $a.Mode "onedrive" }}
+						{{ $color = "blue-200" }}
+						{{- else if eq $a.Mode "onedrive-cn" }}
+						{{ $color = "blue-200" }}
+						{{- else if eq $a.Mode "teambition" }}
+						{{ $color = "blue" }}
+						{{- else if eq $a.Mode "teambition-us" }}
+						{{ $color = "blue" }}
+						{{- else if eq $a.Mode "native" }}
+						{{ $color = "blue-grey" }}
+						{{- else if eq $a.Mode "aliyundrive" }}
+						{{ $color = "deep-purple-accent" }}
+						{{- else if eq $a.Mode "webdav" }}
+						{{ $color = "brown" }}
+						{{- else if eq $a.Mode "yun139" }}
+						{{ $color = "pink" }}
+						{{- else if eq $a.Mode "googledrive" }}
+						{{ $color = "amber" }}
+						{{- else if eq $a.Mode "s3" }}
+						{{ $color = "orange" }}
+						{{- end}}
 						<li class="mdui-menu-item">
-							<a href="/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq $a.Mode "cloud189"}}cyan{{else}}{{end}}{{if eq $a.Mode "onedrive"}}blue-200{{else}}{{end}}{{if eq $a.Mode "teambition"}}blue{{else}}{{end}}{{if eq $a.Mode "teambition-us"}}blue{{else}}{{end}}{{if eq $a.Mode "native"}}blue-grey{{else}}{{end}}{{if eq $a.Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>
+							<a href="/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{$color}}">face</i>{{.Name}}</a>
 						</li>
 						{{- end}}
 					</ul>

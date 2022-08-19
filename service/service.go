@@ -52,7 +52,6 @@ func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isVi
 			log.Infof("get file from api:%s", fullPath)
 			fns, isFile, err = GetFilesFromApi(ac, path, fullPath, "default", "null")
 			log.Infof("get file from api result:%d", len(fns))
-			log.Info(err)
 			fns = FilterHideFiles(fns)
 			cacheTime := time.Now().Format("2006-01-02 15:04:05")
 			if err == nil {
@@ -826,8 +825,11 @@ func DeleteFile(ac module.Account, path, fullPath string) error {
 func GetFileFromApi(ac module.Account, path, fullPath string) (module.FileNode, error) {
 	p, _ := pan.GetPan(ac.Mode)
 	fileId := GetFileIdByPath(ac, path, fullPath)
-	file, err := p.File(ac, fileId, fullPath)
-	return file, err
+	if fileId != "" || (fileId == "" && path == "/") {
+		file, err := p.File(ac, fileId, fullPath)
+		return file, err
+	}
+	return module.FileNode{}, nil
 }
 
 func File(ac module.Account, path, fullPath string) (module.FileNode, error) {
