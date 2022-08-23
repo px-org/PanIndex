@@ -681,7 +681,7 @@ func SaveAccount(account module.Account) string {
 		account.SyncCron = ""
 		account.LastOpTime = time.Now().Format("2006-01-02 15:04:05")
 		var seq int
-		DB.Table("account").Raw("select seq from account where 1=1 order by seq desc").First(&seq)
+		DB.Table("account").Raw("select seq from account where 1=1 order by seq desc limit 1").Take(&seq)
 		account.Seq = seq + 1
 		DB.Create(&account)
 	} else {
