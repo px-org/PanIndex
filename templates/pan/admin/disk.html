@@ -44,6 +44,7 @@
                 <th>文件总数</th>
                 <th>上一次更新</th>
                 <th>耗时</th>
+                <th>备注</th>
             </tr>
             </thead>
             <tbody id="items">
@@ -177,6 +178,7 @@
                     {{.TimeSpan}}
                     {{- end}}
                 </td>
+                <td>{{.Info}}</td>
             </tr>
             {{- end}}
             {{- end}}
@@ -282,6 +284,11 @@
             <input class="mdui-textfield-input" type="text" name="transfer_domain" placeholder="原域名|中转域名">
             <div class="mdui-textfield-helper">为空将在本机中转， 多个,分隔</div>
         </div>
+            <div class="mdui-textfield">
+                <i class="mdui-icon material-icons">info</i>
+                <label class="mdui-textfield-label">备注</label>
+                <textarea class="mdui-textfield-input" type="text" name="info"></textarea>
+            </div>
         </form>
     </div>
     <div class="mdui-dialog-actions">

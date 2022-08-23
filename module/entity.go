@@ -145,6 +145,7 @@ type Account struct {
 	ExpireTimeSpan int    `json:"expire_time_span" gorm:"default:1"` //缓存时间单位是小时
 	Host           string `json:"host"`                              //绑定host
 	PathStyle      string `json:"path_style"`                        //S3 PathStyle :Path, Virtual Hosting
+	Info           string `json:"info"`                              //备注
 }
 
 type Bypass struct {
