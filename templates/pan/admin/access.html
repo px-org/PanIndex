@@ -23,7 +23,7 @@
             </div>
         </div>
         <div class="mdui-textfield">
-            <label class="mdui-textfield-label">模式</label>
+            <label class="mdui-textfield-label">模式(重启生效)</label>
             <div class="mdui-row-md-4 mdui-row-sm-2" style="margin-left: 50px">
                 <label class="mdui-radio mdui-col">
                     <input type="radio" name="access" {{- if eq $.config.Access "0"}}checked="checked"{{- end}} value="0" />
@@ -43,7 +43,7 @@
                 <label class="mdui-radio mdui-col">
                     <input type="radio" name="access" {{- if eq $.config.Access "3"}}checked="checked"{{- end}} value="3" />
                     <i class="mdui-radio-icon"></i>
-                    登录(需重启)
+                    登录
                 </label>
             </div>
         </div>

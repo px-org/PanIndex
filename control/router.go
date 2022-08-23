@@ -87,8 +87,22 @@ func SetRouters(r *gin.Engine) {
 		dav.Handle("MOVE", "/*path", ServeWebDAV)
 	}
 	if module.GloablConfig.Access == "3" {
-		r.NoRoute(middleware.Check, jwt.MiddlewareFunc(), index)
+		r.NoRoute(middleware.Check, jwt.MiddlewareFunc(), func(c *gin.Context) {
+			claim, err := jwt.CheckIfTokenExpire(c)
+			isAdminLogin := false
+			if err != nil && claim["id"] == module.GloablConfig.AdminUser {
+				isAdminLogin = true
+			}
+			index(c, isAdminLogin)
+		})
 	} else {
-		r.NoRoute(middleware.Check, index)
+		r.NoRoute(middleware.Check, func(c *gin.Context) {
+			claim, err := jwt.CheckIfTokenExpire(c)
+			isAdminLogin := false
+			if err == nil && claim["id"] == module.GloablConfig.AdminUser {
+				isAdminLogin = true
+			}
+			index(c, isAdminLogin)
+		})
 	}
 }
