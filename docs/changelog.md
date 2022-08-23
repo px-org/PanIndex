@@ -1,4 +1,4 @@
-### [v3.0.9](https://github.com/libsgh/PanIndex/compare/v3.0.8...v3.0.9)
+### [v3.0.9](https://github.com/libsgh/PanIndex/compare/v3.0.8...v3.0.9) (2022-08-23)
 
 ##### Bug Fixes
 
