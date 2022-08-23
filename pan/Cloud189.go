@@ -233,7 +233,7 @@ func (c Cloud189) File(account module.Account, fileId, path string) (module.File
 	fn := module.FileNode{}
 	if fileId == "-11" {
 		return module.FileNode{
-			FileId:     "root",
+			FileId:     "-11",
 			FileName:   "root",
 			FileSize:   0,
 			IsFolder:   true,

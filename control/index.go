@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func index(c *gin.Context) {
+func index(c *gin.Context, isAdminLogin bool) {
 	var fns []module.FileNode
 	var isFile bool
 	tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, util.GetCurrentTheme(module.GloablConfig.Theme))
@@ -34,7 +34,7 @@ func index(c *gin.Context) {
 	status := http.StatusOK
 	if isSearch {
 		fns = service.Search(searchKey)
-		t := Redirect404(c, false)
+		t := Redirect404(c, false, isAdminLogin)
 		if t != "" {
 			tmpFile = t
 		}
@@ -45,7 +45,7 @@ func index(c *gin.Context) {
 		} else {
 			fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortColumn, sortOrder, isView)
 		}
-		t := Redirect404(c, isFile)
+		t := Redirect404(c, isFile, isAdminLogin)
 		if t != "" {
 			tmpFile = t
 		}
@@ -61,30 +61,31 @@ func index(c *gin.Context) {
 	}
 	hasParent, parentPath := service.HasParent(fullPath)
 	c.HTML(status, tmpFile, gin.H{
-		"title":        CurrentTitle(ac, module.GloablConfig, bypassName),
-		"path":         path,
-		"full_path":    fullPath,
-		"account":      ac,
-		"accounts":     service.GetAccounts(),
-		"config":       module.GloablConfig,
-		"pwd_err_msg":  c.GetString("pwd_err_msg"),
-		"has_pwd":      c.GetBool("has_pwd"),
-		"pwd_path":     pwdPath,
-		"has_parent":   hasParent,
-		"parent_path":  parentPath,
-		"account_path": CurrentAccountPath(ac.Name, bypassName),
-		"search_key":   searchKey,
-		"pre_paths":    util.GetPrePath(fullPath),
-		"fns":          fns,
-		"theme":        theme,
-		"version":      module.VERSION,
-		"layout":       layout,
-		"last_file":    lastFile,
-		"next_file":    nextFile,
+		"title":          CurrentTitle(ac, module.GloablConfig, bypassName),
+		"path":           path,
+		"full_path":      fullPath,
+		"account":        ac,
+		"accounts":       service.GetAccounts(),
+		"config":         module.GloablConfig,
+		"pwd_err_msg":    c.GetString("pwd_err_msg"),
+		"has_pwd":        c.GetBool("has_pwd"),
+		"pwd_path":       pwdPath,
+		"has_parent":     hasParent,
+		"parent_path":    parentPath,
+		"account_path":   CurrentAccountPath(ac.Name, bypassName),
+		"search_key":     searchKey,
+		"pre_paths":      util.GetPrePath(fullPath),
+		"fns":            fns,
+		"theme":          theme,
+		"version":        module.VERSION,
+		"layout":         layout,
+		"last_file":      lastFile,
+		"next_file":      nextFile,
+		"is_admin_login": isAdminLogin,
 	})
 }
 
-func Redirect404(c *gin.Context, flag bool) string {
+func Redirect404(c *gin.Context, flag bool, isAdminLogin bool) string {
 	_, isView := c.GetQuery("v")
 	_, isSearch := c.GetQuery("search")
 	t := "templates/pan/admin/404.html"
@@ -93,11 +94,11 @@ func Redirect404(c *gin.Context, flag bool) string {
 		c.Next()
 	} else if module.GloablConfig.Access == "1" {
 		//仅直链
-		if isView || isSearch || !flag {
+		if !isAdminLogin && (isView || isSearch || !flag) {
 			c.Abort()
 			return t
 		}
-	} else if module.GloablConfig.Access == "2" {
+	} else if !isAdminLogin && (module.GloablConfig.Access == "2") {
 		//直链 + 预览
 		if isSearch || !flag {
 			c.Abort()

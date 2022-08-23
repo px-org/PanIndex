@@ -18,9 +18,11 @@ import (
 
 var DB *gorm.DB
 var NewPassword = ""
+var DB_TYPE = "sqlite"
 var InitConfigItems = []module.ConfigItem{
 	{"site_name", "", "common"},
 	{"account_choose", "default", "common"},
+	{"admin_user", "admin", "common"},
 	{"admin_password", "PanIndex", "common"},
 	{"s_column", "default", "common"},
 	{"s_order", "asc", "common"},
@@ -197,7 +199,7 @@ func GetPwdFromPath(path string) ([]string, string, bool) {
 	filePath := ""
 	now := time.Now().Unix()
 	likeSql := ""
-	if _, ok := GetDb("sqlite"); ok {
+	if DB_TYPE == "sqlite" {
 		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE file_path || '%' AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
 	} else if _, ok := GetDb("postgres"); ok {
 		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE concat_ws(file_path, '%') AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
@@ -369,7 +371,6 @@ func SyncAccountStatus(account module.Account) {
 var SYNC_STATUS = 0
 
 func SyncFilesCache(account module.Account) {
-	log.Info(account.SyncDir)
 	syncDirs := strings.Split(account.SyncDir, ",")
 	for _, syncDir := range syncDirs {
 		t1 := time.Now()
@@ -681,14 +682,14 @@ func SaveAccount(account module.Account) string {
 		account.SyncCron = ""
 		account.LastOpTime = time.Now().Format("2006-01-02 15:04:05")
 		var seq int
-		DB.Table("account").Raw("select seq from account where 1=1 order by seq desc").First(&seq)
+		DB.Table("account").Raw("select seq from account where 1=1 order by seq desc limit 1").Take(&seq)
 		account.Seq = seq + 1
 		DB.Create(&account)
 	} else {
 		account.LastOpTime = time.Now().Format("2006-01-02 15:04:05")
 		DB.Model(&[]module.Account{}).
 			Select("Id", "Name", "Mode", "User", "Password", "RefreshToken", "AccessToken", "SiteId",
-				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host", "TransferDomain").
+				"RedirectUri", "ApiUrl", "RootId", "LastOpTime", "DownTransfer", "TransferUrl", "Host", "TransferDomain", "PathStyle", "Info").
 			Where("id=?", account.Id).
 			Updates(&account)
 	}
@@ -768,4 +769,10 @@ func FileNodeAuth(fn *module.FileNode, hide, hasPwd int) {
 			fn.HasPwd = 0
 		}
 	}
+}
+
+func SelectAccountsById(ids []string) []module.Account {
+	var accounts []module.Account
+	DB.Where("id IN ?", ids).Find(&accounts)
+	return accounts
 }

@@ -1,19 +1,32 @@
-### [v3.0.9](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (Unreleased)
+### [v3.0.9](https://github.com/libsgh/PanIndex/compare/v3.0.8...v3.0.9)
 
 ##### Bug Fixes
 
 - 修复文件扩展名为大写时文件类型识别错误 by [wshon](https://github.com/wshon)
-- 更新播放器artplayer
 - 修复跨域访问错误
-- 提高webdav访问兼容性
+- 新增网盘时排序错误
+- 批量缓存无法并发执行
+
+##### Improve
+- 提高WebDav访问兼容性
+- 优化暗黑主题显示
+- 更新播放器artplayer
 
 ##### Features
 
 - [配置管理]增加配置-访问控制
+  - 公开：自由访问任何未加密、未隐藏的目录、文件
+  - 仅直链：仅可访问文件下载直链，访问目录会返回404，登录后可显示文件列表
+  - 直链+预览：可访问文件下载直链、及文件预览页面，访问目录也会返回404，登录后可显示文件列表
+  - 登录：访问任意文件、目录均需要登录，登录后可以正常访问目录、文件
+
+- [网盘新增]S3、PikPak
 
 - [配置管理]管理接口刷新token
 
 - [配置管理]优化密码配置，有效期、备注、随机密码、导入、生成密码文件短链
+
+- [配置管理]网盘挂载新增备注字段
 
 - 下载直链支持密码参数，可以直接下载密码文件，http://localhost:5238/a/b.txt?pwd=1234
 
@@ -22,6 +35,9 @@
 - 增加404页面
 
 - 基于dev分支的自动构建版本，[nightly](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev)
+
+- 基于dev分支的docker镜像：iicm/pan-index:dev
+
 
 ### [v3.0.8](https://github.com/libsgh/PanIndex/compare/v3.0.7...v3.0.8) (2022-05-08)
 

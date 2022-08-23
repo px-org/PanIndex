@@ -44,16 +44,18 @@ func JWTMiddlewar() (*jwt.GinJWTMiddleware, error) {
 				return "", jwt.ErrMissingLoginValues
 			}
 			password := loginVals.Password
-			if password == module.GloablConfig.AdminPassword {
+			user := loginVals.User
+			if user == module.GloablConfig.AdminUser &&
+				password == module.GloablConfig.AdminPassword {
 				return &User{
-					UserName: "admin",
+					UserName: module.GloablConfig.AdminUser,
 				}, nil
 			}
 
 			return nil, errors.New("密码错误！请重试")
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			if v, ok := data.(*User); ok && v.UserName == "admin" {
+			if v, ok := data.(*User); ok && v.UserName == module.GloablConfig.AdminUser {
 				return true
 			}
 			return false
@@ -69,11 +71,14 @@ func JWTMiddlewar() (*jwt.GinJWTMiddleware, error) {
 			}
 		},
 		LogoutResponse: func(c *gin.Context, code int) {
+			ThemeCheck(c)
+			theme := c.GetString("theme")
 			c.HTML(http.StatusOK, "templates/pan/admin/login.html", gin.H{
 				"error":        true,
 				"msg":          "退出成功",
 				"redirect_url": "login",
 				"config":       module.GloablConfig,
+				"theme":        theme,
 			})
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
@@ -111,7 +116,6 @@ func JWTMiddlewar() (*jwt.GinJWTMiddleware, error) {
 		TimeFunc: time.Now,
 	})
 	errInit := authMiddleware.MiddlewareInit()
-
 	if errInit != nil {
 		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
 	}
@@ -123,6 +127,7 @@ func JWTMiddlewar() (*jwt.GinJWTMiddleware, error) {
 }
 
 type Login struct {
+	User     string `form:"user" json:"user" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
 }
 type User struct {

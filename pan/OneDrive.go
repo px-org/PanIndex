@@ -259,11 +259,11 @@ func (o OneDrive) Copy(account module.Account, fileId, targetFileId string, over
 	if err != nil {
 		log.Errorln(err)
 	}
-	log.Debug("File move: ", resp.String())
+	log.Debug("File copy: ", resp.String())
 	if resp.StatusCode() == http.StatusOK {
-		return true, "File move success", nil
+		return true, "File copy success", nil
 	}
-	return false, "File move error", err
+	return false, "File copy error", err
 }
 
 func (o OneDrive) GetDownloadUrl(account module.Account, fileId string) (string, error) {

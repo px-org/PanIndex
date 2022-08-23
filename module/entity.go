@@ -55,6 +55,7 @@ type Config struct {
 	SiteName         string            `json:"site_name"`
 	AccountChoose    string            `json:"account_choose"`
 	Theme            string            `json:"theme"`
+	AdminUser        string            `json:"admin_user""`
 	AdminPassword    string            `json:"admin_password""`
 	OnlyReferrer     string            `json:"only_referrer"`
 	EnableSafetyLink string            `json:"enable_safety_link"`
@@ -143,6 +144,8 @@ type Account struct {
 	CachePolicy    string `json:"cache_policy" gorm:"default:nc"`    //缓存策略：nc（No Cache）,mc（Memory Cache）, dc（Database Cache）
 	ExpireTimeSpan int    `json:"expire_time_span" gorm:"default:1"` //缓存时间单位是小时
 	Host           string `json:"host"`                              //绑定host
+	PathStyle      string `json:"path_style"`                        //S3 PathStyle :Path, Virtual Hosting
+	Info           string `json:"info"`                              //备注
 }
 
 type Bypass struct {
@@ -273,4 +276,12 @@ type UploadInfo struct {
 type Teambition struct {
 	GloablRootId    string
 	GloablProjectId string
+}
+
+type PikpakToken struct {
+	TokenType    string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	Sub          string `json:"sub"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
 }

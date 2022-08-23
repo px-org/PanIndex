@@ -26,7 +26,7 @@
             <a id="refreshCacheBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新缓存'}">
                 <i class="mdui-icon material-icons">cached</i>
             </a>
-            <a id="refreshAllCacheBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '刷新全部缓存'}">
+            <a id="refreshBatchCacheBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '批量刷新缓存'}">
                 <i class="mdui-icon material-icons">clear_all</i>
             </a>
             <a id="delDiskBtn" href="javascript:void(0);" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '删除'}">
@@ -44,6 +44,7 @@
                 <th>文件总数</th>
                 <th>上一次更新</th>
                 <th>耗时</th>
+                <th>备注</th>
             </tr>
             </thead>
             <tbody id="items">
@@ -74,6 +75,10 @@
                             <span class="mdui-chip-icon mdui-color-pink"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "googledrive"}}
                             <span class="mdui-chip-icon mdui-color-amber"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "s3"}}
+                            <span class="mdui-chip-icon mdui-color-orange"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "pikpak"}}
+                            <span class="mdui-chip-icon mdui-color-indigo"><i class="mdui-icon material-icons">face</i></span>
                         {{- else}}
                         {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -102,6 +107,10 @@
                     和彩云
                 {{- else if eq .Mode "googledrive"}}
                     谷歌云盘
+                {{- else if eq .Mode "s3"}}
+                    S3
+                {{- else if eq .Mode "pikpak"}}
+                    PikPak
                 {{- else}}
                 {{- end}}
                 </td>
@@ -169,6 +178,7 @@
                     {{.TimeSpan}}
                     {{- end}}
                 </td>
+                <td>{{.Info}}</td>
             </tr>
             {{- end}}
             {{- end}}
@@ -201,6 +211,8 @@
                 <option value="onedrive">OneDrive</option>
                 <option value="onedrive-cn">OneDrive世纪互联</option>
                 <option value="googledrive">GoogleDrive</option>
+                <option value="s3">S3</option>
+                <option value="pikpak">PikPak</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
@@ -240,10 +252,17 @@
             <label class="mdui-textfield-label" id="site_label">网站ID</label>
             <input class="mdui-textfield-input" type="text" name="site_id">
         </div>
+        <div id="S3PathDiv">
+            <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">S3ForcePathStyle</label>
+            <select id="path_style" name="path_style" style="margin-left: 50px">
+                <option value="Path" selected>path-style bucket</option>
+                <option value="VirtualHosting">virtual hosted bucket</option>
+            </select>
+        </div>
         <div class="mdui-textfield mdui-textfield-has-bottom mdui-textfield-floating-label">
             <i class="mdui-icon material-icons">folder_open</i>
             <label class="mdui-textfield-label">根目录ID(路径)</label>
-            <input class="mdui-textfield-input" type="text" name="root_id" required>
+            <input class="mdui-textfield-input" type="text" name="root_id">
             <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
         </div>
         <div class="mdui-textfield mdui-textfield-has-bottom">
@@ -265,6 +284,11 @@
             <input class="mdui-textfield-input" type="text" name="transfer_domain" placeholder="原域名|中转域名">
             <div class="mdui-textfield-helper">为空将在本机中转， 多个,分隔</div>
         </div>
+            <div class="mdui-textfield">
+                <i class="mdui-icon material-icons">info</i>
+                <label class="mdui-textfield-label">备注</label>
+                <textarea class="mdui-textfield-input" type="text" name="info"></textarea>
+            </div>
         </form>
     </div>
     <div class="mdui-dialog-actions">

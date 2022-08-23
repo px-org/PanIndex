@@ -9,17 +9,21 @@
 - [x] 防盗链
 - [x] 短链、分享
 - [x] 访问控制
+- [x] 分流
+- [x] WebDav
 
 ## 目前支持的网盘
 - 本地目录
-- 天翼云网盘
-- Teambition（国内、国外）
-- 阿里云盘
+- [天翼云网盘](https://cloud.189.cn/)
+- [Teambition（国内、国外）](https://www.teambition.com/)
+- [阿里云盘](https://www.aliyundrive.com/)
 - OneDrive（国际版、世纪互联）
-- 和彩云
-- 谷歌云盘
+- [和彩云](https://yun.139.com/)
+- [谷歌云盘](https://drive.google.com/)
 - WebDav
 - FTP
+- S3（对象存储）
+- [PikPak](https://mypikpak.com "https://mypikpak.com")
 
 ## 示例
 - [在线演示](https://t1.noki.icu "https://t1.noki.icu")

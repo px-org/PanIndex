@@ -52,7 +52,6 @@ func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isVi
 			log.Infof("get file from api:%s", fullPath)
 			fns, isFile, err = GetFilesFromApi(ac, path, fullPath, "default", "null")
 			log.Infof("get file from api result:%d", len(fns))
-			log.Info(err)
 			fns = FilterHideFiles(fns)
 			cacheTime := time.Now().Format("2006-01-02 15:04:05")
 			if err == nil {
@@ -694,7 +693,7 @@ func UpdateCache(account module.Account, cachePath string) string {
 				account.SyncDir = cachePath
 				account.SyncChild = 0
 				dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-				if _, ok := dao.GetDb("sqlite"); ok {
+				if dao.DB_TYPE == "sqlite" {
 					dao.SYNC_STATUS = 1
 				}
 				go dao.SyncFilesCache(account)
@@ -706,13 +705,15 @@ func UpdateCache(account module.Account, cachePath string) string {
 	return msg
 }
 
-func UpdateAllCache() string {
+func BatchUpdateCache(ids []string) string {
 	msg := "缓存清理成功"
 	if dao.SYNC_STATUS == 1 {
 		msg = "缓存任务正在执行，请稍后重试！"
 	} else {
 		go func() {
-			for _, account := range module.GloablConfig.Accounts {
+			accounts := dao.SelectAccountsById(ids)
+			for _, account := range accounts {
+
 				bypass := GetBypassByAccountId(account.Id)
 				cachePath := "/" + account.Name
 				if bypass.Name != "" {
@@ -725,7 +726,7 @@ func UpdateAllCache() string {
 					account.SyncDir = cachePath
 					account.SyncChild = 0
 					dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-					if _, ok := dao.GetDb("sqlite"); ok {
+					if dao.DB_TYPE == "sqlite" {
 						dao.InitGlobalConfig()
 						dao.SyncFilesCache(account)
 					} else {
@@ -826,8 +827,11 @@ func DeleteFile(ac module.Account, path, fullPath string) error {
 func GetFileFromApi(ac module.Account, path, fullPath string) (module.FileNode, error) {
 	p, _ := pan.GetPan(ac.Mode)
 	fileId := GetFileIdByPath(ac, path, fullPath)
-	file, err := p.File(ac, fileId, fullPath)
-	return file, err
+	if fileId != "" || (fileId == "" && path == "/") {
+		file, err := p.File(ac, fileId, fullPath)
+		return file, err
+	}
+	return module.FileNode{}, nil
 }
 
 func File(ac module.Account, path, fullPath string) (module.FileNode, error) {

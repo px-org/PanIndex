@@ -28,12 +28,16 @@
                 <label class="mdui-radio mdui-col">
                     <input type="radio" name="account_choose" {{if eq $.config.AccountChoose "display" }}checked="checked"{{end}} value="display" />
                     <i class="mdui-radio-icon"></i>
-                    全部账号
+                    全部账号（WebDav必选）
                 </label>
             </div>
         </div>
         <div class="mdui-textfield">
-            <label class="mdui-textfield-label">后台登录密码</label>
+            <label class="mdui-textfield-label">登录账号</label>
+            <input class="mdui-textfield-input" type="text" name="admin_user" value="{{$.config.AdminUser}}" placeholder="默认账号：admin" required />
+        </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">登录密码</label>
             <input class="mdui-textfield-input" type="password" name="admin_password" value="{{$.config.AdminPassword}}" placeholder="默认密码：PanIndex" required />
             <div class="mdui-textfield-helper mdui-text-color-purple">如果是第一次运行，请务必修改默认密码！</div>
         </div>

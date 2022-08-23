@@ -276,12 +276,16 @@ environment=PORT="5239",LOG_LEVEL="debug"
 ### Heroku
 [![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-h.git)
 
-https://github.com/libsgh/PanIndex-heroku
+https://github.com/libsgh/PanIndex-h
 ### Railway
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/RYVkB4?referralCode=W9nIBo)
 
 https://github.com/libsgh/PanIndex-railway
-### Okteto
+### ~~Okteto~~
 [![Develop on Okteto](https://okteto.com/develop-okteto.svg)](https://cloud.okteto.com/deploy?repository=https://github.com/libsgh/PanIndex-okteto&branch=main)
+> 可能导致封号，暂时还不清楚封号原因，可能有人用PanIndex做违反用户协议的事情受到了牵连，如果你已经封号的话可以联系下客服，概率解封。
 
 https://github.com/libsgh/PanIndex-okteto
+### koyeb
+> koyeb账号申请并不容易，需要联系官方的人手动给你审核，不然就是等几个月...koyeb还有个最大问题是：数据配置无法保留，会被重置，除非连接外部数据库。
+基于以上，如果你仍想部署的话，直接使用Docker镜像配置好环境变量即可，不需要特殊部署脚本。

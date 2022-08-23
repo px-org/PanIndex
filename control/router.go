@@ -25,31 +25,31 @@ func SetRouters(r *gin.Engine) {
 	adminApi := api.Group(module.GloablConfig.AdminPath, jwt.MiddlewareFunc())
 	{
 		adminApi.GET("/refresh_token", jwt.RefreshHandler)
-		adminApi.POST("/config/upload", UploadConfig)         //upload config
-		adminApi.POST("/config", SaveConfig)                  //save config
-		adminApi.GET("/config", GetConfig)                    //get config info
-		adminApi.GET("/account", GetAccount)                  //get account info
-		adminApi.POST("/account", SaveAccount)                //save account info
-		adminApi.DELETE("/accounts", DeleteAccounts)          //del accounts
-		adminApi.POST("/accounts/sort", SortAccounts)         //sort accounts
-		adminApi.POST("/cache/update", UpdateCache)           //update cache
-		adminApi.GET("/cache/update/all", UpdateAllCache)     //update all cache
-		adminApi.POST("/refresh/login", RefreshLogin)         //refresh login status
-		adminApi.POST("/upload", Upload)                      //simple upload file
-		adminApi.POST("/hide/file", Hide)                     //add hide file
-		adminApi.DELETE("/hide/file", DelHide)                //del hide file by path
-		adminApi.POST("/password/file", PwdFile)              //add pwd file
-		adminApi.DELETE("/password/file", DelPwdFile)         //del pwd file by path
-		adminApi.POST("/password/file/upload", UploadPwdFile) //upload pwd file
-		adminApi.POST("/password/file/share/info", ShareInfo) //upload pwd file
-		adminApi.POST("/bypass", Bypass)                      //save bypass config
-		adminApi.DELETE("/bypass", DelBypass)                 //del bypass config
-		adminApi.GET("/bypass", GetBypass)                    //get bypass by account
-		adminApi.GET("/cache", GetCache)                      //get file cache data
-		adminApi.POST("/cache/clear", CacheClear)             //clear file cache
-		adminApi.POST("/cache/config", CacheConfig)           //save cache config
-		adminApi.GET("/ali/qrcode", AliQrcode)                //ali qrcode
-		adminApi.POST("/ali/qrcode/check", AliQrcodeCheck)    //ali qrcode check
+		adminApi.POST("/config/upload", UploadConfig)          //upload config
+		adminApi.POST("/config", SaveConfig)                   //save config
+		adminApi.GET("/config", GetConfig)                     //get config info
+		adminApi.GET("/account", GetAccount)                   //get account info
+		adminApi.POST("/account", SaveAccount)                 //save account info
+		adminApi.DELETE("/accounts", DeleteAccounts)           //del accounts
+		adminApi.POST("/accounts/sort", SortAccounts)          //sort accounts
+		adminApi.POST("/cache/update", UpdateCache)            //update cache
+		adminApi.POST("/cache/update/batch", BatchUpdateCache) //batch update cache
+		adminApi.POST("/refresh/login", RefreshLogin)          //refresh login status
+		adminApi.POST("/upload", Upload)                       //simple upload file
+		adminApi.POST("/hide/file", Hide)                      //add hide file
+		adminApi.DELETE("/hide/file", DelHide)                 //del hide file by path
+		adminApi.POST("/password/file", PwdFile)               //add pwd file
+		adminApi.DELETE("/password/file", DelPwdFile)          //del pwd file by path
+		adminApi.POST("/password/file/upload", UploadPwdFile)  //upload pwd file
+		adminApi.POST("/password/file/share/info", ShareInfo)  //upload pwd file
+		adminApi.POST("/bypass", Bypass)                       //save bypass config
+		adminApi.DELETE("/bypass", DelBypass)                  //del bypass config
+		adminApi.GET("/bypass", GetBypass)                     //get bypass by account
+		adminApi.GET("/cache", GetCache)                       //get file cache data
+		adminApi.POST("/cache/clear", CacheClear)              //clear file cache
+		adminApi.POST("/cache/config", CacheConfig)            //save cache config
+		adminApi.GET("/ali/qrcode", AliQrcode)                 //ali qrcode
+		adminApi.POST("/ali/qrcode/check", AliQrcodeCheck)     //ali qrcode check
 	}
 
 	admin := r.Group(module.GloablConfig.AdminPath)
@@ -87,8 +87,22 @@ func SetRouters(r *gin.Engine) {
 		dav.Handle("MOVE", "/*path", ServeWebDAV)
 	}
 	if module.GloablConfig.Access == "3" {
-		r.NoRoute(middleware.Check, jwt.MiddlewareFunc(), index)
+		r.NoRoute(middleware.Check, jwt.MiddlewareFunc(), func(c *gin.Context) {
+			claim, err := jwt.CheckIfTokenExpire(c)
+			isAdminLogin := false
+			if err != nil && claim["id"] == module.GloablConfig.AdminUser {
+				isAdminLogin = true
+			}
+			index(c, isAdminLogin)
+		})
 	} else {
-		r.NoRoute(middleware.Check, index)
+		r.NoRoute(middleware.Check, func(c *gin.Context) {
+			claim, err := jwt.CheckIfTokenExpire(c)
+			isAdminLogin := false
+			if err == nil && claim["id"] == module.GloablConfig.AdminUser {
+				isAdminLogin = true
+			}
+			index(c, isAdminLogin)
+		})
 	}
 }
