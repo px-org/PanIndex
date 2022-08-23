@@ -18,6 +18,7 @@ import (
 
 var DB *gorm.DB
 var NewPassword = ""
+var DB_TYPE = "sqlite"
 var InitConfigItems = []module.ConfigItem{
 	{"site_name", "", "common"},
 	{"account_choose", "default", "common"},
@@ -198,7 +199,7 @@ func GetPwdFromPath(path string) ([]string, string, bool) {
 	filePath := ""
 	now := time.Now().Unix()
 	likeSql := ""
-	if _, ok := GetDb("sqlite"); ok {
+	if DB_TYPE == "sqlite" {
 		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE file_path || '%' AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
 	} else if _, ok := GetDb("postgres"); ok {
 		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE concat_ws(file_path, '%') AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
@@ -768,4 +769,10 @@ func FileNodeAuth(fn *module.FileNode, hide, hasPwd int) {
 			fn.HasPwd = 0
 		}
 	}
+}
+
+func SelectAccountsById(ids []string) []module.Account {
+	var accounts []module.Account
+	DB.Where("id IN ?", ids).Find(&accounts)
+	return accounts
 }

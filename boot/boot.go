@@ -100,6 +100,7 @@ func InitDb(config BootConfig) {
 	if config.Dsn != "" {
 		dsn = config.Dsn
 	}
+	dao.DB_TYPE = driver
 	d, _ := dao.GetDb(driver)
 	d.CreateDb(dsn)
 }

@@ -693,7 +693,7 @@ func UpdateCache(account module.Account, cachePath string) string {
 				account.SyncDir = cachePath
 				account.SyncChild = 0
 				dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-				if _, ok := dao.GetDb("sqlite"); ok {
+				if dao.DB_TYPE == "sqlite" {
 					dao.SYNC_STATUS = 1
 				}
 				go dao.SyncFilesCache(account)
@@ -705,13 +705,15 @@ func UpdateCache(account module.Account, cachePath string) string {
 	return msg
 }
 
-func UpdateAllCache() string {
+func BatchUpdateCache(ids []string) string {
 	msg := "缓存清理成功"
 	if dao.SYNC_STATUS == 1 {
 		msg = "缓存任务正在执行，请稍后重试！"
 	} else {
 		go func() {
-			for _, account := range module.GloablConfig.Accounts {
+			accounts := dao.SelectAccountsById(ids)
+			for _, account := range accounts {
+
 				bypass := GetBypassByAccountId(account.Id)
 				cachePath := "/" + account.Name
 				if bypass.Name != "" {
@@ -724,7 +726,7 @@ func UpdateAllCache() string {
 					account.SyncDir = cachePath
 					account.SyncChild = 0
 					dao.DB.Table("account").Where("id=?", account.Id).UpdateColumn("status", -1)
-					if _, ok := dao.GetDb("sqlite"); ok {
+					if dao.DB_TYPE == "sqlite" {
 						dao.InitGlobalConfig()
 						dao.SyncFilesCache(account)
 					} else {

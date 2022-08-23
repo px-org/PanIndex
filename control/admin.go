@@ -92,8 +92,10 @@ func UpdateCache(c *gin.Context) {
 }
 
 // admin update all cache
-func UpdateAllCache(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": service.UpdateAllCache()})
+func BatchUpdateCache(c *gin.Context) {
+	ids := []string{}
+	c.BindJSON(&ids)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": service.BatchUpdateCache(ids)})
 }
 
 // admin refresh login status
