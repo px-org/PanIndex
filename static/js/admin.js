@@ -379,6 +379,7 @@ $("#addDiskBtn").on('click', function (ev){
     $("#accountForm").find("input[name=transfer_domain]").val("");
     $("#accountForm").find("input[name=site_label]").val("");
     $("#accountForm").find("input[name=host]").val("");
+    $("#accountForm").find("textarea[name=info]").val("");
     modeSelect.handleUpdate();
     pathStyleSelect.handleUpdate();
     dynamicChgMode("native");
@@ -416,6 +417,7 @@ $("#updateDiskBtn").on('click', function (ev){
                 $("#accountForm").find("input[name=transfer_domain]").val(account.transfer_domain);
                 $("#accountForm").find("input[name=site_id]").val(account.site_id);
                 $("#accountForm").find("input[name=host]").val(account.host);
+                $("#accountForm").find("textarea[name=info]").val(account.info);
                 modeSelect.handleUpdate();
                 pathStyleSelect.handleUpdate();
                 if(account.down_transfer == 1){

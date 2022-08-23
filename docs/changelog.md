@@ -1,9 +1,11 @@
-### [v3.0.9](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (20220823-Unreleased)
+### [v3.0.9](https://github.com/libsgh/PanIndex/compare/v3.0.8...v3.0.9)
 
 ##### Bug Fixes
 
 - 修复文件扩展名为大写时文件类型识别错误 by [wshon](https://github.com/wshon)
 - 修复跨域访问错误
+- 新增网盘时排序错误
+- 批量缓存无法并发执行
 
 ##### Improve
 - 提高WebDav访问兼容性
@@ -19,9 +21,12 @@
   - 登录：访问任意文件、目录均需要登录，登录后可以正常访问目录、文件
 
 - [网盘新增]S3、PikPak
+
 - [配置管理]管理接口刷新token
 
 - [配置管理]优化密码配置，有效期、备注、随机密码、导入、生成密码文件短链
+
+- [配置管理]网盘挂载新增备注字段
 
 - 下载直链支持密码参数，可以直接下载密码文件，http://localhost:5238/a/b.txt?pwd=1234
 
