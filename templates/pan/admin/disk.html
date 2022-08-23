@@ -76,6 +76,8 @@
                             <span class="mdui-chip-icon mdui-color-amber"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "s3"}}
                             <span class="mdui-chip-icon mdui-color-orange"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "pikpak"}}
+                            <span class="mdui-chip-icon mdui-color-indigo"><i class="mdui-icon material-icons">face</i></span>
                         {{- else}}
                         {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -106,6 +108,8 @@
                     谷歌云盘
                 {{- else if eq .Mode "s3"}}
                     S3
+                {{- else if eq .Mode "pikpak"}}
+                    PikPak
                 {{- else}}
                 {{- end}}
                 </td>
@@ -206,6 +210,7 @@
                 <option value="onedrive-cn">OneDrive世纪互联</option>
                 <option value="googledrive">GoogleDrive</option>
                 <option value="s3">S3</option>
+                <option value="pikpak">PikPak</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">

@@ -275,3 +275,11 @@ type Teambition struct {
 	GloablRootId    string
 	GloablProjectId string
 }
+
+type PikpakToken struct {
+	TokenType    string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	Sub          string `json:"sub"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+}

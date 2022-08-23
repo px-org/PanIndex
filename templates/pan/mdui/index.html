@@ -75,6 +75,8 @@
 						{{ $color = "amber" }}
 						{{- else if eq $a.Mode "s3" }}
 						{{ $color = "orange" }}
+						{{- else if eq $a.Mode "pikpak" }}
+						{{ $color = "indigo" }}
 						{{- end}}
 						<li class="mdui-menu-item">
 							<a href="/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{$color}}">face</i>{{.Name}}</a>

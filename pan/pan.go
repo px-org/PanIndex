@@ -60,5 +60,7 @@ func RemoveLoginAccount(id string) (ok bool) {
 	delete(TeambitionSessions, id)
 	delete(CLoud189s, id)
 	delete(GoogleDrives, id)
+	delete(S3s, id)
+	delete(Pikpaks, id)
 	return true
 }

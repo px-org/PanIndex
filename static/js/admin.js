@@ -343,6 +343,20 @@ function dynamicChgMode(mode){
         $("#aliQrCodeBtn").hide();
         $("#S3PathDiv").show();
         $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "bucket");
+    }else if (mode == "pikpak"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#SiteIdDiv").hide();
+        $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
+        $("#password_label").text("密码");
+        $("#aliQrCodeBtn").hide();
+        $("#accountForm").find("input[name=root_id]").val("");
+        $("#S3PathDiv").hide();
     }
     diskd.handleUpdate();
 }
