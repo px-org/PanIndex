@@ -21,6 +21,7 @@ var NewPassword = ""
 var InitConfigItems = []module.ConfigItem{
 	{"site_name", "", "common"},
 	{"account_choose", "default", "common"},
+	{"admin_user", "admin", "common"},
 	{"admin_password", "PanIndex", "common"},
 	{"s_column", "default", "common"},
 	{"s_order", "asc", "common"},
