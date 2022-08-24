@@ -1,3 +1,13 @@
+### [v3.1.0](https://github.com/libsgh/PanIndex/compare/v3.0.9...v3.1.0) (2022-08-24)
+
+##### Bug Fixes
+
+- 修复由跨域设置导致的部分WebDav连接失败
+- [PikPak]定时刷新过期TOKEN
+- 增加WebDav文档
+- 分流添加页面高度调整
+
+
 ### [v3.0.9](https://github.com/libsgh/PanIndex/compare/v3.0.8...v3.0.9) (2022-08-23)
 
 ##### Bug Fixes
@@ -21,6 +31,8 @@
   - 登录：访问任意文件、目录均需要登录，登录后可以正常访问目录、文件
 
 - [网盘新增]S3、PikPak
+
+- [配置管理]新增登录账号：默认：admin
 
 - [配置管理]管理接口刷新token
 

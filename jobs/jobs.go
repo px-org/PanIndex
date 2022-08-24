@@ -14,7 +14,7 @@ func Run() {
 	//aliyundrive onedrive googledrive refresh token
 	util.Cron.AddFunc("0 59 * * * ?", func() {
 		for _, account := range module.GloablConfig.Accounts {
-			if account.Mode == "aliyundrive" || account.Mode == "onedrive" || account.Mode == "onedrive-cn" || account.Mode == "googledrive" {
+			if account.Mode == "aliyundrive" || account.Mode == "onedrive" || account.Mode == "onedrive-cn" || account.Mode == "googledrive" || account.Mode == "pikpak" {
 				dao.SyncAccountStatus(account)
 			}
 		}
