@@ -2,6 +2,7 @@
 - [快速开始](/quickstart.md)
 - [配置选项](/config.md)
 - [定制化](/ui.md)
+- [WebDav](/webdav.md)
 - [常见问题](/question.md)
 - [Changelog](/changelog.md)
 - [捐助](/donate.md)
