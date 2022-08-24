@@ -73,9 +73,8 @@ func SetRouters(r *gin.Engine) {
 	r.GET("/s/*shortCode", func(context *gin.Context) {
 		ShortRedirect(context, r)
 	})
-	dav := r.Group(module.GloablConfig.DavPath)
+	dav := r.Group(module.GloablConfig.DavPath, WebDAVAuth())
 	{
-		dav.Use(WebDAVAuth())
 		dav.Any("/*path", ServeWebDAV)
 		dav.Handle("PROPFIND", "/*path", ServeWebDAV)
 		dav.Handle("PROPFIND", "", ServeWebDAV)
