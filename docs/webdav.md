@@ -12,5 +12,5 @@ WebDav客户端，不断测试补充中...
 | [nplayer](https://nplayer.com/)            | ios、android | 一款支持Webdav的播放器，付费，有破解                                                                               | 通过                                                                                                                                                                                                                 |
 | [WinSCP](https://winscp.net/eng/index.php) | windows     | 网络文件传输工具                                                                                            | 通过                                                                                                                                                                                                                 |
 | 群晖（File Station）                           | 群晖          | 路径前面不能加`/`                                                                                          | 通过                                                                                                                                                                                                                 |
-
-
+| [Potplayer](https://potplayer.daum.net/?lang=zh_CN) | windows | 一款支持Webdav的播放器<br/>通过添加专辑添加webdav添加 | 通过 |
+| [MiXplorer]([https://potplayer.daum.net/?lang=zh_CN](https://forum.xda-developers.com/t/app-2-2-mixplorer-v6-x-released-fully-featured-file-manager.1523691/)) | android | 一款支持Webdav的文件管理器 | 通过 |
