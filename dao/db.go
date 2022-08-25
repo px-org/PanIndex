@@ -201,8 +201,8 @@ func GetPwdFromPath(path string) ([]string, string, bool) {
 	likeSql := ""
 	if DB_TYPE == "sqlite" {
 		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE file_path || '%' AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
-	} else if _, ok := GetDb("postgres"); ok {
-		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE concat_ws(file_path, '%') AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
+	} else if DB_TYPE == "postgres" {
+		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE concat_ws('', file_path, '%') AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
 	} else {
 		likeSql = "SELECT * FROM pwd_files WHERE ? LIKE concat(file_path, '%') AND (expire_at =0 or expire_at >= ?) ORDER BY LENGTH(file_path) DESC"
 	}
