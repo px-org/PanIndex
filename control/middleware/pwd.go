@@ -25,7 +25,7 @@ func Check(c *gin.Context) {
 	ThemeCheck(c)
 	LayoutCheck(c)
 	if len(module.GloablConfig.Accounts) == 0 {
-		c.Redirect(http.StatusFound, module.GloablConfig.AdminPath)
+		c.Redirect(http.StatusFound, module.GloablConfig.PathPrefix+module.GloablConfig.AdminPath)
 	}
 	c.Next()
 }

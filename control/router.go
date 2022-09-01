@@ -21,6 +21,7 @@ func SetRouters(r *gin.Engine) {
 		public.POST("/onedrive/exchangeToken", ExchangeToken) //onedrive exchange token
 		public.POST("/onedrive/refreshToken")                 //onedrive refresh token
 		public.GET("/raw/*path", middleware.Check, Raw)       //file original content
+		public.GET("/config.js", ConfigJS)                    //file original content
 	}
 	adminApi := api.Group(module.GloablConfig.AdminPath, jwt.MiddlewareFunc())
 	{
@@ -57,6 +58,7 @@ func SetRouters(r *gin.Engine) {
 		admin.POST("/login", jwt.LoginHandler)  //login
 		admin.GET("/logout", jwt.LogoutHandler) //logout
 		auth := admin.Use(jwt.MiddlewareFunc())
+		auth.GET("", AdminIndex)
 		auth.GET("/", AdminIndex)
 		auth.GET("/common", ConfigManagent)     //base config
 		auth.GET("/appearance", ConfigManagent) //appearance

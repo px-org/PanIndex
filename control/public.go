@@ -2,7 +2,9 @@ package control
 
 import (
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/dao"
+	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
 	"github.com/libsgh/PanIndex/service"
 	"github.com/libsgh/PanIndex/util"
@@ -45,6 +47,9 @@ func AliTranscode(c *gin.Context) {
 
 func Raw(c *gin.Context) {
 	p := c.Param("path")
+	if strings.HasPrefix(p, module.GloablConfig.PathPrefix) {
+		p = strings.TrimPrefix(p, module.GloablConfig.PathPrefix)
+	}
 	hasPwd := c.GetBool("has_pwd")
 	if hasPwd {
 		CommonResp(c, "unauthorized", 401, nil)
@@ -73,6 +78,11 @@ func Raw(c *gin.Context) {
 	}
 }
 
+func ConfigJS(c *gin.Context) {
+	config, _ := jsoniter.MarshalToString(module.GloablConfig)
+	c.String(http.StatusOK, `var $config=%s;`, config)
+}
+
 func Files(c *gin.Context) {
 	hasPwd := c.GetBool("has_pwd")
 	if hasPwd {
@@ -80,6 +90,9 @@ func Files(c *gin.Context) {
 		return
 	}
 	path := c.PostForm("path")
+	if strings.HasPrefix(path, module.GloablConfig.PathPrefix) {
+		path = strings.TrimPrefix(path, module.GloablConfig.PathPrefix)
+	}
 	viewType := c.PostForm("viewType")
 	sColumn := c.PostForm("sortColumn")
 	sOrder := c.PostForm("sortOrder")

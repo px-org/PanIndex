@@ -3,6 +3,6 @@
 {{end}}
 {{define "content-img"}}
     <div class="mdui-shadow-2 mdui-clearfix br" style="padding: 15px;margin: 10px;">
-        <img id="view_link" class="mdui-img-fluid mdui-center mdui-img-rounded" src="{{ (index $.fns 0).Path }}" lazy="loaded" />
+        <img id="view_link" class="mdui-img-fluid mdui-center mdui-img-rounded" src="{{$.config.PathPrefix}}{{ (index $.fns 0).Path }}" lazy="loaded" />
     </div>
 {{end}}

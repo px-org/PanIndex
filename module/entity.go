@@ -55,6 +55,7 @@ type Config struct {
 	SiteName         string            `json:"site_name"`
 	AccountChoose    string            `json:"account_choose"`
 	Theme            string            `json:"theme"`
+	PathPrefix       string            `json:"path_prefix""` //路径前缀
 	AdminUser        string            `json:"admin_user""`
 	AdminPassword    string            `json:"admin_password""`
 	OnlyReferrer     string            `json:"only_referrer"`

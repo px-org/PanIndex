@@ -20,8 +20,8 @@
     <link rel="icon" href="{{$.config.FaviconUr}}" type="image/x-icon" />
     <link rel="shortcut icon" href="{{$.config.FaviconUr}}" type="image/x-icon" />
     {{- else}}
-    <link rel="icon" href="/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+    <link rel="icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
     {{- end}}
     <link rel="stylesheet" href="{{index $.config.CdnFiles "viewer@css"}}">
     <link rel="stylesheet" href="{{index $.config.CdnFiles "fontawesome@css"}}">
@@ -36,6 +36,7 @@
     <script src="{{index $.config.CdnFiles "artplayer@js"}}"></script>
     <script src="{{index $.config.CdnFiles "artplayer-danmuku@js"}}"></script>
     <script src="{{index $.config.CdnFiles "clipboard@js"}}"></script>
+    <script src="{{$.config.PathPrefix}}/api/v3/public/config.js"></script>
     <script src="{{index $.config.CdnFiles "video@simple@js"}}?v={{$.version}}"></script>
     <script src="{{index $.config.CdnFiles "simple@index@js"}}?v={{$.version}}"></script>
 </head>
@@ -62,7 +63,7 @@
     {{- if $.has_parent}}
     <tr class="parent">
         <td class="file-name">
-            <a class="icon icon-up" href="{{$.parent_path}}">..</a>
+            <a class="icon icon-up" href="{{$.config.PathPrefix}}{{$.parent_path}}">..</a>
         </td>
         <td class="file-size"></td>
         <td class="file-date-modified"></td>
@@ -72,14 +73,14 @@
     <tr>
         {{- if .IsFolder}}
         <td class="file-name">
-            <a class="{{iconclass .IsFolder .FileType}}" href="javascript:void(0)" data-url="{{.Path}}">
+            <a class="{{iconclass .IsFolder .FileType}}" href="javascript:void(0)" data-url="{{$.config.PathPrefix}}{{.Path}}">
             {{.FileName}}
             </a>
         </td>
         {{- else}}
         <td class="file-name">
-            <a class="{{iconclass .IsFolder .FileType}}" data-file-type="{{.FileType}}" data-parent-path="{{.ParentPath}}" data-preview="{{$.config.EnablePreview}}" data-view-type="{{.ViewType}}"
-               data-title="{{.FileName}}" data-url="{{.Path}}" href="javascript:void(0);">
+            <a class="{{iconclass .IsFolder .FileType}}" data-file-type="{{.FileType}}" data-parent-path="{{$.config.PathPrefix}}{{.ParentPath}}" data-preview="{{$.config.EnablePreview}}" data-view-type="{{.ViewType}}"
+               data-title="{{.FileName}}" data-url="{{$.config.PathPrefix}}{{.Path}}" href="javascript:void(0);">
                 {{.FileName}}
             </a>
         </td>
@@ -87,11 +88,11 @@
         <td class="file-size">{{.SizeFmt}}</td>
         <td class="file-date-modified">{{.LastOpTime}}</td>
         <td class="file-size">
-            <a href="javascript:void(0)" data-path="{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" class="copyBtn">
+            <a href="javascript:void(0)" data-path="{{$.config.PathPrefix}}{{.Path}}" data-clipboard-action="copy" data-toggle="tooltip" data-placement="bottom" class="copyBtn">
                 <i class="fa fa-copy" aria-hidden="true"></i>
             </a>
             {{- if not .IsFolder}}
-            <a href="javascript:void(0)" data-url="{{.Path}}" title="下载" class="download_btn" target="_blank">
+            <a href="javascript:void(0)" data-url="{{$.config.PathPrefix}}{{.Path}}" title="下载" class="download_btn" target="_blank">
                 <i class="fa fa-download" aria-hidden="true"></i>
             </a>
             {{- end}}
@@ -110,8 +111,9 @@
     </p>
 </div>
 {{end}}
-<div id="aplayer" data-lrc-path="{{$.config.LrcPath}}" data-enable-lrc="{{$.config.EnableLrc}}"></div>
+<div id="aplayer" data-lrc-path="{{$.config.PathPrefix}}{{$.config.LrcPath}}" data-enable-lrc="{{$.config.EnableLrc}}"></div>
 <template id="video-modal" data-config-subtitle="{{$.config.Subtitle}}" data-config-danmuku="{{$.config.Danmuku}}"
-          data-config-danmuku-path="{{$.config.DanmukuPath}}" data-config-subtitle-path="{{$.config.SubtitlePath}}"></template>
+          data-config-danmuku-path="{{$.config.DanmukuPath}}" data-config-subtitle-path="{{$.config.SubtitlePath}}">
+</template>
 </body>
 </html>

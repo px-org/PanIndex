@@ -11,8 +11,8 @@
     <link rel="icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
     <link rel="shortcut icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
     {{- else}}
-    <link rel="icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="/static/img/favicon-native.ico" type="image/x-icon" />
+    <link rel="icon" href="{{$.config.PathPrefix}}/static/img/favicon-native.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{$.config.PathPrefix}}/static/img/favicon-native.ico" type="image/x-icon" />
     {{- end}}
     <link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@css"}}"/>
     <script src="{{index $.config.CdnFiles "mdui@js"}}"></script>
@@ -52,9 +52,9 @@
 <header class="mdui-appbar mdui-appbar-fixed">
     <div class="mdui-toolbar mdui-color-indigo">
         <a href="javascript:;" class="mdui-btn mdui-btn-icon" {{- if ne $.redirect_url "login"}}mdui-drawer="{target: '#main-drawer', swipe: true}"{{- end}}><i class="mdui-icon material-icons">menu</i></a>
-        <a href="/" class="mdui-typo-headline mdui-hidden-xs" target="_blank">PanIndex</a>
+        <a href="{{$.config.PathPrefix}}/" class="mdui-typo-headline mdui-hidden-xs" target="_blank">PanIndex</a>
         {{- if ne $.redirect_url "login"}}
-        <a href="{{$.config.AdminPath}}" class="mdui-typo-title">配置</a>
+        <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}" class="mdui-typo-title">配置</a>
         {{- end}}
         <div class="mdui-toolbar-spacer"></div>
         {{- if ne $.redirect_url "login"}}
@@ -62,7 +62,7 @@
         <!--<a target="_blank" href="/api/v3/admin/config" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '导出配置（JSON）'}"><i class="mdui-icon material-icons">settings</i></a>-->
         {{- end}}
         <a id="theme-toggle" href="JavaScript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{- if eq $.theme "mdui-dark"}}5{{- else}}4{{- end}}</i></a>
-        <a href="{{$.config.AdminPath}}/logout" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
+        <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/logout" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出登录'}"><i class="mdui-icon material-icons">power_settings_new</i></a>
     </div>
 </header>
 {{- if ne $.redirect_url "login"}}
@@ -94,17 +94,17 @@
                 <div class="mdui-list-item-content">通用</div><i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
             </div>
             <div class="mdui-collapse-item-body mdui-list">
-                <a href="{{$.config.AdminPath}}/common" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "common"}}mdui-list-item-active{{end}}">
+                <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/common" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "common"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">基础配置</div>
                 </div>
                 </a>
-                <a href="{{$.config.AdminPath}}/appearance" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "appearance"}}mdui-list-item-active{{end}}">
+                <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/appearance" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "appearance"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">外观</div>
                 </div>
                 </a>
-                <a href="{{$.config.AdminPath}}/view" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "view"}}mdui-list-item-active{{end}}">
+                <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/view" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "view"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">文件预览</div>
                 </div>
@@ -117,41 +117,41 @@
                 <div class="mdui-list-item-content">安全</div><i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
             </div>
             <div class="mdui-collapse-item-body mdui-list">
-                <a href="{{$.config.AdminPath}}/access" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "access"}}mdui-list-item-active{{end}}">
+                <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/access" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "access"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">访问控制</div>
                 </div>
                 </a>
-                <a href="{{$.config.AdminPath}}/pwd" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "pwd"}}mdui-list-item-active{{end}}">
+                <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/pwd" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "pwd"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">文件夹加密</div>
                 </div>
                 </a>
-                <a href="{{$.config.AdminPath}}/hide" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "hide"}}mdui-list-item-active{{end}}">
+                <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/hide" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "hide"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">隐藏文件（夹）</div>
                 </div>
                 </a>
-                <a href="{{$.config.AdminPath}}/safety" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "safety"}}mdui-list-item-active{{end}}">
+                <a href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/safety" class="mdui-list-item mdui-ripple {{if eq $.redirect_url "safety"}}mdui-list-item-active{{end}}">
                 <div class="mdui-list-item-content">
                     <div class="mdui-list-item-title">防盗链</div>
                 </div>
                 </a>
             </div>
         </div>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "disk"}}mdui-list-item-active{{end}}" href="{{$.config.AdminPath}}/disk">
+        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "disk"}}mdui-list-item-active{{end}}" href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/disk">
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue">storage</i>
             <div class="mdui-list-item-content">网盘挂载</div>
         </a>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "bypass"}}mdui-list-item-active{{end}}" href="{{$.config.AdminPath}}/bypass">
+        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "bypass"}}mdui-list-item-active{{end}}" href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/bypass">
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-teal">call_split</i>
             <div class="mdui-list-item-content">分流下载</div>
         </a>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "cache"}}mdui-list-item-active{{end}}" href="{{$.config.AdminPath}}/cache">
+        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "cache"}}mdui-list-item-active{{end}}" href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/cache">
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-deep-orange">cached</i>
             <div class="mdui-list-item-content">缓存管理</div>
         </a>
-        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "webdav"}}mdui-list-item-active{{end}}" href="{{$.config.AdminPath}}/webdav">
+        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "webdav"}}mdui-list-item-active{{end}}" href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/webdav">
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-brown">inbox</i>
             <div class="mdui-list-item-content">WebDav</div>
         </a>
@@ -208,8 +208,8 @@
     </div>
 </div>
 <script>
-    var AdminApiUrl = '/api/v3{{$.config.AdminPath}}';
-    var AdminUrl = '{{$.config.AdminPath}}';
+    var AdminApiUrl = '{{$.config.PathPrefix}}/api/v3{{$.config.AdminPath}}';
+    var AdminUrl = '{{$.config.PathPrefix}}{{$.config.AdminPath}}';
 </script>
 <script src="{{index $.config.CdnFiles "sortablejs@js"}}"></script>
 <script src="{{index $.config.CdnFiles "admin@js"}}?v={{$.version}}"></script>

@@ -11,6 +11,7 @@ import (
 	"github.com/smallnest/weighted"
 	"gorm.io/gorm"
 	"math/rand"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -20,8 +21,9 @@ var DB *gorm.DB
 var NewPassword = ""
 var DB_TYPE = "sqlite"
 var InitConfigItems = []module.ConfigItem{
-	{"site_name", "", "common"},
+	{"site_name", "PanIndex", "common"},
 	{"account_choose", "default", "common"},
+	{"path_prefix", "", "common"},
 	{"admin_user", "admin", "common"},
 	{"admin_password", "PanIndex", "common"},
 	{"s_column", "default", "common"},
@@ -153,6 +155,7 @@ func InitGlobalConfig() {
 	c.HideFiles = GetHideFilesMap()
 	c.PwdFiles = FindPwdList()
 	c.BypassList = GetBypassList()
+	module.GloablConfig = c
 	c.CdnFiles = util.GetCdnFilesMap(c.Cdn, module.VERSION)
 	c.ShareInfoList = GetShareInfoList()
 	module.GloablConfig = c
@@ -488,6 +491,12 @@ func DeleteHideFiles(filePaths []string) {
 func SavePwdFile(pwdFile module.PwdFiles) {
 	if pwdFile.Password == "" {
 		pwdFile.Password = util.RandomPassword(8)
+	}
+	decodedPath, err := url.QueryUnescape(pwdFile.FilePath)
+	if err != nil {
+		log.Error(err)
+	} else {
+		pwdFile.FilePath = decodedPath
 	}
 	if pwdFile.Id != "" {
 		DB.Table("pwd_files").Where("id=?", pwdFile.Id).Updates(pwdFile)

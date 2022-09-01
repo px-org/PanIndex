@@ -123,7 +123,6 @@ function initVideo(container, qas, title){
     if(parentPath.charAt(parentPath.length-1) == "/"){
         currentUrl =encodeURI(window.location.protocol + "//"+window.location.host + parentPath + title);
     }
-    var id = md5(currentUrl);
     if(qas.length > 0){
         $(".artplayer-app").css('height', $('.mdui-video-container').innerHeight()+"200");
         art = new Artplayer({
@@ -154,7 +153,6 @@ function initVideo(container, qas, title){
                         hls.loadSource(url);
                         hls.attachMedia(video);
                         hls.on(Hls.Events.ERROR, function (event, data) {
-                            console.log(data);
                             switch (data.type) {
                                 case Hls.ErrorTypes.NETWORK_ERROR:
                                     if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
@@ -340,7 +338,7 @@ function initPlayList(parentPath) {
     formData.append("sortOrder", Cookies.get("sort_order"));
     $.ajax({
         method: 'POST',
-        url: "/api/v3/public/files", //上传文件的请求路径必须是绝对路劲
+        url: $config.path_prefix+"/api/v3/public/files", //上传文件的请求路径必须是绝对路劲
         data: formData,
         cache: false,
         contentType: false,
@@ -363,7 +361,7 @@ function initPlayList(parentPath) {
                 }
                 var n = item.file_name.substring(0, item.file_name.lastIndexOf("."));
                 var li = '<li id="'+md5(item.path)+'" class="mdui-menu-item '+active+'">'+
-                    '  <a href="javascript:chgVideo(\''+item.file_id+'\', \''+item.path+'\', \''+item.file_name+'\', \''+item.file_type+'\');" data-type="'+item.file_type+'" data-name="'+item.file_name+'" data-path="'+item.path+'" class="mdui-ripple">'+
+                    '  <a href="javascript:chgVideo(\''+item.file_id+'\', \''+$config.path_prefix+item.path+'\', \''+item.file_name+'\', \''+item.file_type+'\');" data-type="'+item.file_type+'" data-name="'+item.file_name+'" data-path="'+$config.path_prefix+item.path+'" class="mdui-ripple">'+
                     activeStatus+n+
                     '  </a>'+
                     '</li>';
@@ -406,7 +404,7 @@ function buildTranscodeInfo(accountId, fileId){
     $.ajax({
         method: 'POST',
         async: false,
-        url: '/api/v3/public/transcode?accountId='+accountId+'&fileId='+fileId,
+        url: $config.path_prefix+'/api/v3/public/transcode?accountId='+accountId+'&fileId='+fileId,
         success: function (data) {
             var d = JSON.parse(data);
             if(d.video_preview_play_info){

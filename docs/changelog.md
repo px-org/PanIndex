@@ -1,3 +1,15 @@
+### [v3.1.1-202291](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (unreleased)
+> 温馨提示：该版本涉及页面改动，升级时需要使用新版本ui，对于页面的个性化调整，尽量使用js或css，而不是直接修改页面，这样方便后期升级！
+
+##### Bug Fixes
+
+- 修复classic、bootstrap主题的一些错误
+
+##### Features
+
+- [配置管理]增加配置-网站路径前缀，用于nginx反代非根目录跳转，配置`/file` `http://noki.icu/file/`，参考[nginx配置](https://libsgh.github.io/PanIndex/#/)
+
+
 ### [v3.1.0](https://github.com/libsgh/PanIndex/compare/v3.0.9...v3.1.0) (2022-08-24)
 
 ##### Bug Fixes

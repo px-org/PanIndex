@@ -17,7 +17,7 @@ import (
 )
 
 func AdminIndex(c *gin.Context) {
-	c.Redirect(http.StatusFound, module.GloablConfig.AdminPath+"/common")
+	c.Redirect(http.StatusFound, module.GloablConfig.PathPrefix+module.GloablConfig.AdminPath+"/common")
 }
 
 //admin config managent

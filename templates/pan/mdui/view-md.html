@@ -6,7 +6,7 @@
     </div>
     <script>
         var path = $("#view_down_link").attr("data-path");
-        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "/api/v3/public/raw" +path);
+        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "{{$.config.PathPrefix}}/api/v3/public/raw" +path);
         $.ajax({
             method: 'GET',
             url: fullUrl,
