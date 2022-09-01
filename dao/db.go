@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+	"github.com/bluele/gcache"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -335,13 +336,27 @@ func DeleteAccounts(ids []string) {
 	}
 }
 
+var RetryTasksCache = gcache.New(100000).LRU().Build()
+
+type RetryTask struct {
+	account      module.Account
+	fileId, path string
+	hide, hasPwd int
+}
+
 //Loop add files
 func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd int) {
 	pan, _ := pan.GetPan(account.Mode)
 	fileNodes, err := pan.Files(account, fileId, path, "default", "null")
 	if err != nil {
-		log.Warningf("%s get files error", account.Mode)
-		log.Errorln(err)
+		if err.Error() == "flow limit" {
+			log.Debugf("%s need retry， err：%v", path, err)
+			//加入重试
+			RetryTasksCache.Set(account.Id+fileId, RetryTask{account, fileId, path, hide, hasPwd})
+		} else {
+			log.Warningf("%s get files error", account.Mode)
+			log.Errorln(err)
+		}
 	}
 	for _, fn := range fileNodes {
 		FileNodeAuth(&fn, hide, hasPwd)
@@ -351,6 +366,7 @@ func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd i
 	}
 	if len(fileNodes) > 0 {
 		DB.Create(&fileNodes)
+		RetryTasksCache.Remove(account.Id + fileId)
 	}
 }
 
@@ -386,6 +402,14 @@ func SyncFilesCache(account module.Account) {
 		}
 		//cache new files
 		LoopCreateFiles(account, account.RootId, syncDir, 0, 0)
+		//retry
+		for _, key := range RetryTasksCache.Keys(false) {
+			rt, _ := RetryTasksCache.Get(key)
+			retryTask := rt.(RetryTask)
+			time.Sleep(time.Duration(1) * time.Second)
+			LoopCreateFiles(retryTask.account, retryTask.fileId, retryTask.path, retryTask.hide, retryTask.hasPwd)
+			log.Debugf("retry path: %s", retryTask.path)
+		}
 		//handle old files && update account status
 		var fileNodeCount int64
 		DB.Model(&module.FileNode{}).Where("account_id=? and is_delete=1", account.Id).Count(&fileNodeCount)

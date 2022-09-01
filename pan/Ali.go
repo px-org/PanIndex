@@ -69,7 +69,7 @@ func (a Ali) Files(account module.Account, fileId, path, sortColumn, sortOrder s
 	nextMarker := ""
 	for {
 		var fsResp AliFilesResp
-		_, err := client.R().
+		re, err := client.R().
 			SetResult(&fsResp).
 			SetAuthToken(tokenResp.AccessToken).
 			SetBody(KV{
@@ -92,6 +92,12 @@ func (a Ali) Files(account module.Account, fileId, path, sortColumn, sortOrder s
 			return nil, err
 		}
 		nextMarker = fsResp.NextMarker
+		if len(fsResp.Items) == 0 {
+			code := jsoniter.Get(re.Body(), "code").ToString()
+			if code == "ParamFlowException" {
+				return nil, FlowLimit
+			}
+		}
 		for _, f := range fsResp.Items {
 			fn, _ := a.ToFileNode(f)
 			if path == "/" {

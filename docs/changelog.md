@@ -4,6 +4,7 @@
 ##### Bug Fixes
 
 - 修复classic、bootstrap主题的一些错误
+- 完全缓存模式下阿里云盘API访问频繁导致的目录信息丢失
 
 ##### Features
 
