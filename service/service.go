@@ -1013,25 +1013,26 @@ func UploadConfig(config module.Config) string {
 }
 
 func UploadPwdFile(content string) {
+	content = strings.TrimSpace(content)
 	if content != "" {
 		lines := strings.Split(content, "\n")
 		for _, line := range lines {
 			columns := strings.Split(line, "\t")
 			pwdFile := module.PwdFiles{}
-			if len(columns) > 0 {
+			if len(columns) > 0 && columns[0] != "" {
 				pwdFile.FilePath = strings.TrimSpace(columns[0])
 				if len(columns) > 1 {
-					pwdFile.Password = columns[1]
+					pwdFile.Password = strings.TrimRight(columns[1], "\r")
 				} else {
 					pwdFile.Password = util.RandomPassword(8)
 					pwdFile.ExpireAt = 0
 				}
-				if len(columns) > 2 {
-					ex, _ := time.ParseInLocation("2006-01-02 15:04:05", columns[2], time.Local)
+				if len(columns) > 2 && columns[2] != "" {
+					ex, _ := time.ParseInLocation("2006-01-02 15:04:05", strings.TrimRight(columns[2], "\r"), time.Local)
 					pwdFile.ExpireAt = ex.UTC().Unix()
 				}
-				if len(columns) > 3 {
-					pwdFile.Info = columns[3]
+				if len(columns) > 3 && columns[3] != "" {
+					pwdFile.Info = strings.TrimRight(columns[3], "\r")
 				}
 				dao.SavePwdFile(pwdFile)
 				dao.InitGlobalConfig()
