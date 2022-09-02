@@ -366,6 +366,8 @@ func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd i
 	}
 	if len(fileNodes) > 0 {
 		DB.Create(&fileNodes)
+	}
+	if len(fileNodes) > 0 || (len(fileNodes) == 0 && err == nil) {
 		RetryTasksCache.Remove(account.Id + fileId)
 	}
 }
@@ -403,13 +405,7 @@ func SyncFilesCache(account module.Account) {
 		//cache new files
 		LoopCreateFiles(account, account.RootId, syncDir, 0, 0)
 		//retry
-		for _, key := range RetryTasksCache.Keys(false) {
-			rt, _ := RetryTasksCache.Get(key)
-			retryTask := rt.(RetryTask)
-			time.Sleep(time.Duration(1) * time.Second)
-			LoopCreateFiles(retryTask.account, retryTask.fileId, retryTask.path, retryTask.hide, retryTask.hasPwd)
-			log.Debugf("retry path: %s", retryTask.path)
-		}
+		LoopRetryTasks(account.Id)
 		//handle old files && update account status
 		var fileNodeCount int64
 		DB.Model(&module.FileNode{}).Where("account_id=? and is_delete=1", account.Id).Count(&fileNodeCount)
@@ -436,6 +432,25 @@ func SyncFilesCache(account module.Account) {
 	}
 	InitGlobalConfig()
 	SYNC_STATUS = 0
+}
+
+func LoopRetryTasks(accountId string) {
+	ks := []string{}
+	for _, key := range RetryTasksCache.Keys(false) {
+		if strings.HasPrefix(key.(string), accountId) {
+			ks = append(ks, key.(string))
+		}
+	}
+	for _, k := range ks {
+		rt, _ := RetryTasksCache.Get(k)
+		retryTask := rt.(RetryTask)
+		time.Sleep(time.Duration(1) * time.Second)
+		LoopCreateFiles(retryTask.account, retryTask.fileId, retryTask.path, retryTask.hide, retryTask.hasPwd)
+		log.Debugf("retry path: %s，剩余：%d", retryTask.path, len(ks))
+	}
+	if len(ks) > 0 {
+		LoopRetryTasks(accountId)
+	}
 }
 
 func RefreshFileNodes(accountId, fileId string) {
