@@ -280,7 +280,7 @@ environment=PORT="5239",LOG_LEVEL="debug"
 
 ## 其他平台部署
 
-### Heroku
+### Heroku(即将收费)
 [![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-h.git)
 
 https://github.com/libsgh/PanIndex-h
@@ -296,3 +296,7 @@ https://github.com/libsgh/PanIndex-okteto
 ### koyeb
 > koyeb账号申请并不容易，需要联系官方的人手动给你审核，不然就是等几个月...koyeb还有个最大问题是：数据配置无法保留，会被重置，除非连接外部数据库。
 基于以上，如果你仍想部署的话，直接使用Docker镜像配置好环境变量即可，不需要特殊部署脚本。
+
+### fly.io
+
+https://github.com/libsgh/PanIndex-fly
