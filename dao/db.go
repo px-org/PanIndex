@@ -386,6 +386,7 @@ func SyncAccountStatus(account module.Account) {
 		log.Errorf("[%s] %s auth login fail, api return : %s", account.Mode, account.Name, auth)
 		DB.Table("account").Where("id=?", account.Id).Update("cookie_status", 4)
 	}
+	InitGlobalConfig()
 }
 
 //sync files cache

@@ -20,8 +20,12 @@ type Postgres struct{}
 
 func (driver Postgres) CreateDb(dsn string) {
 	dialector := postgres.Open(dsn)
-	if os.Getenv("DATABASE_URL") != "" {
-		db, _ := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	url := os.Getenv("DATABASE_URL")
+	if url != "" {
+		if os.Getenv("DATABASE_SSL") == "false" {
+			url = url + "?sslmode=disable"
+		}
+		db, _ := sql.Open("postgres", url)
 		dialector = postgres.New(postgres.Config{
 			Conn: db,
 		})
