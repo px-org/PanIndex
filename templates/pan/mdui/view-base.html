@@ -64,6 +64,7 @@
 						{{- end}}
 					</span>
                 </div>
+                {{- if or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3")}}
                 {{$lenPaths := len $.pre_paths}}
                 {{- range $index, $item := $.pre_paths}}
                     {{- if and (eq (len $.accounts) 1) (eq $.config.AccountChoose "default")}}
@@ -80,21 +81,22 @@
                         </div>
                     {{- end}}
                 {{- end}}
+                {{- end}}
             </div>
             <ul class="mdui-list">
                 <li class="mdui-list-item">
                     <div class="mdui-list-item-content">
                         <div class="mdui-list-item-title">
-                            {{- if $.has_parent}}
+                            {{- if and ($.has_parent) (or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3"))}}
                                 <button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '返回上级目录'}" onclick="window.open('{{$.config.PathPrefix}}{{$.parent_path}}','_self')"><i class="mdui-icon material-icons">arrow_back</i></button>
                             {{- end}}
                             {{- if not $.has_pwd}}<a id="info-toggle" href="javascript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件信息'}"><i class="mdui-icon material-icons">info</i></a>{{- end}}
                             <a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu',covered: false}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>
                             {{- if not $.has_pwd}}<a id="view_down_link" href="javascript:void(0)" data-path="{{$.config.PathPrefix}}{{ (index $.fns 0).Path }}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '点击下载'}"><i class="mdui-icon material-icons">file_download</i></a>{{- end}}
-                            {{- if $.last_file }}
+                            {{- if and ($.last_file) (or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3"))}}
                                 <a id="view_last" href="{{$.config.PathPrefix}}{{$.last_file}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上一个'}"><i class="mdui-icon material-icons">chevron_leftt</i></a>
                             {{- end}}
-                            {{- if $.next_file }}
+                            {{- if and ($.next_file) (or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3"))}}
                                 <a id="view_next" href="{{$.config.PathPrefix}}{{$.next_file}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '下一个'}"><i class="mdui-icon material-icons">chevron_right</i></a>
                             {{- end}}
                             <button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq $.theme "mdui-dark"}}5{{else}}4{{end}}</i></button>
