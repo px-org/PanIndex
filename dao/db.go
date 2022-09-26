@@ -589,7 +589,7 @@ func SaveBypass(bypass module.Bypass) string {
 				return "保存失败，网盘已被其他分流绑定！"
 			}
 		}
-		DB.Where("id=?", bypass.Id).Updates(&bypass)
+		DB.Where("id=?", bypass.Id).Save(&bypass)
 	} else {
 		err := DB.Where("name=?", bypass.Name).First(&module.Bypass{}).Error
 		if err == nil {
