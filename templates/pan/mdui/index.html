@@ -30,6 +30,7 @@
 	{{- if ne $.config.Js ""}}
 	{{$.config.Js | unescaped}}
 	{{- end}}
+	<link rel="preconnect" href="https://gstatic.cdn.haah.net/" crossorigin>
 	<link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@index@css"}}?v={{$.version}}">
 	{{- if ne $.config.Css ""}}
 	{{$.config.Css | unescaped}}
