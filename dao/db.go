@@ -37,7 +37,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"js", "", "appearance"},
 	{"theme", "mdui", "appearance"},
 	{"enable_preview", "1", "view"},
-	{"image", "png,gif,jpg,bmp,jpeg,ico", "view"},
+	{"image", "png,gif,jpg,bmp,jpeg,ico,webp", "view"},
 	{"video", "mp4,mkv,m3u8,flv,avi", "view"},
 	{"audio", "mp3,wav,flac,ape", "view"},
 	{"code", "txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini", "view"},
