@@ -332,3 +332,9 @@ input {
     color: #fff;
     background-color: #424242;
 }
+@media (prefers-color-scheme: dark) {
+    .mdui-theme-layout-auto {
+        color: #fff;
+        background-color: #424242;
+    }
+}
