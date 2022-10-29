@@ -1,19 +1,29 @@
 ### 注意事项
 - 后台地址（默认）：`http://ip:port/admin`
+- 默认账号：`admin`
 - 默认密码：`PanIndex`
-- 第一次安装后需要进行配置， 请务必修改默认密码
+- 第一次安装后需要进行配置， 请务必修改默认账号、密码
 - 部分配置需要重启生效
 ## 通用
 ### 基础配置
 * 网站标题：默认为空，设置后将优先于网盘名称展示
 * 网站路径前缀：默认为空，如需域名多层级目录反代，可设置此项，设置后同步修改nginx，格式：`/file`
+```
+location /file/ {
+   proxy_set_header Host $host;
+   proxy_set_header X-Real-IP $remote_addr;
+   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+   proxy_pass http://127.0.0.1:5238/;
+   client_max_body_size    1000m;
+}
+```
 * 后台管理地址：默认为`/admin`
 * 首页账号切换
     * 默认账号：首页将显示默认账号，或顺序第一位的账号，`home`按钮切换
     * 全部账号：首页将以文件夹形式列出所有账号，`home`按钮依然可以切换
 * 静态资源cdn
-* 登录账号：默认`admin`，注意保护隐私
-* 登录密码：默认`PanIndex`，注意保护隐私
+* 登录账号：默认`admin`，请及时修改默认账号
+* 登录密码：默认`PanIndex`，请及时修改默认密码
 * 排序：指定网盘目录列表的文件（夹）默认排序
 
 ### 外观

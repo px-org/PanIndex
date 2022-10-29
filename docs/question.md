@@ -1,4 +1,11 @@
-## 常见问题
+### 忘记后台登录账号、密码如何解决？
+> 完整命令示例：
+> `/usr/local/bin/PanIndex -c=/usr/local/etc/PanIndex/config.json -reset_password=1234 -reset_user=admin`，命令与你的启动方式有关（配置加载），修改后按原来的方式重新启动
+1. 重置用户名、密码，执行命令：`-reset_password=1234`、`-reset_user=admin`
+2. **查看用户名、密码**，执行命令：`-cq=admin_password`、`-cq=admin_user`
+3. 数据库查看：下载data目录下的数据库文件到本地，使用[SQLite](https://sqlitebrowser.org/dl/)客户端工具查看数据库，在`config_item`表中找到K为`admin_user`，`admin_password`的V值
+
+**推荐方式2**
 
 ### 如何获取目录ID？
 
@@ -46,7 +53,7 @@ PanIndex的设计初衷是简单高效，前后分离会增加部署的复杂度
 PanIndex未来会逐步完善接口，使之可以单独作为接口使用。
 
 ### 如何自定义页面？
-参考[自定义主题](/#自定义主题)
+参考[自定义主题](/ui.md)
 
 ### 登录失效、目录不更新该如何解决？
 - 程序启动时会刷新COOKIE（令牌）

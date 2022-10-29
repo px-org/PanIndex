@@ -32,7 +32,8 @@ $ bash <(curl -L https://github.com/libsgh/PanIndex-install/raw/main/install-rel
   "key_file": "",
   "config_query": "",
   "db_type": "",
-  "dsn": ""
+  "dsn": "",
+  "ui": ""
 }
 ```
 `-host=0.0.0.0` #绑定host，默认0.0.0.0<br>
@@ -45,6 +46,7 @@ $ bash <(curl -L https://github.com/libsgh/PanIndex-install/raw/main/install-rel
 `-cq=port` # 查询配置（旧版），程序并不会启动<br>
 `-db_type=sqlite` # 数据源：sqlite(默认)、mysql、postgres<br>
 `-dsn=` # 数据源连接
+`-ui=` # 自定义UI目录
 ```
 # postgres
 host=localhost user=postgres password=1234 dbname=pan-index port=5432 sslmode=disable TimeZone=Asia/Shanghai
@@ -58,16 +60,17 @@ data.data.db
 
 环境变量主要用于Docker部署。
 
-| 变量名称            | 变量值               | 描述                              |
-| ------------------- |-------------------|---------------------------------|
-| HOST    | 0.0.0.0           | 绑定HOST                          |
-| PORT                | 5238              | 启动端口号，由于Heroku端口号随机，并需要从此环境变量获取 |
-| LOG_LEVEL                | info              | 日志级别                            |
-| DATA_PATH                | /app/data         | 数据目录，主要存储配置文件，SQLITE数据库文件       |
-| CERT_FILE                | -                 | 证书文件                            |
-| KEY_FILE                | -                 | 证书密钥                            |
-| DB_TYPE                | sqlite            | 数据源类型                           |
-| DSN                | /app/data/data.db | 数据源链接                           |
+| 变量名称      | 变量值               | 描述                              |
+|-----------|-------------------|---------------------------------|
+| HOST      | 0.0.0.0           | 绑定HOST                          |
+| PORT      | 5238              | 启动端口号，由于Heroku端口号随机，并需要从此环境变量获取 |
+| LOG_LEVEL | info              | 日志级别                            |
+| DATA_PATH | /app/data         | 数据目录，主要存储配置文件，SQLITE数据库文件       |
+| CERT_FILE | -                 | 证书文件                            |
+| KEY_FILE  | -                 | 证书密钥                            |
+| DB_TYPE   | sqlite            | 数据源类型                           |
+| DSN       | /app/data/data.db | 数据源链接                           |
+| UI         | 绝对路径，默认为空         | 自定义UI目录                         |
 
 
 ```bash
