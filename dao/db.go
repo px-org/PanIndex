@@ -20,6 +20,7 @@ import (
 
 var DB *gorm.DB
 var NewPassword = ""
+var NewUser = "admin"
 var DB_TYPE = "sqlite"
 var InitConfigItems = []module.ConfigItem{
 	{"site_name", "PanIndex", "common"},
@@ -109,6 +110,14 @@ func InitDb() {
 		configItem.V = NewPassword
 		DB.Where("k=?", "admin_password").Updates(configItem)
 		log.Infof("reset password success, old [%s], new [%s] ", OldPassword, NewPassword)
+	}
+	if NewUser != "" {
+		configItem := module.ConfigItem{}
+		DB.Where("k=?", "admin_user").First(&configItem)
+		OldUser := configItem.V
+		configItem.V = NewUser
+		DB.Where("k=?", "admin_user").Updates(configItem)
+		log.Infof("reset user success, old [%s], new [%s] ", OldUser, configItem.V)
 	}
 	//兼容旧版本密码规则
 	UpdateOldPassword()
