@@ -48,6 +48,12 @@
             color: #fff;
             background-color: #424242;
         }
+        @media (prefers-color-scheme: dark) {
+            .mdui-theme-layout-auto {
+                color: #fff;
+                background-color: #424242;
+            }
+        }
     </style>
 </head>
 <body class="{{- if ne $.redirect_url "login"}}mdui-drawer-body-left{{- end}} mdui-appbar-with-toolbar mdui-theme-primary-indigo mdui-theme-accent-blue mdui-theme-layout-{{if eq $.theme "mdui"}}auto{{end}}{{if eq $.theme "mdui-dark"}}dark{{end}}{{if eq $.theme "mdui-light"}}light{{end}} mdui-loaded mdui-bottom-nav-fixed">
