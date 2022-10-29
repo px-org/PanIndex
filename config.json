@@ -6,6 +6,7 @@
   "cert_file": "",
   "key_file": "",
   "config_query": "",
-  "db_type": "postgres",
-  "dsn": "host=localhost user=postgres password=1234 dbname=pan-index port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+  "db_type": "sqlite",
+  "dsn": "",
+  "ui": ""
 }
