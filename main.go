@@ -23,7 +23,7 @@ func main() {
 	r.Use(middleware.Cors())
 	r.Use(gin.Logger(), middleware.RequestCancelRecover())
 	//set html templates
-	r.SetHTMLTemplate(boot.Templates(fs))
+	r.SetHTMLTemplate(boot.Templates(fs, config))
 	//set static box
 	boot.InitStaticBox(r, fs)
 	//set all routers

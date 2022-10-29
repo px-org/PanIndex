@@ -386,7 +386,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 		version = "main"
 	}
 	prefix := module.GloablConfig.PathPrefix
-	jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
+	//jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
+	jp := "https://js.cdn.haah.net/gh/libsgh/PanIndex@" + version
 	m := map[string]string{}
 	cdnMap := KV{
 		"0": KV{
@@ -449,8 +450,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"sweetalert2@js":             prefix + "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     "//cdn.staticfile.org/hls.js/1.1.2/hls.min.js",
 			"flv@js":                     "//cdn.staticfile.org/flv.js/1.6.2/flv.min.js",
-			"artplayer@js":               "//cdn.jsdelivr.net/npm/artplayer@4.5.4/dist/artplayer.js",
-			"artplayer-danmuku@js":       "//cdn.jsdelivr.net/npm/artplayer-plugin-danmuku@4.4.8/dist/artplayer-plugin-danmuku.js",
+			"artplayer@js":               "//js.cdn.haah.net/npm/artplayer@4.5.4/dist/artplayer.js",
+			"artplayer-danmuku@js":       "//js.cdn.haah.net/npm/artplayer-plugin-danmuku@4.4.8/dist/artplayer-plugin-danmuku.js",
 			"video@mdui@js":              prefix + "/static/js/mdui.video.js",
 			"video@simple@js":            prefix + "/static/js/simple.video.js",
 			"simple@index@js":            prefix + "/static/js/simple.index.js",
@@ -458,12 +459,12 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"highlightjs@atom@light@css": "//cdn.bootcdn.net/ajax/libs/highlight.js/11.4.0/styles/atom-one-light.min.css",
 			"highlight@js":               "//cdn.bootcdn.net/ajax/libs/highlight.js/11.4.0/highlight.min.js",
 			"jszip@js":                   "//lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/jszip/3.1.5/jszip.js",
-			"epub@js":                    "//cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.js",
-			"pdfh5@css":                  "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/css/pdfh5.css",
-			"pdf@js":                     "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/js/pdf.js",
-			"pdf@worker@js":              "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/js/pdf.worker.js",
-			"pdfh5@js":                   "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/js/pdfh5.js",
-			"natural@compare@js":         "//cdn.jsdelivr.net/npm/natural-compare-lite@1.4.0/index.js",
+			"epub@js":                    "//js.cdn.haah.net/npm/epubjs@0.3.88/dist/epub.js",
+			"pdfh5@css":                  "//js.cdn.haah.net/npm/pdfh5@1.4.2/css/pdfh5.css",
+			"pdf@js":                     "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdf.js",
+			"pdf@worker@js":              "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdf.worker.js",
+			"pdfh5@js":                   "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdfh5.js",
+			"natural@compare@js":         "//js.cdn.haah.net/npm/natural-compare-lite@1.4.0/index.js",
 			"bootstrap@css":              "//cdn.staticfile.org/bootstrap/4.6.1/css/bootstrap.min.css",
 			"bootstrap@js":               "//cdn.staticfile.org/bootstrap/4.6.1/js/bootstrap.min.js",
 		},
@@ -893,4 +894,16 @@ func If(condition bool, trueVal, falseVal interface{}) interface{} {
 		return trueVal
 	}
 	return falseVal
+}
+
+func ExeFilePath(def string) string {
+	if def != "" {
+		return def
+	}
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	return exPath
 }
