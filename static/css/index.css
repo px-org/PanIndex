@@ -332,3 +332,11 @@ input {
     color: #fff;
     background-color: #424242;
 }
+.copyright {
+    position: fixed;
+    width: 100%;
+    bottom: 5px;
+    left: 0px;
+    z-index: 1;
+    opacity: 0.3;
+}
