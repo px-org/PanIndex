@@ -386,8 +386,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 		version = "main"
 	}
 	prefix := module.GloablConfig.PathPrefix
+	jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
 	//jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
-	jp := "https://js.cdn.haah.net/gh/libsgh/PanIndex@" + version
 	m := map[string]string{}
 	cdnMap := KV{
 		"0": KV{
@@ -450,8 +450,8 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"sweetalert2@js":             prefix + "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     "//cdn.staticfile.org/hls.js/1.1.2/hls.min.js",
 			"flv@js":                     "//cdn.staticfile.org/flv.js/1.6.2/flv.min.js",
-			"artplayer@js":               "//js.cdn.haah.net/npm/artplayer@4.5.4/dist/artplayer.js",
-			"artplayer-danmuku@js":       "//js.cdn.haah.net/npm/artplayer-plugin-danmuku@4.4.8/dist/artplayer-plugin-danmuku.js",
+			"artplayer@js":               "//fastly.jsdelivr.net/npm/artplayer@4.5.4/dist/artplayer.js",
+			"artplayer-danmuku@js":       "//fastly.jsdelivr.net/npm/artplayer-plugin-danmuku@4.4.8/dist/artplayer-plugin-danmuku.js",
 			"video@mdui@js":              prefix + "/static/js/mdui.video.js",
 			"video@simple@js":            prefix + "/static/js/simple.video.js",
 			"simple@index@js":            prefix + "/static/js/simple.index.js",
@@ -459,12 +459,12 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"highlightjs@atom@light@css": "//cdn.bootcdn.net/ajax/libs/highlight.js/11.4.0/styles/atom-one-light.min.css",
 			"highlight@js":               "//cdn.bootcdn.net/ajax/libs/highlight.js/11.4.0/highlight.min.js",
 			"jszip@js":                   "//lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/jszip/3.1.5/jszip.js",
-			"epub@js":                    "//js.cdn.haah.net/npm/epubjs@0.3.88/dist/epub.js",
-			"pdfh5@css":                  "//js.cdn.haah.net/npm/pdfh5@1.4.2/css/pdfh5.css",
-			"pdf@js":                     "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdf.js",
-			"pdf@worker@js":              "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdf.worker.js",
-			"pdfh5@js":                   "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdfh5.js",
-			"natural@compare@js":         "//js.cdn.haah.net/npm/natural-compare-lite@1.4.0/index.js",
+			"epub@js":                    "//fastly.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.js",
+			"pdfh5@css":                  "//fastly.jsdelivr.net/npm/pdfh5@1.4.2/css/pdfh5.css",
+			"pdf@js":                     "//fastly.jsdelivr.net/npm/pdfh5@1.4.2/js/pdf.js",
+			"pdf@worker@js":              "//fastly.jsdelivr.net/npm/pdfh5@1.4.2/js/pdf.worker.js",
+			"pdfh5@js":                   "//fastly.jsdelivr.net/npm/pdfh5@1.4.2/js/pdfh5.js",
+			"natural@compare@js":         "//fastly.jsdelivr.net/npm/natural-compare-lite@1.4.0/index.js",
 			"bootstrap@css":              "//cdn.staticfile.org/bootstrap/4.6.1/css/bootstrap.min.css",
 			"bootstrap@js":               "//cdn.staticfile.org/bootstrap/4.6.1/js/bootstrap.min.js",
 		},
@@ -526,7 +526,7 @@ func Base64Decode(str string) (string, bool) {
 	return string(data), false
 }
 
-//return ParentPath, fileName
+// return ParentPath, fileName
 func ParsePath(path string) (string, string) {
 	filePath, fileName := filepath.Split(path)
 	if filePath != "/" && filePath[len(filePath)-1:] == "/" {
@@ -535,7 +535,7 @@ func ParsePath(path string) (string, string) {
 	return filePath, fileName
 }
 
-//clear Suffix
+// clear Suffix
 func ClearSuffix(filePath string) string {
 	if filePath != "/" && filePath[len(filePath)-1:] == "/" {
 		filePath = filePath[0 : len(filePath)-1]
@@ -543,7 +543,7 @@ func ClearSuffix(filePath string) string {
 	return filePath
 }
 
-//return fileName
+// return fileName
 func GetFileName(path string) string {
 	paths := strings.Split(path, "/")
 	return paths[len(paths)-1]
@@ -627,7 +627,7 @@ func b64tohex(a string) string {
 	return d
 }
 
-//获取随机数
+// 获取随机数
 func Random() string {
 	return fmt.Sprintf("0.%17v", math_rand.New(math_rand.NewSource(time.Now().UnixNano())).Int63n(100000000000000000))
 }

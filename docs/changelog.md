@@ -1,4 +1,4 @@
-### [v3.1.1-20221128](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (unreleased)
+### [v3.1.1](https://github.com/libsgh/PanIndex/compare/v3.1.0...v3.1.1) (2022-11-28)
 > 温馨提示：该版本涉及页面改动，升级时需要使用新版本ui，对于页面的个性化调整，尽量使用js或css，而不是直接修改页面，这样方便后期升级！
 
 ##### Bug Fixes
@@ -8,7 +8,7 @@
 - 修复某些情况下UI目录找不到的问题
 
 ##### Improve
-- 优化cdn资源访问，使用`js.cdn.haah.net`替换jsdelivr
+- 优化cdn资源访问
 - Mdui暗黑主题显示优化（去除中间黑框）
 - 字体图标改为本地访问
 
