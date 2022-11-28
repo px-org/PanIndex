@@ -87,7 +87,7 @@ jobs:
         run: |
           tar=${{ matrix.target }}
           a=${tar//'/'/'-'}
-          echo "::set-output name=name::${a}"
+          echo "name=${a}" >> $GITHUB_OUTPUT
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
