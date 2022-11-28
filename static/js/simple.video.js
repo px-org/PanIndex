@@ -6,7 +6,7 @@ function getTranscodeInfo(accountId, fileId){
     $.ajax({
         method: 'POST',
         async: false,
-        url: '/api/public/transcode?accountId='+accountId+'&fileId='+fileId,
+        url: $config.path_prefix+'/api/public/transcode?accountId='+accountId+'&fileId='+fileId,
         success: function (data) {
             var d = JSON.parse(data);
             if(d.video_preview_play_info){
@@ -83,7 +83,7 @@ function initVideo(container, qas, title, parentPath){
                 {
                     default: false,
                     html: '<span style="color:yellow">字幕</span>',
-                    url: vpath + '.' + subtitle,
+                    url: parentPath + "/" + vpath + '.' + subtitle,
                 }
             ],
             onSelect: function(item, $dom) {
@@ -104,33 +104,8 @@ function initVideo(container, qas, title, parentPath){
         settings.push(subtitlePlugin);
     }
     var plugins = [];
-    if(danmuku != ""){
-        var danmukuPath = subtitlePath + vname + ".xml";
-        var danmukuPlugin = {
-            html: '弹幕',
-            width: 250,
-            selector: [
-                {
-                    default: true,
-                    html: '<span style="color:green">显示</span>',
-                    status: 1,
-                },
-                {
-                    default: false,
-                    html: '<span style="color:red">隐藏</span>',
-                    status: 0,
-                }
-            ],
-            onSelect: function(item, $dom) {
-                if(item.status == 0){
-                    art.plugins.artplayerPluginDanmuku.hide();
-                }else{
-                    art.plugins.artplayerPluginDanmuku.show();
-                }
-                return item.html;
-            }
-        };
-        settings.push(danmukuPlugin);
+    if(danmuku == "1"){
+        danmukuPath = danmukuPath + vname + ".xml";
         plugins.push(artplayerPluginDanmuku({
             danmuku: parentPath + "/" + danmukuPath,
             speed: 5,
@@ -139,6 +114,8 @@ function initVideo(container, qas, title, parentPath){
             opacity: 1,
             fontSize: 25,
             synchronousPlayback: false,
+            theme: "light",
+            mount: document.querySelector('.danmuinput'),
         }));
     }
     if(qas.length > 0){
@@ -163,18 +140,18 @@ function initVideo(container, qas, title, parentPath){
                     hls.attachMedia(video);
                 },
             },
-            quality: qas,
             //quality: qas,
             autoSize: true,
             fullscreen: true, //全屏
-            fullscreenWeb: true, //网页全屏
+            //fullscreenWeb: true, //网页全屏
             //pip: true,
             autoplay: false, //自动播放
+            autoPlayback: true,
             lock: true,
             isLock: true, //移动端锁屏操作
             fastForward: true, //移动端添加长按视频快进
             autoOrientation: true, //全屏自动翻转
-            autoSize: true,
+            //autoSize: true,
             playbackRate: true,//显示视频播放速度
             aspectRatio: true,//显示视频长宽比
             //screenshot: true,
@@ -183,6 +160,9 @@ function initVideo(container, qas, title, parentPath){
             theme: '#23ade5',
             settings: settings,
             whitelist: ['*'],
+            moreVideoAttr: {
+                crossOrigin: 'anonymous',
+            },
             plugins: plugins
         });
         return art;

@@ -385,47 +385,49 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 	if version == "" {
 		version = "main"
 	}
-	jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
+	prefix := module.GloablConfig.PathPrefix
+	//jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
+	jp := "https://js.cdn.haah.net/gh/libsgh/PanIndex@" + version
 	m := map[string]string{}
 	cdnMap := KV{
 		"0": KV{
-			"mdui@css":                   "/static/lib/mdui@1.0.2/css/mdui.min.css",
-			"mdui@js":                    "/static/lib/mdui@1.0.2/js/mdui.min.js",
-			"viewer@css":                 "/static/lib/viewerjs@1.10.1/dist/viewer.min.css",
-			"viewer@js":                  "/static/lib/viewerjs@1.10.1/dist/viewer.min.js",
-			"jquery@js":                  "/static/lib/jquery@3.5.1/jquery.min.js",
-			"cookie@js":                  "/static/lib/js-cookie@3.0.1/dist/js.cookie.min.js",
-			"md5@js":                     "/static/lib/md5/md5.min.js",
-			"marked@js":                  "/static/lib/marked/marked.min.js",
-			"clipboard@js":               "/static/lib/clipboard@2.0.8/clipboard.min.js",
-			"mdui@index@js":              "/static/js/mdui.index.js",
-			"mdui@index@css":             "/static/css/index.css",
-			"sortablejs@js":              "/static/lib/sortablejs@1.14.0/Sortable.min.js",
-			"admin@js":                   "/static/js/admin.js",
-			"fontawesome@css":            "/static/lib/fontawesome@5.15.4/css/all.min.css",
-			"APlayer@css":                "/static/lib/aplayer@1.10.1/dist/APlayer.min.css",
-			"APlayer@js":                 "/static/lib/aplayer@1.10.1/dist/APlayer.min.js",
-			"sweetalert2@css":            "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.css",
-			"sweetalert2@js":             "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
-			"hls@js":                     "/static/lib/hls.js@1.1.2/dist/hls.min.js",
-			"flv@js":                     "/static/lib/flv.js@1.6.2/dist/flv.min.js",
-			"artplayer@js":               "/static/lib/artplayer/artplayer.js",
-			"artplayer-danmuku@js":       "/static/lib/artplayer/artplayer-plugin-danmuku.js",
-			"video@mdui@js":              "/static/js/mdui.video.js",
-			"video@simple@js":            "/static/js/simple.video.js",
-			"simple@index@js":            "/static/js/simple.index.js",
-			"highlightjs@atom@dark@css":  "/static/lib/highlightjs/cdn-release@11.4.0/build/styles/atom-one-dark.min.css",
-			"highlightjs@atom@light@css": "/static/lib/highlightjs/cdn-release@11.4.0/build/styles/atom-one-light.min.css",
-			"highlight@js":               "/static/lib/highlightjs/cdn-release@11.4.0/build/highlight.min.js",
-			"jszip@js":                   "/static/lib/jszip@3.1.5/jszip.min.js",
-			"epub@js":                    "/static/lib/epubjs@0.3.88/epub.min.js",
-			"pdfh5@css":                  "/static/lib/pdfh5@1.4.0/css/pdfh5.css",
-			"pdf@js":                     "/static/lib/pdfh5@1.4.0/js/pdf.js",
-			"pdf@worker@js":              "/static/lib/pdfh5@1.4.0/js/pdf.worker.js",
-			"pdfh5@js":                   "/static/lib/pdfh5@1.4.0/js/pdfh5.js",
-			"natural@compare@js":         "/static/lib/natural-compare-lite@1.4.0/index.min.js",
-			"bootstrap@css":              "/static/lib/bootstrap@4.6.1/css/bootstrap.min.css",
-			"bootstrap@js":               "/static/lib/bootstrap@4.6.1/js/bootstrap.min.js",
+			"mdui@css":                   prefix + "/static/lib/mdui@1.0.2/css/mdui.min.css",
+			"mdui@js":                    prefix + "/static/lib/mdui@1.0.2/js/mdui.min.js",
+			"viewer@css":                 prefix + "/static/lib/viewerjs@1.10.1/dist/viewer.min.css",
+			"viewer@js":                  prefix + "/static/lib/viewerjs@1.10.1/dist/viewer.min.js",
+			"jquery@js":                  prefix + "/static/lib/jquery@3.5.1/jquery.min.js",
+			"cookie@js":                  prefix + "/static/lib/js-cookie@3.0.1/dist/js.cookie.min.js",
+			"md5@js":                     prefix + "/static/lib/md5/md5.min.js",
+			"marked@js":                  prefix + "/static/lib/marked/marked.min.js",
+			"clipboard@js":               prefix + "/static/lib/clipboard@2.0.8/clipboard.min.js",
+			"mdui@index@js":              prefix + "/static/js/mdui.index.js",
+			"mdui@index@css":             prefix + "/static/css/index.css",
+			"sortablejs@js":              prefix + "/static/lib/sortablejs@1.14.0/Sortable.min.js",
+			"admin@js":                   prefix + "/static/js/admin.js",
+			"fontawesome@css":            prefix + "/static/lib/fontawesome@5.15.4/css/all.min.css",
+			"APlayer@css":                prefix + "/static/lib/aplayer@1.10.1/dist/APlayer.min.css",
+			"APlayer@js":                 prefix + "/static/lib/aplayer@1.10.1/dist/APlayer.min.js",
+			"sweetalert2@css":            prefix + "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.css",
+			"sweetalert2@js":             prefix + "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
+			"hls@js":                     prefix + "/static/lib/hls.js@1.1.2/dist/hls.min.js",
+			"flv@js":                     prefix + "/static/lib/flv.js@1.6.2/dist/flv.min.js",
+			"artplayer@js":               prefix + "/static/lib/artplayer/artplayer.js",
+			"artplayer-danmuku@js":       prefix + "/static/lib/artplayer/artplayer-plugin-danmuku.js",
+			"video@mdui@js":              prefix + "/static/js/mdui.video.js",
+			"video@simple@js":            prefix + "/static/js/simple.video.js",
+			"simple@index@js":            prefix + "/static/js/simple.index.js",
+			"highlightjs@atom@dark@css":  prefix + "/static/lib/highlightjs/cdn-release@11.4.0/build/styles/atom-one-dark.min.css",
+			"highlightjs@atom@light@css": prefix + "/static/lib/highlightjs/cdn-release@11.4.0/build/styles/atom-one-light.min.css",
+			"highlight@js":               prefix + "/static/lib/highlightjs/cdn-release@11.4.0/build/highlight.min.js",
+			"jszip@js":                   prefix + "/static/lib/jszip@3.1.5/jszip.min.js",
+			"epub@js":                    prefix + "/static/lib/epubjs@0.3.88/epub.min.js",
+			"pdfh5@css":                  prefix + "/static/lib/pdfh5@1.4.0/css/pdfh5.css",
+			"pdf@js":                     prefix + "/static/lib/pdfh5@1.4.0/js/pdf.js",
+			"pdf@worker@js":              prefix + "/static/lib/pdfh5@1.4.0/js/pdf.worker.js",
+			"pdfh5@js":                   prefix + "/static/lib/pdfh5@1.4.0/js/pdfh5.js",
+			"natural@compare@js":         prefix + "/static/lib/natural-compare-lite@1.4.0/index.min.js",
+			"bootstrap@css":              prefix + "/static/lib/bootstrap@4.6.1/css/bootstrap.min.css",
+			"bootstrap@js":               prefix + "/static/lib/bootstrap@4.6.1/js/bootstrap.min.js",
 		},
 		"1": KV{
 			"mdui@css":                   "//cdn.staticfile.org/mdui/1.0.2/css/mdui.min.css",
@@ -437,32 +439,32 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"md5@js":                     "//cdn.staticfile.org/blueimp-md5/1.0.1/js/md5.min.js",
 			"marked@js":                  "//cdn.staticfile.org/marked/4.0.2/marked.min.js",
 			"clipboard@js":               "//cdn.staticfile.org/clipboard.js/2.0.8/clipboard.min.js",
-			"mdui@index@js":              "/static/js/mdui.index.js",
-			"mdui@index@css":             "/static/css/index.css",
+			"mdui@index@js":              prefix + "/static/js/mdui.index.js",
+			"mdui@index@css":             prefix + "/static/css/index.css",
 			"sortablejs@js":              "//cdn.staticfile.org/Sortable/1.14.0/Sortable.min.js",
-			"admin@js":                   "/static/js/admin.js",
+			"admin@js":                   prefix + "/static/js/admin.js",
 			"fontawesome@css":            "//cdn.staticfile.org/font-awesome/5.15.4/css/all.min.css",
 			"APlayer@css":                "//lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/aplayer/1.10.1/APlayer.min.css",
 			"APlayer@js":                 "//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/aplayer/1.10.1/APlayer.min.js",
-			"sweetalert2@css":            "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.css",
-			"sweetalert2@js":             "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
+			"sweetalert2@css":            prefix + "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.css",
+			"sweetalert2@js":             prefix + "/static/lib/sweetalert2@11.3.0/dist/sweetalert2.min.js",
 			"hls@js":                     "//cdn.staticfile.org/hls.js/1.1.2/hls.min.js",
 			"flv@js":                     "//cdn.staticfile.org/flv.js/1.6.2/flv.min.js",
-			"artplayer@js":               "//cdn.jsdelivr.net/npm/artplayer@4.5.4/dist/artplayer.js",
-			"artplayer-danmuku@js":       "//cdn.jsdelivr.net/npm/artplayer-plugin-danmuku@4.4.8/dist/artplayer-plugin-danmuku.js",
-			"video@mdui@js":              "/static/js/mdui.video.js",
-			"video@simple@js":            "/static/js/simple.video.js",
-			"simple@index@js":            "/static/js/simple.index.js",
+			"artplayer@js":               "//js.cdn.haah.net/npm/artplayer@4.5.4/dist/artplayer.js",
+			"artplayer-danmuku@js":       "//js.cdn.haah.net/npm/artplayer-plugin-danmuku@4.4.8/dist/artplayer-plugin-danmuku.js",
+			"video@mdui@js":              prefix + "/static/js/mdui.video.js",
+			"video@simple@js":            prefix + "/static/js/simple.video.js",
+			"simple@index@js":            prefix + "/static/js/simple.index.js",
 			"highlightjs@atom@dark@css":  "//cdn.bootcdn.net/ajax/libs/highlight.js/11.4.0/styles/atom-one-dark.min.css",
 			"highlightjs@atom@light@css": "//cdn.bootcdn.net/ajax/libs/highlight.js/11.4.0/styles/atom-one-light.min.css",
 			"highlight@js":               "//cdn.bootcdn.net/ajax/libs/highlight.js/11.4.0/highlight.min.js",
 			"jszip@js":                   "//lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/jszip/3.1.5/jszip.js",
-			"epub@js":                    "//cdn.jsdelivr.net/npm/epubjs@0.3.88/dist/epub.js",
-			"pdfh5@css":                  "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/css/pdfh5.css",
-			"pdf@js":                     "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/js/pdf.js",
-			"pdf@worker@js":              "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/js/pdf.worker.js",
-			"pdfh5@js":                   "//cdn.jsdelivr.net/npm/pdfh5@1.4.2/js/pdfh5.js",
-			"natural@compare@js":         "//cdn.jsdelivr.net/npm/natural-compare-lite@1.4.0/index.js",
+			"epub@js":                    "//js.cdn.haah.net/npm/epubjs@0.3.88/dist/epub.js",
+			"pdfh5@css":                  "//js.cdn.haah.net/npm/pdfh5@1.4.2/css/pdfh5.css",
+			"pdf@js":                     "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdf.js",
+			"pdf@worker@js":              "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdf.worker.js",
+			"pdfh5@js":                   "//js.cdn.haah.net/npm/pdfh5@1.4.2/js/pdfh5.js",
+			"natural@compare@js":         "//js.cdn.haah.net/npm/natural-compare-lite@1.4.0/index.js",
 			"bootstrap@css":              "//cdn.staticfile.org/bootstrap/4.6.1/css/bootstrap.min.css",
 			"bootstrap@js":               "//cdn.staticfile.org/bootstrap/4.6.1/js/bootstrap.min.js",
 		},
@@ -789,6 +791,9 @@ func ParseFullPath(path, host string) (module.Account, string, string, string) {
 	if path == "" {
 		path = "/"
 	}
+	if strings.HasPrefix(path, module.GloablConfig.PathPrefix) {
+		path = strings.TrimPrefix(path, module.GloablConfig.PathPrefix)
+	}
 	if path == "/" && module.GloablConfig.AccountChoose == "default" && len(module.GloablConfig.BypassList) > 0 {
 		path = "/" + module.GloablConfig.BypassList[0].Name
 	} else {
@@ -889,4 +894,16 @@ func If(condition bool, trueVal, falseVal interface{}) interface{} {
 		return trueVal
 	}
 	return falseVal
+}
+
+func ExeFilePath(def string) string {
+	if def != "" {
+		return def
+	}
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	return exPath
 }

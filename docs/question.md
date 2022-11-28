@@ -1,9 +1,16 @@
-## 常见问题
+### 忘记后台登录账号、密码如何解决？
+> 完整命令示例：
+> `/usr/local/bin/PanIndex -c=/usr/local/etc/PanIndex/config.json -reset_password=1234 -reset_user=admin`，命令与你的启动方式有关（配置加载），修改后按原来的方式重新启动
+1. 重置用户名、密码，执行命令：`-reset_password=1234`、`-reset_user=admin`
+2. **查看用户名、密码**，执行命令：`-cq=admin_password`、`-cq=admin_user`
+3. 数据库查看：下载data目录下的数据库文件到本地，使用[SQLite](https://sqlitebrowser.org/dl/)客户端工具查看数据库，在`config_item`表中找到K为`admin_user`，`admin_password`的V值
+
+**推荐方式2**
 
 ### 如何获取目录ID？
 
 #### 官方网盘中获取
-正常访问官方网盘页面，进入到你想分享目录的页面，浏览器里地址栏最后面的就是目录ID
+正常访问官方网盘页面，进入到你想挂载目录的页面，浏览器里地址栏最后面的就是目录ID
 
 - 本地模式：
 
@@ -28,6 +35,9 @@
 - OneDrive（根目录ID为`/`）：
 
   同本地模式一样，这里的ID为文件路径
+- GoogleDrive（根目录ID为`root`）：
+
+  ![googledrive-id](_images/googledrive-id.png)
 - S3（根目录ID为**空**）：
 
   目录ID以`/`结尾，例如`test/abc/`，**请勿添加`/`前缀**
@@ -43,7 +53,7 @@ PanIndex的设计初衷是简单高效，前后分离会增加部署的复杂度
 PanIndex未来会逐步完善接口，使之可以单独作为接口使用。
 
 ### 如何自定义页面？
-参考[自定义主题](/#自定义主题)
+参考[自定义主题](/ui.md)
 
 ### 登录失效、目录不更新该如何解决？
 - 程序启动时会刷新COOKIE（令牌）

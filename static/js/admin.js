@@ -205,6 +205,7 @@ function dynamicChgMode(mode){
         $("#password_label").text("密码");
         $("#accountForm").find("input[name=root_id]").val("");
         $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
     }else if (mode == "teambition-us"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -246,8 +247,9 @@ function dynamicChgMode(mode){
         $("#SiteIdDiv").show();
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("/");
-        $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "bucket");
+        $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "https://mgaa.noki.workers.dev");
         $("#S3PathDiv").hide();
+        $("#RedirectUriDiv").find("label").text("重定向地址");
     }else if (mode == "onedrive-cn"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").show();
@@ -264,6 +266,7 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=root_id]").val("/");
         $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "https://mgaa.noki.workers.dev");
         $("#S3PathDiv").hide();
+        $("#RedirectUriDiv").find("label").text("重定向地址");
     }else if (mode == "ftp"){
         $("#RedirectUriDiv").hide();
         $("#RefreshTokenDiv").hide();
@@ -324,6 +327,8 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=root_id]").val("");
         $("#aliQrCodeBtn").hide();
         $("#S3PathDiv").hide();
+        $("#RedirectUriDiv").find("label").text("重定向地址");
+        $("#accountForm").find("input[name=redirect_uri]").attr("placeholder", "https://mgaa.noki.workers.dev");
     }else if (mode == "s3"){
         $("#RedirectUriDiv").show();
         $("#RefreshTokenDiv").hide();

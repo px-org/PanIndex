@@ -4,7 +4,7 @@
 {{define "admin-login"}}
 <div class="mdui-m-t-5 mdui-valign">
     <div class="mdui-card mdui-center" style="width: 500px;height: 341px;box-shadow: none">
-        <form action="{{$.config.AdminPath}}/login" method="post">
+        <form action="{{$.config.PathPrefix}}{{$.config.AdminPath}}/login" method="post">
             <h4 class="mdui-typo-display-1-opacity mdui-text-center">登录</h4>
             <div class="mdui-textfield mdui-textfield-floating-label">
                 <i class="mdui-icon material-icons">account_circle</i>

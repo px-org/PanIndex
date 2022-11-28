@@ -32,7 +32,8 @@ $ bash <(curl -L https://github.com/libsgh/PanIndex-install/raw/main/install-rel
   "key_file": "",
   "config_query": "",
   "db_type": "",
-  "dsn": ""
+  "dsn": "",
+  "ui": ""
 }
 ```
 `-host=0.0.0.0` #绑定host，默认0.0.0.0<br>
@@ -45,6 +46,7 @@ $ bash <(curl -L https://github.com/libsgh/PanIndex-install/raw/main/install-rel
 `-cq=port` # 查询配置（旧版），程序并不会启动<br>
 `-db_type=sqlite` # 数据源：sqlite(默认)、mysql、postgres<br>
 `-dsn=` # 数据源连接
+`-ui=` # 自定义UI目录
 ```
 # postgres
 host=localhost user=postgres password=1234 dbname=pan-index port=5432 sslmode=disable TimeZone=Asia/Shanghai
@@ -58,16 +60,17 @@ data.data.db
 
 环境变量主要用于Docker部署。
 
-| 变量名称            | 变量值               | 描述                              |
-| ------------------- |-------------------|---------------------------------|
-| HOST    | 0.0.0.0           | 绑定HOST                          |
-| PORT                | 5238              | 启动端口号，由于Heroku端口号随机，并需要从此环境变量获取 |
-| LOG_LEVEL                | info              | 日志级别                            |
-| DATA_PATH                | /app/data         | 数据目录，主要存储配置文件，SQLITE数据库文件       |
-| CERT_FILE                | -                 | 证书文件                            |
-| KEY_FILE                | -                 | 证书密钥                            |
-| DB_TYPE                | sqlite            | 数据源类型                           |
-| DSN                | /app/data/data.db | 数据源链接                           |
+| 变量名称      | 变量值               | 描述                              |
+|-----------|-------------------|---------------------------------|
+| HOST      | 0.0.0.0           | 绑定HOST                          |
+| PORT      | 5238              | 启动端口号，由于Heroku端口号随机，并需要从此环境变量获取 |
+| LOG_LEVEL | info              | 日志级别                            |
+| DATA_PATH | /app/data         | 数据目录，主要存储配置文件，SQLITE数据库文件       |
+| CERT_FILE | -                 | 证书文件                            |
+| KEY_FILE  | -                 | 证书密钥                            |
+| DB_TYPE   | sqlite            | 数据源类型                           |
+| DSN       | /app/data/data.db | 数据源链接                           |
+| UI         | 绝对路径，默认为空         | 自定义UI目录                         |
 
 
 ```bash
@@ -177,7 +180,14 @@ docker run -itd \
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_pass http://127.0.0.1:5238;
-      client_max_body_size    1000m;
+   }
+   #server中增加配置
+   absolute_redirect off;#绝对重定向开关
+   location /file/ {
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_pass http://127.0.0.1:5238/;
    }
    ```
 - Caddy
@@ -273,7 +283,7 @@ environment=PORT="5239",LOG_LEVEL="debug"
 
 ## 其他平台部署
 
-### Heroku
+### Heroku(即将收费)
 [![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-h.git)
 
 https://github.com/libsgh/PanIndex-h
@@ -289,3 +299,7 @@ https://github.com/libsgh/PanIndex-okteto
 ### koyeb
 > koyeb账号申请并不容易，需要联系官方的人手动给你审核，不然就是等几个月...koyeb还有个最大问题是：数据配置无法保留，会被重置，除非连接外部数据库。
 基于以上，如果你仍想部署的话，直接使用Docker镜像配置好环境变量即可，不需要特殊部署脚本。
+
+### fly.io
+
+https://github.com/libsgh/PanIndex-fly

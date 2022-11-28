@@ -7,5 +7,6 @@
   "key_file": "",
   "config_query": "",
   "db_type": "sqlite",
-  "dsn": ""
+  "dsn": "",
+  "ui": ""
 }

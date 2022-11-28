@@ -9,6 +9,7 @@ import (
 var (
 	ErrNotImplement = errors.New("not implement")
 	LoginCaptcha    = errors.New("captcha")
+	FlowLimit       = errors.New("flow limit")
 )
 
 type Pan interface {

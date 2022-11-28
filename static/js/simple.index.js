@@ -50,7 +50,7 @@ $(document).ready(function() {
             var art;
             Swal.fire({
                 template: '#video-modal',
-                html: '<div class="artplayer-app" style="width: 100%;height: 33.75rem"></div>',
+                html: '<div class="artplayer-app" style="width: 100%;height: 33.75rem"></div><div class="danmuinput"></div>',
                 width: "60rem",
                 showConfirmButton: false,
                 allowOutsideClick: true,
@@ -84,7 +84,7 @@ $(document).ready(function() {
                     name: title,
                     artist: 'artist',
                     url: dURL,
-                    cover: '/static/img/music-cover.png',
+                    cover: $config.path_prefix+'/static/img/music-cover.png',
                     lrc: lrc
                 }]
             });
@@ -102,15 +102,12 @@ $(document).ready(function() {
         ev.preventDefault();
     });
     $(".search").on("keydown", function(event) {
-        var accountHome = $(this).attr("data-index");
         var key = $(this).val();
         key = key.replace(/(^\s*)|(\s*$)/g,"");
         if(key.length < 30){
             if (event.key === "Enter") {
-                if( $(this).val() != ""){
-                    window.location.href = "/?search=" + key;
-                }else{
-                    window.location.href = accountHome;
+                if(key != ""){
+                    window.location.href = $config.path_prefix+"/?search=" + key;
                 }
             }
         }
@@ -139,7 +136,7 @@ $(document).ready(function() {
         if(key.length < 30){
             if (event.key === "Enter") {
                 if( $(this).val() != ""){
-                    window.location.href = "/?search=" + key;
+                    window.location.href = $config.path_prefix+"/?search=" + key;
                 }
             }
         }

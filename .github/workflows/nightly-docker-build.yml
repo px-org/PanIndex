@@ -6,6 +6,7 @@ on:
     branches: [ dev ]
 jobs:
   build_docker:
+    if: contains('["libsgh"]', github.actor)
     name: Docker
     runs-on: ubuntu-latest
     steps:

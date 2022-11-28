@@ -22,7 +22,7 @@
         var index = 0;
         $.ajax({
             method: 'POST',
-            url: "/api/v3/public/files", //上传文件的请求路径必须是绝对路劲
+            url: "{{$.config.PathPrefix}}/api/v3/public/files", //上传文件的请求路径必须是绝对路劲
             data: formData,
             cache: false,
             contentType: false,
@@ -47,7 +47,7 @@
                         v.artist = '艺术家';
                     }
                     v.url = item.file_name;
-                    v.cover = '/static/img/music-cover.png';
+                    v.cover = '{{$.config.PathPrefix}}/static/img/music-cover.png';
                     if(enableLrc == "1"){
                         v.lrc = lrcPath + vname + '.lrc';
                     }

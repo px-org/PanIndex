@@ -13,6 +13,11 @@
             <div class="mdui-textfield-helper mdui-text-color-purple">显示优先于网盘名称</div>
         </div>
         <div class="mdui-textfield">
+            <label class="mdui-textfield-label">网站路径前缀</label>
+            <input class="mdui-textfield-input" type="text" name="path_prefix" value="{{$.config.PathPrefix}}" />
+            <div class="mdui-textfield-helper mdui-text-color-purple">配合<a href="https://libsgh.github.io/PanIndex/#/quickstart?id=%e5%8f%8d%e5%90%91%e4%bb%a3%e7%90%86" target="_blank">反代</a>可实现多层级跳转</div>
+        </div>
+        <div class="mdui-textfield">
             <label class="mdui-textfield-label">后台管理地址</label>
             <input class="mdui-textfield-input" type="text" name="admin_path" value="{{$.config.AdminPath}}" />
             <div class="mdui-textfield-helper mdui-text-color-purple">自定义后台地址，默认为<code>/admin</code>，重启生效</div>

@@ -1,3 +1,24 @@
+### [v3.1.1-20221128](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (unreleased)
+> 温馨提示：该版本涉及页面改动，升级时需要使用新版本ui，对于页面的个性化调整，尽量使用js或css，而不是直接修改页面，这样方便后期升级！
+
+##### Bug Fixes
+
+- 修复classic、bootstrap主题的一些错误
+- 完全缓存模式下阿里云盘API访问频繁导致的目录信息丢失
+- 修复某些情况下UI目录找不到的问题
+
+##### Improve
+- 优化cdn资源访问，使用`js.cdn.haah.net`替换jsdelivr
+- Mdui暗黑主题显示优化（去除中间黑框）
+- 字体图标改为本地访问
+
+##### Features
+
+- [配置管理]增加配置-网站路径前缀，用于nginx反代非根目录跳转，配置`/file` `http://noki.icu/file/`，参考[nginx配置](/config.md?id=基础配置)
+- 后台账号、密码重置，命令更新`-reset_password=1234`、`-reset_user=admin`，至此有[三种方法](/question.md?id=忘记后台登录账号、密码如何解决？)解决账号密码忘记问题
+- 启动配置（config.json、Env、Program Args）增加参数`ui`，用于自定义UI目录，默认将从执行程序所在目录查找
+- 更新Go构建版本1.19
+
 ### [v3.1.0](https://github.com/libsgh/PanIndex/compare/v3.0.9...v3.1.0) (2022-08-24)
 
 ##### Bug Fixes
@@ -42,7 +63,7 @@
 
 - 下载直链支持密码参数，可以直接下载密码文件，http://localhost:5238/a/b.txt?pwd=1234
 
-- 支持密码重置，启动时指定参数`--rest_password=1234`
+- 支持密码重置，启动时指定参数`-reset_password=1234`
 
 - 增加404页面
 

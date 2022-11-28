@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+	"github.com/bluele/gcache"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -11,6 +12,7 @@ import (
 	"github.com/smallnest/weighted"
 	"gorm.io/gorm"
 	"math/rand"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -18,10 +20,12 @@ import (
 
 var DB *gorm.DB
 var NewPassword = ""
+var NewUser = "admin"
 var DB_TYPE = "sqlite"
 var InitConfigItems = []module.ConfigItem{
-	{"site_name", "", "common"},
+	{"site_name", "PanIndex", "common"},
 	{"account_choose", "default", "common"},
+	{"path_prefix", "", "common"},
 	{"admin_user", "admin", "common"},
 	{"admin_password", "PanIndex", "common"},
 	{"s_column", "default", "common"},
@@ -34,7 +38,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"js", "", "appearance"},
 	{"theme", "mdui", "appearance"},
 	{"enable_preview", "1", "view"},
-	{"image", "png,gif,jpg,bmp,jpeg,ico", "view"},
+	{"image", "png,gif,jpg,bmp,jpeg,ico,webp", "view"},
 	{"video", "mp4,mkv,m3u8,flv,avi", "view"},
 	{"audio", "mp3,wav,flac,ape", "view"},
 	{"code", "txt,go,html,js,java,json,css,lua,sh,sql,py,cpp,xml,jsp,properties,yaml,ini", "view"},
@@ -107,6 +111,14 @@ func InitDb() {
 		DB.Where("k=?", "admin_password").Updates(configItem)
 		log.Infof("reset password success, old [%s], new [%s] ", OldPassword, NewPassword)
 	}
+	if NewUser != "" {
+		configItem := module.ConfigItem{}
+		DB.Where("k=?", "admin_user").First(&configItem)
+		OldUser := configItem.V
+		configItem.V = NewUser
+		DB.Where("k=?", "admin_user").Updates(configItem)
+		log.Infof("reset user success, old [%s], new [%s] ", OldUser, configItem.V)
+	}
 	//兼容旧版本密码规则
 	UpdateOldPassword()
 }
@@ -153,6 +165,7 @@ func InitGlobalConfig() {
 	c.HideFiles = GetHideFilesMap()
 	c.PwdFiles = FindPwdList()
 	c.BypassList = GetBypassList()
+	module.GloablConfig = c
 	c.CdnFiles = util.GetCdnFilesMap(c.Cdn, module.VERSION)
 	c.ShareInfoList = GetShareInfoList()
 	module.GloablConfig = c
@@ -332,13 +345,27 @@ func DeleteAccounts(ids []string) {
 	}
 }
 
+var RetryTasksCache = gcache.New(100000).LRU().Build()
+
+type RetryTask struct {
+	account      module.Account
+	fileId, path string
+	hide, hasPwd int
+}
+
 //Loop add files
 func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd int) {
 	pan, _ := pan.GetPan(account.Mode)
 	fileNodes, err := pan.Files(account, fileId, path, "default", "null")
 	if err != nil {
-		log.Warningf("%s get files error", account.Mode)
-		log.Errorln(err)
+		if err.Error() == "flow limit" {
+			log.Debugf("%s need retry， err：%v", path, err)
+			//加入重试
+			RetryTasksCache.Set(account.Id+fileId, RetryTask{account, fileId, path, hide, hasPwd})
+		} else {
+			log.Warningf("%s get files error", account.Mode)
+			log.Errorln(err)
+		}
 	}
 	for _, fn := range fileNodes {
 		FileNodeAuth(&fn, hide, hasPwd)
@@ -348,6 +375,9 @@ func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd i
 	}
 	if len(fileNodes) > 0 {
 		DB.Create(&fileNodes)
+	}
+	if len(fileNodes) > 0 || (len(fileNodes) == 0 && err == nil) {
+		RetryTasksCache.Remove(account.Id + fileId)
 	}
 }
 
@@ -365,6 +395,7 @@ func SyncAccountStatus(account module.Account) {
 		log.Errorf("[%s] %s auth login fail, api return : %s", account.Mode, account.Name, auth)
 		DB.Table("account").Where("id=?", account.Id).Update("cookie_status", 4)
 	}
+	InitGlobalConfig()
 }
 
 //sync files cache
@@ -383,6 +414,8 @@ func SyncFilesCache(account module.Account) {
 		}
 		//cache new files
 		LoopCreateFiles(account, account.RootId, syncDir, 0, 0)
+		//retry
+		LoopRetryTasks(account.Id)
 		//handle old files && update account status
 		var fileNodeCount int64
 		DB.Model(&module.FileNode{}).Where("account_id=? and is_delete=1", account.Id).Count(&fileNodeCount)
@@ -409,6 +442,25 @@ func SyncFilesCache(account module.Account) {
 	}
 	InitGlobalConfig()
 	SYNC_STATUS = 0
+}
+
+func LoopRetryTasks(accountId string) {
+	ks := []string{}
+	for _, key := range RetryTasksCache.Keys(false) {
+		if strings.HasPrefix(key.(string), accountId) {
+			ks = append(ks, key.(string))
+		}
+	}
+	for _, k := range ks {
+		rt, _ := RetryTasksCache.Get(k)
+		retryTask := rt.(RetryTask)
+		time.Sleep(time.Duration(1) * time.Second)
+		LoopCreateFiles(retryTask.account, retryTask.fileId, retryTask.path, retryTask.hide, retryTask.hasPwd)
+		log.Debugf("retry path: %s，剩余：%d", retryTask.path, len(ks))
+	}
+	if len(ks) > 0 {
+		LoopRetryTasks(accountId)
+	}
 }
 
 func RefreshFileNodes(accountId, fileId string) {
@@ -489,6 +541,12 @@ func SavePwdFile(pwdFile module.PwdFiles) {
 	if pwdFile.Password == "" {
 		pwdFile.Password = util.RandomPassword(8)
 	}
+	decodedPath, err := url.QueryUnescape(pwdFile.FilePath)
+	if err != nil {
+		log.Error(err)
+	} else {
+		pwdFile.FilePath = decodedPath
+	}
 	if pwdFile.Id != "" {
 		DB.Table("pwd_files").Where("id=?", pwdFile.Id).Updates(pwdFile)
 	} else {
@@ -540,7 +598,7 @@ func SaveBypass(bypass module.Bypass) string {
 				return "保存失败，网盘已被其他分流绑定！"
 			}
 		}
-		DB.Where("id=?", bypass.Id).Updates(&bypass)
+		DB.Where("id=?", bypass.Id).Save(&bypass)
 	} else {
 		err := DB.Where("name=?", bypass.Name).First(&module.Bypass{}).Error
 		if err == nil {

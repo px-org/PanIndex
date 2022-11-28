@@ -61,7 +61,7 @@ $(document).ready(function() {
             Cookies.set("theme", "mdui-light", {expires : 3650, path:"/"});
             $(".aplayer-title").css("color", "");
             $(".aplayer-list-title").css("color", "");
-            if(art){
+            if(typeof art != 'undefined' && art){
                 videoInit();
             }
         }else{
@@ -70,7 +70,7 @@ $(document).ready(function() {
             Cookies.set("theme", "mdui-dark", {expires : 3650, path:"/"});
             $(".aplayer-title").css("color", "#666");
             $(".aplayer-list-title").css("color", "#666");
-            if(art){
+            if(typeof art != 'undefined' && art){
                 videoInit();
             }
         }
@@ -91,13 +91,13 @@ $(document).ready(function() {
         document.getElementById('share-menu').addEventListener('open.mdui.menu', function () {
             $(".mdui-card").attr("style","min-height:403px");
             var formData = new FormData();
-            var prefix = window.location.protocol + "//"+window.location.host + "/s/";
+            var prefix = window.location.protocol + "//"+window.location.host + $config.path_prefix+"/s/";
             formData.append("prefix", prefix);
             formData.append("path", $(this).attr("data-fp"));
             formData.append("isFile", $(this).attr("data-file-type"));
             $.ajax({
                 type: 'POST',
-                url: '/api/v3/public/shortInfo',
+                url: $config.path_prefix+'/api/v3/public/shortInfo',
                 data: formData,
                 cache: false,
                 contentType: false,
