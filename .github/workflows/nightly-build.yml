@@ -61,14 +61,14 @@ jobs:
             target='["'${platforms}'/'${achitectures}'"]'
           fi
           list=$(echo ${target} | jq -c)
-          echo "{target}={list}" >> $GITHUB_OUTPUT
+          echo "target=${list}" >> $GITHUB_OUTPUT
           if ${{ github.event.inputs.branch == ''}}; then
             branch='["dev"]'
           else
             branch='["${{ github.event.inputs.branch }}"]'
           fi
           b=$(echo ${branch} | jq -c)
-          echo "{branch}={b}" >> $GITHUB_OUTPUT
+          echo "branch=${b}" >> $GITHUB_OUTPUT
   build:
     if: contains('["libsgh"]', github.actor)
     needs: setup
