@@ -22,7 +22,7 @@ func ExchangeToken(c *gin.Context) {
 	c.String(http.StatusOK, tokenInfo)*/
 }
 
-//short url & qrcode
+// short url & qrcode
 func ShortInfo(c *gin.Context) {
 	path := c.PostForm("path")
 	prefix := c.PostForm("prefix")
@@ -34,7 +34,7 @@ func ShortInfo(c *gin.Context) {
 	})
 }
 
-//aliyundrive transcode
+// aliyundrive transcode
 func AliTranscode(c *gin.Context) {
 	accountId := c.Query("accountId")
 	fileId := c.Query("fileId")
@@ -79,7 +79,7 @@ func Raw(c *gin.Context) {
 }
 
 func ConfigJS(c *gin.Context) {
-	config, _ := jsoniter.MarshalToString(module.GloablConfig)
+	config, _ := jsoniter.MarshalToString(gin.H{"path_prefix": module.GloablConfig.PathPrefix})
 	c.String(http.StatusOK, `var $config=%s;`, config)
 }
 
