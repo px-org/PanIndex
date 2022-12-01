@@ -161,7 +161,7 @@ function initVideo(container, qas, title, parentPath){
             settings: settings,
             whitelist: ['*'],
             moreVideoAttr: {
-                crossOrigin: 'anonymous',
+               // crossOrigin: 'anonymous',
             },
             plugins: plugins
         });
