@@ -79,7 +79,9 @@ func Raw(c *gin.Context) {
 }
 
 func ConfigJS(c *gin.Context) {
-	config, _ := jsoniter.MarshalToString(gin.H{"path_prefix": module.GloablConfig.PathPrefix})
+	config, _ := jsoniter.MarshalToString(gin.H{
+		"path_prefix": module.GloablConfig.PathPrefix,
+	})
 	c.String(http.StatusOK, `var $config=%s;`, config)
 }
 
@@ -112,4 +114,73 @@ func CommonResp(c *gin.Context, msg string, code int, data interface{}) {
 		"data":   data,
 	})
 	c.Abort()
+}
+
+func CommonSuccessResp(c *gin.Context, msg string, data interface{}) {
+	c.JSON(http.StatusOK, gin.H{
+		"status": 0,
+		"msg":    msg,
+		"data":   data,
+	})
+	c.Abort()
+}
+
+func ConfigJson(c *gin.Context) {
+	CommonSuccessResp(c, "success", gin.H{
+		"site_name":      module.GloablConfig.SiteName,
+		"theme":          module.GloablConfig.Theme,
+		"account_choose": module.GloablConfig.AccountChoose,
+		"s_column":       module.GloablConfig.SColumn,
+		"s_order":        module.GloablConfig.SOrder,
+		"path_prefix":    module.GloablConfig.PathPrefix,
+		"favicon_url":    module.GloablConfig.FaviconUrl,
+		"footer":         module.GloablConfig.Footer,
+		"css":            module.GloablConfig.Css,
+		"js":             module.GloablConfig.Js,
+		"readme":         module.GloablConfig.Readme,
+		"head":           module.GloablConfig.Head,
+		"image":          module.GloablConfig.Image,
+		"video":          module.GloablConfig.Video,
+		"audio":          module.GloablConfig.Audio,
+		"doc":            module.GloablConfig.Doc,
+		"code":           module.GloablConfig.Code,
+	})
+}
+
+func AccountList(c *gin.Context) {
+	accounts := module.GloablConfig.Accounts
+	acs := []gin.H{}
+	for _, account := range accounts {
+		acs = append(acs, gin.H{
+			"name": account.Name,
+			"path": "/" + account.Name,
+			"mode": account.Mode,
+		})
+	}
+	CommonSuccessResp(c, "success", acs)
+}
+
+func IndexData(c *gin.Context) {
+	var fns []module.FileNode
+	var isFile bool
+	path := c.PostForm("path")
+	sortBy := c.PostForm("sort_by")
+	order := c.PostForm("order")
+	if strings.HasPrefix(path, module.GloablConfig.PathPrefix) {
+		path = strings.TrimPrefix(path, module.GloablConfig.PathPrefix)
+	}
+	ac, fullPath, path, _ := util.ParseFullPath(path, "")
+	if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
+		//return account list
+		fns = service.AccountsToNodes(c.Request.Host)
+	} else {
+		fns, isFile, _, _ = service.Index(ac, path, fullPath, sortBy, order, false)
+	}
+	CommonSuccessResp(c, "success", gin.H{
+		"is_folder": !isFile,
+		"content":   fns,
+		"page_no":   1,
+		"page_size": 10,
+		"pages":     1,
+	})
 }

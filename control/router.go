@@ -22,6 +22,10 @@ func SetRouters(r *gin.Engine) {
 		public.POST("/onedrive/refreshToken")                 //onedrive refresh token
 		public.GET("/raw/*path", middleware.Check, Raw)       //file original content
 		public.GET("/config.js", ConfigJS)                    //file original content
+		//static web api
+		public.GET("/config.json", ConfigJson)   //global base config
+		public.GET("/account/list", AccountList) //account list
+		public.POST("/index", IndexData)         //account list
 	}
 	adminApi := api.Group(module.GloablConfig.AdminPath, jwt.MiddlewareFunc())
 	{

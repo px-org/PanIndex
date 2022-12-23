@@ -318,7 +318,7 @@ func (dl *DownLock) GetDownlaodUrl(account module.Account, fileId string) string
 	return downloadUrl
 }
 
-//clear file memory cache
+// clear file memory cache
 func ClearFileCache(p string) {
 	keys := FilesCache.Keys(false)
 	for _, key := range keys {
@@ -329,7 +329,7 @@ func ClearFileCache(p string) {
 	}
 }
 
-//upload file
+// upload file
 func Upload(accountId, p string, c *gin.Context) string {
 	_, fullPath, path, _ := util.ParseFullPath(p, "")
 	form, _ := c.MultipartForm()
@@ -365,7 +365,7 @@ func Upload(accountId, p string, c *gin.Context) string {
 	}
 }
 
-//sync file cache
+// sync file cache
 func Async(accountId, path string) string {
 	account := module.Account{}
 	result := dao.DB.Raw("select * from account where id=?", accountId).Take(&account)
@@ -382,7 +382,7 @@ func Async(accountId, path string) string {
 	return "刷新成功"
 }
 
-//short url & qrcode
+// short url & qrcode
 func ShortInfo(path, prefix string) (string, string, string) {
 	si := module.ShareInfo{}
 	dao.DB.Raw("select * from share_info where file_path = ?", path).First(&si)
@@ -413,7 +413,7 @@ func ShortInfo(path, prefix string) (string, string, string) {
 	return shortUrl, dataURI, "短链生成成功"
 }
 
-//get file data
+// get file data
 func GetFileData(account module.Account, downUrl, r string) ([]byte, string, int) {
 	client := httpClient(r)
 	req, _ := http.NewRequest("GET", downUrl, nil)
@@ -504,7 +504,7 @@ func GetRedirectUri(shorCode string) (string, string) {
 	return redirectUri, v
 }
 
-//path: filePath
+// path: filePath
 func GetLastNextFile(ac module.Account, path, fullPath, sortColumn, sortOrder string) (string, string) {
 	var fns []module.FileNode
 	var err error
@@ -858,7 +858,7 @@ func File(ac module.Account, path, fullPath string) (module.FileNode, error) {
 	return module.FileNode{}, nil
 }
 
-//webdav upload callback
+// webdav upload callback
 func UploadCall(account module.Account, file module.FileNode, overwrite bool) {
 	if account.CachePolicy == "mc" {
 		parentPath := util.GetParentPath(file.Path)
@@ -886,12 +886,12 @@ func UploadCall(account module.Account, file module.FileNode, overwrite bool) {
 	}
 }
 
-//webdav mkdir callback
+// webdav mkdir callback
 func MkdirCall(account module.Account, file module.FileNode) {
 	UploadCall(account, file, false)
 }
 
-//webdav move callback
+// webdav move callback
 func MoveCall(account module.Account, fileId, srcFullPath, dstFullPath string) {
 	UrlCache.Remove(account.Id + fileId)
 	if account.CachePolicy == "mc" {
