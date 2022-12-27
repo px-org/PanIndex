@@ -163,6 +163,7 @@ func AccountList(c *gin.Context) {
 func IndexData(c *gin.Context) {
 	var fns []module.FileNode
 	var isFile bool
+	var lastFile, nextFile = "", ""
 	path := c.PostForm("path")
 	sortBy := c.PostForm("sort_by")
 	order := c.PostForm("order")
@@ -174,13 +175,31 @@ func IndexData(c *gin.Context) {
 		//return account list
 		fns = service.AccountsToNodes(c.Request.Host)
 	} else {
-		fns, isFile, _, _ = service.Index(ac, path, fullPath, sortBy, order, false)
+		fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortBy, order, true)
 	}
 	CommonSuccessResp(c, "success", gin.H{
 		"is_folder": !isFile,
 		"content":   fns,
+		"last_file": lastFile,
+		"next_file": nextFile,
 		"page_no":   1,
 		"page_size": 10,
 		"pages":     1,
+	})
+}
+func SearchData(c *gin.Context) {
+	key := c.PostForm("key")
+	fns := service.Search(key)
+	CommonSuccessResp(c, "success", gin.H{
+		"content": fns,
+	})
+}
+
+func Info(c *gin.Context) {
+	CommonSuccessResp(c, "success", gin.H{
+		"name":       "PanIndex",
+		"version":    module.VERSION,
+		"commit_sha": module.GIT_COMMIT_SHA,
+		"author":     "Libs",
 	})
 }

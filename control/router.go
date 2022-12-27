@@ -25,7 +25,9 @@ func SetRouters(r *gin.Engine) {
 		//static web api
 		public.GET("/config.json", ConfigJson)   //global base config
 		public.GET("/account/list", AccountList) //account list
-		public.POST("/index", IndexData)         //account list
+		public.POST("/index", IndexData)         //index files
+		public.POST("/search", SearchData)       //search files
+		public.GET("/info", Info)                //Api Info
 	}
 	adminApi := api.Group(module.GloablConfig.AdminPath, jwt.MiddlewareFunc())
 	{
