@@ -144,6 +144,7 @@ func ConfigJson(c *gin.Context) {
 		"audio":          module.GloablConfig.Audio,
 		"doc":            module.GloablConfig.Doc,
 		"code":           module.GloablConfig.Code,
+		"short_action":   module.GloablConfig.ShortAction,
 	})
 }
 
@@ -177,14 +178,19 @@ func IndexData(c *gin.Context) {
 	} else {
 		fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortBy, order, true)
 	}
+	noReferrer := false
+	if ac.Mode == "aliyundrive" {
+		noReferrer = true
+	}
 	CommonSuccessResp(c, "success", gin.H{
-		"is_folder": !isFile,
-		"content":   fns,
-		"last_file": lastFile,
-		"next_file": nextFile,
-		"page_no":   1,
-		"page_size": 10,
-		"pages":     1,
+		"is_folder":   !isFile,
+		"content":     fns,
+		"no_referrer": noReferrer,
+		"last_file":   lastFile,
+		"next_file":   nextFile,
+		"page_no":     1,
+		"page_size":   10,
+		"pages":       1,
 	})
 }
 func SearchData(c *gin.Context) {
@@ -201,5 +207,14 @@ func Info(c *gin.Context) {
 		"version":    module.VERSION,
 		"commit_sha": module.GIT_COMMIT_SHA,
 		"author":     "Libs",
+	})
+}
+
+func ShortRedirectInfo(c *gin.Context) {
+	shortCode := c.PostForm("short_code")
+	redirectUri, v := service.GetRedirectUri(shortCode)
+	CommonSuccessResp(c, "success", gin.H{
+		"redirectUri": redirectUri,
+		"v":           v,
 	})
 }

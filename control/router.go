@@ -28,6 +28,7 @@ func SetRouters(r *gin.Engine) {
 		public.POST("/index", IndexData)         //index files
 		public.POST("/search", SearchData)       //search files
 		public.GET("/info", Info)                //Api Info
+		public.POST("/short", ShortRedirectInfo) //Short Info
 	}
 	adminApi := api.Group(module.GloablConfig.AdminPath, jwt.MiddlewareFunc())
 	{
