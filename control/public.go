@@ -3,6 +3,7 @@ package control
 import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/libsgh/PanIndex/control/middleware"
 	"github.com/libsgh/PanIndex/dao"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -172,6 +173,7 @@ func IndexData(c *gin.Context) {
 		path = strings.TrimPrefix(path, module.GloablConfig.PathPrefix)
 	}
 	ac, fullPath, path, _ := util.ParseFullPath(path, "")
+	middleware.PwdCheck(c, fullPath)
 	if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
 		//return account list
 		fns = service.AccountsToNodes(c.Request.Host)
@@ -181,6 +183,22 @@ func IndexData(c *gin.Context) {
 	noReferrer := false
 	if ac.Mode == "aliyundrive" {
 		noReferrer = true
+	}
+	if c.GetBool("has_pwd") {
+		c.JSON(http.StatusOK, gin.H{
+			"status": 403,
+			"msg":    c.GetString("pwd_err_msg"),
+			"data": gin.H{
+				"is_folder":   !isFile,
+				"content":     []module.FileNode{},
+				"no_referrer": noReferrer,
+				"last_file":   lastFile,
+				"next_file":   nextFile,
+				"pwd_path":    c.GetString("pwd_path"),
+			},
+		})
+		c.Abort()
+		return
 	}
 	CommonSuccessResp(c, "success", gin.H{
 		"is_folder":   !isFile,
