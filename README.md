@@ -27,7 +27,7 @@
 
 ## 示例
 - [在线演示](https://t1.noki.icu "https://t1.noki.icu")
- 
+- [Next.Vuetify](https://t2.nonki.icu)
 ## 文档
 [在线文档](https://pan-index-docs.vercel.app)
 

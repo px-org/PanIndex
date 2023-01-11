@@ -1,8 +1,19 @@
-### [v3.1.2-20221201](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (unreleased)
+### [v3.1.2-20230111](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev) (unreleased)
+
+> 预告vuetify主题，基于vue实现的纯静态UI，跳转更丝滑，测试预览：https://t2.nonki.icu，虽然计划接口和页面分离，但会尽量满足一站式部署。
 
 ##### Bug Fixes
 
 - 移除artplayer跨域参数
+
+##### Improve
+
+- 解决Material Icons字体加载过慢的问题
+
+##### Features
+
+- 增加一些公共接口，方便接入vuetify主题
+- 文档更新
 
 ### [v3.1.1](https://github.com/libsgh/PanIndex/compare/v3.1.0...v3.1.1) (2022-11-28)
 > 温馨提示：该版本涉及页面改动，升级时需要使用新版本ui，对于页面的个性化调整，尽量使用js或css，而不是直接修改页面，这样方便后期升级！
