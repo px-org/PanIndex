@@ -9,6 +9,7 @@
 - [捐助](/donate.md)
 - **链接**
 - [![Demo](_media/demo.png)Demo](https://t1.noki.icu)
+- [![Demo.Next](_media/demo.png)Demo](https://t2.noki.icu)
 - [![Github](_media/github.svg)Github](https://github.com/libsgh/PanIndex/)
 - [![Telegram](_media/telegram.svg)Telegram](https://t.me/PanIndex)
 - [![QQ_Group](_media/qq.svg)QQ_Group](https://qm.qq.com/cgi-bin/qm/qr?k=tDmhP8YbRaJBTpwbwM0BMgr0zQ9tRSU-&jump_from=webapi)
