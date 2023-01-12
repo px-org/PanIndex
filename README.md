@@ -46,8 +46,10 @@ English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)
 ## Thanks
 - The theme is inspired by [JustList](https://github.com/txperl/JustList)
 
-## 声明
-This program is designed to share network disk files, easy to download, please do not abuse. Before using this program, you should understand and bear the corresponding risks, including but not limited to account banned, download speed limit, etc.
+## Disclaimer
+- This program is free and open source, and it is only provided for communication and learning. Please follow the laws and regulations, and you will undertake the legal consequences arising therefrom.
+- This program is designed to share network disk files, easy to download, please do not abuse. Before using this program, you should understand and bear the corresponding risks, including but not limited to account banned, download speed limit, etc.
+- If there is any infringement, please notify by [email]((mailto:ponbous@gmail.com))
 
 ## License
 [AGPL-V3](https://github.com/libsgh/PanIndex/blob/main/LICENSE)

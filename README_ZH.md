@@ -46,7 +46,9 @@
 - 主题源自 [JustList](https://github.com/txperl/JustList) 魔改
 
 ## 声明
-本程序旨在分享网盘文件，方便下载，请勿滥用。在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等。
+- 本程序免费开源，仅供交流学习使用，请遵循法律法规，由此产生的法律后果自行承担。
+- 本程序旨在分享网盘文件，方便下载，请勿滥用。在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等。
+- 如有侵权，请通过[邮件](mailto:ponbous@gmail.com)告知。
 
 ## License
 [AGPL-V3](https://github.com/libsgh/PanIndex/blob/dev/LICENSE)
