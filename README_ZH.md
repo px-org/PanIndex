@@ -9,45 +9,44 @@
 [![Nightly build](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml)
 
 ---
-English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)**
+[English](https://github.com/libsgh/PanIndex/blob/dev/README.md) | 中文
 
-## Features
-- [x] Cross-platform / Easy to deploy
-- [x] Multiple mode, Multiple storages
-- [x] Multiple theme
-- [x] Dark mode
-- [x] File preview (image, video, audio, code, pdf, epub, markdown)
-- [x] Download direct link
-- [x] Anti-leech
-- [x] Short link / Share link
-- [x] Access control
-- [x] Bypass
+## 特性
+- [x] 跨平台、易部署
+- [x] 多模式、多存储
+- [x] 多主题
+- [x] 暗黑模式
+- [x] 文件预览（image, video, audio, code, pdf, epub, markdown）
+- [x] 下载直链
+- [x] 防盗链
+- [x] 短链、分享链接
+- [x] 访问控制
+- [x] 分流
 - [x] WebDav
 
-## Supported Storage
-- Local directory
-- [189](https://cloud.189.cn/)
-- [Teambition Team](https://www.teambition.com/)
-- [Aliyundrive](https://www.aliyundrive.com/)
-- OneDrive / Sharepoint([global](https://www.office.com/)、[cn](https://portal.partner.microsoftonline.cn/))
-- [139](https://yun.139.com/)
-- [Google Drive](https://drive.google.com/)
+## 支持的存储
+- 本地目录
+- [天翼云](https://cloud.189.cn/)
+- [Teambition 团队盘](https://www.teambition.com/)
+- [阿里云盘](https://www.aliyundrive.com/)
+- 微软云盘 / Sharepoint([国际版](https://www.office.com/)、[世纪互联](https://portal.partner.microsoftonline.cn/))
+- [和彩云](https://yun.139.com/)
+- [谷歌云盘](https://drive.google.com/)
 - WebDav
 - FTP
-- [S3](https://aws.amazon.com/s3/)（Object Storage）
+- [S3](https://aws.amazon.com/s3/)（对象存储）
 - [PikPak](https://mypikpak.com "https://mypikpak.com")
 
-## Links
+## 链接
 - [`dev`branch demo](https://t1.noki.icu "https://t1.noki.icu")
 - [`dev`branch demo(Vuetify)](https://t2.nonki.icu "https://t2.noki.icu")
 - [Document](https://docs.noki.icu)
 
-
-## Thanks
-- The theme is inspired by[JustList](https://github.com/txperl/JustList)
+## 感谢
+- 主题源自[JustList](https://github.com/txperl/JustList)魔改
 
 ## 声明
-This program is designed to share network disk files, easy to download, please do not abuse. Before using this program, you should understand and bear the corresponding risks, including but not limited to account banned, download speed limit, etc.
+本程序旨在分享网盘文件，方便下载，请勿滥用。在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等。
 
 ## License
-[AGPL-V3](https://github.com/libsgh/PanIndex/blob/main/LICENSE)
+[AGPL-V3](https://github.com/libsgh/PanIndex/blob/dev/LICENSE)
