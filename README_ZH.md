@@ -43,7 +43,7 @@
 - [Document](https://docs.noki.icu)
 
 ## 感谢
-- 主题源自[JustList](https://github.com/txperl/JustList)魔改
+- 主题源自 [JustList](https://github.com/txperl/JustList) 魔改
 
 ## 声明
 本程序旨在分享网盘文件，方便下载，请勿滥用。在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等。

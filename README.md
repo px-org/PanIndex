@@ -9,7 +9,7 @@
 [![Nightly build](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml)
 
 ---
-English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)**
+English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)
 
 ## Features
 - [x] Cross-platform / Easy to deploy
@@ -44,7 +44,7 @@ English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)**
 
 
 ## Thanks
-- The theme is inspired by[JustList](https://github.com/txperl/JustList)
+- The theme is inspired by [JustList](https://github.com/txperl/JustList)
 
 ## 声明
 This program is designed to share network disk files, easy to download, please do not abuse. Before using this program, you should understand and bear the corresponding risks, including but not limited to account banned, download speed limit, etc.
