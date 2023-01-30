@@ -41,7 +41,7 @@
 
 
 ### 2. 获取配置信息
-
+sho
 | URL                        | Request Method | Content-Type                      |
 | -------------------------- | -------------- | --------------------------------- |
 | /api/v3/public/config.json | GET            | application/x-www-form-urlencoded |
@@ -244,11 +244,11 @@ sss
 
 #### 请求参数
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| prefix | string  | URL前缀：https://localhost:5238/s |
-| path   | string  | 文件路径                          |
-| isFile | boolean | 是否是文件                        |
+| Name   | Type    | Description                     |
+| ------ | ------- |---------------------------------|
+| prefix | string  | URL前缀：https://localhost:5238/s/ |
+| path   | string  | 文件路径                            |
+| isFile | boolean | 是否是文件                           |
 
 #### 返回参数
 
