@@ -395,7 +395,6 @@ func ShortInfo(path, prefix string) (string, string, string) {
 		shortCode = si.ShortCode
 	} else {
 		shortCodes, err := util.Transform(path)
-		fmt.Println(shortCodes)
 		if err != nil {
 			log.Errorln(err)
 			return "", "", "短链生成失败"
