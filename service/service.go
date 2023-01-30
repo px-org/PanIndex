@@ -395,11 +395,19 @@ func ShortInfo(path, prefix string) (string, string, string) {
 		shortCode = si.ShortCode
 	} else {
 		shortCodes, err := util.Transform(path)
+		fmt.Println(shortCodes)
 		if err != nil {
 			log.Errorln(err)
 			return "", "", "短链生成失败"
 		}
-		shortCode = shortCodes[0]
+		for i, code := range shortCodes {
+			si = module.ShareInfo{}
+			dao.DB.Raw("select * from share_info where short_code = ?", code).First(&si)
+			if si.ShortCode == "" {
+				shortCode = shortCodes[i]
+				break
+			}
+		}
 		dao.DB.Create(module.ShareInfo{
 			path, shortCode,
 		})
