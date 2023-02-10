@@ -669,7 +669,7 @@ func EncodeURIComponent(str string) string {
 	return r
 }
 
-func GetClient() *http.Client {
+func GetClient(timeout int) *http.Client {
 	if module.GloablConfig.Proxy != "" {
 		proxy, _ := url.Parse(module.GloablConfig.Proxy)
 		tr := &http.Transport{
@@ -678,12 +678,12 @@ func GetClient() *http.Client {
 		}
 		client := &http.Client{
 			Transport: tr,
-			//Timeout:   time.Second * time.Duration(timeout),
+			Timeout:   time.Second * time.Duration(timeout),
 		}
 		return client
 	} else {
 		return &http.Client{
-			//Timeout: time.Second * time.Duration(timeout),
+			Timeout: time.Second * time.Duration(timeout),
 		}
 	}
 }
