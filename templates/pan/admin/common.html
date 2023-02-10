@@ -79,6 +79,11 @@
                 </label>
             </div>
         </div>
+        <div class="mdui-textfield">
+            <label class="mdui-textfield-label">代理</label>
+            <input class="mdui-textfield-input" type="text" name="proxy" value="{{$.config.Proxy}}" placeholder="socks5://127.0.0.1:10808" />
+            <div class="mdui-textfield-helper mdui-text-color-purple">代理地址，仅对流量中转和及GoogleDrive生效</div>
+        </div>
         <div class="mdui-row-xs-1" style="margin-top: 20px">
             <div class="mdui-col">
                 <button type="button" class="saveConfigBtn mdui-btn mdui-color-brown mdui-ripple" value="1">
