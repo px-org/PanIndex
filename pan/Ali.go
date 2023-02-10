@@ -31,7 +31,7 @@ func (a Ali) IsLogin(account *module.Account) bool {
 	}
 }
 
-//auth login api return (refresh_token, err)
+// auth login api return (refresh_token, err)
 func (a Ali) AuthLogin(account *module.Account) (string, error) {
 	var tokenResp module.TokenResp
 	_, err := client.R().
@@ -43,13 +43,34 @@ func (a Ali) AuthLogin(account *module.Account) (string, error) {
 		return "", err
 	}
 	Alis[account.Id] = tokenResp
+	signature, _ := a.GetSignatureFromApi(*account)
+	if signature == "" {
+		return "", err
+	}
 	return tokenResp.RefreshToken, nil
+}
+
+func (a Ali) GetSignatureFromApi(account module.Account) (string, error) {
+	tokenResp := Alis[account.Id]
+	resp, err := client.R().
+		SetBody(KV{"device_id": tokenResp.DeviceId, "user_id": tokenResp.UserId, "access_token": tokenResp.AccessToken}).
+		Post("https://api.noki.icu/pan/aliyundrive/signature")
+	if err != nil {
+		log.Errorln(err)
+		return "", err
+	}
+	signature := jsoniter.Get(resp.Body(), "data").Get("signature").ToString()
+	tokenResp.Signature = signature
+	Alis[account.Id] = tokenResp
+	return signature, nil
 }
 
 func (a Ali) GetSpaceSzie(account module.Account) (int64, int64) {
 	tokenResp := Alis[account.Id]
 	resp, err := client.R().
 		SetAuthToken(tokenResp.AccessToken).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://auth.aliyundrive.com/v2/databox/get_personal_info")
 	if err != nil {
 		log.Errorln(err)
@@ -60,7 +81,7 @@ func (a Ali) GetSpaceSzie(account module.Account) (int64, int64) {
 	return totalSize, usedSize
 }
 
-//files api return (entity.FileNode, err)
+// files api return (entity.FileNode, err)
 func (a Ali) Files(account module.Account, fileId, path, sortColumn, sortOrder string) ([]module.FileNode, error) {
 	fileNodes := make([]module.FileNode, 0)
 	tokenResp := Alis[account.Id]
@@ -86,6 +107,8 @@ func (a Ali) Files(account module.Account, fileId, path, sortColumn, sortOrder s
 				"order_direction":         sortOrder,  //default DESC
 				"marker":                  nextMarker,
 			}).
+			SetHeader("x-device-id", tokenResp.DeviceId).
+			SetHeader("x-signature", tokenResp.Signature).
 			Post("https://api.aliyundrive.com/adrive/v3/file/list")
 		if err != nil {
 			log.Errorln(err)
@@ -144,7 +167,7 @@ func (a Ali) ToFileNode(item Items) (module.FileNode, error) {
 	return fn, nil
 }
 
-//file api return (entity.FileNode, err)
+// file api return (entity.FileNode, err)
 func (a Ali) File(account module.Account, fileId, path string) (module.FileNode, error) {
 	tokenResp := Alis[account.Id]
 	item := Items{}
@@ -156,6 +179,8 @@ func (a Ali) File(account module.Account, fileId, path string) (module.FileNode,
 			"drive_id": tokenResp.DefaultDriveId,
 			"file_id":  fileId,
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/v2/file/get")
 	if err != nil {
 		log.Errorln(err)
@@ -194,6 +219,8 @@ func (a Ali) UploadFiles(account module.Account, parentFileId string, files []*m
 				"check_name_mode": checkNameMode,
 				"size":            file.FileSize,
 			}).
+			SetHeader("x-device-id", tokenResp.DeviceId).
+			SetHeader("x-signature", tokenResp.Signature).
 			Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
 		if err != nil {
 			log.Errorln(err)
@@ -232,7 +259,7 @@ func (a Ali) UploadFiles(account module.Account, parentFileId string, files []*m
 	return true, "All files uploaded", nil
 }
 
-//rename api return (ok, AliRenameResp, err)
+// rename api return (ok, AliRenameResp, err)
 func (a Ali) Rename(account module.Account, fileId, name string) (bool, interface{}, error) {
 	tokenResp := Alis[account.Id]
 	var result AliRenameResp
@@ -245,6 +272,8 @@ func (a Ali) Rename(account module.Account, fileId, name string) (bool, interfac
 			"name":            name,
 			"check_name_mode": "refuse",
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/v3/file/update")
 	if err != nil {
 		log.Errorln(err)
@@ -264,6 +293,8 @@ func (a Ali) Remove(account module.Account, fileId string) (bool, interface{}, e
 			"drive_id": tokenResp.DefaultDriveId,
 			"file_id":  fileId,
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/v2/recyclebin/trash")
 	if err != nil {
 		log.Errorln(err)
@@ -286,6 +317,8 @@ func (a Ali) Mkdir(account module.Account, parentFileId, name string) (bool, int
 			"check_name_mode": "refuse",
 			"type":            "folder",
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
 	if err != nil {
 		log.Errorln(err)
@@ -318,6 +351,8 @@ func (a Ali) Move(account module.Account, fileId, targetFileId string, overwrite
 			},
 			"resource": "file",
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/v3/batch")
 	if err != nil {
 		log.Errorln(err)
@@ -342,6 +377,8 @@ func (a Ali) GetDownloadUrl(account module.Account, fileId string) (string, erro
 			"file_id":    fileId,
 			"expire_sec": 14400,
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/v2/file/get_download_url")
 	if err != nil {
 		log.Errorln(err)
@@ -353,7 +390,7 @@ func (a Ali) GetDownloadUrl(account module.Account, fileId string) (string, erro
 	return result.URL, err
 }
 
-//Get Paths by fileId
+// Get Paths by fileId
 func (a Ali) GetPaths(account module.Account, fileId string) ([]module.FileNode, error) {
 	fns := make([]module.FileNode, 0)
 	tokenResp := Alis[account.Id]
@@ -365,6 +402,8 @@ func (a Ali) GetPaths(account module.Account, fileId string) ([]module.FileNode,
 			"drive_id": tokenResp.UserInfo.DefaultDriveId,
 			"file_id":  fileId,
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/adrive/v1/file/get_path")
 	if err != nil {
 		log.Errorln(err)
@@ -387,6 +426,8 @@ func (a Ali) Transcode(account module.Account, fileId string) (string, error) {
 			"file_id":     fileId,
 			"template_id": "",
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/v2/file/get_video_preview_play_info")
 	if err != nil {
 		log.Errorln(err)
@@ -406,6 +447,8 @@ func (a Ali) GetPath(account module.Account, fileId string) (AliPathResp, error)
 			"drive_id": tokenResp.DefaultDriveId,
 			"file_id":  fileId,
 		}).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", tokenResp.Signature).
 		Post("https://api.aliyundrive.com/adrive/v1/file/get_path")
 	if err != nil {
 		log.Errorln(err)
@@ -434,6 +477,8 @@ func (a Ali) Search(account module.Account, key string) ([]Items, error) {
 				"order_by":                "updated_at DESC",
 				"marker":                  marker,
 			}).
+			SetHeader("x-device-id", tokenResp.DeviceId).
+			SetHeader("x-signature", tokenResp.Signature).
 			Post("https://api.aliyundrive.com/adrive/v3/file/search")
 		if err != nil {
 			log.Errorln(err)
@@ -452,7 +497,7 @@ func (a Ali) Search(account module.Account, key string) ([]Items, error) {
 
 }
 
-//ali qrcode gen
+// ali qrcode gen
 func QrcodeGen() (string, string) {
 	resp, err := client.R().
 		Get("https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive")
@@ -470,7 +515,7 @@ func QrcodeGen() (string, string) {
 	return dataURI, data.ToString()
 }
 
-//ali qrcode check
+// ali qrcode check
 func QrcodeCheck(t, codeContent, ck, resultCode string) (string, string) {
 	resp, _ := client.R().
 		SetQueryParam("t", t).
@@ -506,14 +551,14 @@ func (a Ali) GetOrderFiled(sortColumn, sortOrder string) (string, string) {
 	return sortColumn, sortOrder
 }
 
-//file api response
+// file api response
 type AliFilesResp struct {
 	Items             []Items `json:"items"`
 	NextMarker        string  `json:"next_marker"`
 	PunishedFileCount int     `json:"punished_file_count"`
 }
 
-//file api file
+// file api file
 type Items struct {
 	DriveID         string `json:"drive_id"`
 	FileID          string `json:"file_id"`
@@ -533,7 +578,7 @@ type Items struct {
 	Thumbnail       string `json:"thumbnail,omitempty"`
 }
 
-//remove api response
+// remove api response
 type AliRemoveResp struct {
 	DomainID    string `json:"domain_id"`
 	DriveID     string `json:"drive_id"`
@@ -541,7 +586,7 @@ type AliRemoveResp struct {
 	AsyncTaskID string `json:"async_task_id"`
 }
 
-//mkdir api response
+// mkdir api response
 type AliMkdirResp struct {
 	UploadID     string      `json:"upload_id"`
 	ParentFileID string      `json:"parent_file_id"`
@@ -609,7 +654,7 @@ type PartInfo struct {
 	UploadURL  string `json:"upload_url"`
 }
 
-//path api response
+// path api response
 type AliPathResp struct {
 	Items []Items `json:"items"`
 }
