@@ -165,7 +165,7 @@ func download(ac module.Account, fileNode module.FileNode, c *gin.Context) {
 }
 
 func DataRroxy(ac module.Account, downUrl, fileName string, c *gin.Context) {
-	client := util.GetClient(20)
+	client := util.GetClient(0)
 	req, err := http.NewRequest("GET", downUrl, nil)
 	reqRange := c.GetHeader("Range")
 	if reqRange != "" {
