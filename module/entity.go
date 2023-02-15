@@ -187,7 +187,10 @@ type TokenResp struct {
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int    `json:"expires_in"`
 	TokenType    string `json:"token_type"`
-	Signature    string `json:"signature"`
+	//local use
+	Signature     string `json:"signature"`
+	Nonce         int    `json:"nonce"`
+	PrivateKeyHex string `json:"private_key_hex"`
 
 	UserInfo
 

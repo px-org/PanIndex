@@ -3,18 +3,24 @@ package pan
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"net/http"
 	"strings"
 	"time"
 )
 
 var Alis = map[string]module.TokenResp{}
+var APPID = "5dde4e1bdf9e4966b387ba58f4b3fdc3"
+var NONCE_MIN = 0
+var NONCE_MAX = 2147483647
 
 func init() {
 	RegisterPan("aliyundrive", &Ali{})
@@ -43,26 +49,87 @@ func (a Ali) AuthLogin(account *module.Account) (string, error) {
 		return "", err
 	}
 	Alis[account.Id] = tokenResp
-	signature, _ := a.GetSignatureFromApi(*account)
+	signature, _ := a.CreateSession(*account)
 	if signature == "" {
 		return "", err
 	}
 	return tokenResp.RefreshToken, nil
 }
 
-func (a Ali) GetSignatureFromApi(account module.Account) (string, error) {
+func (a Ali) CreateSession(account module.Account) (string, error) {
 	tokenResp := Alis[account.Id]
+	privateKey, pubKey := genKeys()
+	tokenResp.Nonce = NONCE_MIN
+	signature := genSignature(privateKey, tokenResp.DeviceId, tokenResp.UserId, tokenResp.Nonce)
 	resp, err := client.R().
-		SetBody(KV{"device_id": tokenResp.DeviceId, "user_id": tokenResp.UserId, "access_token": tokenResp.AccessToken}).
-		Post("https://api.noki.icu/pan/aliyundrive/signature")
+		SetBody(KV{"deviceName": "Chrome浏览器", "modelName": "Windows网页版", "pubKey": pubKey}).
+		SetAuthToken(tokenResp.AccessToken).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", signature).
+		Post("https://api.aliyundrive.com/users/v1/users/device/create_session")
 	if err != nil {
 		log.Errorln(err)
 		return "", err
 	}
-	signature := jsoniter.Get(resp.Body(), "data").Get("signature").ToString()
+	success := jsoniter.Get(resp.Body(), "success").ToBool()
+	result := jsoniter.Get(resp.Body(), "result").ToBool()
+	if result && success {
+		log.Debugf("CreateSession success, signature：%s", signature)
+	} else {
+		log.Error(resp.String())
+	}
 	tokenResp.Signature = signature
+	tokenResp.PrivateKeyHex = hex.EncodeToString(privateKey.Bytes())
 	Alis[account.Id] = tokenResp
 	return signature, nil
+}
+
+func (a Ali) RenewSession(account module.Account) (string, error) {
+	tokenResp := Alis[account.Id]
+	privateKey, _ := hex.DecodeString(tokenResp.PrivateKeyHex)
+	nonce := getNextNonce(tokenResp.Nonce)
+	signature := genSignature(privateKey, tokenResp.DeviceId, tokenResp.UserId, nonce)
+	resp, err := client.R().
+		SetBody(KV{}).
+		SetAuthToken(tokenResp.AccessToken).
+		SetHeader("x-device-id", tokenResp.DeviceId).
+		SetHeader("x-signature", signature).
+		Post("https://api.aliyundrive.com/users/v1/users/device/renew_session")
+	if err != nil {
+		log.Errorln(err)
+		return "", err
+	}
+	success := jsoniter.Get(resp.Body(), "success").ToBool()
+	result := jsoniter.Get(resp.Body(), "result").ToBool()
+	if result && success {
+		log.Debugf("RenewSession success, signature：%s", signature)
+	} else {
+		log.Error(resp.String())
+	}
+	tokenResp.Signature = signature
+	tokenResp.Nonce = nonce
+	Alis[account.Id] = tokenResp
+	return signature, nil
+}
+
+func genSignature(privKey secp256k1.PrivKey, deviceId, userId string, nonce int) string {
+	str := "%s:%s:%s:%d"
+	message := fmt.Sprintf(str, APPID, deviceId, userId, nonce)
+	signature, _ := privKey.Sign([]byte(message))
+	sign := hex.EncodeToString(signature) + "00"
+	return sign
+}
+
+func genKeys() (secp256k1.PrivKey, string) {
+	privateKey := secp256k1.GenPrivKey()
+	return privateKey, hex.EncodeToString(privateKey.PubKey().Bytes())
+}
+
+func getNextNonce(nonce int) int {
+	if nonce > NONCE_MAX {
+		return NONCE_MIN
+	}
+	return nonce + 1
 }
 
 func (a Ali) GetSpaceSzie(account module.Account) (int64, int64) {
@@ -384,7 +451,7 @@ func (a Ali) GetDownloadUrl(account module.Account, fileId string) (string, erro
 		log.Errorln(err)
 		return "", err
 	}
-	if result.Ratelimit.PartSpeed != -1 {
+	if result.Ratelimit.PartSpeed != 0 {
 		log.Warningf("该文件限速：%d", result.Ratelimit.PartSpeed)
 	}
 	return result.URL, err
