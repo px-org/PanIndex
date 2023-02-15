@@ -36,7 +36,7 @@ func Run() {
 			if account.Mode == "aliyundrive" {
 				//renew signature session
 				ali := p.(*pan.Ali)
-				ali.RenewSession(account)
+				ali.CreateSession(account)
 			}
 		}
 	})
