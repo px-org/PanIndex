@@ -22,9 +22,9 @@ func Run() {
 	//cookie有效性检测
 	util.Cron.AddFunc("0 0/1 * * * ?", func() {
 		for _, account := range module.GloablConfig.Accounts {
+			p, _ := pan.GetPan(account.Mode)
 			if account.Mode == "cloud189" || account.Mode == "yun139" ||
 				account.Mode == "teambition-us" || account.Mode == "teambition" {
-				p, _ := pan.GetPan(account.Mode)
 				status := p.IsLogin(&account)
 				if !status {
 					log.Debugf("[cron] account:%s, logout, start login...", account.Name)
@@ -32,6 +32,11 @@ func Run() {
 				} else {
 					//log.Debugf("[cron] account:%s, status ok", account.Name)
 				}
+			}
+			if account.Mode == "aliyundrive" {
+				//renew signature session
+				ali := p.(*pan.Ali)
+				ali.CreateSession(account)
 			}
 		}
 	})

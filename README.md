@@ -1,43 +1,55 @@
 # PanIndex
-[![](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/libsgh/PanIndex-h.git)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/libsgh/PanIndex.svg)](https://github.com/libsgh/PanIndex)
+[![GoReportCard](https://goreportcard.com/badge/github.com/libsgh/PanIndex)](https://goreportcard.com/report/github.com/libsgh/PanIndex)
+![GitHub all releases](https://img.shields.io/github/downloads/libsgh/PanIndex/total)
+![Docker pulls](https://img.shields.io/docker/pulls/iicm/pan-index?color=%2348BB78&logo=docker&label=pulls)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/libsgh/PanIndex)
+![GitHub last commit](https://img.shields.io/github/last-commit/libsgh/PanIndex)
+[![Nightly build](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml)
 
-## 简单的网盘目录列表
-- [x] 跨平台、易部署
-- [x] 多模式、多网盘
-- [x] 多主题
-- [x] 下载直链
-- [x] 防盗链
-- [x] 短链、分享
-- [x] 访问控制
-- [x] 分流
+---
+English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)
+
+## Features
+- [x] Cross-platform / Easy to deploy
+- [x] Multiple mode, Multiple storages
+- [x] Multiple theme
+- [x] Dark mode
+- [x] File preview (image, video, audio, code, pdf, epub, markdown)
+- [x] Download direct link
+- [x] Anti-leech
+- [x] Short link / Share link
+- [x] Access control
+- [x] Bypass
 - [x] WebDav
 
-## 目前支持的网盘
-- 本地目录
-- [天翼云网盘](https://cloud.189.cn/)
-- [Teambition（国内、国外）](https://www.teambition.com/)
-- [阿里云盘](https://www.aliyundrive.com/)
-- OneDrive（国际版、世纪互联）
-- [和彩云](https://yun.139.com/)
-- [谷歌云盘](https://drive.google.com/)
+## Supported Storage
+- Local directory
+- [189](https://cloud.189.cn/)
+- [Teambition Team](https://www.teambition.com/)
+- [Aliyundrive](https://www.aliyundrive.com/)
+- OneDrive / Sharepoint([global](https://www.office.com/)、[cn](https://portal.partner.microsoftonline.cn/))
+- [139](https://yun.139.com/)
+- [Google Drive](https://drive.google.com/)
 - WebDav
 - FTP
-- S3（对象存储）
+- [S3](https://aws.amazon.com/s3/)（Object Storage）
 - [PikPak](https://mypikpak.com "https://mypikpak.com")
 
-## 示例
-- [在线演示](https://t1.noki.icu "https://t1.noki.icu")
- 
-## 文档
-[在线文档](https://pan-index-docs.vercel.app)
+## Links
+- [`dev`branch demo](https://t1.noki.icu "https://t1.noki.icu")
+- [`dev`branch demo(Vuetify)](https://t2.nonki.icu "https://t2.noki.icu")
+- [Document](https://docs.noki.icu)
 
-## 鸣谢
-- 前端框架：[mdui](https://www.mdui.org/)
-- mdui主题样式源自[JustList](https://github.com/txperl/JustList)
-- 后端框架：[gin-gonic](https://github.com/gin-gonic/gin)
 
-## 声明
-本程序旨在分享网盘文件，方便下载，请勿滥用。在使用本程序之前，你应了解并承担相应的风险，包括但不限于账号被ban，下载限速等。
+## Thanks
+- The theme is inspired by [JustList](https://github.com/txperl/JustList)
+
+## Disclaimer
+- This program is free and open source, and it is only provided for communication and learning. Please follow the laws and regulations, and you will undertake the legal consequences arising therefrom.
+- This program is designed to share network disk files, easy to download, please do not abuse. Before using this program, you should understand and bear the corresponding risks, including but not limited to account banned, download speed limit, etc.
+- If there is any infringement, please notify by [email]((mailto:ponbous@gmail.com))
 
 ## License
-AGPL-V3
+[AGPL-V3](https://github.com/libsgh/PanIndex/blob/main/LICENSE)

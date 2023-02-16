@@ -1,5 +1,8 @@
 # 简介
+[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/libsgh/PanIndex.svg)](https://github.com/libsgh/PanIndex)
+[![GoReportCard](https://goreportcard.com/badge/github.com/libsgh/PanIndex)](https://goreportcard.com/report/github.com/libsgh/PanIndex)
 ![GitHub all releases](https://img.shields.io/github/downloads/libsgh/PanIndex/total)
+![Docker pulls](https://img.shields.io/docker/pulls/iicm/pan-index?color=%2348BB78&logo=docker&label=pulls)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/libsgh/PanIndex)
 ![GitHub last commit](https://img.shields.io/github/last-commit/libsgh/PanIndex)
 [![Nightly build](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml)

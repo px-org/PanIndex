@@ -161,7 +161,7 @@ type BypassAccounts struct {
 	AccountId string `json:"account_id"` //账号id
 }
 
-//cache data struct
+// cache data struct
 type Cache struct {
 	FilePath    string      `json:"file_path"`
 	CacheTime   string      `json:"cache_time"`
@@ -187,6 +187,10 @@ type TokenResp struct {
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int    `json:"expires_in"`
 	TokenType    string `json:"token_type"`
+	//local use
+	Signature     string `json:"signature"`
+	Nonce         int    `json:"nonce"`
+	PrivateKeyHex string `json:"private_key_hex"`
 
 	UserInfo
 

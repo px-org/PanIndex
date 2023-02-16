@@ -1,7 +1,6 @@
 ![logo](_media/index.png)
 
-# PanIndex <small>v3.1.1</small>
-
+# PanIndex <small>v3.1.2</small>
 > 一个简易的网盘目录列表.
 >
 - 跨平台、易部署
@@ -12,7 +11,6 @@
 - 短链、分享
 - 访问控制
 - 分流
-
 
 [GitHub](https://github.com/libsgh/PanIndex)
 [Demo](https://t1.noki.icu)

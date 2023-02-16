@@ -3,6 +3,7 @@ package control
 import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/libsgh/PanIndex/control/middleware"
 	"github.com/libsgh/PanIndex/dao"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/pan"
@@ -79,7 +80,9 @@ func Raw(c *gin.Context) {
 }
 
 func ConfigJS(c *gin.Context) {
-	config, _ := jsoniter.MarshalToString(gin.H{"path_prefix": module.GloablConfig.PathPrefix})
+	config, _ := jsoniter.MarshalToString(gin.H{
+		"path_prefix": module.GloablConfig.PathPrefix,
+	})
 	c.String(http.StatusOK, `var $config=%s;`, config)
 }
 
@@ -112,4 +115,124 @@ func CommonResp(c *gin.Context, msg string, code int, data interface{}) {
 		"data":   data,
 	})
 	c.Abort()
+}
+
+func CommonSuccessResp(c *gin.Context, msg string, data interface{}) {
+	c.JSON(http.StatusOK, gin.H{
+		"status": 0,
+		"msg":    msg,
+		"data":   data,
+	})
+	c.Abort()
+}
+
+func ConfigJson(c *gin.Context) {
+	CommonSuccessResp(c, "success", gin.H{
+		"site_name":      module.GloablConfig.SiteName,
+		"theme":          module.GloablConfig.Theme,
+		"account_choose": module.GloablConfig.AccountChoose,
+		"s_column":       module.GloablConfig.SColumn,
+		"s_order":        module.GloablConfig.SOrder,
+		"path_prefix":    module.GloablConfig.PathPrefix,
+		"favicon_url":    module.GloablConfig.FaviconUrl,
+		"footer":         module.GloablConfig.Footer,
+		"css":            module.GloablConfig.Css,
+		"js":             module.GloablConfig.Js,
+		"readme":         module.GloablConfig.Readme,
+		"head":           module.GloablConfig.Head,
+		"image":          module.GloablConfig.Image,
+		"video":          module.GloablConfig.Video,
+		"audio":          module.GloablConfig.Audio,
+		"doc":            module.GloablConfig.Doc,
+		"code":           module.GloablConfig.Code,
+		"short_action":   module.GloablConfig.ShortAction,
+	})
+}
+
+func AccountList(c *gin.Context) {
+	accounts := module.GloablConfig.Accounts
+	acs := []gin.H{}
+	for _, account := range accounts {
+		acs = append(acs, gin.H{
+			"name": account.Name,
+			"path": "/" + account.Name,
+			"mode": account.Mode,
+		})
+	}
+	CommonSuccessResp(c, "success", acs)
+}
+
+func IndexData(c *gin.Context) {
+	var fns []module.FileNode
+	var isFile bool
+	var lastFile, nextFile = "", ""
+	path := c.PostForm("path")
+	sortBy := c.PostForm("sort_by")
+	order := c.PostForm("order")
+	if strings.HasPrefix(path, module.GloablConfig.PathPrefix) {
+		path = strings.TrimPrefix(path, module.GloablConfig.PathPrefix)
+	}
+	ac, fullPath, path, _ := util.ParseFullPath(path, "")
+	middleware.PwdCheck(c, fullPath)
+	if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
+		//return account list
+		fns = service.AccountsToNodes(c.Request.Host)
+	} else {
+		fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortBy, order, true)
+	}
+	noReferrer := false
+	if ac.Mode == "aliyundrive" {
+		noReferrer = true
+	}
+	if c.GetBool("has_pwd") {
+		c.JSON(http.StatusOK, gin.H{
+			"status": 403,
+			"msg":    c.GetString("pwd_err_msg"),
+			"data": gin.H{
+				"is_folder":   !isFile,
+				"content":     []module.FileNode{},
+				"no_referrer": noReferrer,
+				"last_file":   lastFile,
+				"next_file":   nextFile,
+				"pwd_path":    c.GetString("pwd_path"),
+			},
+		})
+		c.Abort()
+		return
+	}
+	CommonSuccessResp(c, "success", gin.H{
+		"is_folder":   !isFile,
+		"content":     fns,
+		"no_referrer": noReferrer,
+		"last_file":   lastFile,
+		"next_file":   nextFile,
+		"page_no":     1,
+		"page_size":   10,
+		"pages":       1,
+	})
+}
+func SearchData(c *gin.Context) {
+	key := c.PostForm("key")
+	fns := service.Search(key)
+	CommonSuccessResp(c, "success", gin.H{
+		"content": fns,
+	})
+}
+
+func Info(c *gin.Context) {
+	CommonSuccessResp(c, "success", gin.H{
+		"name":       "PanIndex",
+		"version":    module.VERSION,
+		"commit_sha": module.GIT_COMMIT_SHA,
+		"author":     "Libs",
+	})
+}
+
+func ShortRedirectInfo(c *gin.Context) {
+	shortCode := c.PostForm("short_code")
+	redirectUri, v := service.GetRedirectUri(shortCode)
+	CommonSuccessResp(c, "success", gin.H{
+		"redirectUri": redirectUri,
+		"v":           v,
+	})
 }
