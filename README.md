@@ -39,9 +39,10 @@ English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)
 
 ## Links
 - [`dev`branch demo](https://t1.noki.icu "https://t1.noki.icu")
-- [`dev`branch demo(Vuetify)](https://t2.nonki.icu "https://t2.noki.icu")
+- [`dev`branch demo(Vuetify)](https://t2.noki.icu "https://t2.noki.icu")
 - [Document](https://docs.noki.icu)
-
+- [Nightly](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev)
+- [PanIndex Tool](https://pt.noki.icu/)
 
 ## Thanks
 - The theme is inspired by [JustList](https://github.com/txperl/JustList)
