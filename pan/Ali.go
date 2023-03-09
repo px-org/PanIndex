@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/bluele/gcache"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/libsgh/PanIndex/module"
 	"github.com/libsgh/PanIndex/util"
@@ -19,8 +20,9 @@ import (
 
 var Alis = map[string]module.TokenResp{}
 var APPID = "5dde4e1bdf9e4966b387ba58f4b3fdc3"
-var NONCE_MIN = 0
-var NONCE_MAX = 2147483647
+var NonceMin = 0
+var NonceMax = 2147483647
+var SignCache = gcache.New(100000).LRU().Build()
 
 func init() {
 	RegisterPan("aliyundrive", &Ali{})
@@ -57,9 +59,14 @@ func (a Ali) AuthLogin(account *module.Account) (string, error) {
 }
 
 func (a Ali) CreateSession(account module.Account) (string, error) {
+	if SignCache.Has(account.Id) {
+		signature, err := SignCache.Get(account.Id)
+		log.Debugf("get signature from cache：%s", signature)
+		return signature.(string), err
+	}
 	tokenResp := Alis[account.Id]
 	privateKey, pubKey := genKeys()
-	tokenResp.Nonce = NONCE_MIN
+	tokenResp.Nonce = NonceMin
 	signature := genSignature(privateKey, tokenResp.DeviceId, tokenResp.UserId, tokenResp.Nonce)
 	resp, err := client.R().
 		SetBody(KV{"deviceName": "Chrome浏览器", "modelName": "Windows网页版", "pubKey": pubKey}).
@@ -74,7 +81,8 @@ func (a Ali) CreateSession(account module.Account) (string, error) {
 	success := jsoniter.Get(resp.Body(), "success").ToBool()
 	result := jsoniter.Get(resp.Body(), "result").ToBool()
 	if result && success {
-		log.Debugf("CreateSession success, signature：%s", signature)
+		SignCache.Set(account.Id, signature)
+		log.Infof("CreateSession success, signature：%s", signature)
 	} else {
 		log.Error(resp.String())
 	}
@@ -102,9 +110,10 @@ func (a Ali) RenewSession(account module.Account) (string, error) {
 	success := jsoniter.Get(resp.Body(), "success").ToBool()
 	result := jsoniter.Get(resp.Body(), "result").ToBool()
 	if result && success {
-		log.Debugf("RenewSession success, signature：%s", signature)
+		log.Infof("RenewSession success, signature：%s", signature)
 	} else {
-		log.Error(resp.String())
+		log.Infof(resp.String())
+		return "", err
 	}
 	tokenResp.Signature = signature
 	tokenResp.Nonce = nonce
@@ -126,8 +135,8 @@ func genKeys() (secp256k1.PrivKey, string) {
 }
 
 func getNextNonce(nonce int) int {
-	if nonce > NONCE_MAX {
-		return NONCE_MIN
+	if nonce > NonceMax {
+		return NonceMin
 	}
 	return nonce + 1
 }
@@ -174,8 +183,8 @@ func (a Ali) Files(account module.Account, fileId, path, sortColumn, sortOrder s
 				"order_direction":         sortOrder,  //default DESC
 				"marker":                  nextMarker,
 			}).
-			SetHeader("x-device-id", tokenResp.DeviceId).
-			SetHeader("x-signature", tokenResp.Signature).
+			/*SetHeader("x-device-id", tokenResp.DeviceId).
+			SetHeader("x-signature", tokenResp.Signature).*/
 			Post("https://api.aliyundrive.com/adrive/v3/file/list")
 		if err != nil {
 			log.Errorln(err)
@@ -239,7 +248,8 @@ func (a Ali) File(account module.Account, fileId, path string) (module.FileNode,
 	tokenResp := Alis[account.Id]
 	item := Items{}
 	fn := module.FileNode{}
-	_, err := client.R().
+	signature, _ := a.CreateSession(account)
+	resp, err := client.R().
 		SetResult(&item).
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -247,11 +257,16 @@ func (a Ali) File(account module.Account, fileId, path string) (module.FileNode,
 			"file_id":  fileId,
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/v2/file/get")
 	if err != nil {
 		log.Errorln(err)
 		return fn, err
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Infof("signature expired create and retry:%s", signature)
+		return a.File(account, fileId, path)
 	}
 	fn, _ = a.ToFileNode(item)
 	fn.Path = path
@@ -270,6 +285,7 @@ func (a Ali) UploadFiles(account module.Account, parentFileId string, files []*m
 	for _, file := range files {
 		t1 := time.Now()
 		log.Debugf("Upload started：%s，Size：%d", file.FileName, file.FileSize)
+		signature, _ := a.CreateSession(account)
 		var aliMkdirResp AliMkdirResp
 		resp, err := client.R().
 			SetResult(&aliMkdirResp).
@@ -287,7 +303,7 @@ func (a Ali) UploadFiles(account module.Account, parentFileId string, files []*m
 				"size":            file.FileSize,
 			}).
 			SetHeader("x-device-id", tokenResp.DeviceId).
-			SetHeader("x-signature", tokenResp.Signature).
+			SetHeader("x-signature", signature).
 			Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
 		if err != nil {
 			log.Errorln(err)
@@ -329,8 +345,9 @@ func (a Ali) UploadFiles(account module.Account, parentFileId string, files []*m
 // rename api return (ok, AliRenameResp, err)
 func (a Ali) Rename(account module.Account, fileId, name string) (bool, interface{}, error) {
 	tokenResp := Alis[account.Id]
+	signature, _ := a.CreateSession(account)
 	var result AliRenameResp
-	_, err := client.R().
+	resp, err := client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -340,11 +357,16 @@ func (a Ali) Rename(account module.Account, fileId, name string) (bool, interfac
 			"check_name_mode": "refuse",
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/v3/file/update")
 	if err != nil {
 		log.Errorln(err)
 		return false, result, err
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Debugf("signature expired create and retry:%s", signature)
+		return a.Rename(account, fileId, name)
 	}
 	return true, result, err
 }
@@ -353,7 +375,8 @@ func (a Ali) Rename(account module.Account, fileId, name string) (bool, interfac
 func (a Ali) Remove(account module.Account, fileId string) (bool, interface{}, error) {
 	tokenResp := Alis[account.Id]
 	var result AliRemoveResp
-	_, err := client.R().
+	signature, _ := a.CreateSession(account)
+	resp, err := client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -361,11 +384,16 @@ func (a Ali) Remove(account module.Account, fileId string) (bool, interface{}, e
 			"file_id":  fileId,
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/v2/recyclebin/trash")
 	if err != nil {
 		log.Errorln(err)
 		return false, result, err
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Debugf("signature expired create and retry:%s", signature)
+		return a.Remove(account, fileId)
 	}
 	return true, result, err
 }
@@ -373,8 +401,9 @@ func (a Ali) Remove(account module.Account, fileId string) (bool, interface{}, e
 // mkdir api return (ok, AliMkdirResp, err)
 func (a Ali) Mkdir(account module.Account, parentFileId, name string) (bool, interface{}, error) {
 	tokenResp := Alis[account.Id]
+	signature, _ := a.CreateSession(account)
 	var result AliMkdirResp
-	_, err := client.R().
+	resp, err := client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -385,11 +414,16 @@ func (a Ali) Mkdir(account module.Account, parentFileId, name string) (bool, int
 			"type":            "folder",
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/adrive/v2/file/createWithFolders")
 	if err != nil {
 		log.Errorln(err)
 		return false, result, err
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Debugf("signature expired create and retry:%s", signature)
+		return a.Mkdir(account, parentFileId, name)
 	}
 	return true, result, err
 }
@@ -397,8 +431,9 @@ func (a Ali) Mkdir(account module.Account, parentFileId, name string) (bool, int
 // move api return (ok, BatchApiResp, err)
 func (a Ali) Move(account module.Account, fileId, targetFileId string, overwrite bool) (bool, interface{}, error) {
 	tokenResp := Alis[account.Id]
+	signature, _ := a.CreateSession(account)
 	var result BatchApiResp
-	_, err := client.R().
+	resp, err := client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -419,11 +454,16 @@ func (a Ali) Move(account module.Account, fileId, targetFileId string, overwrite
 			"resource": "file",
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/v3/batch")
 	if err != nil {
 		log.Errorln(err)
 		return false, result, err
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Debugf("signature expired create and retry:%s", signature)
+		return a.Move(account, fileId, targetFileId, overwrite)
 	}
 	return true, result, err
 }
@@ -435,8 +475,9 @@ func (a Ali) Copy(account module.Account, fileId, targetFileId string, overwrite
 
 func (a Ali) GetDownloadUrl(account module.Account, fileId string) (string, error) {
 	tokenResp := Alis[account.Id]
+	signature, _ := a.CreateSession(account)
 	var result AliDownResp
-	_, err := client.R().
+	resp, err := client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -445,11 +486,16 @@ func (a Ali) GetDownloadUrl(account module.Account, fileId string) (string, erro
 			"expire_sec": 14400,
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/v2/file/get_download_url")
 	if err != nil {
 		log.Errorln(err)
 		return "", err
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Debugf("signature expired create and retry:%s", signature)
+		return a.GetDownloadUrl(account, fileId)
 	}
 	if result.Ratelimit.PartSpeed != 0 {
 		log.Warningf("该文件限速：%d", result.Ratelimit.PartSpeed)
@@ -460,9 +506,10 @@ func (a Ali) GetDownloadUrl(account module.Account, fileId string) (string, erro
 // Get Paths by fileId
 func (a Ali) GetPaths(account module.Account, fileId string) ([]module.FileNode, error) {
 	fns := make([]module.FileNode, 0)
+	signature, _ := a.CreateSession(account)
 	tokenResp := Alis[account.Id]
 	var items []Items
-	_, err := client.R().
+	resp, err := client.R().
 		SetResult(&items).
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -470,10 +517,15 @@ func (a Ali) GetPaths(account module.Account, fileId string) ([]module.FileNode,
 			"file_id":  fileId,
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/adrive/v1/file/get_path")
 	if err != nil {
 		log.Errorln(err)
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Debugf("signature expired create and retry:%s", signature)
+		return a.GetPaths(account, fileId)
 	}
 	for _, f := range items {
 		fn, _ := a.ToFileNode(f)
@@ -485,6 +537,7 @@ func (a Ali) GetPaths(account module.Account, fileId string) ([]module.FileNode,
 // transcode api return (ok, string, err)
 func (a Ali) Transcode(account module.Account, fileId string) (string, error) {
 	tokenResp := Alis[account.Id]
+	signature, _ := a.CreateSession(account)
 	resp, err := client.R().
 		SetAuthToken(tokenResp.AccessToken).
 		SetBody(KV{
@@ -494,11 +547,16 @@ func (a Ali) Transcode(account module.Account, fileId string) (string, error) {
 			"template_id": "",
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/v2/file/get_video_preview_play_info")
 	if err != nil {
 		log.Errorln(err)
 		return "", err
+	}
+	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
+		SignCache.Remove(account.Id)
+		log.Debugf("signature expired create and retry:%s", signature)
+		return a.Transcode(account, fileId)
 	}
 	return resp.String(), err
 }
@@ -506,6 +564,7 @@ func (a Ali) Transcode(account module.Account, fileId string) (string, error) {
 // path api return (ok, AliPathResp, err)
 func (a Ali) GetPath(account module.Account, fileId string) (AliPathResp, error) {
 	tokenResp := Alis[account.Id]
+	signature, _ := a.CreateSession(account)
 	var result AliPathResp
 	_, err := client.R().
 		SetResult(&result).
@@ -515,7 +574,7 @@ func (a Ali) GetPath(account module.Account, fileId string) (AliPathResp, error)
 			"file_id":  fileId,
 		}).
 		SetHeader("x-device-id", tokenResp.DeviceId).
-		SetHeader("x-signature", tokenResp.Signature).
+		SetHeader("x-signature", signature).
 		Post("https://api.aliyundrive.com/adrive/v1/file/get_path")
 	if err != nil {
 		log.Errorln(err)

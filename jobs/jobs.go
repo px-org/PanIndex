@@ -33,11 +33,6 @@ func Run() {
 					//log.Debugf("[cron] account:%s, status ok", account.Name)
 				}
 			}
-			if account.Mode == "aliyundrive" {
-				//renew signature session
-				ali := p.(*pan.Ali)
-				ali.CreateSession(account)
-			}
 		}
 	})
 	accounts := []module.Account{}
