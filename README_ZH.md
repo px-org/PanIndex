@@ -41,7 +41,7 @@
 - [`dev`branch demo](https://t1.noki.icu "https://t1.noki.icu")
 - [`dev`branch demo(Vuetify)](https://t2.noki.icu "https://t2.noki.icu")
 - [Document](https://docs.noki.icu)
-- [Nightly](https://nightly.link/libsgh/PanIndex/workflows/nightly-build/dev)
+- [Nightly](https://nightly.link/px-org/PanIndex/workflows/nightly-build/dev)
 - [PanIndex Tool](https://pt.noki.icu/)
 
 ## 感谢
