@@ -55,7 +55,7 @@ jobs:
           fi
           if ${{ github.event.inputs.achitectures == ''}}; then
             achitectures="amd64"
-            target='["linux/386", "linux/amd64", "linux/arm64", "linux/arm5", "linux/arm6", "linux/arm7", "windows/amd64", "window/386", "darwin-10.12/amd64", "darwin-10.12/arm64", "static/ui"]'
+            target='["linux/386", "linux/amd64", "linux/arm64", "linux/arm5", "linux/arm6", "linux/arm7", "windows/amd64", "window/386", "darwin-10.12/amd64", "darwin-10.12/arm64"]'
           else
             achitectures="${{ github.event.inputs.achitectures }}"
             target='["'${platforms}'/'${achitectures}'"]'
@@ -76,7 +76,7 @@ jobs:
       matrix:
         target: ${{ fromJson(needs.setup.outputs.target) }}
         branch: ${{ fromJson(needs.setup.outputs.branch) }}
-        go-version: [1.19]
+        go-version: [1.20.1]
     name: build
     runs-on: ubuntu-latest
     outputs:
@@ -98,12 +98,26 @@ jobs:
           persist-credentials: false
           ref: ${{ matrix.branch }}
           fetch-depth: 0
-      - name: Build PanIndex
-        uses: libsgh/PanIndex-build-action@main
+      - name: Build
+        uses: px-org/build-action@main
         with:
+          type: "nightly_build"
           target: ${{ matrix.target }}
-      - name: upload-PanIndex
+          go-version: ${{ matrix.go-version }}
+          artifact-name: "PanIndex"
+      - name: upload
         uses: actions/upload-artifact@v3
         with:
           name: PanIndex-${{ steps.artifact.outputs.name }}
           path: ${{ github.workspace }}/dist/*
+      - name: Deploy to Dev Server
+        if: contains('linux-amd64', steps.artifact.outputs.name)
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEV_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.DEV_HOST }}
+          REMOTE_USER: ${{ secrets.DEV_USERNAME }}
+          REMOTE_PORT: ${{ secrets.DEV_PORT }}
+          SOURCE: dist/
+          TARGET: ${{ secrets.DEV_TARGET }}
+          SCRIPT_AFTER: ${{ secrets.UPDATE_SCRIPT }}
