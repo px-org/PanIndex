@@ -111,7 +111,6 @@ func (p Pan115) UploadFiles(account module.Account, parentFileId string, files [
 		log.Debugf("Upload started：%s，Size：%d", file.FileName, file.FileSize)
 		t1 := time.Now()
 		resp, err := client.NewRequest().SetFormData(map[string]string{
-			"userid":   "16700654",
 			"filename": file.FileName,
 			"filesize": fmt.Sprintf("%d", file.FileSize),
 			"target":   "U_1_" + parentFileId,
