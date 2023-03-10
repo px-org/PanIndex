@@ -6,10 +6,10 @@ package webdav
 
 import (
 	"fmt"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/pan"
-	"github.com/libsgh/PanIndex/service"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/service"
+	"github.com/px-org/PanIndex/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"io/ioutil"
@@ -102,7 +102,7 @@ func (fs *FileSystem) Upload(account module.Account, req *http.Request, path, fu
 		ContentType: req.Header.Get("Content-Type"),
 		Content:     content,
 	}}
-	p, _ := pan.GetPan(account.Mode)
+	p, _ := base.GetPan(account.Mode)
 	ok, _, err := p.UploadFiles(account, fileId, files, overwrite)
 	log.Debugf("[webdav] Upload '%s', result: %v", fullPath, ok)
 	if ok && err == nil && account.CachePolicy != "nc" {
@@ -113,7 +113,7 @@ func (fs *FileSystem) Upload(account module.Account, req *http.Request, path, fu
 
 func UploadCall(account module.Account, path, fullPath string, overwrite bool) {
 	//upload success
-	p, _ := pan.GetPan(account.Mode)
+	p, _ := base.GetPan(account.Mode)
 	fId := service.GetFileIdByPath(account, path, fullPath)
 	log.Debug("Upload file id: ", fId, " start callback:")
 	fn, _ := p.File(account, fId, fullPath)
@@ -124,7 +124,7 @@ func (fs *FileSystem) Mkdir(account module.Account, path string, fullPath string
 	if account.Id == "" {
 		return ErrNotImplemented
 	}
-	p, _ := pan.GetPan(account.Mode)
+	p, _ := base.GetPan(account.Mode)
 	filePath, fileName := util.ParsePath(path)
 	fileFullPath, _ := util.ParsePath(fullPath)
 	parentFileId := service.GetFileIdByPath(account, filePath, fileFullPath)
@@ -146,7 +146,7 @@ func (fs *FileSystem) Copy(src string, dst string, overwrite bool) (int, error) 
 	}
 	srcFileId := service.GetFileIdByPath(srcAccount, srcPath, srcFullPath)
 	targetFileId := service.GetFileIdByPath(dstAccount, dstPath, dstFullPath)
-	p, _ := pan.GetPan(srcAccount.Mode)
+	p, _ := base.GetPan(srcAccount.Mode)
 	ok, _, err := p.Copy(srcAccount, srcFileId, targetFileId, overwrite)
 	if ok {
 		return http.StatusCreated, nil
@@ -167,7 +167,7 @@ func (fs *FileSystem) Move(src string, dst string, overwrite bool) (int, error) 
 	}
 	srcParentPath := util.GetParentPath(srcPath)
 	dstParentPath, fileName := util.ParsePath(dstPath)
-	p, _ := pan.GetPan(srcAccount.Mode)
+	p, _ := base.GetPan(srcAccount.Mode)
 	srcFileId := service.GetFileIdByPath(srcAccount, srcPath, srcFullPath)
 	var ok bool
 	var err error
@@ -191,14 +191,14 @@ func (fs *FileSystem) GetSpace(account module.Account, fullPath string) (int64, 
 		var total int64
 		var used int64
 		for _, ac := range accounts {
-			disk, _ := pan.GetPan(ac.Mode)
+			disk, _ := base.GetPan(ac.Mode)
 			oneTotal, oneUsed := disk.GetSpaceSzie(ac)
 			total += oneTotal
 			used += oneUsed
 		}
 		return total, used
 	} else {
-		disk, _ := pan.GetPan(account.Mode)
+		disk, _ := base.GetPan(account.Mode)
 		return disk.GetSpaceSzie(account)
 	}
 }

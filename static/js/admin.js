@@ -362,6 +362,33 @@ function dynamicChgMode(mode){
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("");
         $("#S3PathDiv").hide();
+    }else if (mode == "123"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#SiteIdDiv").hide();
+        $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
+        $("#password_label").text("密码");
+        $("#accountForm").find("input[name=root_id]").val("0");
+        $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
+    }else if (mode == "115"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
+        $("#UserDiv").hide();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#SiteIdDiv").hide();
+        $("#password_label").text("COOKIE");
+        $("#accountForm").find("input[name=password]").attr("type", "text");
+        $("#accountForm").find("input[name=root_id]").val("0");
+        $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
     }
     diskd.handleUpdate();
 }

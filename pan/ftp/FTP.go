@@ -1,10 +1,11 @@
-package pan
+package ftp
 
 import (
 	"bytes"
 	"github.com/jlaffaye/ftp"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -14,7 +15,7 @@ import (
 )
 
 func init() {
-	RegisterPan("ftp", &FTP{})
+	base.RegisterPan("ftp", &FTP{})
 }
 
 type FTP struct{}

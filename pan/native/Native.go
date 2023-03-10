@@ -1,9 +1,10 @@
-package pan
+package native
 
 import (
 	"fmt"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/v3/disk"
 	log "github.com/sirupsen/logrus"
@@ -16,7 +17,7 @@ import (
 )
 
 func init() {
-	RegisterPan("native", &Native{})
+	base.RegisterPan("native", &Native{})
 }
 
 type Native struct{}

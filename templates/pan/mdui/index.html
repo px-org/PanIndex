@@ -79,6 +79,10 @@
 						{{ $color = "orange" }}
 						{{- else if eq $a.Mode "pikpak" }}
 						{{ $color = "indigo" }}
+						{{- else if eq $a.Mode "123" }}
+						{{ $color = "light-blue" }}
+						{{- else if eq $a.Mode "115" }}
+						{{ $color = "blue-900" }}
 						{{- end}}
 						<li class="mdui-menu-item">
 							<a href="{{$.config.PathPrefix}}/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{$color}}">face</i>{{.Name}}</a>

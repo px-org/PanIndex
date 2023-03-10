@@ -1,11 +1,13 @@
-package pan
+package googledrive
 
 import (
 	"bytes"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/pan/onedrive"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -21,7 +23,7 @@ const (
 )
 
 func init() {
-	RegisterPan("googledrive", &GoogleDrive{})
+	base.RegisterPan("googledrive", &GoogleDrive{})
 }
 
 type GoogleDrive struct{}
@@ -135,7 +137,7 @@ func (g GoogleDrive) UploadFiles(account module.Account, parentFileId string, fi
 		resp, err := g_req().
 			SetAuthToken(gd.AccessToken).
 			SetHeader("Content-Type", "application/json; charset=UTF-8").
-			SetBody(KV{
+			SetBody(base.KV{
 				"name":    file.FileName,
 				"parents": []string{parentFileId},
 			}).
@@ -145,7 +147,7 @@ func (g GoogleDrive) UploadFiles(account module.Account, parentFileId string, fi
 		if uploadUrl == "" {
 			return false, "File upload failed", err
 		}
-		bfs := ReadBlock(16384000, file) //15.625MB
+		bfs := onedrive.ReadBlock(16384000, file) //15.625MB
 		for _, bf := range bfs {
 			httpClient := util.GetClient(0)
 			r, _ := http.NewRequest("PUT", uploadUrl, bytes.NewReader(bf.Content))
@@ -165,7 +167,7 @@ func (g GoogleDrive) Rename(account module.Account, fileId, name string) (bool, 
 		SetAuthToken(gd.AccessToken).
 		SetPathParam("fileId", fileId).
 		SetHeader("Content-Type", "application/json; charset=UTF-8").
-		SetBody(KV{"name": name}).
+		SetBody(base.KV{"name": name}).
 		SetQueryParam("supportsAllDrives", "true").
 		Patch("https://www.googleapis.com/drive/v3/files/{fileId}")
 	if err != nil {
@@ -201,7 +203,7 @@ func (g GoogleDrive) Mkdir(account module.Account, parentFileId, name string) (b
 	resp, err := g_req().
 		SetAuthToken(gd.AccessToken).
 		SetHeader("Content-Type", "application/json; charset=UTF-8").
-		SetBody(KV{
+		SetBody(base.KV{
 			"name":     name,
 			"parents":  []string{parentFileId},
 			"mimeType": "application/vnd.google-apps.folder",
@@ -329,7 +331,7 @@ func (g GoogleDrive) CopyOneFile(account module.Account, fileId string, targetId
 		SetAuthToken(gd.AccessToken).
 		SetPathParam("fileId", fileId).
 		SetHeader("Content-Type", "application/json; charset=UTF-8").
-		SetBody(KV{
+		SetBody(base.KV{
 			"parents": []string{targetId},
 		}).
 		SetQueryParam("supportsAllDrives", "true").

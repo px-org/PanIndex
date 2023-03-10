@@ -1,4 +1,4 @@
-package pan
+package yun139
 
 import (
 	"bytes"
@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
 	"github.com/libsgh/nic"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/pan/onedrive"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -17,15 +19,15 @@ import (
 )
 
 func init() {
-	RegisterPan("yun139", &Yun139{})
+	base.RegisterPan("yun139", &Yun139{})
 }
 
 type Yun139 struct{}
 
 func (y Yun139) IsLogin(account *module.Account) bool {
-	body := KV{
-		"qryUserExternInfoReq": KV{
-			"commonAccountInfo": KV{"account": account.User, "accountType": 1},
+	body := base.KV{
+		"qryUserExternInfoReq": base.KV{
+			"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 		},
 	}
 	resp, err := resty.New().R().
@@ -53,7 +55,7 @@ func (y Yun139) Files(account module.Account, fileId, path, sortColumn, sortOrde
 	offset := 0
 	var err error
 	for {
-		body := KV{
+		body := base.KV{
 			"catalogID":         fileId,
 			"sortDirection":     1,
 			"filterType":        0,
@@ -203,15 +205,15 @@ func (y Yun139) UploadFiles(account module.Account, parentFileId string, files [
 		textQuoted := strconv.QuoteToASCII(file.FileName)
 		textUnquoted := textQuoted[1 : len(textQuoted)-1]
 		digest := fmt.Sprintf("%x", md5.Sum(file.Content))
-		body := KV{
+		body := base.KV{
 			"fileCount":         1,
 			"parentCatalogID":   parentFileId,
 			"manualRename":      2,
 			"newCatalogName":    "",
 			"operation":         0,
 			"totalSize":         file.FileSize,
-			"commonAccountInfo": KV{"account": account.User, "accountType": 1},
-			"uploadContentList": []KV{{
+			"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
+			"uploadContentList": []base.KV{{
 				"contentName": file.FileName,
 				"contentSize": file.FileSize,
 				"digest":      digest,
@@ -239,7 +241,7 @@ func (y Yun139) UploadFiles(account module.Account, parentFileId string, files [
 				uploadTaskID := jsoniter.Get(resp.Body(), "data").
 					Get("uploadResult").
 					Get("uploadTaskID").ToString()
-				bfs := ReadBlock(16384000, file)
+				bfs := onedrive.ReadBlock(16384000, file)
 				for _, bf := range bfs {
 					r, _ := http.NewRequest("POST", uploadUrl, bytes.NewReader(bf.Content))
 					r.Header.Add("uploadtaskID", uploadTaskID)
@@ -264,10 +266,10 @@ func (y Yun139) UploadFiles(account module.Account, parentFileId string, files [
 }
 
 func (y Yun139) Rename(account module.Account, fileId, name string) (bool, interface{}, error) {
-	body := KV{
+	body := base.KV{
 		"catalogName":       name,
 		"catalogID":         fileId,
-		"commonAccountInfo": KV{"account": account.User, "accountType": 1},
+		"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 	}
 	resp, err := resty.New().R().
 		SetHeaders(y.CreateHeaders(body, account.Password)).
@@ -279,10 +281,10 @@ func (y Yun139) Rename(account module.Account, fileId, name string) (bool, inter
 	log.Debug("Dir rename: ", resp.String())
 	status := jsoniter.Get(resp.Body(), "success").ToBool()
 	if !status {
-		body = KV{
+		body = base.KV{
 			"contentName":       name,
 			"contentID":         fileId,
-			"commonAccountInfo": KV{"account": account.User, "accountType": 1},
+			"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 		}
 		resp, err = resty.New().R().
 			SetHeaders(y.CreateHeaders(body, account.Password)).
@@ -315,10 +317,10 @@ func (y Yun139) Remove(account module.Account, fileId string) (bool, interface{}
 }
 
 func (y Yun139) QueryTaskInfo(account module.Account, taskId string) {
-	body := KV{
-		"queryBatchOprTaskDetailReq": KV{
+	body := base.KV{
+		"queryBatchOprTaskDetailReq": base.KV{
 			"taskID":            taskId,
-			"commonAccountInfo": KV{"account": account.User, "accountType": 1},
+			"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 		},
 	}
 	resp, _ := resty.New().R().
@@ -329,11 +331,11 @@ func (y Yun139) QueryTaskInfo(account module.Account, taskId string) {
 }
 
 func (y Yun139) Mkdir(account module.Account, parentFileId, name string) (bool, interface{}, error) {
-	body := KV{
-		"createCatalogExtReq": KV{
+	body := base.KV{
+		"createCatalogExtReq": base.KV{
 			"newCatalogName":    name,
 			"parentCatalogID":   parentFileId,
-			"commonAccountInfo": KV{"account": account.User, "accountType": 1},
+			"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 		},
 	}
 	resp, err := resty.New().R().
@@ -352,12 +354,12 @@ func (y Yun139) Mkdir(account module.Account, parentFileId, name string) (bool, 
 }
 
 func (y Yun139) CommonReq(account module.Account, actionType, taskType int, catalogIds, contentIds []string, newCatalogID string) (*resty.Response, error) {
-	body := KV{
-		"createBatchOprTaskReq": KV{
+	body := base.KV{
+		"createBatchOprTaskReq": base.KV{
 			"actionType":        actionType,
 			"taskType":          taskType,
-			"commonAccountInfo": KV{"account": account.User, "accountType": 1},
-			"taskInfo": KV{
+			"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
+			"taskInfo": base.KV{
 				"catalogInfoList": catalogIds,
 				"contentInfoList": contentIds,
 				"newCatalogID":    newCatalogID,
@@ -400,10 +402,10 @@ func (y Yun139) Copy(account module.Account, fileId, targetFileId string, overwr
 }
 
 func (y Yun139) GetDownloadUrl(account module.Account, fileId string) (string, error) {
-	body := KV{
+	body := base.KV{
 		"appName":           "",
 		"contentID":         fileId,
-		"commonAccountInfo": KV{"account": account.User, "accountType": 1},
+		"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 	}
 	resp, err := resty.New().R().
 		SetHeaders(y.CreateHeaders(body, account.Password)).
@@ -417,9 +419,9 @@ func (y Yun139) GetDownloadUrl(account module.Account, fileId string) (string, e
 }
 
 func (y Yun139) GetSpaceSzie(account module.Account) (int64, int64) {
-	body := KV{
+	body := base.KV{
 		"account":           account.User,
-		"commonAccountInfo": KV{"account": account.User, "accountType": 1},
+		"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 	}
 	resp, err := resty.New().R().
 		SetHeaders(y.CreateHeaders(body, account.Password)).
@@ -439,15 +441,15 @@ func (y Yun139) GetSpaceSzie(account module.Account) (int64, int64) {
 }
 
 func (y Yun139) LoginCheck(account module.Account) (bool, error) {
-	body := KV{
-		"qryUserExternInfoReq": KV{
-			"commonAccountInfo": KV{
+	body := base.KV{
+		"qryUserExternInfoReq": base.KV{
+			"commonAccountInfo": base.KV{
 				"account":     account.User,
 				"accountType": 1,
 			},
 		},
 	}
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetHeaders(y.CreateHeaders(body, account.Password)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/user/v1.0/qryUserExternInfo")
@@ -457,7 +459,7 @@ func (y Yun139) LoginCheck(account module.Account) (bool, error) {
 	return false, err
 }
 
-func (y Yun139) CreateHeaders(body KV, cookie string) map[string]string {
+func (y Yun139) CreateHeaders(body base.KV, cookie string) map[string]string {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	key := util.GetRandomStr(16)
 	json, _ := jsoniter.MarshalToString(body)

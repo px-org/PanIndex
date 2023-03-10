@@ -1,4 +1,4 @@
-package pan
+package ali
 
 import (
 	"bytes"
@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"github.com/bluele/gcache"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
@@ -25,7 +26,7 @@ var NonceMax = 2147483647
 var SignCache = gcache.New(100000).LRU().Build()
 
 func init() {
-	RegisterPan("aliyundrive", &Ali{})
+	base.RegisterPan("aliyundrive", &Ali{})
 }
 
 type Ali struct{}
@@ -42,9 +43,9 @@ func (a Ali) IsLogin(account *module.Account) bool {
 // auth login api return (refresh_token, err)
 func (a Ali) AuthLogin(account *module.Account) (string, error) {
 	var tokenResp module.TokenResp
-	_, err := client.R().
+	_, err := base.Client.R().
 		SetResult(&tokenResp).
-		SetBody(KV{"refresh_token": account.RefreshToken, "grant_type": "refresh_token"}).
+		SetBody(base.KV{"refresh_token": account.RefreshToken, "grant_type": "refresh_token"}).
 		Post("https://auth.aliyundrive.com/v2/account/token")
 	if err != nil {
 		log.Errorln(err)
@@ -68,8 +69,8 @@ func (a Ali) CreateSession(account module.Account) (string, error) {
 	privateKey, pubKey := genKeys()
 	tokenResp.Nonce = NonceMin
 	signature := genSignature(privateKey, tokenResp.DeviceId, tokenResp.UserId, tokenResp.Nonce)
-	resp, err := client.R().
-		SetBody(KV{"deviceName": "Chrome浏览器", "modelName": "Windows网页版", "pubKey": pubKey}).
+	resp, err := base.Client.R().
+		SetBody(base.KV{"deviceName": "Chrome浏览器", "modelName": "Windows网页版", "pubKey": pubKey}).
 		SetAuthToken(tokenResp.AccessToken).
 		SetHeader("x-device-id", tokenResp.DeviceId).
 		SetHeader("x-signature", signature).
@@ -82,7 +83,7 @@ func (a Ali) CreateSession(account module.Account) (string, error) {
 	result := jsoniter.Get(resp.Body(), "result").ToBool()
 	if result && success {
 		SignCache.Set(account.Id, signature)
-		log.Infof("CreateSession success, signature：%s", signature)
+		log.Debugf("CreateSession success, signature：%s", signature)
 	} else {
 		log.Error(resp.String())
 	}
@@ -97,8 +98,8 @@ func (a Ali) RenewSession(account module.Account) (string, error) {
 	privateKey, _ := hex.DecodeString(tokenResp.PrivateKeyHex)
 	nonce := getNextNonce(tokenResp.Nonce)
 	signature := genSignature(privateKey, tokenResp.DeviceId, tokenResp.UserId, nonce)
-	resp, err := client.R().
-		SetBody(KV{}).
+	resp, err := base.Client.R().
+		SetBody(base.KV{}).
 		SetAuthToken(tokenResp.AccessToken).
 		SetHeader("x-device-id", tokenResp.DeviceId).
 		SetHeader("x-signature", signature).
@@ -110,9 +111,8 @@ func (a Ali) RenewSession(account module.Account) (string, error) {
 	success := jsoniter.Get(resp.Body(), "success").ToBool()
 	result := jsoniter.Get(resp.Body(), "result").ToBool()
 	if result && success {
-		log.Infof("RenewSession success, signature：%s", signature)
+		log.Debugf("RenewSession success, signature：%s", signature)
 	} else {
-		log.Infof(resp.String())
 		return "", err
 	}
 	tokenResp.Signature = signature
@@ -143,7 +143,7 @@ func getNextNonce(nonce int) int {
 
 func (a Ali) GetSpaceSzie(account module.Account) (int64, int64) {
 	tokenResp := Alis[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(tokenResp.AccessToken).
 		SetHeader("x-device-id", tokenResp.DeviceId).
 		SetHeader("x-signature", tokenResp.Signature).
@@ -166,10 +166,10 @@ func (a Ali) Files(account module.Account, fileId, path, sortColumn, sortOrder s
 	nextMarker := ""
 	for {
 		var fsResp AliFilesResp
-		re, err := client.R().
+		re, err := base.Client.R().
 			SetResult(&fsResp).
 			SetAuthToken(tokenResp.AccessToken).
-			SetBody(KV{
+			SetBody(base.KV{
 				"drive_id":                tokenResp.DefaultDriveId,
 				"parent_file_id":          fileId,
 				"all":                     false,
@@ -194,7 +194,7 @@ func (a Ali) Files(account module.Account, fileId, path, sortColumn, sortOrder s
 		if len(fsResp.Items) == 0 {
 			code := jsoniter.Get(re.Body(), "code").ToString()
 			if code == "ParamFlowException" {
-				return nil, FlowLimit
+				return nil, base.FlowLimit
 			}
 		}
 		for _, f := range fsResp.Items {
@@ -249,10 +249,10 @@ func (a Ali) File(account module.Account, fileId, path string) (module.FileNode,
 	item := Items{}
 	fn := module.FileNode{}
 	signature, _ := a.CreateSession(account)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetResult(&item).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"drive_id": tokenResp.DefaultDriveId,
 			"file_id":  fileId,
 		}).
@@ -265,7 +265,7 @@ func (a Ali) File(account module.Account, fileId, path string) (module.FileNode,
 	}
 	if strings.Contains(resp.String(), "DeviceSessionSignatureInvalid") {
 		SignCache.Remove(account.Id)
-		log.Infof("signature expired create and retry:%s", signature)
+		log.Debugf("signature expired create and retry:%s", signature)
 		return a.File(account, fileId, path)
 	}
 	fn, _ = a.ToFileNode(item)
@@ -287,12 +287,12 @@ func (a Ali) UploadFiles(account module.Account, parentFileId string, files []*m
 		log.Debugf("Upload started：%s，Size：%d", file.FileName, file.FileSize)
 		signature, _ := a.CreateSession(account)
 		var aliMkdirResp AliMkdirResp
-		resp, err := client.R().
+		resp, err := base.Client.R().
 			SetResult(&aliMkdirResp).
 			SetAuthToken(tokenResp.AccessToken).
-			SetBody(KV{
+			SetBody(base.KV{
 				"drive_id": tokenResp.DefaultDriveId,
-				"part_info_list": []KV{KV{
+				"part_info_list": []base.KV{base.KV{
 					"part_number": 1,
 				},
 				},
@@ -324,9 +324,9 @@ func (a Ali) UploadFiles(account module.Account, parentFileId string, files []*m
 			}
 			client.Do(req)
 		}
-		resp, e := client.R().
+		resp, e := base.Client.R().
 			SetAuthToken(tokenResp.AccessToken).
-			SetBody(KV{
+			SetBody(base.KV{
 				"drive_id":  tokenResp.DefaultDriveId,
 				"file_id":   aliMkdirResp.FileID,
 				"upload_id": aliMkdirResp.UploadID,
@@ -347,10 +347,10 @@ func (a Ali) Rename(account module.Account, fileId, name string) (bool, interfac
 	tokenResp := Alis[account.Id]
 	signature, _ := a.CreateSession(account)
 	var result AliRenameResp
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"drive_id":        tokenResp.DefaultDriveId,
 			"file_id":         fileId,
 			"name":            name,
@@ -376,10 +376,10 @@ func (a Ali) Remove(account module.Account, fileId string) (bool, interface{}, e
 	tokenResp := Alis[account.Id]
 	var result AliRemoveResp
 	signature, _ := a.CreateSession(account)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"drive_id": tokenResp.DefaultDriveId,
 			"file_id":  fileId,
 		}).
@@ -403,10 +403,10 @@ func (a Ali) Mkdir(account module.Account, parentFileId, name string) (bool, int
 	tokenResp := Alis[account.Id]
 	signature, _ := a.CreateSession(account)
 	var result AliMkdirResp
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"drive_id":        tokenResp.DefaultDriveId,
 			"parent_file_id":  parentFileId,
 			"name":            name,
@@ -433,17 +433,17 @@ func (a Ali) Move(account module.Account, fileId, targetFileId string, overwrite
 	tokenResp := Alis[account.Id]
 	signature, _ := a.CreateSession(account)
 	var result BatchApiResp
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
-			"requests": []KV{
+		SetBody(base.KV{
+			"requests": []base.KV{
 				{
-					"body": KV{"drive_id": tokenResp.DefaultDriveId,
+					"body": base.KV{"drive_id": tokenResp.DefaultDriveId,
 						"file_id":           fileId,
 						"to_drive_id":       tokenResp.DefaultDriveId,
 						"to_parent_file_id": targetFileId},
-					"headers": KV{
+					"headers": base.KV{
 						"Content-Type": "application/json",
 					},
 					"id":     fileId,
@@ -470,17 +470,17 @@ func (a Ali) Move(account module.Account, fileId, targetFileId string, overwrite
 
 // copy api return (ok, BatchApiResp, err)
 func (a Ali) Copy(account module.Account, fileId, targetFileId string, overwrite bool) (bool, interface{}, error) {
-	return false, nil, ErrNotImplement
+	return false, nil, base.ErrNotImplement
 }
 
 func (a Ali) GetDownloadUrl(account module.Account, fileId string) (string, error) {
 	tokenResp := Alis[account.Id]
 	signature, _ := a.CreateSession(account)
 	var result AliDownResp
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"drive_id":   tokenResp.UserInfo.DefaultDriveId,
 			"file_id":    fileId,
 			"expire_sec": 14400,
@@ -509,10 +509,10 @@ func (a Ali) GetPaths(account module.Account, fileId string) ([]module.FileNode,
 	signature, _ := a.CreateSession(account)
 	tokenResp := Alis[account.Id]
 	var items []Items
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetResult(&items).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"drive_id": tokenResp.UserInfo.DefaultDriveId,
 			"file_id":  fileId,
 		}).
@@ -538,9 +538,9 @@ func (a Ali) GetPaths(account module.Account, fileId string) ([]module.FileNode,
 func (a Ali) Transcode(account module.Account, fileId string) (string, error) {
 	tokenResp := Alis[account.Id]
 	signature, _ := a.CreateSession(account)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"category":    "live_transcoding",
 			"drive_id":    tokenResp.DefaultDriveId,
 			"file_id":     fileId,
@@ -566,10 +566,10 @@ func (a Ali) GetPath(account module.Account, fileId string) (AliPathResp, error)
 	tokenResp := Alis[account.Id]
 	signature, _ := a.CreateSession(account)
 	var result AliPathResp
-	_, err := client.R().
+	_, err := base.Client.R().
 		SetResult(&result).
 		SetAuthToken(tokenResp.AccessToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"drive_id": tokenResp.DefaultDriveId,
 			"file_id":  fileId,
 		}).
@@ -590,10 +590,10 @@ func (a Ali) Search(account module.Account, key string) ([]Items, error) {
 	marker := ""
 	for {
 		var result AliFilesResp
-		_, err := client.R().
+		_, err := base.Client.R().
 			SetResult(&result).
 			SetAuthToken(tokenResp.AccessToken).
-			SetBody(KV{
+			SetBody(base.KV{
 				"drive_id":                tokenResp.DefaultDriveId,
 				"limit":                   100,
 				"query":                   "name match \"" + key + "\"",
@@ -625,7 +625,7 @@ func (a Ali) Search(account module.Account, key string) ([]Items, error) {
 
 // ali qrcode gen
 func QrcodeGen() (string, string) {
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		Get("https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive")
 	if err != nil {
 		log.Errorln(err)
@@ -643,7 +643,7 @@ func QrcodeGen() (string, string) {
 
 // ali qrcode check
 func QrcodeCheck(t, codeContent, ck, resultCode string) (string, string) {
-	resp, _ := client.R().
+	resp, _ := base.Client.R().
 		SetQueryParam("t", t).
 		SetQueryParam("ck", ck).
 		SetQueryParam("appName", "aliyun_drive").

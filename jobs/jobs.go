@@ -1,10 +1,10 @@
 package jobs
 
 import (
-	"github.com/libsgh/PanIndex/dao"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/pan"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/dao"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 )
@@ -22,7 +22,7 @@ func Run() {
 	//cookie有效性检测
 	util.Cron.AddFunc("0 0/1 * * * ?", func() {
 		for _, account := range module.GloablConfig.Accounts {
-			p, _ := pan.GetPan(account.Mode)
+			p, _ := base.GetPan(account.Mode)
 			if account.Mode == "cloud189" || account.Mode == "yun139" ||
 				account.Mode == "teambition-us" || account.Mode == "teambition" {
 				status := p.IsLogin(&account)

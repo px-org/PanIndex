@@ -1,12 +1,13 @@
-package pan
+package cloud189
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -20,7 +21,7 @@ import (
 var CLoud189s = map[string]module.Cloud189{}
 
 func init() {
-	RegisterPan("cloud189", &Cloud189{})
+	base.RegisterPan("cloud189", &Cloud189{})
 }
 
 type Cloud189 struct{}
@@ -40,8 +41,8 @@ func (c Cloud189) IsLogin(account *module.Account) bool {
 }
 
 func (c Cloud189) AuthLogin(account *module.Account) (string, error) {
-	base := resty.New()
-	resp, err := base.R().Get("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action")
+	client := resty.New()
+	resp, err := client.R().Get("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action")
 	if err != nil {
 		log.Error(err)
 		return "", err
@@ -64,7 +65,7 @@ func (c Cloud189) AuthLogin(account *module.Account) (string, error) {
 	vCodeRS := ""
 	userRsa := util.RsaEncode([]byte(account.User), jRsakey)
 	passwordRsa := util.RsaEncode([]byte(account.Password), jRsakey)
-	loginResp, _ := base.R().
+	loginResp, _ := client.R().
 		SetHeaders(map[string]string{
 			"lt":         lt,
 			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/76.0",
@@ -89,22 +90,22 @@ func (c Cloud189) AuthLogin(account *module.Account) (string, error) {
 	restCode := jsoniter.Get([]byte(loginResp.String()), "result").ToInt()
 	if restCode == 0 {
 		toUrl := jsoniter.Get([]byte(loginResp.String()), "toUrl").ToString()
-		resp, err = base.SetRedirectPolicy(resty.FlexibleRedirectPolicy(3)).R().Get(toUrl)
+		resp, err = client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(3)).R().Get(toUrl)
 		if err != nil {
 			return "", err
 		}
-		resp, err = base.R().Get("https://cloud.189.cn/v2/getUserBriefInfo.action?noCache=" + util.Random())
+		resp, err = client.R().Get("https://cloud.189.cn/v2/getUserBriefInfo.action?noCache=" + util.Random())
 		if err != nil {
 			return "", err
 		}
 		sessionKey := jsoniter.Get(resp.Body(), "sessionKey").ToString()
-		resp, err = base.SetRedirectPolicy(resty.FlexibleRedirectPolicy(3)).R().Get("https://api.cloud.189.cn/open/oauth2/ssoH5.action")
+		resp, err = client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(3)).R().Get("https://api.cloud.189.cn/open/oauth2/ssoH5.action")
 		v, _ := url.ParseQuery(resp.Header().Get("location"))
 		accessToken := v.Get("https://h5.cloud.189.cn/index.html?accessToken")
-		CLoud189s[account.Id] = module.Cloud189{base, sessionKey, accessToken, account.RootId, ""}
+		CLoud189s[account.Id] = module.Cloud189{client, sessionKey, accessToken, account.RootId, ""}
 		return fmt.Sprintf("cloud189 login success [%s]", time.Now()), nil
 	} else if restCode == -2 {
-		return "", LoginCaptcha
+		return "", base.LoginCaptcha
 	} else {
 		return "", nil
 	}
@@ -331,7 +332,7 @@ func (c Cloud189) Remove(account module.Account, fileId string) (bool, interface
 	if fn.IsFolder {
 		isFolder = 1
 	}
-	info := []KV{
+	info := []base.KV{
 		{
 			"fileId":   fileId,
 			"fileName": fn.FileName,
@@ -386,7 +387,7 @@ func (c Cloud189) Move(account module.Account, fileId, targetFileId string, over
 	if fn.IsFolder {
 		isFolder = 1
 	}
-	info := []KV{
+	info := []base.KV{
 		{
 			"fileId":   fileId,
 			"fileName": fn.FileName,
@@ -422,7 +423,7 @@ func (c Cloud189) Copy(account module.Account, fileId, targetFileId string, over
 	if fn.IsFolder {
 		isFolder = 1
 	}
-	info := []KV{
+	info := []base.KV{
 		{
 			"fileId":   fileId,
 			"fileName": fn.FileName,

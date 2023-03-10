@@ -1,4 +1,4 @@
-package pan
+package pikpak
 
 import (
 	"bytes"
@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"strconv"
@@ -19,7 +20,7 @@ import (
 )
 
 func init() {
-	RegisterPan("pikpak", &Pikpak{})
+	base.RegisterPan("pikpak", &Pikpak{})
 }
 
 type Pikpak struct {
@@ -38,10 +39,10 @@ func (p Pikpak) AuthLogin(account *module.Account) (string, error) {
 			return refreshToken, nil
 		}
 	}
-	_, err := client.R().
+	_, err := base.Client.R().
 		SetResult(&tokenResp).
 		SetBody(
-			KV{
+			base.KV{
 				"username":  account.User,
 				"password":  account.Password,
 				"client_id": "YNxT9w7GMdWvEOKa",
@@ -58,9 +59,9 @@ func (p Pikpak) AuthLogin(account *module.Account) (string, error) {
 
 func (p Pikpak) AuthToken(account *module.Account) (string, string) {
 	var e RespErr
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetError(e).
-		SetBody(KV{
+		SetBody(base.KV{
 			"client_id":     "YNxT9w7GMdWvEOKa",
 			"client_secret": "dbw2OtmVEeuUvIptb1Coyg",
 			"grant_type":    "refresh_token",
@@ -86,7 +87,7 @@ type RespErr struct {
 
 func (p Pikpak) IsLogin(account *module.Account) bool {
 	var e RespErr
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetError(e).Get("https://user.mypikpak.com/v1/user/me")
 	if err != nil {
 		return false
@@ -104,7 +105,7 @@ func (p Pikpak) Files(account module.Account, fileId, path, sortColumn, sortOrde
 	nextPageToken := ""
 	for {
 		var filesResp PikpakFilesResp
-		_, err := client.R().
+		_, err := base.Client.R().
 			SetAuthToken(pikPakToken.AccessToken).
 			SetResult(&filesResp).
 			SetQueryParams(map[string]string{
@@ -154,7 +155,7 @@ func (p Pikpak) File(account module.Account, fileId, path string) (module.FileNo
 		}, nil
 	}
 	var file PikpakFile
-	_, err := client.R().
+	_, err := base.Client.R().
 		SetAuthToken(pikPakToken.AccessToken).
 		SetResult(&file).
 		Get("https://api-drive.mypikpak.com/drive/v1/files/" + fileId)
@@ -206,16 +207,16 @@ func (p Pikpak) UploadFiles(account module.Account, parentFileId string, files [
 	for _, file := range files {
 		t1 := time.Now()
 		sha1 := sha1.Sum(file.Content)
-		resp, err := client.R().
+		resp, err := base.Client.R().
 			SetAuthToken(pikPakToken.AccessToken).
 			SetResult(&file).
-			SetBody(KV{
+			SetBody(base.KV{
 				"kind":        "drive#file",
 				"name":        file.FileName,
 				"size":        file.FileSize,
 				"hash":        strings.ToUpper(fmt.Sprintf("%x", sha1)),
 				"upload_type": "UPLOAD_TYPE_RESUMABLE",
-				"objProvider": KV{"provider": "UPLOAD_TYPE_UNKNOWN"},
+				"objProvider": base.KV{"provider": "UPLOAD_TYPE_UNKNOWN"},
 				"parent_id":   parentFileId}).
 			Post("https://api-drive.mypikpak.com/drive/v1/files")
 		params := jsoniter.Get(resp.Body(), "resumable").Get("params")
@@ -253,9 +254,9 @@ func (p Pikpak) UploadFiles(account module.Account, parentFileId string, files [
 
 func (p Pikpak) Rename(account module.Account, fileId, name string) (bool, interface{}, error) {
 	pikPakToken := Pikpaks[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(pikPakToken.AccessToken).
-		SetBody(KV{"name": name}).
+		SetBody(base.KV{"name": name}).
 		Patch("https://api-drive.mypikpak.com/drive/v1/files/" + fileId)
 	if err != nil {
 		log.Errorf("File renaming failed: %v", err)
@@ -267,9 +268,9 @@ func (p Pikpak) Rename(account module.Account, fileId, name string) (bool, inter
 
 func (p Pikpak) Remove(account module.Account, fileId string) (bool, interface{}, error) {
 	pikPakToken := Pikpaks[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(pikPakToken.AccessToken).
-		SetBody(KV{"ids": []string{fileId}}).
+		SetBody(base.KV{"ids": []string{fileId}}).
 		Post("https://api-drive.mypikpak.com/drive/v1/files:batchTrash")
 	log.Debug("File remove success: ", resp.String())
 	if err != nil {
@@ -281,9 +282,9 @@ func (p Pikpak) Remove(account module.Account, fileId string) (bool, interface{}
 
 func (p Pikpak) Mkdir(account module.Account, parentFileId, name string) (bool, interface{}, error) {
 	pikPakToken := Pikpaks[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(pikPakToken.AccessToken).
-		SetBody(KV{"kind": "drive#folder", "parent_id": parentFileId, "name": name}).
+		SetBody(base.KV{"kind": "drive#folder", "parent_id": parentFileId, "name": name}).
 		Post("https://api-drive.mypikpak.com/drive/v1/files")
 	log.Debug("Dir create: ", resp.String())
 	if err == nil {
@@ -294,9 +295,9 @@ func (p Pikpak) Mkdir(account module.Account, parentFileId, name string) (bool, 
 
 func (p Pikpak) Move(account module.Account, fileId, targetFileId string, overwrite bool) (bool, interface{}, error) {
 	pikPakToken := Pikpaks[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(pikPakToken.AccessToken).
-		SetBody(KV{"ids": []string{fileId}, "to": KV{"parent_id": targetFileId}}).
+		SetBody(base.KV{"ids": []string{fileId}, "to": base.KV{"parent_id": targetFileId}}).
 		Post("https://api-drive.mypikpak.com/drive/v1/files:batchMove")
 	if err != nil {
 		log.Errorf("File moved failed: %v", err)
@@ -308,9 +309,9 @@ func (p Pikpak) Move(account module.Account, fileId, targetFileId string, overwr
 
 func (p Pikpak) Copy(account module.Account, fileId, targetFileId string, overwrite bool) (bool, interface{}, error) {
 	pikPakToken := Pikpaks[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(pikPakToken.AccessToken).
-		SetBody(KV{"ids": []string{fileId}, "to": KV{"parent_id": targetFileId}}).
+		SetBody(base.KV{"ids": []string{fileId}, "to": base.KV{"parent_id": targetFileId}}).
 		Post(" https://api-drive.mypikpak.com/drive/v1/files:batchCopy")
 	if err != nil {
 		log.Errorf("File copy failed: %v", err)
@@ -330,7 +331,7 @@ func (p Pikpak) GetDownloadUrl(account module.Account, fileId string) (string, e
 
 func (p Pikpak) GetSpaceSzie(account module.Account) (int64, int64) {
 	pikPakToken := Pikpaks[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(pikPakToken.AccessToken).
 		Get("https://api-drive.mypikpak.com/drive/v1/about")
 	if err != nil {

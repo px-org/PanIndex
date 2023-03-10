@@ -1,12 +1,13 @@
-package pan
+package teambition
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -32,8 +33,8 @@ var t_zones = map[string]module.Zone{
 }
 
 func init() {
-	RegisterPan("teambition", &Teambition{})
-	RegisterPan("teambition-us", &Teambition{})
+	base.RegisterPan("teambition", &Teambition{})
+	base.RegisterPan("teambition-us", &Teambition{})
 }
 
 type Teambition struct{}
@@ -66,7 +67,7 @@ func (t Teambition) AuthLogin(account *module.Account) (string, error) {
 	}
 	token := util.GetBetweenStr(resp.String(), "TOKEN\":\"", "\"")
 	clientId := util.GetBetweenStr(resp.String(), "CLIENT_ID\":\"", "\"")
-	params := KV{
+	params := base.KV{
 		"client_id":     clientId,
 		"token":         token,
 		"password":      account.Password,
@@ -221,7 +222,7 @@ func (t Teambition) UploadChunkFile(account module.Account, parentFileId string,
 	resp, err = resty.New().R().
 		SetResult(&teambitionUploadResp).
 		SetHeader("Authorization", jwt).
-		SetBody(KV{
+		SetBody(base.KV{
 			"fileName":    file.FileName,
 			"fileSize":    file.FileSize,
 			"lastUpdated": time.Now(),
@@ -297,8 +298,8 @@ func (t Teambition) UploadFile(account module.Account, parentFileId string, file
 func (t Teambition) UploadWorks(account module.Account, parentFileId string, teambitionUploadResp TeambitionUploadResp) (string, error) {
 	resp, err := resty.New().R().
 		SetHeader("Cookie", account.RefreshToken).
-		SetBody(KV{
-			"works": []KV{{
+		SetBody(base.KV{
+			"works": []base.KV{{
 				"fileKey":      teambitionUploadResp.FileKey,
 				"fileName":     teambitionUploadResp.FileName,
 				"fileType":     teambitionUploadResp.FileType,
@@ -323,14 +324,14 @@ func (t Teambition) Rename(account module.Account, fileId, name string) (bool, i
 		if f.IsFolder {
 			resp, err = resty.New().R().
 				SetHeader("Cookie", account.RefreshToken).
-				SetBody(KV{
+				SetBody(base.KV{
 					"title": name,
 				}).
 				Put(t_zones[account.Mode].Api + "/api/collections/" + fileId)
 		} else {
 			resp, err = resty.New().R().
 				SetHeader("Cookie", account.RefreshToken).
-				SetBody(KV{
+				SetBody(base.KV{
 					"fileName": name,
 				}).
 				Put(t_zones[account.Mode].Api + "/api/works/" + fileId)
@@ -347,14 +348,14 @@ func (t Teambition) Remove(account module.Account, fileId string) (bool, interfa
 	updated := time.Now().UTC().String()
 	resp, err := resty.New().R().
 		SetHeader("Cookie", account.RefreshToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"_id":     fileId,
 			"updated": updated,
 		}).
 		Delete(t_zones[account.Mode].Api + "/api/works/" + fileId)
 	resp, err = resty.New().R().
 		SetHeader("Cookie", account.RefreshToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"_id":     fileId,
 			"updated": updated,
 		}).
@@ -369,13 +370,13 @@ func (t Teambition) Remove(account module.Account, fileId string) (bool, interfa
 func (t Teambition) Mkdir(account module.Account, parentFileId, name string) (bool, interface{}, error) {
 	resp, err := resty.New().R().
 		SetHeader("Cookie", account.RefreshToken).
-		SetBody(KV{
+		SetBody(base.KV{
 			"collectionType": "",
 			"color":          "blue",
 			"created":        "",
 			"description":    "",
 			"objectType":     "collection",
-			"recentWorks":    []KV{},
+			"recentWorks":    []base.KV{},
 			"title":          name,
 			"updated":        "",
 			"workCount":      0,
@@ -399,14 +400,14 @@ func (t Teambition) Move(account module.Account, fileId, targetFileId string, ov
 		if f.IsFolder {
 			resp, err = resty.New().R().
 				SetHeader("Cookie", account.RefreshToken).
-				SetBody(KV{
+				SetBody(base.KV{
 					"_parentId": targetFileId,
 				}).
 				Put(t_zones[account.Mode].Api + "/api/collections/" + fileId + "/move")
 		} else {
 			resp, err = resty.New().R().
 				SetHeader("Cookie", account.RefreshToken).
-				SetBody(KV{
+				SetBody(base.KV{
 					"_parentId": targetFileId,
 				}).
 				Put(t_zones[account.Mode].Api + "/api/works/" + fileId + "/move")
@@ -427,7 +428,7 @@ func (t Teambition) Copy(account module.Account, fileId, targetFileId string, ov
 		if f.IsFolder {
 			resp, err = resty.New().R().
 				SetHeader("Cookie", account.RefreshToken).
-				SetBody(KV{
+				SetBody(base.KV{
 					"_parentId":  targetFileId,
 					"_projectId": account.RootId,
 				}).
@@ -435,7 +436,7 @@ func (t Teambition) Copy(account module.Account, fileId, targetFileId string, ov
 		} else {
 			resp, err = resty.New().R().
 				SetHeader("Cookie", account.RefreshToken).
-				SetBody(KV{
+				SetBody(base.KV{
 					"_parentId": targetFileId,
 				}).
 				Put(t_zones[account.Mode].Api + "/api/works/" + fileId + "/fork")

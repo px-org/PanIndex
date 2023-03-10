@@ -12,7 +12,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
+	"github.com/px-org/PanIndex/module"
 	"github.com/qingstor/go-mime"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
@@ -64,6 +64,11 @@ func FormatFileSize(fileSize int64) (size string) {
 
 func UTCTimeFormat(timeStr string) string {
 	t, _ := time.Parse(time.RFC3339, timeStr)
+	timeUint := t.In(time.Local).Unix()
+	return time.Unix(timeUint, 0).Format("2006-01-02 15:04:05")
+}
+
+func UTCTime(t time.Time) string {
 	timeUint := t.In(time.Local).Unix()
 	return time.Unix(timeUint, 0).Format("2006-01-02 15:04:05")
 }

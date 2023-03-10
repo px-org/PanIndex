@@ -1,9 +1,10 @@
-package pan
+package webdav
 
 import (
 	"bytes"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/studio-b12/gowebdav"
@@ -15,7 +16,7 @@ import (
 )
 
 func init() {
-	RegisterPan("webdav", &WebDav{})
+	base.RegisterPan("webdav", &WebDav{})
 }
 
 type WebDav struct{}

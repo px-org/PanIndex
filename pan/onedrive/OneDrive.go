@@ -1,11 +1,12 @@
-package pan
+package onedrive
 
 import (
 	"bytes"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"math"
@@ -30,8 +31,8 @@ var zones = map[string]module.Zone{
 }
 
 func init() {
-	RegisterPan("onedrive", &OneDrive{})
-	RegisterPan("onedrive-cn", &OneDrive{})
+	base.RegisterPan("onedrive", &OneDrive{})
+	base.RegisterPan("onedrive-cn", &OneDrive{})
 }
 
 type OneDrive struct{}
@@ -42,7 +43,7 @@ func (o OneDrive) IsLogin(account *module.Account) bool {
 
 func (o OneDrive) AuthLogin(account *module.Account) (string, error) {
 	var auth module.OneDriveAuthInfo
-	_, err := client.R().
+	_, err := base.Client.R().
 		SetResult(&auth).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetFormData(map[string]string{
@@ -57,7 +58,6 @@ func (o OneDrive) AuthLogin(account *module.Account) (string, error) {
 		log.Errorln(err)
 		return "", err
 	}
-	//fmt.Println(auth.AccessToken)
 	auth.Mode = account.Mode
 	driveId := o.GetDriveId(auth)
 	auth.DriveId = driveId
@@ -76,7 +76,7 @@ func (o OneDrive) Files(account module.Account, fileId, path, sortColumn, sortOr
 	var err error
 	for {
 		var filesResp OnedriveFilesResp
-		_, err = client.R().
+		_, err = base.Client.R().
 			SetResult(&filesResp).
 			SetAuthToken(od.AccessToken).
 			SetHeader("Host", "graph.microsoft.com").
@@ -112,7 +112,7 @@ func (o OneDrive) File(account module.Account, fileId, path string) (module.File
 	od := OneDrives[account.Id]
 	//var err error
 	var fileResp Value
-	_, err := client.R().
+	_, err := base.Client.R().
 		SetResult(&fileResp).
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
@@ -152,12 +152,12 @@ func (o OneDrive) Rename(account module.Account, fileId, name string) (bool, int
 	parentId := util.GetParentPath(fileId)
 	targetItemId, _ := o.GetItemId(account, parentId)
 	itemId, _ := o.GetItemId(account, fileId)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		SetHeader("Content-Type", "application/json").
-		SetBody(KV{
-			"parentReference": KV{
+		SetBody(base.KV{
+			"parentReference": base.KV{
 				"id": targetItemId,
 			},
 			"name": name,
@@ -176,7 +176,7 @@ func (o OneDrive) Rename(account module.Account, fileId, name string) (bool, int
 func (o OneDrive) Remove(account module.Account, fileId string) (bool, interface{}, error) {
 	od := OneDrives[account.Id]
 	itemId, _ := o.GetItemId(account, fileId)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		Delete(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/items/" + itemId)
@@ -193,13 +193,13 @@ func (o OneDrive) Remove(account module.Account, fileId string) (bool, interface
 func (o OneDrive) Mkdir(account module.Account, parentFileId, name string) (bool, interface{}, error) {
 	od := OneDrives[account.Id]
 	itemId, _ := o.GetItemId(account, parentFileId)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		SetHeader("Content-Type", "application/json").
-		SetBody(KV{
+		SetBody(base.KV{
 			"name":                              name,
-			"folder":                            KV{},
+			"folder":                            base.KV{},
 			"@microsoft.graph.conflictBehavior": "rename",
 		}).
 		Post(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/items/" + itemId + "/children")
@@ -218,12 +218,12 @@ func (o OneDrive) Move(account module.Account, fileId, targetFileId string, over
 	fileName := util.GetFileName(fileId)
 	itemId, _ := o.GetItemId(account, fileId)
 	targetItemId, _ := o.GetItemId(account, targetFileId)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		SetHeader("Content-Type", "application/json").
-		SetBody(KV{
-			"parentReference": KV{
+		SetBody(base.KV{
+			"parentReference": base.KV{
 				"id": targetItemId,
 			},
 			"name": fileName,
@@ -244,12 +244,12 @@ func (o OneDrive) Copy(account module.Account, fileId, targetFileId string, over
 	fileName := util.GetFileName(fileId)
 	itemId, _ := o.GetItemId(account, fileId)
 	targetItemId, _ := o.GetItemId(account, targetFileId)
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		SetHeader("Content-Type", "application/json").
-		SetBody(KV{
-			"parentReference": KV{
+		SetBody(base.KV{
+			"parentReference": base.KV{
 				"driveId": od.DriveId,
 				"id":      targetItemId,
 			},
@@ -277,7 +277,7 @@ func (o OneDrive) GetDownloadUrl(account module.Account, fileId string) (string,
 
 func (o OneDrive) GetSpaceSzie(account module.Account) (int64, int64) {
 	od := OneDrives[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		Get(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive")
@@ -316,7 +316,7 @@ func (o OneDrive) ToFileNode(f Value) (module.FileNode, error) {
 }
 
 func (o OneDrive) GetDriveId(od module.OneDriveAuthInfo) string {
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		Get(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive")
@@ -331,7 +331,7 @@ func (o OneDrive) GetItemId(account module.Account, fileId string) (string, erro
 	od := OneDrives[account.Id]
 	//var err error
 	var fileResp Value
-	_, err := client.R().
+	_, err := base.Client.R().
 		SetResult(&fileResp).
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
@@ -344,7 +344,7 @@ func (o OneDrive) GetItemId(account module.Account, fileId string) (string, erro
 
 func (o OneDrive) SharePointId(account *module.Account) string {
 	od := OneDrives[account.Id]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Content-Type", "application/json").
 		Get(zones[account.Mode].Api + "/v1.0/sites/" + account.SiteId)
@@ -367,7 +367,7 @@ func OneExchangeToken(zone, clientId, redirectUri, clientSecret, code string) st
 	if zone == "" {
 		zone = "onedrive"
 	}
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetFormData(map[string]string{
 			"client_id":     clientId,
@@ -387,7 +387,7 @@ func OneGetRefreshToken(zone, clientId, redirectUri, clientSecret, refreshToken 
 	if zone == "" {
 		zone = "onedrive"
 	}
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetFormData(map[string]string{
 			"client_id":     clientId,
@@ -406,7 +406,7 @@ func OneGetRefreshToken(zone, clientId, redirectUri, clientSecret, refreshToken 
 
 func CreateUploadSession(accountId, filePath string) string {
 	od := OneDrives[accountId]
-	resp, err := client.R().
+	resp, err := base.Client.R().
 		SetAuthToken(od.AccessToken).
 		SetHeader("Host", "graph.microsoft.com").
 		Post(zones[od.Mode].Api + "/v1.0" + SitePath(od) + "/drive/root:" + filePath + ":/createUploadSession")

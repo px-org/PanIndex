@@ -2,9 +2,9 @@ package control
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/control/webdav"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/control/webdav"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/util"
 	"net/http"
 )
 

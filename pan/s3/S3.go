@@ -1,4 +1,4 @@
-package pan
+package s3
 
 import (
 	"bytes"
@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"net/url"
@@ -20,7 +21,7 @@ import (
 )
 
 func init() {
-	RegisterPan("s3", &S3{})
+	base.RegisterPan("s3", &S3{})
 }
 
 type S3 struct {

@@ -36,6 +36,8 @@ English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)
 - FTP
 - [S3](https://aws.amazon.com/s3/)（Object Storage）
 - [PikPak](https://mypikpak.com "https://mypikpak.com")
+- [115](https://115.com/ "https://115.com/")
+- [123](https://www.123pan.com/ "https://www.123pan.com/")
 
 ## Links
 - [`dev`branch demo](https://t1.noki.icu "https://t1.noki.icu")

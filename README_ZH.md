@@ -36,6 +36,8 @@
 - FTP
 - [S3](https://aws.amazon.com/s3/)（对象存储）
 - [PikPak](https://mypikpak.com "https://mypikpak.com")
+- [115云盘](https://115.com/ "https://115.com/")
+- [123云盘](https://www.123pan.com/ "https://www.123pan.com/")
 
 ## 链接
 - [`dev`branch demo](https://t1.noki.icu "https://t1.noki.icu")

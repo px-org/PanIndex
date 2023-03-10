@@ -2,14 +2,14 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/module"
+	"github.com/px-org/PanIndex/module"
 	log "github.com/sirupsen/logrus"
 	"net/url"
 	"regexp"
 	"strings"
 )
 
-//防盗链检测
+// 防盗链检测
 func CheckReferer(c *gin.Context) bool {
 	isForbidden := true
 	if module.GloablConfig.EnableSafetyLink == "0" {

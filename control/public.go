@@ -3,12 +3,13 @@ package control
 import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/control/middleware"
-	"github.com/libsgh/PanIndex/dao"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/pan"
-	"github.com/libsgh/PanIndex/service"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/control/middleware"
+	"github.com/px-org/PanIndex/dao"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/ali"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/service"
+	"github.com/px-org/PanIndex/util"
 	"net/http"
 	"strings"
 )
@@ -40,8 +41,8 @@ func AliTranscode(c *gin.Context) {
 	accountId := c.Query("accountId")
 	fileId := c.Query("fileId")
 	account := dao.GetAccountById(accountId)
-	p, _ := pan.GetPan(account.Mode)
-	result, _ := p.(*pan.Ali).Transcode(account, fileId)
+	p, _ := base.GetPan(account.Mode)
+	result, _ := p.(*ali.Ali).Transcode(account, fileId)
 	c.String(http.StatusOK, result)
 	c.Abort()
 }
@@ -67,7 +68,7 @@ func Raw(c *gin.Context) {
 	if strings.HasPrefix(downloadUrl, "http") {
 		DataRroxy(account, downloadUrl, fileName, c)
 	} else {
-		pa, _ := pan.GetPan(account.Mode)
+		pa, _ := base.GetPan(account.Mode)
 		fileNode, _ := pa.File(account, fileId, fullpath)
 		if account.Mode == "ftp" {
 			service.FtpDownload(account, downloadUrl, fileNode, c)

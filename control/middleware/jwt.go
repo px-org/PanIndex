@@ -4,7 +4,7 @@ import (
 	"errors"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/module"
+	"github.com/px-org/PanIndex/module"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"

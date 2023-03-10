@@ -10,7 +10,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/libsgh/PanIndex/module"
+	"github.com/px-org/PanIndex/module"
 	"net/http"
 	"strconv"
 	"time"
