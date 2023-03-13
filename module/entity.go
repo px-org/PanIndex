@@ -16,29 +16,31 @@ var (
 var GloablConfig Config
 
 type FileNode struct {
-	Id          string `json:"id"`                              //数据库唯一主键
-	AccountId   string `json:"account_id" gorm:"index:idx_aid"` //文件所属账号
-	FileId      string `json:"file_id" gorm:"index:idx_fid`     //网盘中的文件id
-	FileName    string `json:"file_name" gorm:"index:idx_fn"`   //文件名称
-	FileSize    int64  `json:"file_size"`                       //文件大小
-	SizeFmt     string `json:"size_fmt"`                        //文件大小（格式化）
-	FileType    string `json:"file_type"`                       //文件类型
-	IsFolder    bool   `json:"is_folder"`                       //是否是目录
-	LastOpTime  string `json:"last_op_time"`                    //最近一次操作时间
-	ParentId    string `json:"parent_id"`                       //父目录id
-	Path        string `json:"path" gorm:"index:idx_p"`         //文件路径
-	ParentPath  string `json:"parent_path" gorm:"index:idx_pp"` //文件上层目录
-	Thumbnail   string `json:"thumbnail" gorm:"-"`              //缩略图
-	DownloadUrl string `json:"download_url" gorm:"-"`           //下载地址
-	ViewType    string `json:"view_type"`                       //预览类型，取决于全局配置
-	CreateTime  string `json:"create_time"`                     //创建时间（目录信息入库时间）
-	IsDelete    int    `json:"is_delete" gorm:"index:idx_del"`  //删除标记（便于做缓存）
-	Hide        int    `json:"hide"`                            //是否隐藏
-	HasPwd      int    `json:"has_pwd"`                         //是否是密码文件（包含）
+	Id          string                 `json:"id"`                              //数据库唯一主键
+	AccountId   string                 `json:"account_id" gorm:"index:idx_aid"` //文件所属账号
+	FileId      string                 `json:"file_id" gorm:"index:idx_fid`     //网盘中的文件id
+	FileName    string                 `json:"file_name" gorm:"index:idx_fn"`   //文件名称
+	FileSize    int64                  `json:"file_size"`                       //文件大小
+	SizeFmt     string                 `json:"size_fmt"`                        //文件大小（格式化）
+	FileType    string                 `json:"file_type"`                       //文件类型
+	IsFolder    bool                   `json:"is_folder"`                       //是否是目录
+	LastOpTime  string                 `json:"last_op_time"`                    //最近一次操作时间
+	ParentId    string                 `json:"parent_id"`                       //父目录id
+	Path        string                 `json:"path" gorm:"index:idx_p"`         //文件路径
+	ParentPath  string                 `json:"parent_path" gorm:"index:idx_pp"` //文件上层目录
+	Thumbnail   string                 `json:"thumbnail" gorm:"-"`              //缩略图
+	DownloadUrl string                 `json:"download_url" gorm:"-"`           //下载地址
+	ViewType    string                 `json:"view_type"`                       //预览类型，取决于全局配置
+	CreateTime  string                 `json:"create_time"`                     //创建时间（目录信息入库时间）
+	IsDelete    int                    `json:"is_delete" gorm:"index:idx_del"`  //删除标记（便于做缓存）
+	Hide        int                    `json:"hide"`                            //是否隐藏
+	HasPwd      int                    `json:"has_pwd"`                         //是否是密码文件（包含）
+	ExtraData   map[string]interface{} `json:"extra_data" gorm:"-"`             //额外数据
 }
 type ShareInfo struct {
-	FilePath  string `json:"file_path"`  //PanIndex文件路径
-	ShortCode string `json:"short_code"` //短链接code
+	FilePath  string     `json:"file_path"`         //PanIndex文件路径
+	ShortCode string     `json:"short_code"`        //短链接code
+	PwdInfo   []PwdFiles `json:"pwd_info" gorm:"-"` //密码信息
 	//IsFile    bool   `json:"is_file"`    //是否是文件（文件根据配置跳转预览或下载，目录直接打开）
 }
 type SearchNode struct {
@@ -95,9 +97,10 @@ type Config struct {
 	Proxy            string            `json:"proxy"`           //google api prxoy
 	Readme           string            `json:"readme"`          //show or hide readme
 	Head             string            `json:"head"`            //show or hide head
-	ShareInfoList    []ShareInfo       `json:"share_info_list"` //分享信息列表
+	ShareInfoList    []ShareInfo       `json:"share_info_list"` //share info list
 	Access           string            `json:"access"`          //access
-	ShortAction      string            `json:"short_action"`    //短链行为
+	ShortAction      string            `json:"short_action"`    //access short link action
+	JwtSignKey       string            `json:"jwt_sign_key"`    //jwt sign key
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key

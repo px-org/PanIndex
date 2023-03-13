@@ -8,10 +8,11 @@ package webdav // import "golang.org/x/net/webdav"
 import (
 	"errors"
 	"fmt"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/pan"
-	"github.com/libsgh/PanIndex/service"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	_115 "github.com/px-org/PanIndex/pan/115"
+	"github.com/px-org/PanIndex/pan/googledrive"
+	"github.com/px-org/PanIndex/service"
+	"github.com/px-org/PanIndex/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"io"
@@ -195,7 +196,7 @@ func (h *Handler) handleOptions(w http.ResponseWriter, r *http.Request) (status 
 	return 0, nil
 }
 
-//impl
+// impl
 func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	ctx := r.Context()
 	fn, exist := h.FileSystem.File(h.Account, h.Path, h.FullPath)
@@ -232,7 +233,10 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 			req.Header.Add("range", rangeStr)
 			req.Header.Add("if-range", r.Header.Get("if-range"))
 			if h.Account.Mode == "googledrive" {
-				req.Header.Add("Authorization", "Bearer "+pan.GoogleDrives[h.Account.Id].AccessToken)
+				req.Header.Add("Authorization", "Bearer "+googledrive.GoogleDrives[h.Account.Id].AccessToken)
+			} else if h.Account.Mode == "115" {
+				req.Header.Add("Cookie", h.Account.Password)
+				req.Header.Add("User-Agent", _115.UA)
 			}
 			res, er := client.Do(req)
 			if er != nil {
@@ -248,7 +252,7 @@ func (h *Handler) handleGetHeadPost(w http.ResponseWriter, r *http.Request) (sta
 	return 0, nil
 }
 
-//impl
+// impl
 func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -288,7 +292,7 @@ func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) (status i
 	return http.StatusNoContent, nil
 }
 
-//impl
+// impl
 func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -325,7 +329,7 @@ func (h *Handler) handlePut(w http.ResponseWriter, r *http.Request) (status int,
 	return http.StatusCreated, nil
 }
 
-//impl
+// impl
 func (h *Handler) handleMkcol(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	reqPath, status, err := h.stripPrefix(r.URL.Path)
 	if err != nil {
@@ -696,10 +700,11 @@ const (
 // infiniteDepth. Parsing any other string returns invalidDepth.
 //
 // Different WebDAV methods have further constraints on valid depths:
-//	- PROPFIND has no further restrictions, as per section 9.1.
-//	- COPY accepts only "0" or "infinity", as per section 9.8.3.
-//	- MOVE accepts only "infinity", as per section 9.9.2.
-//	- LOCK accepts only "0" or "infinity", as per section 9.10.3.
+//   - PROPFIND has no further restrictions, as per section 9.1.
+//   - COPY accepts only "0" or "infinity", as per section 9.8.3.
+//   - MOVE accepts only "infinity", as per section 9.9.2.
+//   - LOCK accepts only "0" or "infinity", as per section 9.10.3.
+//
 // These constraints are enforced by the handleXxx methods.
 func parseDepth(s string) int {
 	switch s {

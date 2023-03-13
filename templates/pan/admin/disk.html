@@ -79,6 +79,10 @@
                             <span class="mdui-chip-icon mdui-color-orange"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "pikpak"}}
                             <span class="mdui-chip-icon mdui-color-indigo"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "123"}}
+                            <span class="mdui-chip-icon mdui-color-light-blue"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "115"}}
+                            <span class="mdui-chip-icon mdui-color-blue-900"><i class="mdui-icon material-icons">face</i></span>
                         {{- else}}
                         {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -111,6 +115,10 @@
                     S3
                 {{- else if eq .Mode "pikpak"}}
                     PikPak
+                {{- else if eq .Mode "123"}}
+                    123云盘
+                {{- else if eq .Mode "115"}}
+                    115云盘
                 {{- else}}
                 {{- end}}
                 </td>
@@ -195,7 +203,7 @@
             <label class="mdui-textfield-label">网盘名称</label>
             <input type="hidden" name="id" />
             <input class="mdui-textfield-input" type="text" name="name" value="" required>
-            <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/config?id=%e8%b4%a6%e5%8f%b7%e7%bb%91%e5%ae%9a" target="_blank">说明</a></div>
+            <div class="mdui-textfield-helper"><a href="https://docs.noki.icu/#/docs/zh/question?id=%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e7%9b%ae%e5%bd%95id%ef%bc%9f" target="_blank">说明</a></div>
         </div>
         <div>
             <label class="mdui-textfield-label mdui-text-color-pink-300" style="margin-left: 50px">网盘模式</label>
@@ -213,6 +221,8 @@
                 <option value="googledrive">GoogleDrive</option>
                 <option value="s3">S3</option>
                 <option value="pikpak">PikPak</option>
+                <option value="123">123云盘</option>
+                <option value="115">115云盘</option>
             </select>
         </div>
         <div id="UserDiv" class="mdui-textfield mdui-textfield-has-bottom">
@@ -263,7 +273,7 @@
             <i class="mdui-icon material-icons">folder_open</i>
             <label class="mdui-textfield-label">根目录ID(路径)</label>
             <input class="mdui-textfield-input" type="text" name="root_id">
-            <div class="mdui-textfield-helper"><a href="https://libsgh.github.io/PanIndex/#/question?id=%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" target="_blank">如何获取目录ID？</a></div>
+            <div class="mdui-textfield-helper"><a href="https://docs.noki.icu/#/docs/zh/question?id=%e5%a6%82%e4%bd%95%e8%8e%b7%e5%8f%96%e7%9b%ae%e5%bd%95id%ef%bc%9f" target="_blank">如何获取目录ID？</a></div>
         </div>
         <div class="mdui-textfield mdui-textfield-has-bottom">
             <i class="mdui-icon material-icons">domain</i>

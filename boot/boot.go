@@ -4,13 +4,13 @@ import (
 	"embed"
 	"flag"
 	"fmt"
-	runtime "github.com/banzaicloud/logrus-runtime-formatter"
+	logrus_runtime "github.com/banzaicloud/logrus-runtime-formatter"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/dao"
-	"github.com/libsgh/PanIndex/jobs"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/dao"
+	"github.com/px-org/PanIndex/jobs"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/unrolled/secure"
 	"html/template"
@@ -105,7 +105,7 @@ func InitDb(config BootConfig) {
 	d.CreateDb(dsn)
 }
 
-//config.json > env > flag
+// config.json > env > flag
 func LoadConfig() BootConfig {
 	var Config = flag.String("c", "config.json", "config.json")
 	var Host = flag.String("host", "", "bind host, default 0.0.0.0")
@@ -220,7 +220,7 @@ func InitLog(lvl string) error {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	formatter := runtime.Formatter{ChildFormatter: &log.TextFormatter{
+	formatter := logrus_runtime.Formatter{ChildFormatter: &log.TextFormatter{
 		ForceColors:               true,
 		EnvironmentOverrideColors: true,
 		TimestampFormat:           "2006-01-02 15:04:05",
@@ -245,7 +245,7 @@ func InitStaticBox(r *gin.Engine, fs embed.FS) {
 func Templates(fs embed.FS, config BootConfig) *template.Template {
 	themes := [3]string{"mdui", "classic", "bootstrap"}
 	tmpl := template.New("")
-	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "access", "pwd", "safety", "view", "bypass", "cache", "webdav", "404"}
+	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "access", "pwd", "safety", "view", "bypass", "cache", "webdav", "404", "share"}
 	addTemplatesFromFolder("admin", tmpl, fs, templatesFileNames, config)
 	for _, theme := range themes {
 		theme = util.GetCurrentTheme(theme)
@@ -264,6 +264,7 @@ func Templates(fs embed.FS, config BootConfig) *template.Template {
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
 			"FormateUnix":  FormateUnix,
+			"Year":         Year,
 		}).Parse(data)
 	}
 	//添加详情模板
@@ -311,19 +312,6 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 	}
 }
 
-type BootConfig struct {
-	Host        string `json:"host"`
-	Port        int    `json:"port"`
-	LogLevel    string `json:"log_level"`
-	DataPath    string `json:"data_path"`
-	CertFile    string `json:"cert_file"`
-	KeyFile     string `json:"key_file"`
-	ConfigQuery string `json:"config_query"`
-	DbType      string `json:"db_type"` //dao type:sqlite,mysql,postgres
-	Dsn         string `json:"dsn"`     //dao dsn
-	Ui          string `json:"ui"`
-}
-
 func unescaped(x string) interface{} { return template.HTML(x) }
 
 func isLast(index int, len int) bool {
@@ -355,4 +343,21 @@ func FormateUnix(timeUnix int64) string {
 	} else {
 		return time.Unix(timeUnix, 0).Format("2006-01-02 15:04:05")
 	}
+}
+
+func Year() string {
+	return time.Now().Format("2006")
+}
+
+type BootConfig struct {
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
+	LogLevel    string `json:"log_level"`
+	DataPath    string `json:"data_path"`
+	CertFile    string `json:"cert_file"`
+	KeyFile     string `json:"key_file"`
+	ConfigQuery string `json:"config_query"`
+	DbType      string `json:"db_type"` //dao type:sqlite,mysql,postgres
+	Dsn         string `json:"dsn"`     //dao dsn
+	Ui          string `json:"ui"`
 }

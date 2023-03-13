@@ -3,12 +3,12 @@ package control
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/control/middleware"
-	"github.com/libsgh/PanIndex/dao"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/pan"
-	"github.com/libsgh/PanIndex/service"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/control/middleware"
+	"github.com/px-org/PanIndex/dao"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/pan/ali"
+	"github.com/px-org/PanIndex/service"
+	"github.com/px-org/PanIndex/util"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -20,7 +20,7 @@ func AdminIndex(c *gin.Context) {
 	c.Redirect(http.StatusFound, module.GloablConfig.PathPrefix+module.GloablConfig.AdminPath+"/common")
 }
 
-//admin config managent
+// admin config managent
 func ConfigManagent(c *gin.Context) {
 	middleware.AdminThemeCheck(c)
 	theme := c.GetString("theme")
@@ -127,7 +127,7 @@ func Upload(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
 
-//add hide file
+// add hide file
 func Hide(c *gin.Context) {
 	data := gin.H{}
 	c.BindJSON(&data)
@@ -137,7 +137,7 @@ func Hide(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "添加成功！"})
 }
 
-//del hide file by path
+// del hide file by path
 func DelHide(c *gin.Context) {
 	delPaths := []string{}
 	c.BindJSON(&delPaths)
@@ -149,7 +149,7 @@ func DelHide(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
 }
 
-//save pwd file
+// save pwd file
 func PwdFile(c *gin.Context) {
 	pwdFiles := module.PwdFiles{}
 	c.BindJSON(&pwdFiles)
@@ -158,7 +158,7 @@ func PwdFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "保存成功！"})
 }
 
-//del hide file by path
+// del hide file by path
 func DelPwdFile(c *gin.Context) {
 	delIds := []string{}
 	c.BindJSON(&delIds)
@@ -166,7 +166,7 @@ func DelPwdFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
 }
 
-//save bypass
+// save bypass
 func Bypass(c *gin.Context) {
 	bypass := module.Bypass{}
 	c.BindJSON(&bypass)
@@ -174,7 +174,7 @@ func Bypass(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
 
-//del bypass
+// del bypass
 func DelBypass(c *gin.Context) {
 	delIds := []string{}
 	c.BindJSON(&delIds)
@@ -182,7 +182,7 @@ func DelBypass(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
 }
 
-//get file cache
+// get file cache
 func GetCache(c *gin.Context) {
 	path := c.Query("path")
 	pathEsc, _ := url.QueryUnescape(path)
@@ -193,7 +193,7 @@ func GetCache(c *gin.Context) {
 	}
 }
 
-//get file cache
+// get file cache
 func CacheClear(c *gin.Context) {
 	data := gin.H{}
 	c.BindJSON(&data)
@@ -208,7 +208,7 @@ func CacheClear(c *gin.Context) {
 	}
 }
 
-//get bypass by account
+// get bypass by account
 func GetBypass(c *gin.Context) {
 	accountId := c.Query("account_id")
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "成功", "data": service.GetBypassByAccountId(accountId)})
@@ -223,7 +223,7 @@ func CacheConfig(c *gin.Context) {
 }
 
 func AliQrcode(c *gin.Context) {
-	qr, data := pan.QrcodeGen()
+	qr, data := ali.QrcodeGen()
 	c.JSON(http.StatusOK, gin.H{
 		"qr":    qr,
 		"param": data,
@@ -235,7 +235,7 @@ func AliQrcodeCheck(c *gin.Context) {
 	codeContent := c.PostForm("codeContent")
 	ck := c.PostForm("ck")
 	resultCode := c.PostForm("resultCode")
-	qrCodeStatus, refreshToken := pan.QrcodeCheck(t, codeContent, ck, resultCode)
+	qrCodeStatus, refreshToken := ali.QrcodeCheck(t, codeContent, ck, resultCode)
 	c.JSON(http.StatusOK, gin.H{
 		"qrCodeStatus": qrCodeStatus,
 		"refreshToken": refreshToken,
@@ -261,7 +261,7 @@ func UploadConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
 
-//upload pwd file
+// upload pwd file
 func UploadPwdFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -285,12 +285,32 @@ func UploadPwdFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
 
-//share info
-func ShareInfo(c *gin.Context) {
+// gen share info
+func GenShareInfo(c *gin.Context) {
 	paramMap := make(map[string]string)
 	c.BindJSON(&paramMap)
 	id := paramMap["id"]
 	prefix := paramMap["prefix"]
-	msg := service.ShareInfo(prefix, id)
+	msg := service.GenShareInfo(prefix, id)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
+}
+
+// admin del share info
+func DeleteShareInfo(c *gin.Context) {
+	delPaths := []string{}
+	c.BindJSON(&delPaths)
+	dao.DeleteShareInfo(delPaths)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
+}
+
+// short url & qrcode
+func ShortInfo(c *gin.Context) {
+	path := c.PostForm("path")
+	prefix := c.PostForm("prefix")
+	url, qrCode, msg := service.ShortInfo(path, prefix)
+	c.JSON(http.StatusOK, gin.H{
+		"short_url": url,
+		"qr_code":   qrCode,
+		"msg":       msg,
+	})
 }

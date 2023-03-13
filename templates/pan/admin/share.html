@@ -1,0 +1,43 @@
+{{define "templates/pan/admin/share.html"}}
+    {{template "templates/pan/admin/base.html" .}}
+{{end}}
+{{define "admin-share"}}
+<div class="mdui-m-t-2">
+    <div class="mdui-typo mdui-p-b-2">
+        <h3> 分享短链 </h3>
+    </div>
+    <div class="mdui-table-fluid">
+
+        <table class="mdui-table mdui-table-hoverable mdui-table-selectable ">
+            <thead>
+            <tr>
+                <th>文件（夹）路径</th>
+                <th>短链编码</th>
+                <th>访问控制</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{- range $i, $info := $.config.ShareInfoList}}
+            <tr>
+                <td>{{$info.FilePath}}</td>
+                <td class="mdui-typo"><a href="{{$.config.PathPrefix}}/s/{{$info.ShortCode}}" target="_blank">{{$info.ShortCode}}</a></td>
+                <td class="mdui-typo">
+                    {{- if $info.PwdInfo}}
+                        {{- range $index, $pwd := $info.PwdInfo}}
+                        <p class="mdui-text-color-indigo"><code>{{$pwd.Password}}</code> {{FormateUnix $pwd.ExpireAt}} <a href="javascript:void(0)" data-pwd ="{{$pwd.Password}}" data-path="{{$info.FilePath}}" data-share-path="{{$.config.PathPrefix}}/s/{{$info.ShortCode}}" class="copyShareBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: small">content_copy</a></p>
+                        {{- end}}
+                    {{- end}}
+                </td>
+                <td>
+                    <a href="javascript:void(0)" data-path="{{.FilePath}}" class="deleteShareBtn mdui-btn mdui-btn-icon mdui-btn-dense" mdui-tooltip="{content: '删除'}">
+                        <i class="mdui-icon material-icons">delete</i>
+                    </a>
+                </td>
+            </tr>
+            {{- end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

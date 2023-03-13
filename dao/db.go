@@ -4,9 +4,18 @@ import (
 	"errors"
 	"github.com/bluele/gcache"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/pan"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/module"
+	_115 "github.com/px-org/PanIndex/pan/115"
+	"github.com/px-org/PanIndex/pan/123"
+	"github.com/px-org/PanIndex/pan/ali"
+	"github.com/px-org/PanIndex/pan/base"
+	"github.com/px-org/PanIndex/pan/cloud189"
+	"github.com/px-org/PanIndex/pan/googledrive"
+	"github.com/px-org/PanIndex/pan/onedrive"
+	"github.com/px-org/PanIndex/pan/pikpak"
+	"github.com/px-org/PanIndex/pan/s3"
+	"github.com/px-org/PanIndex/pan/teambition"
+	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/smallnest/weighted"
@@ -64,6 +73,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"dav_user", "webdav", "dav"},
 	{"dav_password", "1234", "dav"},
 	{"proxy", "", "common"},
+	{"jwt_sign_key", uuid.NewV4().String(), "common"},
 }
 
 type Db interface {
@@ -148,7 +158,7 @@ func SaveConfigItems(items []module.ConfigItem) {
 	}
 }
 
-//init global config
+// init global config
 func InitGlobalConfig() {
 	c := module.Config{}
 	cis := []module.ConfigItem{}
@@ -172,14 +182,21 @@ func InitGlobalConfig() {
 	RoundRobin()
 }
 
-//share info all list
+// share info all list
 func GetShareInfoList() []module.ShareInfo {
 	shareInfoList := []module.ShareInfo{}
+	result := []module.ShareInfo{}
 	DB.Where("1 = 1").Find(&shareInfoList)
-	return shareInfoList
+	for _, info := range shareInfoList {
+		pwdfiles := []module.PwdFiles{}
+		DB.Where("file_path = ?", info.FilePath).Find(&pwdfiles)
+		info.PwdInfo = pwdfiles
+		result = append(result, info)
+	}
+	return result
 }
 
-//pwd files to map
+// pwd files to map
 func GetHideFilesMap() map[string]string {
 	m := make(map[string]string)
 	hidefiles := []module.HideFiles{}
@@ -192,7 +209,7 @@ func GetHideFilesMap() map[string]string {
 	return m
 }
 
-//hide files to map
+// hide files to map
 func GetPwdFilesMap() map[string]string {
 	m := make(map[string]string)
 	pwdfiles := []module.PwdFiles{}
@@ -205,7 +222,7 @@ func GetPwdFilesMap() map[string]string {
 	return m
 }
 
-//get pwd from full path
+// get pwd from full path
 func GetPwdFromPath(path string) ([]string, string, bool) {
 	pwdfiles := []string{}
 	pwdfile := module.PwdFiles{}
@@ -234,21 +251,21 @@ func GetPwdFromPath(path string) ([]string, string, bool) {
 	return pwdfiles, filePath, true
 }
 
-//find account by name
+// find account by name
 func FindAccountByName(name string) module.Account {
 	account := module.Account{}
 	DB.Where("name = ?", name).First(&account)
 	return account
 }
 
-//find first account by seq
+// find first account by seq
 func FindAccountBySeq(seq int) module.Account {
 	account := module.Account{}
 	DB.Where("seq = ?", seq).First(&account)
 	return account
 }
 
-//find first file by path
+// find first file by path
 func FindFileByPath(ac module.Account, path string) (module.FileNode, bool) {
 	fn := module.FileNode{}
 	ok := false
@@ -277,7 +294,7 @@ func FindFileByPath(ac module.Account, path string) (module.FileNode, bool) {
 	return fn, ok
 }
 
-//find first file  list by path
+// find first file  list by path
 func FindFileListByPath(ac module.Account, path, sortColumn, sortOrder string) []module.FileNode {
 	fns := []module.FileNode{}
 	tx := DB.Where("is_delete=0 and hide =0 and account_id=? and parent_path=?", ac.Id, path)
@@ -291,7 +308,7 @@ func FindFileListByPath(ac module.Account, path, sortColumn, sortOrder string) [
 	return fns
 }
 
-//update config
+// update config
 func UpdateConfig(config map[string]string) {
 	for key, value := range config {
 		DB.Table("config_item").Where("k=?", key).Update("v", value)
@@ -299,7 +316,7 @@ func UpdateConfig(config map[string]string) {
 	InitGlobalConfig()
 }
 
-//get config
+// get config
 func GetConfig() module.Config {
 	c := module.Config{}
 	cis := []module.ConfigItem{}
@@ -317,14 +334,14 @@ func GetConfig() module.Config {
 	return c
 }
 
-//get account
+// get account
 func GetAccountById(id string) module.Account {
 	account := module.Account{}
 	DB.Where("id = ?", id).First(&account)
 	return account
 }
 
-//delete accounts
+// delete accounts
 func DeleteAccounts(ids []string) {
 	for _, id := range ids {
 		//delete account db file
@@ -337,11 +354,19 @@ func DeleteAccounts(ids []string) {
 		//delete share info
 		DB.Model(module.ShareInfo{}).Where("1=1").Delete(si)
 		//delete login account
-		pan.RemoveLoginAccount(id)
+		//base.RemoveLoginAccount(id)
 		// refresh global config
 		InitGlobalConfig()
 		//remove login account
-		pan.RemoveLoginAccount(id)
+		delete(ali.Alis, id)
+		delete(onedrive.OneDrives, id)
+		delete(teambition.TeambitionSessions, id)
+		delete(cloud189.CLoud189s, id)
+		delete(googledrive.GoogleDrives, id)
+		delete(s3.S3s, id)
+		delete(pikpak.Pikpaks, id)
+		delete(_123.Sessions, id)
+		delete(_115.Sessions, id)
 	}
 }
 
@@ -353,9 +378,9 @@ type RetryTask struct {
 	hide, hasPwd int
 }
 
-//Loop add files
+// Loop add files
 func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd int) {
-	pan, _ := pan.GetPan(account.Mode)
+	pan, _ := base.GetPan(account.Mode)
 	fileNodes, err := pan.Files(account, fileId, path, "default", "null")
 	if err != nil {
 		if err.Error() == "flow limit" {
@@ -381,10 +406,10 @@ func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd i
 	}
 }
 
-//sync account status
+// sync account status
 func SyncAccountStatus(account module.Account) {
 	DB.Table("account").Where("id=?", account.Id).Update("cookie_status", -1)
-	pan, _ := pan.GetPan(account.Mode)
+	pan, _ := base.GetPan(account.Mode)
 	auth, err := pan.AuthLogin(&account)
 	if err == nil && auth != "" {
 		log.Debugf("[%s] %s auth login success", account.Mode, account.Name)
@@ -398,7 +423,7 @@ func SyncAccountStatus(account module.Account) {
 	InitGlobalConfig()
 }
 
-//sync files cache
+// sync files cache
 var SYNC_STATUS = 0
 
 func SyncFilesCache(account module.Account) {
@@ -496,7 +521,7 @@ func GetAllNodes(tmpList, list *[]module.FileNode) {
 	}
 }
 
-//sort accounts
+// sort accounts
 func SortAccounts(ids []string) {
 	for i, id := range ids {
 		i++
@@ -505,7 +530,7 @@ func SortAccounts(ids []string) {
 	InitGlobalConfig()
 }
 
-//get file id by path
+// get file id by path
 func GetFileIdByPath(accountId, path string) string {
 	fn := module.FileNode{}
 	if path == "/" {
@@ -517,7 +542,7 @@ func GetFileIdByPath(accountId, path string) string {
 	}
 }
 
-//save hide file
+// save hide file
 func SaveHideFile(filePath string) {
 	hideFile := module.HideFiles{FilePath: filePath}
 	err := DB.Where("file_path=?", filePath).First(&module.HideFiles{}).Error
@@ -527,7 +552,7 @@ func SaveHideFile(filePath string) {
 	InitGlobalConfig()
 }
 
-//delete hide file
+// delete hide file
 func DeleteHideFiles(filePaths []string) {
 	for _, filePath := range filePaths {
 		c := DB.Where("file_path=?", filePath).Delete(&module.HideFiles{}).RowsAffected
@@ -536,7 +561,7 @@ func DeleteHideFiles(filePaths []string) {
 	InitGlobalConfig()
 }
 
-//save pwd file
+// save pwd file
 func SavePwdFile(pwdFile module.PwdFiles) {
 	if pwdFile.Password == "" {
 		pwdFile.Password = util.RandomPassword(8)
@@ -555,7 +580,7 @@ func SavePwdFile(pwdFile module.PwdFiles) {
 	}
 }
 
-//delete hide file
+// delete hide file
 func DeletePwdFiles(delIds []string) {
 	for _, id := range delIds {
 		c := DB.Where("id=?", id).Delete(&module.PwdFiles{}).RowsAffected
@@ -833,4 +858,12 @@ func SelectAccountsById(ids []string) []module.Account {
 	var accounts []module.Account
 	DB.Where("id IN ?", ids).Find(&accounts)
 	return accounts
+}
+
+func DeleteShareInfo(paths []string) {
+	for _, path := range paths {
+		//delete share info
+		DB.Where("file_path = ?", path).Delete(module.ShareInfo{})
+	}
+	InitGlobalConfig()
 }

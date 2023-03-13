@@ -1,15 +1,15 @@
 # PanIndex
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/libsgh/PanIndex.svg)](https://github.com/libsgh/PanIndex)
-[![GoReportCard](https://goreportcard.com/badge/github.com/libsgh/PanIndex)](https://goreportcard.com/report/github.com/libsgh/PanIndex)
-![GitHub all releases](https://img.shields.io/github/downloads/libsgh/PanIndex/total)
+[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/px-org/PanIndex.svg)](https://github.com/px-org/PanIndex)
+[![GoReportCard](https://goreportcard.com/badge/github.com/px-org/PanIndex)](https://goreportcard.com/report/github.com/px-org/PanIndex)
+![GitHub all releases](https://img.shields.io/github/downloads/px-org/PanIndex/total)
 ![Docker pulls](https://img.shields.io/docker/pulls/iicm/pan-index?color=%2348BB78&logo=docker&label=pulls)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/libsgh/PanIndex)
-![GitHub last commit](https://img.shields.io/github/last-commit/libsgh/PanIndex)
-[![Nightly build](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/px-org/PanIndex)
+![GitHub last commit](https://img.shields.io/github/last-commit/px-org/PanIndex)
+[![Nightly build](https://github.com/px-org/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/px-org/PanIndex/actions/workflows/nightly-build.yml)
 
 ---
-[English](https://github.com/libsgh/PanIndex/blob/dev/README.md) | 中文
+[English](https://github.com/px-org/PanIndex/blob/dev/README.md) | 中文
 
 ## 特性
 - [x] 跨平台、易部署
@@ -36,11 +36,15 @@
 - FTP
 - [S3](https://aws.amazon.com/s3/)（对象存储）
 - [PikPak](https://mypikpak.com "https://mypikpak.com")
+- [115云盘](https://115.com/ "https://115.com/")
+- [123云盘](https://www.123pan.com/ "https://www.123pan.com/")
 
 ## 链接
 - [`dev`branch demo](https://t1.noki.icu "https://t1.noki.icu")
-- [`dev`branch demo(Vuetify)](https://t2.nonki.icu "https://t2.noki.icu")
+- [`dev`branch demo(Vuetify)](https://t2.noki.icu "https://t2.noki.icu")
 - [Document](https://docs.noki.icu)
+- [Nightly](https://nightly.link/px-org/PanIndex/workflows/nightly-build/dev)
+- [PanIndex Tool](https://pt.noki.icu/)
 
 ## 感谢
 - 主题源自 [JustList](https://github.com/txperl/JustList) 魔改
@@ -51,4 +55,4 @@
 - 如有侵权，请通过[邮件](mailto:ponbous@gmail.com)告知。
 
 ## License
-[AGPL-V3](https://github.com/libsgh/PanIndex/blob/dev/LICENSE)
+[AGPL-V3](https://github.com/px-org/PanIndex/blob/dev/LICENSE)

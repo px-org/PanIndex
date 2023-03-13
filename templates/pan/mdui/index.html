@@ -79,6 +79,10 @@
 						{{ $color = "orange" }}
 						{{- else if eq $a.Mode "pikpak" }}
 						{{ $color = "indigo" }}
+						{{- else if eq $a.Mode "123" }}
+						{{ $color = "light-blue" }}
+						{{- else if eq $a.Mode "115" }}
+						{{ $color = "blue-900" }}
 						{{- end}}
 						<li class="mdui-menu-item">
 							<a href="{{$.config.PathPrefix}}/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{$color}}">face</i>{{.Name}}</a>
@@ -206,7 +210,9 @@
 								<button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '排序'}" mdui-menu="{target: '#sort-menu',position:'bottom'}"><i class="mdui-icon material-icons">sort</i></button>
 								<button id="previewImages" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '预览本页所有图片'}"><i class="mdui-icon material-icons">panorama_wide_angle</i></button>
 								{{- if $.has_parent}}
+								{{- if $.is_admin_login}}
 								<a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu',covered: false}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>
+								{{- end}}
 								<ul id="share-menu" class="mdui-menu" data-fp="{{ $.full_path }}" data-file-type="0" data-aid="{{ $.account.Id }}">
 									<li class="mdui-divider"></li>
 									<li class="mdui-menu-item">
@@ -336,7 +342,7 @@
 	{{- end}}
 	<div class="mdui-text-center mdui-typo footer">
 		{{- if eq $.config.Footer ""}}
-		©2021 <a href="https://github.com/libsgh/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
+		©{{Year}} <a href="https://github.com/px-org/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
 		{{- else}}
 		{{$.config.Footer | unescaped}}
 		{{- end}}

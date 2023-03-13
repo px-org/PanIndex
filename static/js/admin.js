@@ -362,6 +362,33 @@ function dynamicChgMode(mode){
         $("#aliQrCodeBtn").hide();
         $("#accountForm").find("input[name=root_id]").val("");
         $("#S3PathDiv").hide();
+    }else if (mode == "123"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
+        $("#UserDiv").show();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#SiteIdDiv").hide();
+        $("#user_label").text("用户名");
+        $("#accountForm").find("input[name=password]").attr("type", "password");
+        $("#password_label").text("密码");
+        $("#accountForm").find("input[name=root_id]").val("0");
+        $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
+    }else if (mode == "115"){
+        $("#RedirectUriDiv").hide();
+        $("#RefreshTokenDiv").hide();
+        $("#ApiUrlDiv").hide();
+        $("#UserDiv").hide();
+        $("#PasswordDiv").show();
+        $(".sync-div").show();
+        $("#SiteIdDiv").hide();
+        $("#password_label").text("COOKIE");
+        $("#accountForm").find("input[name=password]").attr("type", "text");
+        $("#accountForm").find("input[name=root_id]").val("0");
+        $("#aliQrCodeBtn").hide();
+        $("#S3PathDiv").hide();
     }
     diskd.handleUpdate();
 }
@@ -1137,6 +1164,46 @@ $("#saveDavConfigBtn").on('click', function (ev){
         snackbar("请输入WebDav请求路径!");
     }
 
+});
+$(".deleteShareBtn").on('click', function (event) {
+    var path = $(this).data("path");
+    var delPaths= [path];
+    $.ajax({
+        method: 'DELETE',
+        url: AdminApiUrl + '/share/info',
+        data: JSON.stringify(delPaths),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (data) {
+            mdui.snackbar({
+                message: data.msg,
+                timeout: 2000,
+                onClose: function(){
+                    location.reload();
+                }
+            });
+        }
+    });
+});
+$(".copyShareBtn").on('click', function (ev){
+    var prefix = window.location.protocol + "//"+window.location.host;
+    var path = $(this).data("path");
+    var fileName = path.substring(path.lastIndexOf('/') + 1);
+    var sharePath = $(this).data("share-path");
+    var pwd = $(this).data("pwd");
+    let msg = "「" + fileName + "」" + prefix + sharePath;
+    if(pwd != ""){
+        msg = "「" + fileName + "」" + prefix + sharePath + " 密码: " + pwd + "";
+    }
+    var title = "链接和密码已复制到剪切板";
+    if (!navigator.clipboard) {
+        title = "该浏览器不支持复制操作";
+    }
+    navigator.clipboard.writeText(msg);
+    mdui.snackbar({
+        message: title,
+        timeout: 1000
+    });
 });
 //webdav - end
 function parseFormData(formArray){

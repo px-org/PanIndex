@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/libsgh/PanIndex/dao"
-	"github.com/libsgh/PanIndex/module"
-	"github.com/libsgh/PanIndex/util"
+	"github.com/px-org/PanIndex/dao"
+	"github.com/px-org/PanIndex/module"
+	"github.com/px-org/PanIndex/util"
 	"net/http"
 	"net/url"
 	"strings"
