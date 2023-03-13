@@ -20,7 +20,7 @@ const (
 func JWTMiddlewar() (*jwt.GinJWTMiddleware, error) {
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "PanIndex Zone",
-		Key:         []byte("PanIndex"),
+		Key:         []byte(module.GloablConfig.JwtSignKey),
 		Timeout:     (time.Duration(LoginTimeOut)) * time.Hour,
 		MaxRefresh:  (time.Duration(LoginTimeOut)) * time.Hour,
 		IdentityKey: identityKey,

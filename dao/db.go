@@ -73,6 +73,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"dav_user", "webdav", "dav"},
 	{"dav_password", "1234", "dav"},
 	{"proxy", "", "common"},
+	{"jwt_sign_key", uuid.NewV4().String(), "common"},
 }
 
 type Db interface {
