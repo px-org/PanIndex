@@ -96,9 +96,10 @@ type Config struct {
 	Proxy            string            `json:"proxy"`           //google api prxoy
 	Readme           string            `json:"readme"`          //show or hide readme
 	Head             string            `json:"head"`            //show or hide head
-	ShareInfoList    []ShareInfo       `json:"share_info_list"` //分享信息列表
+	ShareInfoList    []ShareInfo       `json:"share_info_list"` //share info list
 	Access           string            `json:"access"`          //access
-	ShortAction      string            `json:"short_action"`    //短链行为
+	ShortAction      string            `json:"short_action"`    //access short link action
+	JwtSignKey       string            `json:"jwt_sign_key"`    //jwt sign key
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key

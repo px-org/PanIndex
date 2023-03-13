@@ -391,7 +391,7 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 		version = "main"
 	}
 	prefix := module.GloablConfig.PathPrefix
-	jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
+	jp := "https://fastly.jsdelivr.net/gh/px-org/PanIndex@" + version
 	//jp := "https://fastly.jsdelivr.net/gh/libsgh/PanIndex@" + version
 	m := map[string]string{}
 	cdnMap := KV{

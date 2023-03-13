@@ -264,6 +264,7 @@ func Templates(fs embed.FS, config BootConfig) *template.Template {
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
 			"FormateUnix":  FormateUnix,
+			"Year":         Year,
 		}).Parse(data)
 	}
 	//添加详情模板
@@ -342,6 +343,10 @@ func FormateUnix(timeUnix int64) string {
 	} else {
 		return time.Unix(timeUnix, 0).Format("2006-01-02 15:04:05")
 	}
+}
+
+func Year() string {
+	return time.Now().Format("2006")
 }
 
 type BootConfig struct {
