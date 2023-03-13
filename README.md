@@ -1,15 +1,15 @@
 # PanIndex
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/libsgh/PanIndex.svg)](https://github.com/libsgh/PanIndex)
-[![GoReportCard](https://goreportcard.com/badge/github.com/libsgh/PanIndex)](https://goreportcard.com/report/github.com/libsgh/PanIndex)
-![GitHub all releases](https://img.shields.io/github/downloads/libsgh/PanIndex/total)
+[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/px-org/PanIndex.svg)](https://github.com/px-org/PanIndex)
+[![GoReportCard](https://goreportcard.com/badge/github.com/px-org/PanIndex)](https://goreportcard.com/report/github.com/px-org/PanIndex)
+![GitHub all releases](https://img.shields.io/github/downloads/px-org/PanIndex/total)
 ![Docker pulls](https://img.shields.io/docker/pulls/iicm/pan-index?color=%2348BB78&logo=docker&label=pulls)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/libsgh/PanIndex)
-![GitHub last commit](https://img.shields.io/github/last-commit/libsgh/PanIndex)
-[![Nightly build](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/libsgh/PanIndex/actions/workflows/nightly-build.yml)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/px-org/PanIndex)
+![GitHub last commit](https://img.shields.io/github/last-commit/px-org/PanIndex)
+[![Nightly build](https://github.com/px-org/PanIndex/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/px-org/PanIndex/actions/workflows/nightly-build.yml)
 
 ---
-English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)
+English | [中文](https://github.com/px-org/PanIndex/blob/dev/README_ZH.md)
 
 ## Features
 - [x] Cross-platform / Easy to deploy
@@ -55,4 +55,4 @@ English | [中文](https://github.com/libsgh/PanIndex/blob/dev/README_ZH.md)
 - If there is any infringement, please notify by [email]((mailto:ponbous@gmail.com))
 
 ## License
-[AGPL-V3](https://github.com/libsgh/PanIndex/blob/main/LICENSE)
+[AGPL-V3](https://github.com/px-org/PanIndex/blob/main/LICENSE)
