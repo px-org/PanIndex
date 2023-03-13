@@ -38,8 +38,9 @@ type FileNode struct {
 	ExtraData   map[string]interface{} `json:"extra_data" gorm:"-"`             //额外数据
 }
 type ShareInfo struct {
-	FilePath  string `json:"file_path"`  //PanIndex文件路径
-	ShortCode string `json:"short_code"` //短链接code
+	FilePath  string     `json:"file_path"`         //PanIndex文件路径
+	ShortCode string     `json:"short_code"`        //短链接code
+	PwdInfo   []PwdFiles `json:"pwd_info" gorm:"-"` //密码信息
 	//IsFile    bool   `json:"is_file"`    //是否是文件（文件根据配置跳转预览或下载，目录直接打开）
 }
 type SearchNode struct {

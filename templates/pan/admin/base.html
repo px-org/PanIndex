@@ -152,6 +152,10 @@
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-blue">storage</i>
             <div class="mdui-list-item-content">网盘挂载</div>
         </a>
+        <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "share"}}mdui-list-item-active{{end}}" href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/share">
+        <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-black">share</i>
+        <div class="mdui-list-item-content">分享短链</div>
+        </a>
         <a class="mdui-list-item mdui-ripple mdui-text-color-theme {{if eq $.redirect_url "bypass"}}mdui-list-item-active{{end}}" href="{{$.config.PathPrefix}}{{$.config.AdminPath}}/bypass">
             <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-teal">call_split</i>
             <div class="mdui-list-item-content">分流下载</div>
@@ -191,6 +195,8 @@
         {{block "admin-safety" .}}{{end}}
     {{- else if eq $.redirect_url "disk"}}
         {{block "admin-disk" .}}{{end}}
+    {{- else if eq $.redirect_url "share"}}
+        {{block "admin-share" .}}{{end}}
     {{- else if eq $.redirect_url "bypass"}}
         {{block "admin-bypass" .}}{{end}}
     {{- else if eq $.redirect_url "cache"}}

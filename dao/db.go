@@ -185,8 +185,15 @@ func InitGlobalConfig() {
 // share info all list
 func GetShareInfoList() []module.ShareInfo {
 	shareInfoList := []module.ShareInfo{}
+	result := []module.ShareInfo{}
 	DB.Where("1 = 1").Find(&shareInfoList)
-	return shareInfoList
+	for _, info := range shareInfoList {
+		pwdfiles := []module.PwdFiles{}
+		DB.Where("file_path = ?", info.FilePath).Find(&pwdfiles)
+		info.PwdInfo = pwdfiles
+		result = append(result, info)
+	}
+	return result
 }
 
 // pwd files to map
@@ -851,4 +858,12 @@ func SelectAccountsById(ids []string) []module.Account {
 	var accounts []module.Account
 	DB.Where("id IN ?", ids).Find(&accounts)
 	return accounts
+}
+
+func DeleteShareInfo(paths []string) {
+	for _, path := range paths {
+		//delete share info
+		DB.Where("file_path = ?", path).Delete(module.ShareInfo{})
+	}
+	InitGlobalConfig()
 }

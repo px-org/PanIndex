@@ -245,7 +245,7 @@ func InitStaticBox(r *gin.Engine, fs embed.FS) {
 func Templates(fs embed.FS, config BootConfig) *template.Template {
 	themes := [3]string{"mdui", "classic", "bootstrap"}
 	tmpl := template.New("")
-	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "access", "pwd", "safety", "view", "bypass", "cache", "webdav", "404"}
+	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "access", "pwd", "safety", "view", "bypass", "cache", "webdav", "404", "share"}
 	addTemplatesFromFolder("admin", tmpl, fs, templatesFileNames, config)
 	for _, theme := range themes {
 		theme = util.GetCurrentTheme(theme)

@@ -1165,6 +1165,46 @@ $("#saveDavConfigBtn").on('click', function (ev){
     }
 
 });
+$(".deleteShareBtn").on('click', function (event) {
+    var path = $(this).data("path");
+    var delPaths= [path];
+    $.ajax({
+        method: 'DELETE',
+        url: AdminApiUrl + '/share/info',
+        data: JSON.stringify(delPaths),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (data) {
+            mdui.snackbar({
+                message: data.msg,
+                timeout: 2000,
+                onClose: function(){
+                    location.reload();
+                }
+            });
+        }
+    });
+});
+$(".copyShareBtn").on('click', function (ev){
+    var prefix = window.location.protocol + "//"+window.location.host;
+    var path = $(this).data("path");
+    var fileName = path.substring(path.lastIndexOf('/') + 1);
+    var sharePath = $(this).data("share-path");
+    var pwd = $(this).data("pwd");
+    let msg = "「" + fileName + "」" + prefix + sharePath;
+    if(pwd != ""){
+        msg = "「" + fileName + "」" + prefix + sharePath + " 密码: " + pwd + "";
+    }
+    var title = "链接和密码已复制到剪切板";
+    if (!navigator.clipboard) {
+        title = "该浏览器不支持复制操作";
+    }
+    navigator.clipboard.writeText(msg);
+    mdui.snackbar({
+        message: title,
+        timeout: 1000
+    });
+});
 //webdav - end
 function parseFormData(formArray){
    var d = {};

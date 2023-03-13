@@ -97,7 +97,7 @@ $(document).ready(function() {
             formData.append("isFile", $(this).attr("data-file-type"));
             $.ajax({
                 type: 'POST',
-                url: $config.path_prefix+'/api/v3/public/shortInfo',
+                url: $config.path_prefix+'/api/v3'+$config.admin_path+'/short/info',
                 data: formData,
                 cache: false,
                 contentType: false,

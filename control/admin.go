@@ -285,12 +285,32 @@ func UploadPwdFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
 }
 
-// share info
-func ShareInfo(c *gin.Context) {
+// gen share info
+func GenShareInfo(c *gin.Context) {
 	paramMap := make(map[string]string)
 	c.BindJSON(&paramMap)
 	id := paramMap["id"]
 	prefix := paramMap["prefix"]
-	msg := service.ShareInfo(prefix, id)
+	msg := service.GenShareInfo(prefix, id)
 	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": msg})
+}
+
+// admin del share info
+func DeleteShareInfo(c *gin.Context) {
+	delPaths := []string{}
+	c.BindJSON(&delPaths)
+	dao.DeleteShareInfo(delPaths)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "删除成功！"})
+}
+
+// short url & qrcode
+func ShortInfo(c *gin.Context) {
+	path := c.PostForm("path")
+	prefix := c.PostForm("prefix")
+	url, qrCode, msg := service.ShortInfo(path, prefix)
+	c.JSON(http.StatusOK, gin.H{
+		"short_url": url,
+		"qr_code":   qrCode,
+		"msg":       msg,
+	})
 }

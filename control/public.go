@@ -24,18 +24,6 @@ func ExchangeToken(c *gin.Context) {
 	c.String(http.StatusOK, tokenInfo)*/
 }
 
-// short url & qrcode
-func ShortInfo(c *gin.Context) {
-	path := c.PostForm("path")
-	prefix := c.PostForm("prefix")
-	url, qrCode, msg := service.ShortInfo(path, prefix)
-	c.JSON(http.StatusOK, gin.H{
-		"short_url": url,
-		"qr_code":   qrCode,
-		"msg":       msg,
-	})
-}
-
 // aliyundrive transcode
 func AliTranscode(c *gin.Context) {
 	accountId := c.Query("accountId")
@@ -83,6 +71,7 @@ func Raw(c *gin.Context) {
 func ConfigJS(c *gin.Context) {
 	config, _ := jsoniter.MarshalToString(gin.H{
 		"path_prefix": module.GloablConfig.PathPrefix,
+		"admin_path":  module.GloablConfig.AdminPath,
 	})
 	c.String(http.StatusOK, `var $config=%s;`, config)
 }

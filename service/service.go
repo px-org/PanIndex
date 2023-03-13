@@ -413,15 +413,16 @@ func ShortInfo(path, prefix string) (string, string, string) {
 			}
 		}
 		dao.DB.Create(module.ShareInfo{
-			path, shortCode,
+			path, shortCode, []module.PwdFiles{},
 		})
 	}
+	go dao.InitGlobalConfig()
 	shortUrl = prefix + shortCode
 	png, err := qrcode.Encode(shortUrl, qrcode.Medium, 256)
 	if err != nil {
 		panic(err)
 	}
-	dataURI := "data:image/png;base64," + base64.StdEncoding.EncodeToString([]byte(png))
+	dataURI := "data:image/png;base64," + base64.StdEncoding.EncodeToString(png)
 	return shortUrl, dataURI, "短链生成成功"
 }
 
@@ -1053,7 +1054,7 @@ func UploadPwdFile(content string) {
 	}
 }
 
-func ShareInfo(urlPrefix, pwdId string) string {
+func GenShareInfo(urlPrefix, pwdId string) string {
 	//1. pwd
 	pwdFile := module.PwdFiles{}
 	dao.DB.Where("id=?", pwdId).First(&pwdFile)
