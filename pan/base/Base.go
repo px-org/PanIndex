@@ -65,6 +65,8 @@ func SimpleTest() {
 	account.Password = os.Getenv("ACCOUNT_PASSWORD")
 	account.Mode = os.Getenv("MODE")
 	account.RootId = os.Getenv("ROOT_ID")
+	account.SiteId = os.Getenv("SITE_ID")
+	account.RefreshToken = os.Getenv("REFRESH_TOKEN")
 	p, _ := GetPan(account.Mode)
 	result, err := p.AuthLogin(account)
 	//p.IsLogin(account)
@@ -72,5 +74,6 @@ func SimpleTest() {
 	fs, _ := p.Files(*account, account.RootId, "/", "", "")
 	log.Info(fs)
 	f, _ := p.File(*account, fs[0].FileId, fs[0].Path)
+	log.Info(f)
 	log.Info(p.GetDownloadUrl(*account, f.FileId))
 }

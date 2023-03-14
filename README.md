@@ -28,13 +28,13 @@ English | [中文](https://github.com/px-org/PanIndex/blob/dev/README_ZH.md)
 - Local directory
 - [189](https://cloud.189.cn/)
 - [Teambition Team](https://www.teambition.com/)
-- [Aliyundrive](https://www.aliyundrive.com/)
+- [Aliyundrive](https://www.aliyundrive.com/)(share)
 - OneDrive / Sharepoint([global](https://www.office.com/)、[cn](https://portal.partner.microsoftonline.cn/))
 - [139](https://yun.139.com/)
 - [Google Drive](https://drive.google.com/)
 - WebDav
 - FTP
-- [S3](https://aws.amazon.com/s3/)（Object Storage）
+- [S3](https://aws.amazon.com/s3/)(Object Storage)
 - [PikPak](https://mypikpak.com "https://mypikpak.com")
 - [115](https://115.com/ "https://115.com/")
 - [123](https://www.123pan.com/ "https://www.123pan.com/")

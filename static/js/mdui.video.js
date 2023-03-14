@@ -155,7 +155,7 @@ function initVideo(container, qas, title){
                         hls.on(Hls.Events.ERROR, function (event, data) {
                             switch (data.type) {
                                 case Hls.ErrorTypes.NETWORK_ERROR:
-                                    if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
+                                    if((mode == "aliyundrive" || mode == "aliyundrive-share") && $("#transcodeBtn").text()=="cloud_done" && data.response.code == 403){
                                         const lastTime = art.currentTime;
                                         var qas = buildTranscodeInfo(accountId, fileId);
                                         if(qas.length != 0){
@@ -207,7 +207,7 @@ function initVideo(container, qas, title){
             if (!Hls.isSupported()) {
                 const canPlay = video.canPlayType('application/vnd.apple.mpegurl');
                 if (canPlay === 'probably' || canPlay == 'maybe') {
-                    if(mode == "aliyundrive" && $("#transcodeBtn").text()=="cloud_done"){
+                    if((mode == "aliyundrive" || mode == "aliyundrive-share") && $("#transcodeBtn").text()=="cloud_done"){
                         const lastTime = art.currentTime;
                         var qas = buildTranscodeInfo(accountId, fileId);
                         if(qas.length != 0){
@@ -435,7 +435,7 @@ function buildTranscodeInfo(accountId, fileId){
 }
 function getQas() {
     var qas = [];
-    if(mode == "aliyundrive" && Cookies.get("transcode") == "1"){
+    if((mode == "aliyundrive" || mode == "aliyundrive-share") && Cookies.get("transcode") == "1"){
         qas = buildTranscodeInfo(accountId, fileId);
         $("#transcodeBtn").text("cloud_done");
         if(qas.length == 0){

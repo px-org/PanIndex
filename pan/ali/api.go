@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/bluele/gcache"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/px-org/PanIndex/module"
 	"github.com/px-org/PanIndex/pan/base"
@@ -18,12 +17,6 @@ import (
 	"strings"
 	"time"
 )
-
-var Alis = map[string]module.TokenResp{}
-var APPID = "5dde4e1bdf9e4966b387ba58f4b3fdc3"
-var NonceMin = 0
-var NonceMax = 2147483647
-var SignCache = gcache.New(100000).LRU().Build()
 
 func init() {
 	base.RegisterPan("aliyundrive", &Ali{})
@@ -42,7 +35,7 @@ func (a Ali) IsLogin(account *module.Account) bool {
 
 // auth login api return (refresh_token, err)
 func (a Ali) AuthLogin(account *module.Account) (string, error) {
-	var tokenResp module.TokenResp
+	var tokenResp TokenResp
 	_, err := base.Client.R().
 		SetResult(&tokenResp).
 		SetBody(base.KV{"refresh_token": account.RefreshToken, "grant_type": "refresh_token"}).
@@ -660,6 +653,18 @@ func QrcodeCheck(t, codeContent, ck, resultCode string) (string, string) {
 	return qrCodeStatus, refreshToken
 }
 
+// ali sign activity
+func (a Ali) SignActivity(account module.Account) {
+	tokenResp := Alis[account.Id]
+	_, err := base.Client.R().
+		SetAuthToken(tokenResp.AccessToken).
+		SetBody(base.KV{"refresh_token": account.RefreshToken, "grant_type": "refresh_token"}).
+		Post("https://member.aliyundrive.com/v1/activity/sign_in_list")
+	if err != nil {
+		log.Errorln(err)
+	}
+}
+
 func (a Ali) GetOrderFiled(sortColumn, sortOrder string) (string, string) {
 	if sortColumn == "default" {
 		sortColumn = "updated_at"
@@ -675,129 +680,4 @@ func (a Ali) GetOrderFiled(sortColumn, sortOrder string) (string, string) {
 	}
 	sortOrder = strings.ToUpper(sortOrder)
 	return sortColumn, sortOrder
-}
-
-// file api response
-type AliFilesResp struct {
-	Items             []Items `json:"items"`
-	NextMarker        string  `json:"next_marker"`
-	PunishedFileCount int     `json:"punished_file_count"`
-}
-
-// file api file
-type Items struct {
-	DriveID         string `json:"drive_id"`
-	FileID          string `json:"file_id"`
-	Name            string `json:"name"`
-	Type            string `json:"type"`
-	CreatedAt       string `json:"created_at"`
-	UpdatedAt       string `json:"updated_at"`
-	Hidden          bool   `json:"hidden"`
-	Status          string `json:"status"`
-	ParentFileID    string `json:"parent_file_id"`
-	FileExtension   string `json:"file_extension,omitempty"`
-	MimeType        string `json:"mime_type,omitempty"`
-	Size            int    `json:"size,omitempty"`
-	ContentHash     string `json:"content_hash,omitempty"`
-	ContentHashName string `json:"content_hash_name,omitempty"`
-	Category        string `json:"category,omitempty"`
-	Thumbnail       string `json:"thumbnail,omitempty"`
-}
-
-// remove api response
-type AliRemoveResp struct {
-	DomainID    string `json:"domain_id"`
-	DriveID     string `json:"drive_id"`
-	FileID      string `json:"file_id"`
-	AsyncTaskID string `json:"async_task_id"`
-}
-
-// mkdir api response
-type AliMkdirResp struct {
-	UploadID     string      `json:"upload_id"`
-	ParentFileID string      `json:"parent_file_id"`
-	Type         string      `json:"type"`
-	FileID       string      `json:"file_id"`
-	DomainID     string      `json:"domain_id"`
-	DriveID      string      `json:"drive_id"`
-	FileName     string      `json:"file_name"`
-	EncryptMode  string      `json:"encrypt_mode"`
-	RapidUpload  bool        `json:"rapid_upload"`
-	PartInfoList []*PartInfo `json:"part_info_list"`
-}
-
-// batch api(/file/move) response
-type BatchApiResp struct {
-	Responses []Responses `json:"responses"`
-}
-
-type Body struct {
-	DomainID string `json:"domain_id"`
-	DriveID  string `json:"drive_id"`
-	FileID   string `json:"file_id"`
-}
-
-type Responses struct {
-	Body   Body   `json:"body"`
-	ID     string `json:"id"`
-	Status int    `json:"status"`
-}
-
-// rename api response
-type AliRenameResp struct {
-	DriveID          string    `json:"drive_id"`
-	DomainID         string    `json:"domain_id"`
-	FileID           string    `json:"file_id"`
-	Name             string    `json:"name"`
-	Type             string    `json:"type"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	Hidden           bool      `json:"hidden"`
-	Starred          bool      `json:"starred"`
-	Status           string    `json:"status"`
-	UserMeta         string    `json:"user_meta"`
-	ParentFileID     string    `json:"parent_file_id"`
-	EncryptMode      string    `json:"encrypt_mode"`
-	CreatorType      string    `json:"creator_type"`
-	CreatorID        string    `json:"creator_id"`
-	CreatorName      string    `json:"creator_name"`
-	LastModifierType string    `json:"last_modifier_type"`
-	LastModifierID   string    `json:"last_modifier_id"`
-	LastModifierName string    `json:"last_modifier_name"`
-	RevisionID       string    `json:"revision_id"`
-	Trashed          bool      `json:"trashed"`
-}
-
-type CreateFileWithProofResp struct {
-	UploadID     string      `json:"upload_id"`
-	FileID       string      `json:"file_id"`
-	RapidUpload  bool        `json:"rapid_upload"`
-	PartInfoList []*PartInfo `json:"part_info_list"`
-}
-
-type PartInfo struct {
-	PartNumber int    `json:"part_number"`
-	UploadURL  string `json:"upload_url"`
-}
-
-// path api response
-type AliPathResp struct {
-	Items []Items `json:"items"`
-}
-
-// Ali down response
-type AliDownResp struct {
-	Method          string    `json:"method"`
-	URL             string    `json:"url"`
-	InternalURL     string    `json:"internal_url"`
-	Expiration      time.Time `json:"expiration"`
-	Size            int       `json:"size"`
-	Ratelimit       Ratelimit `json:"ratelimit"`
-	Crc64Hash       string    `json:"crc64_hash"`
-	ContentHash     string    `json:"content_hash"`
-	ContentHashName string    `json:"content_hash_name"`
-}
-type Ratelimit struct {
-	PartSpeed int `json:"part_speed"`
-	PartSize  int `json:"part_size"`
 }

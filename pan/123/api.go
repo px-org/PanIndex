@@ -133,7 +133,6 @@ func (p Pan123) File(account module.Account, fileId, path string) (module.FileNo
 			},
 		})
 	}, &resp)
-	fmt.Println(resp)
 	if err != nil || resp.Code != 0 {
 		log.Errorln(err)
 		return fn, err

@@ -315,7 +315,7 @@ func (dl *DownLock) GetDownlaodUrl(account module.Account, fileId string) string
 			if account.Mode == "aliyundrive" {
 				UrlCache.SetWithExpire(account.Id+fileId, DownUrlCacheBean{downloadUrl, cacheTime, util.GetExpireTime(cacheTime, time.Minute*230)}, time.Minute*230)
 			} else {
-				UrlCache.SetWithExpire(account.Id+fileId, DownUrlCacheBean{downloadUrl, cacheTime, util.GetExpireTime(cacheTime, time.Minute*14)}, time.Minute*14)
+				UrlCache.SetWithExpire(account.Id+fileId, DownUrlCacheBean{downloadUrl, cacheTime, util.GetExpireTime(cacheTime, time.Minute*10)}, time.Minute*10)
 			}
 			log.Debugf("get download url from api:" + downloadUrl)
 		}

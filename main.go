@@ -10,6 +10,7 @@ import (
 	_ "github.com/px-org/PanIndex/pan/115"
 	_ "github.com/px-org/PanIndex/pan/123"
 	_ "github.com/px-org/PanIndex/pan/ali"
+	_ "github.com/px-org/PanIndex/pan/alishare"
 	_ "github.com/px-org/PanIndex/pan/cloud189"
 	_ "github.com/px-org/PanIndex/pan/ftp"
 	_ "github.com/px-org/PanIndex/pan/googledrive"

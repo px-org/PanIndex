@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="renderer" content="webkit"/>
     <title>{{$.title}} {{ $.path }}</title>
-    {{- if eq $.account.Mode "aliyundrive"}}
+    {{- if or (eq $.account.Mode "aliyundrive") (eq $.account.Mode "aliyundrive-share")}}
     <meta name="referrer" content="no-referrer">
     {{- end}}
     <style>
