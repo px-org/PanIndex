@@ -19,6 +19,8 @@ import (
 
 var Sessions = map[string]LoginResp{}
 
+var RootId = "0"
+
 func init() {
 	base.RegisterPan("123", &Pan123{})
 }
@@ -112,6 +114,16 @@ func (p Pan123) Files(account module.Account, fileId, path, sortColumn, sortOrde
 func (p Pan123) File(account module.Account, fileId, path string) (module.FileNode, error) {
 	var resp FileResp
 	fn := module.FileNode{}
+	if fileId == RootId {
+		return module.FileNode{
+			FileId:     "0",
+			FileName:   "root",
+			FileSize:   0,
+			IsFolder:   true,
+			Path:       "/",
+			LastOpTime: time.Now().Format("2006-01-02 15:04:05"),
+		}, nil
+	}
 	_, err := p.request(&account, "https://www.123pan.com/a/api/file/info", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.KV{
 			"fileIdList": []base.KV{
@@ -121,6 +133,7 @@ func (p Pan123) File(account module.Account, fileId, path string) (module.FileNo
 			},
 		})
 	}, &resp)
+	fmt.Println(resp)
 	if err != nil || resp.Code != 0 {
 		log.Errorln(err)
 		return fn, err
