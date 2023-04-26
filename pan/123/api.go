@@ -349,9 +349,10 @@ func (p Pan123) GetDownloadUrl(account module.Account, fileId string) (string, e
 				return "", err
 			}
 		}
-		dRedirectRep, _ := base.Client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(0)).R().Get(u.String())
-		if dRedirectRep.StatusCode() == 302 {
-			return dRedirectRep.Header().Get("location"), err
+		var downloadUrlResp DownloadUrlResp
+		_, err = p.request(&account, u.String(), http.MethodGet, nil, &downloadUrlResp)
+		if downloadUrlResp.Code == 0 {
+			return downloadUrlResp.Data.RedirectURL, err
 		}
 	}
 	return "", err
