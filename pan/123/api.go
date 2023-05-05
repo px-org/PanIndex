@@ -44,6 +44,13 @@ func (p Pan123) AuthLogin(account *module.Account) (string, error) {
 	_, err := base.Client.R().
 		SetResult(&resp).
 		SetBody(reqBody).
+		SetHeaders(map[string]string{
+			"Origin":       "https://www.123pan.com",
+			"Content-Type": "application/json;charset=UTF-8",
+			"platform":     "web",
+			"App-Version":  "3",
+			"User-Agent":   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+		}).
 		Post("https://www.123pan.com/b/api/user/sign_in")
 	//refresh_token_expire_time 1 month
 	if err != nil || resp.Code != 200 {
@@ -124,7 +131,7 @@ func (p Pan123) File(account module.Account, fileId, path string) (module.FileNo
 			LastOpTime: time.Now().Format("2006-01-02 15:04:05"),
 		}, nil
 	}
-	_, err := p.request(&account, "https://www.123pan.com/a/api/file/info", http.MethodPost, func(req *resty.Request) {
+	_, err := p.request(&account, "https://www.123pan.com/b/api/file/info", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.KV{
 			"fileIdList": []base.KV{
 				{
