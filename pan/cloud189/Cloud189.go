@@ -72,10 +72,11 @@ func (c Cloud189) AuthLogin(account *module.Account) (string, error) {
 			"Referer":    "https://open.e.189.cn/",
 		}).
 		SetFormData(map[string]string{
+			"version":      "v2.0",
 			"appKey":       "cloud",
 			"accountType":  "01",
 			"userName":     "{RSA}" + userRsa,
-			"password":     "{RSA}" + passwordRsa,
+			"epd":          "{RSA}" + passwordRsa,
 			"validateCode": vCodeRS,
 			"captchaToken": captchaToken,
 			"returnUrl":    returnUrl,
