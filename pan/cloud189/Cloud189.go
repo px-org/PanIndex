@@ -14,7 +14,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"regexp"
 	"time"
 )
 
@@ -42,29 +41,75 @@ func (c Cloud189) IsLogin(account *module.Account) bool {
 
 func (c Cloud189) AuthLogin(account *module.Account) (string, error) {
 	client := resty.New()
-	resp, err := client.R().Get("https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action")
+	tempUrl := "https://cloud.189.cn/api/portal/loginUrl.action?redirectURL=https%3A%2F%2Fcloud.189.cn%2Fmain.action"
+	resp := &resty.Response{}
+	var err error
+	lt := ""
+	reqId := ""
+	resp, err = client.SetRedirectPolicy(resty.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
+		if req.URL.Query().Get("lt") != "" {
+			lt = req.URL.Query().Get("lt")
+		}
+		if req.URL.Query().Get("reqId") != "" {
+			reqId = req.URL.Query().Get("reqId")
+		}
+		return nil
+	})).R().Get(tempUrl)
 	if err != nil {
 		log.Error(err)
 		return "", err
 	}
-	b := resp.String()
-	lt := ""
-	ltText := regexp.MustCompile(`lt = "(.+?)"`)
-	ltTextArr := ltText.FindStringSubmatch(b)
-	if len(ltTextArr) > 0 {
-		lt = ltTextArr[1]
-	} else {
-		return "", nil
+	cookies := ""
+	for _, cookie := range resp.Cookies() {
+		cookies += cookie.Name + "=" + cookie.Value + ";"
 	}
-	captchaToken := regexp.MustCompile(`captchaToken' value='(.+?)'`).FindStringSubmatch(b)[1]
-	returnUrl := regexp.MustCompile(`returnUrl = '(.+?)'`).FindStringSubmatch(b)[1]
-	paramId := regexp.MustCompile(`paramId = "(.+?)"`).FindStringSubmatch(b)[1]
-	//reqId := regexp.MustCompile(`reqId = "(.+?)"`).FindStringSubmatch(b)[1]
-	jRsakey := regexp.MustCompile(`j_rsaKey" value="(\S+)"`).FindStringSubmatch(b)[1]
-	//vCodeID := regexp.MustCompile(`picCaptcha\.do\?token\=([A-Za-z0-9\&\=]+)`).FindStringSubmatch(b)[1]
+	client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(10))
+	appConfResp, err := client.R().
+		SetHeaders(map[string]string{
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/74.0",
+			"Referer":    resp.Request.URL,
+			"Cookie":     cookies,
+			"lt":         lt,
+			"reqId":      reqId,
+		}).
+		SetFormData(map[string]string{
+			"appKey": "cloud",
+			"version": "2.0",
+		}).
+		Post("https://open.e.189.cn/api/logbox/oauth2/appConf.do")
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+	accountType := jsoniter.Get(appConfResp.Body(), "data", "accountType").ToString()
+	clientType := jsoniter.Get(appConfResp.Body(), "data", "clientType").ToString()
+	paramId := jsoniter.Get(appConfResp.Body(), "data", "paramId").ToString()
+	mailSuffix := jsoniter.Get(appConfResp.Body(), "data", "mailSuffix").ToString()
+	returnUrl := jsoniter.Get(appConfResp.Body(), "data", "returnUrl").ToString()
+	encryptConfResp, err := client.R().
+		SetHeaders(map[string]string{
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/74.0",
+			"Referer":    "https://open.e.189.cn/api/logbox/separate/web/index.html",
+			"Cookie":     cookies,
+		}).
+		SetFormData(map[string]string{
+			"appId":      "cloud",
+		}).
+		Post("https://open.e.189.cn/api/logbox/config/encryptConf.do")
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
+	resCode := jsoniter.Get(encryptConfResp.Body(), "result").ToInt()
+	if resCode != 0 {
+		log.Error("Failed to get encrypt config")
+		return "", fmt.Errorf("Failed to get encrypt config")
+	}
+	pubKey := jsoniter.Get(encryptConfResp.Body(), "data", "pubKey").ToString()
+	pre := jsoniter.Get(encryptConfResp.Body(), "data", "pre").ToString()
 	vCodeRS := ""
-	userRsa := util.RsaEncode([]byte(account.User), jRsakey)
-	passwordRsa := util.RsaEncode([]byte(account.Password), jRsakey)
+	userRsa := util.RsaEncode([]byte(account.User), pubKey)
+	passwordRsa := util.RsaEncode([]byte(account.Password), pubKey)
 	loginResp, _ := client.R().
 		SetHeaders(map[string]string{
 			"lt":         lt,
@@ -74,15 +119,15 @@ func (c Cloud189) AuthLogin(account *module.Account) (string, error) {
 		SetFormData(map[string]string{
 			"version":      "v2.0",
 			"appKey":       "cloud",
-			"accountType":  "01",
-			"userName":     "{RSA}" + userRsa,
-			"epd":          "{RSA}" + passwordRsa,
+			"accountType":  accountType,
+			"userName":     pre + userRsa,
+			"epd":          pre + passwordRsa,
 			"validateCode": vCodeRS,
-			"captchaToken": captchaToken,
+			"captchaToken": "",
 			"returnUrl":    returnUrl,
-			"mailSuffix":   "@pan.cn",
+			"mailSuffix":   mailSuffix,
 			"paramId":      paramId,
-			"clientType":   "10010",
+			"clientType":   clientType,
 			"dynamicCheck": "FALSE",
 			"cb_SaveName":  "1",
 			"isOauth2":     "false",
