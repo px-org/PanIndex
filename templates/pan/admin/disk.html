@@ -83,6 +83,8 @@
                             <span class="mdui-chip-icon mdui-color-light-blue"><i class="mdui-icon material-icons">face</i></span>
                         {{- else if eq .Mode "115"}}
                             <span class="mdui-chip-icon mdui-color-blue-900"><i class="mdui-icon material-icons">face</i></span>
+                        {{- else if eq .Mode "aliyundrive-share"}}
+                            <span class="mdui-chip-icon mdui-color-deep-purple-accent"><i class="mdui-icon material-icons">face</i></span>
                         {{- else}}
                         {{- end}}
                         <span class="mdui-chip-title mdui-text-truncate" style="max-width: 100px;" mdui-tooltip="{content: '{{.Name}}'}">{{.Name}}</span>
@@ -119,6 +121,8 @@
                     123云盘
                 {{- else if eq .Mode "115"}}
                     115云盘
+                {{- else if eq .Mode "aliyundrive-share"}}
+                    阿里云盘（分享）
                 {{- else}}
                 {{- end}}
                 </td>
@@ -213,6 +217,7 @@
                 <option value="webdav">WebDav</option>
                 <option value="cloud189">天翼云盘</option>
                 <option value="aliyundrive">阿里云盘</option>
+                <option value="aliyundrive-share">阿里云盘（分享）</option>
                 <option value="teambition">Teambition项目盘</option>
                 <option value="teambition-us">Teambition国际盘</option>
                 <option value="yun139">和彩云</option>

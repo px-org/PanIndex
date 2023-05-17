@@ -18,6 +18,8 @@ var Sessions = map[string]*driver115.Pan115Client{}
 
 var UA = driver115.UADefalut
 
+var RootId = "0"
+
 func init() {
 	base.RegisterPan("115", &Pan115{})
 }
@@ -79,7 +81,7 @@ func (p Pan115) Files(account module.Account, fileId, path, sortColumn, sortOrde
 func (p Pan115) File(account module.Account, fileId, path string) (module.FileNode, error) {
 	client := GetClient(&account)
 	fn := module.FileNode{}
-	if fileId == "0" {
+	if fileId == RootId {
 		return module.FileNode{
 			FileId:     "0",
 			FileName:   "root",

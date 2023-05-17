@@ -14,10 +14,12 @@ func (p *Pan123) request(account *module.Account, url string, method string, cal
 	req := base.Client.R().
 		SetAuthToken(session.Data.Token)
 	req.SetHeaders(map[string]string{
-		"origin":       "https://www.123pan.com",
-		"content-type": "application/json;charset=UTF-8",
+		"Origin":       "https://www.123pan.com",
+		"Content-Type": "application/json;charset=UTF-8",
 		"platform":     "web",
-		"app-version":  "1.2",
+		"Cookie":       "jwt=" + session.Data.Token,
+		"App-Version":  "3",
+		"User-Agent":   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
 	})
 	if callback != nil {
 		callback(req)

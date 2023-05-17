@@ -160,3 +160,11 @@ type ListUploadResp struct {
 		} `json:"Parts"`
 	} `json:"data"`
 }
+
+type DownloadUrlResp struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+	Data    struct {
+		RedirectURL string `json:"redirect_url"`
+	} `json:"data"`
+}

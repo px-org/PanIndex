@@ -7,6 +7,7 @@ import (
 	"github.com/px-org/PanIndex/dao"
 	"github.com/px-org/PanIndex/module"
 	"github.com/px-org/PanIndex/pan/ali"
+	_alishare "github.com/px-org/PanIndex/pan/alishare"
 	"github.com/px-org/PanIndex/pan/base"
 	"github.com/px-org/PanIndex/service"
 	"github.com/px-org/PanIndex/util"
@@ -30,7 +31,12 @@ func AliTranscode(c *gin.Context) {
 	fileId := c.Query("fileId")
 	account := dao.GetAccountById(accountId)
 	p, _ := base.GetPan(account.Mode)
-	result, _ := p.(*ali.Ali).Transcode(account, fileId)
+	var result string
+	if pan, ok := p.(*ali.Ali); ok {
+		result, _ = pan.Transcode(account, fileId)
+	} else {
+		result, _ = p.(*_alishare.AliShare).Transcode(account, fileId)
+	}
 	c.String(http.StatusOK, result)
 	c.Abort()
 }
@@ -171,7 +177,7 @@ func IndexData(c *gin.Context) {
 		fns, isFile, lastFile, nextFile = service.Index(ac, path, fullPath, sortBy, order, true)
 	}
 	noReferrer := false
-	if ac.Mode == "aliyundrive" {
+	if ac.Mode == "aliyundrive" || ac.Mode == "aliyundrive-share" {
 		noReferrer = true
 	}
 	if c.GetBool("has_pwd") {

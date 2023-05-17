@@ -389,6 +389,20 @@ function dynamicChgMode(mode){
         $("#accountForm").find("input[name=root_id]").val("0");
         $("#aliQrCodeBtn").hide();
         $("#S3PathDiv").hide();
+    }else if (mode == "aliyundrive-share"){
+        $("#RedirectUriDiv").hide();
+        $("#ApiUrlDiv").hide();
+        $("#RefreshTokenDiv").show();
+        $("#UserDiv").hide();
+        $("#PasswordDiv").show();
+        $("#password_label").text("提取码");
+        $(".sync-div").show();
+        $("#SiteIdDiv").show();
+        $("#site_label").text("分享ID");
+        $("#aliQrCodeBtn").show();
+        $("#accountForm").find("input[name=password]").attr("type", "text");
+        $("#accountForm").find("input[name=root_id]").val("");
+        $("#S3PathDiv").hide();
     }
     diskd.handleUpdate();
 }

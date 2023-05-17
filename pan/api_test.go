@@ -3,6 +3,7 @@ package pan
 import (
 	_ "github.com/px-org/PanIndex/pan/123"
 	_ "github.com/px-org/PanIndex/pan/ali"
+	_ "github.com/px-org/PanIndex/pan/alishare"
 	"github.com/px-org/PanIndex/pan/base"
 	_ "github.com/px-org/PanIndex/pan/cloud189"
 	_ "github.com/px-org/PanIndex/pan/ftp"

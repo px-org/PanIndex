@@ -3,7 +3,6 @@ package module
 import (
 	"github.com/go-resty/resty/v2"
 	"github.com/smallnest/weighted"
-	"time"
 )
 
 var (
@@ -173,10 +172,6 @@ type Cache struct {
 	Data        interface{} `json:"data"`
 }
 
-type Ali struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
 type Cloud189 struct {
 	Cloud189Session *resty.Client
 	SessionKey      string `json:"session_key"`
@@ -184,50 +179,7 @@ type Cloud189 struct {
 	RootId          string `json:"root_id"`
 	FamilyId        string `json:"family_id"`
 }
-type TokenResp struct {
-	RespError
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	TokenType    string `json:"token_type"`
-	//local use
-	Signature     string `json:"signature"`
-	Nonce         int    `json:"nonce"`
-	PrivateKeyHex string `json:"private_key_hex"`
 
-	UserInfo
-
-	DefaultSboxDriveId string        `json:"default_sbox_drive_id"`
-	ExpireTime         *time.Time    `json:"expire_time"`
-	State              string        `json:"state"`
-	ExistLink          []interface{} `json:"exist_link"`
-	NeedLink           bool          `json:"need_link"`
-	PinSetup           bool          `json:"pin_setup"`
-	IsFirstLogin       bool          `json:"is_first_login"`
-	NeedRpVerify       bool          `json:"need_rp_verify"`
-	DeviceId           string        `json:"device_id"`
-}
-type UserInfo struct {
-	RespError
-	DomainId       string                 `json:"domain_id"`
-	UserId         string                 `json:"user_id"`
-	Avatar         string                 `json:"avatar"`
-	CreatedAt      int64                  `json:"created_at"`
-	UpdatedAt      int64                  `json:"updated_at"`
-	Email          string                 `json:"email"`
-	NickName       string                 `json:"nick_name"`
-	Phone          string                 `json:"phone"`
-	Role           string                 `json:"role"`
-	Status         string                 `json:"status"`
-	UserName       string                 `json:"user_name"`
-	Description    string                 `json:"description"`
-	DefaultDriveId string                 `json:"default_drive_id"`
-	UserData       map[string]interface{} `json:"user_data"`
-}
-type RespError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
 type PartInfo struct {
 	PartNumber int    `json:"partNumber"`
 	UploadUrl  string `json:"uploadUrl"`

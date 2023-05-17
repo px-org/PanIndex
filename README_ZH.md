@@ -28,7 +28,7 @@
 - 本地目录
 - [天翼云](https://cloud.189.cn/)
 - [Teambition 团队盘](https://www.teambition.com/)
-- [阿里云盘](https://www.aliyundrive.com/)
+- [阿里云盘](https://www.aliyundrive.com/)（分享）
 - 微软云盘 / Sharepoint([国际版](https://www.office.com/)、[世纪互联](https://portal.partner.microsoftonline.cn/))
 - [和彩云](https://yun.139.com/)
 - [谷歌云盘](https://drive.google.com/)

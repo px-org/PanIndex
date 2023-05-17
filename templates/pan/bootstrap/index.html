@@ -6,7 +6,7 @@
 		</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	{{- if eq $.account.Mode "aliyundrive"}}
+	{{- if or (eq $.account.Mode "aliyundrive") (eq $.account.Mode "aliyundrive-share")}}
 		<meta name="referrer" content="no-referrer">
 	{{- end}}
 	{{- if ne $.config.FaviconUrl ""}}

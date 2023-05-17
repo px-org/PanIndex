@@ -19,6 +19,8 @@ import (
 
 var Sessions = map[string]LoginResp{}
 
+var RootId = "0"
+
 func init() {
 	base.RegisterPan("123", &Pan123{})
 }
@@ -42,6 +44,13 @@ func (p Pan123) AuthLogin(account *module.Account) (string, error) {
 	_, err := base.Client.R().
 		SetResult(&resp).
 		SetBody(reqBody).
+		SetHeaders(map[string]string{
+			"Origin":       "https://www.123pan.com",
+			"Content-Type": "application/json;charset=UTF-8",
+			"platform":     "web",
+			"App-Version":  "3",
+			"User-Agent":   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+		}).
 		Post("https://www.123pan.com/b/api/user/sign_in")
 	//refresh_token_expire_time 1 month
 	if err != nil || resp.Code != 200 {
@@ -112,7 +121,17 @@ func (p Pan123) Files(account module.Account, fileId, path, sortColumn, sortOrde
 func (p Pan123) File(account module.Account, fileId, path string) (module.FileNode, error) {
 	var resp FileResp
 	fn := module.FileNode{}
-	_, err := p.request(&account, "https://www.123pan.com/a/api/file/info", http.MethodPost, func(req *resty.Request) {
+	if fileId == RootId {
+		return module.FileNode{
+			FileId:     "0",
+			FileName:   "root",
+			FileSize:   0,
+			IsFolder:   true,
+			Path:       "/",
+			LastOpTime: time.Now().Format("2006-01-02 15:04:05"),
+		}, nil
+	}
+	_, err := p.request(&account, "https://www.123pan.com/b/api/file/info", http.MethodPost, func(req *resty.Request) {
 		req.SetBody(base.KV{
 			"fileIdList": []base.KV{
 				{
@@ -337,9 +356,10 @@ func (p Pan123) GetDownloadUrl(account module.Account, fileId string) (string, e
 				return "", err
 			}
 		}
-		dRedirectRep, _ := base.Client.SetRedirectPolicy(resty.FlexibleRedirectPolicy(0)).R().Get(u.String())
-		if dRedirectRep.StatusCode() == 302 {
-			return dRedirectRep.Header().Get("location"), err
+		var downloadUrlResp DownloadUrlResp
+		_, err = p.request(&account, u.String(), http.MethodGet, nil, &downloadUrlResp)
+		if downloadUrlResp.Code == 0 {
+			return downloadUrlResp.Data.RedirectURL, err
 		}
 	}
 	return "", err

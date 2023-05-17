@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
 	<meta name="renderer" content="webkit"/>
-	{{- if or (eq $.account.Mode "aliyundrive") ($.search_key)}}
+	{{- if or (eq $.account.Mode "aliyundrive") (eq $.account.Mode "aliyundrive-share") ($.search_key)}}
 	<meta name="referrer" content="no-referrer">
 	{{- end}}
 	<meta name="force-rendering" content="webkit"/>
@@ -83,6 +83,8 @@
 						{{ $color = "light-blue" }}
 						{{- else if eq $a.Mode "115" }}
 						{{ $color = "blue-900" }}
+						{{- else if eq $a.Mode "aliyundrive-share" }}
+						{{ $color = "deep-purple-accent" }}
 						{{- end}}
 						<li class="mdui-menu-item">
 							<a href="{{$.config.PathPrefix}}/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{$color}}">face</i>{{.Name}}</a>
