@@ -3,6 +3,7 @@ package yun139
 import (
 	"bytes"
 	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -31,7 +32,7 @@ func (y Yun139) IsLogin(account *module.Account) bool {
 		},
 	}
 	resp, err := resty.New().R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/user/v1.0/qryUserExternInfo")
 	status := jsoniter.Get(resp.Body(), "success").ToBool()
@@ -42,9 +43,12 @@ func (y Yun139) IsLogin(account *module.Account) bool {
 }
 
 func (y Yun139) AuthLogin(account *module.Account) (string, error) {
+	authToken := util.GetBetweenStr(account.Password, "auth_token=", ";")
+	token := "Basic " + base64.StdEncoding.EncodeToString([]byte((fmt.Sprintf("pc:%s:%s", account.User, authToken))))
+	account.RefreshToken = token
 	isLogin, err := y.LoginCheck(*account)
 	if isLogin {
-		return account.Password, err
+		return account.RefreshToken, err
 	}
 	return "", err
 }
@@ -68,7 +72,7 @@ func (y Yun139) Files(account module.Account, fileId, path, sortColumn, sortOrde
 		var filesResp Yun139FilesResp
 		_, err = resty.New().R().
 			SetResult(&filesResp).
-			SetHeaders(y.CreateHeaders(body, account.Password)).
+			SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 			SetBody(body).
 			Post("https://yun.139.com/orchestration/personalCloud/catalog/v1.0/getDisk")
 		if err == nil && filesResp.Success {
@@ -220,7 +224,7 @@ func (y Yun139) UploadFiles(account module.Account, parentFileId string, files [
 			}},
 		}
 		resp, err := resty.New().R().
-			SetHeaders(y.CreateHeaders(body, account.Password)).
+			SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 			SetBody(body).
 			Post("https://yun.139.com/orchestration/personalCloud/uploadAndDownload/v1.0/pcUploadFileRequest")
 		if err != nil {
@@ -272,7 +276,7 @@ func (y Yun139) Rename(account module.Account, fileId, name string) (bool, inter
 		"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 	}
 	resp, err := resty.New().R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/catalog/v1.0/updateCatalogInfo")
 	if err != nil {
@@ -287,7 +291,7 @@ func (y Yun139) Rename(account module.Account, fileId, name string) (bool, inter
 			"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 		}
 		resp, err = resty.New().R().
-			SetHeaders(y.CreateHeaders(body, account.Password)).
+			SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 			SetBody(body).
 			Post("https://yun.139.com/orchestration/personalCloud/content/v1.0/updateContentInfo")
 		if err != nil {
@@ -324,7 +328,7 @@ func (y Yun139) QueryTaskInfo(account module.Account, taskId string) {
 		},
 	}
 	resp, _ := resty.New().R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/batchOprTask/v1.0/queryBatchOprTaskDetail")
 	log.Debug("Task query:", resp.String())
@@ -339,7 +343,7 @@ func (y Yun139) Mkdir(account module.Account, parentFileId, name string) (bool, 
 		},
 	}
 	resp, err := resty.New().R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/catalog/v1.0/createCatalogExt")
 	if err != nil {
@@ -367,7 +371,7 @@ func (y Yun139) CommonReq(account module.Account, actionType, taskType int, cata
 		},
 	}
 	resp, err := resty.New().R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/batchOprTask/v1.0/createBatchOprTask")
 	return resp, err
@@ -408,7 +412,7 @@ func (y Yun139) GetDownloadUrl(account module.Account, fileId string) (string, e
 		"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 	}
 	resp, err := resty.New().R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/uploadAndDownload/v1.0/downloadRequest")
 	status := jsoniter.Get(resp.Body(), "success").ToBool()
@@ -424,7 +428,7 @@ func (y Yun139) GetSpaceSzie(account module.Account) (int64, int64) {
 		"commonAccountInfo": base.KV{"account": account.User, "accountType": 1},
 	}
 	resp, err := resty.New().R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/user/v1.0/getDiskInfo")
 	if err != nil {
@@ -450,7 +454,7 @@ func (y Yun139) LoginCheck(account module.Account) (bool, error) {
 		},
 	}
 	resp, err := base.Client.R().
-		SetHeaders(y.CreateHeaders(body, account.Password)).
+		SetHeaders(y.CreateHeaders(body, account.RefreshToken)).
 		SetBody(body).
 		Post("https://yun.139.com/orchestration/personalCloud/user/v1.0/qryUserExternInfo")
 	if err == nil && jsoniter.Get(resp.Body(), "success").ToBool() {
@@ -476,7 +480,8 @@ func (y Yun139) CreateHeaders(body base.KV, cookie string) map[string]string {
 		"x-DeviceInfo":        "||9|6.5.2|chrome|95.0.4638.17|||linux unknow||zh-CN|||",
 		"x-SvcType":           "1",
 		"referer":             "https://yun.139.com/w/",
-		"Cookie":              cookie,
+		"Authorization":       cookie,
+		//"Cookie":              cookie,
 	}
 	return headers
 }
