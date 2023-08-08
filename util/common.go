@@ -915,3 +915,18 @@ func ExeFilePath(def string) string {
 	exPath := filepath.Dir(ex)
 	return exPath
 }
+
+func Group(nodes []module.FileNode, subGroupLength int64) [][]module.FileNode {
+	max := int64(len(nodes))
+	var segmens = make([][]module.FileNode, 0)
+	quantity := max / subGroupLength
+	remainder := max % subGroupLength
+	i := int64(0)
+	for i = int64(0); i < quantity; i++ {
+		segmens = append(segmens, nodes[i*subGroupLength:(i+1)*subGroupLength])
+	}
+	if quantity == 0 || remainder != 0 {
+		segmens = append(segmens, nodes[i*subGroupLength:i*subGroupLength+remainder])
+	}
+	return segmens
+}
