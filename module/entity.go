@@ -52,54 +52,57 @@ type Paths struct {
 	IsCoShare int    `json:"isCoShare"`
 }
 type Config struct {
-	Accounts         []Account         `json:"accounts" gorm:"-"`
-	SiteName         string            `json:"site_name"`
-	AccountChoose    string            `json:"account_choose"`
-	Theme            string            `json:"theme"`
-	PathPrefix       string            `json:"path_prefix""` //路径前缀
-	AdminUser        string            `json:"admin_user""`
-	AdminPassword    string            `json:"admin_password""`
-	OnlyReferrer     string            `json:"only_referrer"`
-	EnableSafetyLink string            `json:"enable_safety_link"`
-	IsNullReferrer   string            `json:"is_null_referrer"`
-	FaviconUrl       string            `json:"favicon_url"`     //网站图标
-	Footer           string            `json:"footer"`          //网站底部信息
-	Css              string            `json:"css"`             //自定义css
-	Js               string            `json:"js"`              //自定义js
-	EnablePreview    string            `json:"enable_preview"`  //是否开启文件预览
-	Image            string            `json:"image"`           //图片
-	Audio            string            `json:"audio"`           //音频
-	Video            string            `json:"video"`           //视频
-	Code             string            `json:"code"`            //代码
-	Doc              string            `json:"doc"`             //文档
-	Other            string            `json:"other"`           //other
-	EnableLrc        string            `json:"enable_lrc"`      //是否开启歌词
-	LrcPath          string            `json:"lrc_path"`        //歌词路径
-	Subtitle         string            `json:"subtitle"`        //字幕
-	SubtitlePath     string            `json:"subtitle_path"`   //字幕路径
-	Danmuku          string            `json:"danmuku"`         //弹幕
-	DanmukuPath      string            `json:"danmuku_path"`    //弹幕路径
-	SColumn          string            `json:"s_column"`        //排序字段
-	SOrder           string            `json:"s_order"`         //排序顺序
-	PwdFiles         []PwdFiles        `json:"pwd_files"`       //密码文件列表
-	HideFiles        map[string]string `json:"hide_files"`      //隐藏文件
-	AdminPath        string            `json:"admin_path"`      //后台管理路径前缀
-	Cdn              string            `json:"cdn"`             //cdn
-	CdnFiles         map[string]string `json:"-"`               //cdn files
-	BypassList       []Bypass          `json:"bypass_list"`     //分流列表
-	EnableDav        string            `json:"enable_dav"`      //dav enabled 1 disabled 0
-	DavPath          string            `json:"dav_path"`        //dav path
-	DavMode          string            `json:"dav_mode"`        //0 read-only, 1 read-write
-	DavDownMode      string            `json:"dav_down_mode"`   //0 302 downloadurl, 1 proxy
-	DavUser          string            `json:"dav_user"`        //dav user
-	DavPassword      string            `json:"dav_password"`    //dav password
-	Proxy            string            `json:"proxy"`           //google api prxoy
-	Readme           string            `json:"readme"`          //show or hide readme
-	Head             string            `json:"head"`            //show or hide head
-	ShareInfoList    []ShareInfo       `json:"share_info_list"` //share info list
-	Access           string            `json:"access"`          //access
-	ShortAction      string            `json:"short_action"`    //access short link action
-	JwtSignKey       string            `json:"jwt_sign_key"`    //jwt sign key
+	Accounts                 []Account            `json:"accounts" gorm:"-"`
+	SiteName                 string               `json:"site_name"`
+	AccountChoose            string               `json:"account_choose"`
+	Theme                    string               `json:"theme"`
+	PathPrefix               string               `json:"path_prefix""` //路径前缀
+	AdminUser                string               `json:"admin_user""`
+	AdminPassword            string               `json:"admin_password""`
+	OnlyReferrer             string               `json:"only_referrer"`
+	EnableSafetyLink         string               `json:"enable_safety_link"`
+	IsNullReferrer           string               `json:"is_null_referrer"`
+	FaviconUrl               string               `json:"favicon_url"`                //网站图标
+	Footer                   string               `json:"footer"`                     //网站底部信息
+	Css                      string               `json:"css"`                        //自定义css
+	Js                       string               `json:"js"`                         //自定义js
+	EnablePreview            string               `json:"enable_preview"`             //是否开启文件预览
+	Image                    string               `json:"image"`                      //图片
+	Audio                    string               `json:"audio"`                      //音频
+	Video                    string               `json:"video"`                      //视频
+	Code                     string               `json:"code"`                       //代码
+	Doc                      string               `json:"doc"`                        //文档
+	Other                    string               `json:"other"`                      //other
+	EnableLrc                string               `json:"enable_lrc"`                 //是否开启歌词
+	LrcPath                  string               `json:"lrc_path"`                   //歌词路径
+	Subtitle                 string               `json:"subtitle"`                   //字幕
+	SubtitlePath             string               `json:"subtitle_path"`              //字幕路径
+	Danmuku                  string               `json:"danmuku"`                    //弹幕
+	DanmukuPath              string               `json:"danmuku_path"`               //弹幕路径
+	SColumn                  string               `json:"s_column"`                   //排序字段
+	SOrder                   string               `json:"s_order"`                    //排序顺序
+	PwdFiles                 []PwdFiles           `json:"pwd_files"`                  //密码文件列表
+	HideFiles                map[string]string    `json:"hide_files"`                 //隐藏文件
+	AdminPath                string               `json:"admin_path"`                 //后台管理路径前缀
+	Cdn                      string               `json:"cdn"`                        //cdn
+	CdnFiles                 map[string]string    `json:"-"`                          //cdn files
+	BypassList               []Bypass             `json:"bypass_list"`                //分流列表
+	EnableDav                string               `json:"enable_dav"`                 //dav enabled 1 disabled 0
+	DavPath                  string               `json:"dav_path"`                   //dav path
+	DavMode                  string               `json:"dav_mode"`                   //0 read-only, 1 read-write
+	DavDownMode              string               `json:"dav_down_mode"`              //0 302 downloadurl, 1 proxy
+	DavUser                  string               `json:"dav_user"`                   //dav user
+	DavPassword              string               `json:"dav_password"`               //dav password
+	Proxy                    string               `json:"proxy"`                      //google api prxoy
+	Readme                   string               `json:"readme"`                     //show or hide readme
+	Head                     string               `json:"head"`                       //show or hide head
+	ShareInfoList            []ShareInfo          `json:"share_info_list"`            //share info list
+	DownloadStatisticsList   []DownloadStatistics `json:"download_statistics_list"`   //download statistics list
+	Access                   string               `json:"access"`                     //access
+	ShortAction              string               `json:"short_action"`               //access short link action
+	JwtSignKey               string               `json:"jwt_sign_key"`               //jwt sign key
+	EnableDownloadStatistics string               `json:"enable_download_statistics"` //enable download statistics
+	ShowDownloadInfo         string               `json:"show_download_info"`         //show download info
 }
 type ConfigItem struct {
 	K string `json:"k" gorm:"unique;not null"` //配置项key
@@ -170,6 +173,16 @@ type Cache struct {
 	ExpireTime  string      `json:"expire_time"`
 	CachePolicy string      `json:"cache_policy"`
 	Data        interface{} `json:"data"`
+}
+
+// File download statistics
+type DownloadStatistics struct {
+	Id               string `json:"id"`                            //数据库唯一主键（文件ID）
+	AccountName      string `json:"account_name"`                  //文件所属账号
+	FileName         string `json:"file_name" gorm:"index:idx_fn"` //文件名称
+	LastDownloadTime string `json:"last_op_time"`                  //最近一次下载时间
+	Path             string `json:"path" gorm:"index:idx_p"`       //文件路径
+	Count            int64  `json:"count"`                         //下载次数
 }
 
 type Cloud189 struct {
