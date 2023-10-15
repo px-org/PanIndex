@@ -9,7 +9,7 @@ import (
 	"github.com/shirou/gopsutil/v3/disk"
 	log "github.com/sirupsen/logrus"
 	"io"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -33,24 +33,29 @@ func (n Native) AuthLogin(account *module.Account) (string, error) {
 func (n Native) Files(account module.Account, fileId, path, sortColumn, sortOrder string) ([]module.FileNode, error) {
 	fns := []module.FileNode{}
 	if util.FileExist(fileId) && IsDirectory(fileId) {
-		fileInfos, err := ioutil.ReadDir(fileId)
+		fileInfos, err := os.ReadDir(fileId)
 		if err != nil {
 			log.Error(err)
 			return fns, err
 		} else {
 			for _, fileInfo := range fileInfos {
+				info, err := fileInfo.Info()
+				if err != nil {
+					log.Error(err)
+					return fns, err
+				}
 				file := module.FileNode{
 					Id:         uuid.NewV4().String(),
 					AccountId:  account.Id,
 					FileId:     filepath.Join(fileId, fileInfo.Name()),
 					IsFolder:   fileInfo.IsDir(),
 					FileName:   fileInfo.Name(),
-					FileSize:   fileInfo.Size(),
-					SizeFmt:    util.FormatFileSize(fileInfo.Size()),
+					FileSize:   info.Size(),
+					SizeFmt:    util.FormatFileSize(info.Size()),
 					FileType:   util.GetExt(fileInfo.Name()),
 					Path:       PathJoin(path, fileInfo.Name()),
 					ViewType:   util.GetViewType(util.GetExt(fileInfo.Name())),
-					LastOpTime: time.Unix(fileInfo.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
+					LastOpTime: time.Unix(info.ModTime().Unix(), 0).Format("2006-01-02 15:04:05"),
 					ParentId:   fileId,
 					ParentPath: path,
 					IsDelete:   1,
@@ -94,7 +99,7 @@ func (n Native) UploadFiles(account module.Account, parentFileId string, files [
 		t1 := time.Now()
 		log.Debugf("Upload started：%s，Size：%d", file.FileName, file.FileSize)
 		fileName := filepath.Join(parentFileId, file.FileName)
-		err := ioutil.WriteFile(fileName, file.Content, 0644)
+		err := os.WriteFile(fileName, file.Content, 0644)
 		if err != nil {
 			log.Error(err)
 		} else {
@@ -217,7 +222,7 @@ func FileCopy(src, dst string) error {
 // Dir copies a whole directory recursively
 func DirCopy(src string, dst string) error {
 	var err error
-	var fds []os.FileInfo
+	var fds []fs.DirEntry
 	var srcinfo os.FileInfo
 
 	if srcinfo, err = os.Stat(src); err != nil {
@@ -228,7 +233,7 @@ func DirCopy(src string, dst string) error {
 		return err
 	}
 
-	if fds, err = ioutil.ReadDir(src); err != nil {
+	if fds, err = os.ReadDir(src); err != nil {
 		return err
 	}
 	for _, fd := range fds {

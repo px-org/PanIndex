@@ -10,7 +10,7 @@ import (
 	"github.com/px-org/PanIndex/service"
 	"github.com/px-org/PanIndex/util"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -275,7 +275,7 @@ func UploadPwdFile(c *gin.Context) {
 		log.Error(err)
 		msg = "导入失败"
 	}
-	s, err := ioutil.ReadAll(f)
+	s, err := io.ReadAll(f)
 	if err != nil {
 		log.Error(err)
 		msg = "读取失败"

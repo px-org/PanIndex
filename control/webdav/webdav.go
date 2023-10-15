@@ -16,7 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -551,7 +550,7 @@ func (h *Handler) handleUnlock(w http.ResponseWriter, r *http.Request) (status i
 
 func (h *Handler) handlePropfind(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	if r.ContentLength > 0 {
-		space, _ := ioutil.ReadAll(r.Body)
+		space, _ := io.ReadAll(r.Body)
 		if strings.Contains(string(space), "quota-available-bytes") {
 			total, used := h.FileSystem.GetSpace(h.Account, h.FullPath)
 			w.Write([]byte(`<?xml version="1.0" encoding="utf-8"?>
