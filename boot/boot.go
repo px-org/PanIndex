@@ -14,7 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/unrolled/secure"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -254,7 +253,7 @@ func Templates(fs embed.FS, config BootConfig) *template.Template {
 		data := string(dataBuf)
 		tmpFilePath := filepath.Join(util.ExeFilePath(config.Ui), tmpFile)
 		if util.FileExist(tmpFilePath) {
-			s, _ := ioutil.ReadFile(tmpFilePath)
+			s, _ := os.ReadFile(tmpFilePath)
 			data = string(s)
 		}
 		tmpl.New(tmpFile).Funcs(template.FuncMap{
@@ -275,7 +274,7 @@ func Templates(fs embed.FS, config BootConfig) *template.Template {
 		data := string(dataBuf)
 		tmpNamePath := filepath.Join(util.ExeFilePath(config.Ui), tmpName)
 		if util.FileExist(tmpNamePath) {
-			s, _ := ioutil.ReadFile(tmpNamePath)
+			s, _ := os.ReadFile(tmpNamePath)
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{
@@ -297,7 +296,7 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 		data := string(dataBuf)
 		tmpNamePath := filepath.Join(util.ExeFilePath(config.Ui), tmpName)
 		if util.FileExist(tmpNamePath) {
-			s, _ := ioutil.ReadFile(tmpNamePath)
+			s, _ := os.ReadFile(tmpNamePath)
 			data = string(s)
 		}
 		tmpl.New(tmpName).Funcs(template.FuncMap{

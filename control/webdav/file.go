@@ -12,7 +12,7 @@ import (
 	"github.com/px-org/PanIndex/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -92,7 +92,7 @@ func (fs *FileSystem) Delete(account module.Account, path, fullPath string) erro
 
 func (fs *FileSystem) Upload(account module.Account, req *http.Request, path, fullPath, fileId string, overwrite bool) error {
 	_, fileName := util.ParsePath(path)
-	content, err := ioutil.ReadAll(req.Body)
+	content, err := io.ReadAll(req.Body)
 	if err != nil {
 		return err
 	}

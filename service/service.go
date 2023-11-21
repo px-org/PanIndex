@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 	"gorm.io/gorm"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -352,7 +352,7 @@ func Upload(accountId, p string, c *gin.Context) string {
 	fileInfos := []*module.UploadInfo{}
 	for _, file := range files {
 		fileContent, _ := file.Open()
-		byteContent, _ := ioutil.ReadAll(fileContent)
+		byteContent, _ := io.ReadAll(fileContent)
 		fileInfos = append(fileInfos, &module.UploadInfo{
 			FileName:    file.Filename,
 			FileSize:    file.Size,
@@ -436,7 +436,7 @@ func GetFileData(account module.Account, downUrl, r string) ([]byte, string, int
 		log.Errorln(err)
 	}
 	defer resp.Body.Close()
-	data, _ := ioutil.ReadAll(resp.Body)
+	data, _ := io.ReadAll(resp.Body)
 	mtype := mimetype.Detect(data)
 	return data, mtype.String(), resp.StatusCode
 }

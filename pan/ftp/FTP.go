@@ -8,7 +8,7 @@ import (
 	"github.com/px-org/PanIndex/util"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"path"
 	"strconv"
 	"time"
@@ -188,7 +188,7 @@ func (F FTP) Move(account module.Account, fileId, targetFileId string, overwrite
 	if err == nil {
 		r, er := c.Retr(fileId)
 		fileName := util.GetFileName(fileId)
-		content, _ := ioutil.ReadAll(r)
+		content, _ := io.ReadAll(r)
 		r.Close()
 		er = c.Stor(path.Join(targetFileId, fileName), bytes.NewReader(content))
 		if er == nil {
