@@ -473,7 +473,7 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"natural@compare@js":         "//fastly.jsdelivr.net/npm/natural-compare-lite@1.4.0/index.js",
 			"bootstrap@css":              "//cdn.staticfile.org/bootstrap/4.6.1/css/bootstrap.min.css",
 			"bootstrap@js":               "//cdn.staticfile.org/bootstrap/4.6.1/js/bootstrap.min.js",
-			"Material+Icons@css":         "//fonts.sourcegcdn.com/icon?family=Material+Icons",
+			"Material+Icons@css":         "//fonts.loli.net/icon?family=Material+Icons",
 		},
 		"2": KV{
 			"mdui@css":                   jp + "/static/lib/mdui@1.0.2/css/mdui.min.css",
@@ -513,7 +513,7 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"natural@compare@js":         jp + "/static/lib/natural-compare-lite@1.4.0/index.min.js",
 			"bootstrap@css":              jp + "/static/lib/bootstrap@4.6.1/css/bootstrap.min.css",
 			"bootstrap@js":               jp + "/static/lib/bootstrap@4.6.1/js/bootstrap.min.js",
-			"Material+Icons@css":         "//fonts.sourcegcdn.com/icon?family=Material+Icons",
+			"Material+Icons@css":         "//fonts.loli.net/icon?family=Material+Icons",
 		},
 	}
 	cdnKV := cdnMap["0"].(KV)
