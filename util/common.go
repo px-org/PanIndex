@@ -473,7 +473,7 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"natural@compare@js":         "//fastly.jsdelivr.net/npm/natural-compare-lite@1.4.0/index.js",
 			"bootstrap@css":              "//cdn.staticfile.org/bootstrap/4.6.1/css/bootstrap.min.css",
 			"bootstrap@js":               "//cdn.staticfile.org/bootstrap/4.6.1/js/bootstrap.min.js",
-			"Material+Icons@css":         "//fonts.sourcegcdn.com/icon?family=Material+Icons",
+			"Material+Icons@css":         "//fonts.loli.net/icon?family=Material+Icons",
 		},
 		"2": KV{
 			"mdui@css":                   jp + "/static/lib/mdui@1.0.2/css/mdui.min.css",
@@ -513,7 +513,7 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"natural@compare@js":         jp + "/static/lib/natural-compare-lite@1.4.0/index.min.js",
 			"bootstrap@css":              jp + "/static/lib/bootstrap@4.6.1/css/bootstrap.min.css",
 			"bootstrap@js":               jp + "/static/lib/bootstrap@4.6.1/js/bootstrap.min.js",
-			"Material+Icons@css":         "//fonts.sourcegcdn.com/icon?family=Material+Icons",
+			"Material+Icons@css":         "//fonts.loli.net/icon?family=Material+Icons",
 		},
 	}
 	cdnKV := cdnMap["0"].(KV)
@@ -914,4 +914,19 @@ func ExeFilePath(def string) string {
 	}
 	exPath := filepath.Dir(ex)
 	return exPath
+}
+
+func Group(nodes []module.FileNode, subGroupLength int64) [][]module.FileNode {
+	max := int64(len(nodes))
+	var segmens = make([][]module.FileNode, 0)
+	quantity := max / subGroupLength
+	remainder := max % subGroupLength
+	i := int64(0)
+	for i = int64(0); i < quantity; i++ {
+		segmens = append(segmens, nodes[i*subGroupLength:(i+1)*subGroupLength])
+	}
+	if quantity == 0 || remainder != 0 {
+		segmens = append(segmens, nodes[i*subGroupLength:i*subGroupLength+remainder])
+	}
+	return segmens
 }

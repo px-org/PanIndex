@@ -74,6 +74,8 @@ var InitConfigItems = []module.ConfigItem{
 	{"dav_password", "1234", "dav"},
 	{"proxy", "", "common"},
 	{"jwt_sign_key", uuid.NewV4().String(), "common"},
+	{"enable_download_statistics", "0", "common"},
+	{"show_download_info", "0", "common"},
 }
 
 type Db interface {
@@ -100,6 +102,7 @@ func InitDb() {
 	DB.AutoMigrate(&module.HideFiles{})
 	DB.AutoMigrate(&module.Bypass{})
 	DB.AutoMigrate(&module.BypassAccounts{})
+	DB.AutoMigrate(&module.DownloadStatistics{})
 	//init data
 	var count int64
 	err := DB.Model(module.ConfigItem{}).Count(&count).Error
@@ -108,7 +111,7 @@ func InitDb() {
 		panic(err)
 	} else if count == 0 {
 		//DB.Create(&InitConfigItems)
-		rand.Seed(time.Now().UnixNano())
+		rand.New(rand.NewSource(time.Now().UnixNano()))
 		ApiToken := strconv.Itoa(rand.Intn(10000000))
 		configItem := module.ConfigItem{K: "api_token", V: ApiToken, G: "common"}
 		DB.Create(configItem)
@@ -178,6 +181,7 @@ func InitGlobalConfig() {
 	module.GloablConfig = c
 	c.CdnFiles = util.GetCdnFilesMap(c.Cdn, module.VERSION)
 	c.ShareInfoList = GetShareInfoList()
+	c.DownloadStatisticsList = GetAllDownloadStatistics()
 	module.GloablConfig = c
 	RoundRobin()
 }
@@ -399,7 +403,11 @@ func LoopCreateFiles(account module.Account, fileId, path string, hide, hasPwd i
 		}
 	}
 	if len(fileNodes) > 0 {
-		DB.Create(&fileNodes)
+		//避免但文件夹文件过多导致同步失败
+		groupNodes := util.Group(fileNodes, 500)
+		for _, nodes := range groupNodes {
+			DB.Create(&nodes)
+		}
 	}
 	if len(fileNodes) > 0 || (len(fileNodes) == 0 && err == nil) {
 		RetryTasksCache.Remove(account.Id + fileId)
@@ -866,4 +874,56 @@ func DeleteShareInfo(paths []string) {
 		DB.Where("file_path = ?", path).Delete(module.ShareInfo{})
 	}
 	InitGlobalConfig()
+}
+
+func DeleteStatistics(ids []string) {
+	for _, id := range ids {
+		DB.Where("id = ?", id).Delete(module.DownloadStatistics{})
+	}
+	InitGlobalConfig()
+}
+
+func SyncDownloadInfo(ac module.Account, fileNode module.FileNode) {
+	var downloadStatistics module.DownloadStatistics
+	err := DB.Where("id = ?", fileNode.FileId).First(&downloadStatistics).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		DB.Create(module.DownloadStatistics{
+			Id:               fileNode.FileId,
+			AccountName:      ac.Name,
+			FileName:         fileNode.FileName,
+			LastDownloadTime: util.UTCTime(time.Now()),
+			Path:             fileNode.Path,
+			Count:            1,
+		})
+	} else {
+		count := downloadStatistics.Count + 1
+		DB.Table("download_statistics").Where("id=?", fileNode.FileId).Update("count", count)
+	}
+	InitGlobalConfig()
+}
+
+func GetDownloadCount(fns []module.FileNode) []module.FileNode {
+	if len(fns) > 0 {
+		fn := fns[0]
+		var downloadStatistics module.DownloadStatistics
+		err := DB.Where("id = ?", fns[0].FileId).First(&downloadStatistics).Error
+		extraData := fns[0].ExtraData
+		if extraData == nil {
+			extraData = make(map[string]interface{})
+		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			extraData["DownloadCount"] = 0
+		} else {
+			extraData["DownloadCount"] = downloadStatistics.Count
+		}
+		fn.ExtraData = extraData
+		return []module.FileNode{fn}
+	}
+	return fns
+}
+
+func GetAllDownloadStatistics() []module.DownloadStatistics {
+	var data []module.DownloadStatistics
+	DB.Where("1=1").Find(&data)
+	return data
 }
