@@ -41,6 +41,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"s_order", "asc", "common"},
 	{"readme", "1", "common"},
 	{"head", "1", "common"},
+	{"hide_readme_files", "0", "appearance"},
 	{"favicon_url", "", "appearance"},
 	{"footer", "", "appearance"},
 	{"css", "", "appearance"},
@@ -74,7 +75,7 @@ var InitConfigItems = []module.ConfigItem{
 	{"dav_password", "1234", "dav"},
 	{"proxy", "", "common"},
 	{"jwt_sign_key", uuid.NewV4().String(), "common"},
-	{"enable_download_statistics", "0", "common"},
+	{"enable_download_statistics", "1", "common"},
 	{"show_download_info", "0", "common"},
 }
 
@@ -103,6 +104,7 @@ func InitDb() {
 	DB.AutoMigrate(&module.Bypass{})
 	DB.AutoMigrate(&module.BypassAccounts{})
 	DB.AutoMigrate(&module.DownloadStatistics{})
+	DB.AutoMigrate(&module.DownloadDaily{})
 	//init data
 	var count int64
 	err := DB.Model(module.ConfigItem{}).Count(&count).Error
@@ -884,6 +886,7 @@ func DeleteStatistics(ids []string) {
 }
 
 func SyncDownloadInfo(ac module.Account, fileNode module.FileNode) {
+	now := util.UTCTime(time.Now())
 	var downloadStatistics module.DownloadStatistics
 	err := DB.Where("id = ?", fileNode.FileId).First(&downloadStatistics).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -891,15 +894,87 @@ func SyncDownloadInfo(ac module.Account, fileNode module.FileNode) {
 			Id:               fileNode.FileId,
 			AccountName:      ac.Name,
 			FileName:         fileNode.FileName,
-			LastDownloadTime: util.UTCTime(time.Now()),
+			LastDownloadTime: now,
 			Path:             fileNode.Path,
 			Count:            1,
 		})
 	} else {
-		count := downloadStatistics.Count + 1
-		DB.Table("download_statistics").Where("id=?", fileNode.FileId).Update("count", count)
+		DB.Model(&module.DownloadStatistics{}).Where("id = ?", fileNode.FileId).Updates(map[string]interface{}{
+			"count":              downloadStatistics.Count + 1,
+			"last_download_time": now,
+			"file_name":          fileNode.FileName,
+			"path":               fileNode.Path,
+			"account_name":       ac.Name,
+		})
 	}
-	InitGlobalConfig()
+	IncDownloadDaily()
+}
+
+func IncDownloadDaily() {
+	today := time.Now().Format("2006-01-02")
+	var daily module.DownloadDaily
+	err := DB.Where("date = ?", today).First(&daily).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		DB.Create(&module.DownloadDaily{Date: today, Count: 1})
+		return
+	}
+	DB.Model(&module.DownloadDaily{}).Where("date = ?", today).Update("count", daily.Count+1)
+}
+
+func GetTodayDownloadCount() int64 {
+	today := time.Now().Format("2006-01-02")
+	var daily module.DownloadDaily
+	err := DB.Where("date = ?", today).First(&daily).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0
+	}
+	return daily.Count
+}
+
+func GetTotalDownloadCount() int64 {
+	var total int64
+	DB.Model(&module.DownloadStatistics{}).Select("coalesce(sum(count),0)").Scan(&total)
+	return total
+}
+
+func GetDownloadTrend(days int) []module.DownloadDaily {
+	if days <= 0 {
+		days = 14
+	}
+	start := time.Now().AddDate(0, 0, -(days - 1)).Format("2006-01-02")
+	var rows []module.DownloadDaily
+	DB.Where("date >= ?", start).Order("date asc").Find(&rows)
+	byDate := make(map[string]int64, len(rows))
+	for _, r := range rows {
+		byDate[r.Date] = r.Count
+	}
+	out := make([]module.DownloadDaily, 0, days)
+	for i := days - 1; i >= 0; i-- {
+		d := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
+		out = append(out, module.DownloadDaily{Date: d, Count: byDate[d]})
+	}
+	return out
+}
+
+func GetTopDownloadFiles(limit int) []module.DownloadStatistics {
+	if limit <= 0 {
+		limit = 20
+	}
+	var list []module.DownloadStatistics
+	DB.Order("count desc").Limit(limit).Find(&list)
+	return list
+}
+
+func CountFileNodes() int64 {
+	var n int64
+	DB.Model(&module.FileNode{}).Where("is_delete = 0").Count(&n)
+	return n
+}
+
+func CountShareInfos() int64 {
+	var n int64
+	DB.Model(&module.ShareInfo{}).Count(&n)
+	return n
 }
 
 func GetDownloadCount(fns []module.FileNode) []module.FileNode {

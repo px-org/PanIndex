@@ -97,19 +97,16 @@ func ThemeCheck(c *gin.Context) {
 }
 
 func AdminThemeCheck(c *gin.Context) {
-	theme, err := c.Request.Cookie("theme")
+	theme, err := c.Request.Cookie("admin_theme")
 	if err != nil {
-		if strings.HasPrefix(module.GloablConfig.Theme, "mdui") {
-			c.Set("theme", module.GloablConfig.Theme)
-		} else {
-			c.Set("theme", "mdui")
-		}
-	} else {
-		if strings.HasPrefix(theme.Value, "mdui") {
-			c.Set("theme", theme.Value)
-		} else {
-			c.Set("theme", "mdui")
-		}
+		c.Set("theme", "auto")
+		return
+	}
+	switch theme.Value {
+	case "light", "dark", "auto":
+		c.Set("theme", theme.Value)
+	default:
+		c.Set("theme", "auto")
 	}
 }
 

@@ -1,0 +1,100 @@
+﻿<!doctype html>
+<html lang="zh-CN" class="{{- if or (eq $.theme "oxygen-dark") (eq $.theme "vue-dark")}}dark{{- end}}">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+	<meta name="renderer" content="webkit"/>
+	{{- if or (eq $.account.Mode "aliyundrive") (eq $.account.Mode "aliyundrive-share") ($.search_key)}}
+	<meta name="referrer" content="no-referrer">
+	{{- end}}
+	<meta name="force-rendering" content="webkit"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+	{{- if ne $.config.FaviconUrl ""}}
+	<link rel="icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+	<link rel="shortcut icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+	{{- else}}
+	<link rel="icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+	<link rel="shortcut icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+	{{- end}}
+	<script src="{{index $.config.CdnFiles "tailwind@js"}}"></script>
+	<script>
+		tailwind.config = {
+			darkMode: 'class',
+			theme: {
+				extend: {
+					colors: {
+						primary: {
+							DEFAULT: '#3949ab',
+							light: '#5c6bc0',
+							dark: '#818cf8'
+						}
+					}
+				}
+			}
+		}
+	</script>
+	<link rel="stylesheet" href="{{index $.config.CdnFiles "oxygen@theme@css"}}?v={{$.version}}">
+	<link rel="stylesheet" href="{{index $.config.CdnFiles "viewer@css"}}">
+	<script src="{{index $.config.CdnFiles "vue@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "lucide@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "md5@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "markdown-it@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "markdown@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "viewer@js"}}"></script>
+	<script src="{{$.config.PathPrefix}}/api/v3/public/config.js"></script>
+	{{- if ne $.config.Js ""}}
+	{{$.config.Js | unescaped}}
+	{{- end}}
+	{{- if ne $.config.Css ""}}
+	{{$.config.Css | unescaped}}
+	{{- end}}
+	<title>{{- if eq $.config.SiteName ""}}{{$.title}}{{- else}}{{$.config.SiteName}}{{- end}} {{ .Path }}</title>
+	<script>
+		(function () {
+			var theme = {{toJSON $.theme}};
+			var dark = theme === 'oxygen-dark' || theme === 'vue-dark' || ((theme === 'oxygen' || theme === 'vue') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+			document.documentElement.classList.toggle('dark', !!dark);
+		})();
+	</script>
+</head>
+<body>
+<div id="app"></div>
+<script src="{{index $.config.CdnFiles "oxygen@theme@js"}}?v={{$.version}}"></script>
+<script>
+	window.PanOxygenTheme.mountListing({
+		title: {{toJSON $.title}},
+		path: {{toJSON $.path}},
+		full_path: {{toJSON $.full_path}},
+		account_path: {{toJSON $.account_path}},
+		account: {Id: {{toJSON $.account.Id}}, Name: {{toJSON $.account.Name}}, Mode: {{toJSON $.account.Mode}}},
+		accounts: [
+			{{- range $i, $a := $.accounts}}{{if $i}},{{end}}{Id: {{toJSON $a.Id}}, Name: {{toJSON $a.Name}}, Mode: {{toJSON $a.Mode}}}{{- end}}
+		],
+		config: {
+			PathPrefix: {{toJSON $.config.PathPrefix}},
+			SiteName: {{toJSON $.config.SiteName}},
+			FaviconUrl: {{toJSON $.config.FaviconUrl}},
+			Footer: {{toJSON $.config.Footer}},
+			EnablePreview: {{toJSON $.config.EnablePreview}},
+			AccountChoose: {{toJSON $.config.AccountChoose}},
+			Head: {{toJSON $.config.Head}},
+			Readme: {{toJSON $.config.Readme}},
+			Access: {{toJSON $.config.Access}},
+			AdminPath: {{toJSON $.config.AdminPath}}
+		},
+		fns: {{toJSON $.fns}},
+		pre_paths: {{toJSON $.pre_paths}},
+		has_pwd: {{toJSON $.has_pwd}},
+		pwd_err_msg: {{toJSON $.pwd_err_msg}},
+		pwd_path: {{toJSON $.pwd_path}},
+		has_parent: {{toJSON $.has_parent}},
+		parent_path: {{toJSON $.parent_path}},
+		search_key: {{toJSON $.search_key}},
+		layout: {{toJSON $.layout}},
+		theme: {{toJSON $.theme}},
+		is_admin_login: {{toJSON $.is_admin_login}},
+		version: {{toJSON $.version}}
+	});
+</script>
+</body>
+</html>

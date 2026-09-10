@@ -22,7 +22,8 @@
 	<script src="{{index $.config.CdnFiles "jquery@js"}}"></script>
 	<script src="{{index $.config.CdnFiles "cookie@js"}}"></script>
 	<script src="{{index $.config.CdnFiles "md5@js"}}"></script>
-	<script src="{{index $.config.CdnFiles "marked@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "markdown-it@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "markdown@js"}}"></script>
 	<script src="{{index $.config.CdnFiles "viewer@js"}}"></script>
 	<script src="{{index $.config.CdnFiles "clipboard@js"}}"></script>
 	<script src="{{$.config.PathPrefix}}/api/v3/public/config.js"></script>
@@ -131,7 +132,7 @@
 					var hKey = md5(fullUrl);
 					var hc = localStorage.getItem(hKey);
 					if(hc && hc != null && hc != ""){
-						$("#headContent").append(marked.parse(hc));
+						$("#headContent").append(parseMarkdown(hc));
 						$("table").addClass("mdui-table");
 						$("#headContent").toggle();
 						mdContent(fullUrl, hKey, "headContent", false);
@@ -325,7 +326,7 @@
 				var key = md5(fullUrl);
 				var c = localStorage.getItem(key);
 				if(c && c != null && c != ""){
-					$("#content").append(marked.parse(c));
+					$("#content").append(parseMarkdown(c));
 					$("table").addClass("mdui-table");
 					$("#content").toggle();
 					mdContent(fullUrl, key, "content", false);

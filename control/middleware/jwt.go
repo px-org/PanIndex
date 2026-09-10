@@ -61,42 +61,44 @@ func JWTMiddlewar() (*jwt.GinJWTMiddleware, error) {
 			return false
 		},
 		LoginResponse: func(c *gin.Context, code int, token string, expire time.Time) {
-			//c.Redirect(http.StatusFound, module.GloablConfig.AdminPath+"/common")
 			referer := c.Request.Header.Get("Referer")
 			u, _ := url.Parse(referer)
-			if strings.HasPrefix(u.Path, module.GloablConfig.AdminPath) {
-				c.Redirect(http.StatusFound, module.GloablConfig.AdminPath+"/common")
+			adminBase := module.GloablConfig.PathPrefix + module.GloablConfig.AdminPath
+			if strings.HasPrefix(u.Path, module.GloablConfig.AdminPath) || strings.HasPrefix(u.Path, adminBase) {
+				c.Redirect(http.StatusFound, adminBase+"/common")
+			} else if referer != "" {
+				c.Redirect(http.StatusFound, referer)
 			} else {
-				c.Redirect(http.StatusFound, c.Request.Header.Get("Referer"))
+				c.Redirect(http.StatusFound, adminBase+"/common")
 			}
 		},
 		LogoutResponse: func(c *gin.Context, code int) {
-			ThemeCheck(c)
+			AdminThemeCheck(c)
 			theme := c.GetString("theme")
 			c.HTML(http.StatusOK, "templates/pan/admin/login.html", gin.H{
-				"error":        true,
-				"msg":          "退出成功",
-				"redirect_url": "login",
-				"config":       module.GloablConfig,
-				"theme":        theme,
+				"error":   true,
+				"msg":     "退出成功",
+				"config":  module.GloablConfig,
+				"theme":   theme,
+				"version": module.VERSION,
 			})
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
 			path := c.Request.RequestURI
 			if strings.HasPrefix(path, "/api") {
-				//api return json
 				c.JSON(code, gin.H{
 					"status": code,
 					"msg":    message,
 				})
 			} else {
-				//return to login
+				AdminThemeCheck(c)
+				theme := c.GetString("theme")
 				data := gin.H{
-					"error":        true,
-					"msg":          message,
-					"redirect_url": "login",
-					"config":       module.GloablConfig,
-					"theme":        module.GloablConfig.Theme,
+					"error":   true,
+					"msg":     message,
+					"config":  module.GloablConfig,
+					"theme":   theme,
+					"version": module.VERSION,
 				}
 				if message == "cookie token is empty" {
 					data["error"] = false

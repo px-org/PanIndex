@@ -64,6 +64,9 @@ func Index(ac module.Account, path, fullPath, sortColumn, sortOrder string, isVi
 		fns, isFile = GetFilesFromDb(ac, fullPath, "default", "null")
 		fns = FilterHideFiles(fns)
 	}
+	if !isFile {
+		fns = FilterReadmeFiles(fns)
+	}
 	sortFns := make([]module.FileNode, len(fns))
 	copy(sortFns, fns)
 	util.SortFileNode(sortColumn, sortOrder, sortFns)
@@ -164,7 +167,7 @@ func Search(searchKey string) []module.FileNode {
 			dao.DB.Raw(sql, "%"+searchKey+"%").Find(&fns)
 		}
 	}
-	return fns
+	return FilterReadmeFiles(fns)
 }
 
 func FilterHideFiles(files []module.FileNode) []module.FileNode {
@@ -175,6 +178,26 @@ func FilterHideFiles(files []module.FileNode) []module.FileNode {
 		if !ok {
 			fns = append(fns, file)
 		}
+	}
+	return fns
+}
+
+func isHiddenReadmeName(name string) bool {
+	return strings.EqualFold(name, "README.md") || strings.EqualFold(name, "HEAD.md")
+}
+
+// FilterReadmeFiles hides README.md / HEAD.md from directory listings when enabled.
+// Direct single-file access and /api/v3/public/raw are unaffected.
+func FilterReadmeFiles(files []module.FileNode) []module.FileNode {
+	if module.GloablConfig.HideReadmeFiles != "1" || len(files) == 0 {
+		return files
+	}
+	fns := make([]module.FileNode, 0, len(files))
+	for _, file := range files {
+		if !file.IsFolder && isHiddenReadmeName(file.FileName) {
+			continue
+		}
+		fns = append(fns, file)
 	}
 	return fns
 }
@@ -544,6 +567,7 @@ func GetLastNextFile(ac module.Account, path, fullPath, sortColumn, sortOrder st
 			}
 		}
 	}
+	fns = FilterReadmeFiles(fns)
 	util.SortFileNode(sortColumn, sortOrder, fns)
 	var lastFile, nextFile = "", ""
 	for i, fn := range fns {
@@ -585,6 +609,7 @@ func GetFiles(ac module.Account, path, fullPath, sortColumn, sortOrder, viewType
 		}
 	}
 	fns = FilterFilesByType(fns, viewType)
+	fns = FilterReadmeFiles(fns)
 	util.SortFileNode(sortColumn, sortOrder, fns)
 	return fns
 }
@@ -817,6 +842,9 @@ func Files(ac module.Account, path, fullPath string) []module.FileNode {
 	} else if ac.CachePolicy == "dc" {
 		fns, isFile = GetFilesFromDb(ac, fullPath, "default", "null")
 		fns = FilterHideFiles(fns)
+	}
+	if !isFile {
+		fns = FilterReadmeFiles(fns)
 	}
 
 	return fns

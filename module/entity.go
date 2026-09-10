@@ -96,6 +96,7 @@ type Config struct {
 	Proxy                    string               `json:"proxy"`                      //google api prxoy
 	Readme                   string               `json:"readme"`                     //show or hide readme
 	Head                     string               `json:"head"`                       //show or hide head
+	HideReadmeFiles          string               `json:"hide_readme_files"`          //hide README.md/HEAD.md from file lists
 	ShareInfoList            []ShareInfo          `json:"share_info_list"`            //share info list
 	DownloadStatisticsList   []DownloadStatistics `json:"download_statistics_list"`   //download statistics list
 	Access                   string               `json:"access"`                     //access
@@ -185,9 +186,16 @@ type DownloadStatistics struct {
 	Count            int64  `json:"count"`                         //下载次数
 }
 
+// Daily download aggregate for dashboard trend charts
+type DownloadDaily struct {
+	Date  string `json:"date" gorm:"primaryKey;size:10"` // YYYY-MM-DD
+	Count int64  `json:"count"`
+}
+
 type Cloud189 struct {
 	Cloud189Session *resty.Client
 	SessionKey      string `json:"session_key"`
+	SessionSecret   string `json:"session_secret"`
 	AccessToken     string `json:"access_token"`
 	RootId          string `json:"root_id"`
 	FamilyId        string `json:"family_id"`

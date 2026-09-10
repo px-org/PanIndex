@@ -2,9 +2,11 @@ package util
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
@@ -149,6 +151,20 @@ func GetIcon(isFolder bool, fileType string) string {
 			"txt":     "fas fa-file-alt",     //文本
 			"pdf":     "fas fa-file-alt",
 			"md":      "fas fa-file-alt",
+		},
+		"oxygen": KV{
+			"folder":  "folder-open",
+			"image":   "image",
+			"audio":   "music",
+			"video":   "film",
+			"apk":     "smartphone",
+			"archive": "file-archive",
+			"file":    "file",
+			"exe":     "app-window",
+			"code":    "code",
+			"txt":     "file-text",
+			"pdf":     "file-text",
+			"md":      "file-text",
 		},
 	}
 	config := module.GloablConfig
@@ -326,7 +342,7 @@ func SortFileNode(sortColumn, sortOrder string, list []module.FileNode) {
 		sortColumn = "file_name"
 	}
 	if sortOrder == "null" {
-		sortColumn = "asc"
+		sortOrder = "asc"
 	}
 	sort.SliceStable(list, func(i, j int) bool {
 		if list[i].IsFolder != list[j].IsFolder {
@@ -403,12 +419,18 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"jquery@js":                  prefix + "/static/lib/jquery@3.5.1/jquery.min.js",
 			"cookie@js":                  prefix + "/static/lib/js-cookie@3.0.1/dist/js.cookie.min.js",
 			"md5@js":                     prefix + "/static/lib/md5/md5.min.js",
-			"marked@js":                  prefix + "/static/lib/marked/marked.min.js",
+			"markdown-it@js":             prefix + "/static/lib/markdown-it@14.1.0/dist/markdown-it.min.js",
+			"markdown@js":                prefix + "/static/js/markdown.js",
 			"clipboard@js":               prefix + "/static/lib/clipboard@2.0.8/clipboard.min.js",
 			"mdui@index@js":              prefix + "/static/js/mdui.index.js",
 			"mdui@index@css":             prefix + "/static/css/index.css",
 			"sortablejs@js":              prefix + "/static/lib/sortablejs@1.14.0/Sortable.min.js",
-			"admin@js":                   prefix + "/static/js/admin.js",
+			"apexcharts@js":              prefix + "/static/lib/apexcharts@3.54.1/dist/apexcharts.min.js",
+			"admin@js":                   prefix + "/static/js/admin/app.js",
+			"admin@css":                  prefix + "/static/css/admin.css",
+			"admin@api@js":               prefix + "/static/js/admin/api.js",
+			"admin@icons@js":             prefix + "/static/js/admin/icons.js",
+			"admin@ui@js":                prefix + "/static/js/admin/ui.js",
 			"fontawesome@css":            prefix + "/static/lib/fontawesome@5.15.4/css/all.min.css",
 			"APlayer@css":                prefix + "/static/lib/aplayer@1.10.1/dist/APlayer.min.css",
 			"APlayer@js":                 prefix + "/static/lib/aplayer@1.10.1/dist/APlayer.min.js",
@@ -432,8 +454,16 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"pdfh5@js":                   prefix + "/static/lib/pdfh5@1.4.0/js/pdfh5.js",
 			"natural@compare@js":         prefix + "/static/lib/natural-compare-lite@1.4.0/index.min.js",
 			"bootstrap@css":              prefix + "/static/lib/bootstrap@4.6.1/css/bootstrap.min.css",
-			"bootstrap@js":               prefix + "/static/lib/bootstrap@4.6.1/js/bootstrap.min.js",
+			"bootstrap@js":               prefix + "/static/lib/bootstrap@4.6.1/js/bootstrap.bundle.min.js",
+			"bootstrap@theme@css":        prefix + "/static/css/bootstrap-theme.css",
 			"Material+Icons@css":         prefix + "/static/css/Material+Icons.css",
+			"vue@js":                     prefix + "/static/lib/vue@3.4.21/dist/vue.global.prod.js",
+			"vue-router@js":              prefix + "/static/lib/vue-router@4.3.0/dist/vue-router.global.prod.js",
+			"tailwind@js":                prefix + "/static/lib/tailwindcss/tailwindcss.js",
+			"lucide@js":                  prefix + "/static/lib/lucide@0.460.0/dist/umd/lucide.min.js",
+			"oxygen@theme@js":            prefix + "/static/js/oxygen-theme/app.js",
+			"oxygen@theme@css":           prefix + "/static/css/oxygen-theme.css",
+			"oxygen@view@js":             prefix + "/static/js/oxygen-theme/view.js",
 		},
 		"1": KV{
 			"mdui@css":                   "//cdn.staticfile.org/mdui/1.0.2/css/mdui.min.css",
@@ -443,12 +473,18 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"jquery@js":                  "//cdn.staticfile.org/jquery/3.5.1/jquery.min.js",
 			"cookie@js":                  "//cdn.staticfile.org/js-cookie/latest/js.cookie.min.js",
 			"md5@js":                     "//cdn.staticfile.org/blueimp-md5/1.0.1/js/md5.min.js",
-			"marked@js":                  "//cdn.staticfile.org/marked/4.0.2/marked.min.js",
+			"markdown-it@js":             "https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js",
+			"markdown@js":                prefix + "/static/js/markdown.js",
 			"clipboard@js":               "//cdn.staticfile.org/clipboard.js/2.0.8/clipboard.min.js",
 			"mdui@index@js":              prefix + "/static/js/mdui.index.js",
 			"mdui@index@css":             prefix + "/static/css/index.css",
 			"sortablejs@js":              "//cdn.staticfile.org/Sortable/1.14.0/Sortable.min.js",
-			"admin@js":                   prefix + "/static/js/admin.js",
+			"apexcharts@js":              "https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js",
+			"admin@js":                   prefix + "/static/js/admin/app.js",
+			"admin@css":                  prefix + "/static/css/admin.css",
+			"admin@api@js":               prefix + "/static/js/admin/api.js",
+			"admin@icons@js":             prefix + "/static/js/admin/icons.js",
+			"admin@ui@js":                prefix + "/static/js/admin/ui.js",
 			"fontawesome@css":            "//cdn.staticfile.org/font-awesome/5.15.4/css/all.min.css",
 			"APlayer@css":                "//lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/aplayer/1.10.1/APlayer.min.css",
 			"APlayer@js":                 "//lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/aplayer/1.10.1/APlayer.min.js",
@@ -472,8 +508,16 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"pdfh5@js":                   "//fastly.jsdelivr.net/npm/pdfh5@1.4.2/js/pdfh5.js",
 			"natural@compare@js":         "//fastly.jsdelivr.net/npm/natural-compare-lite@1.4.0/index.js",
 			"bootstrap@css":              "//cdn.staticfile.org/bootstrap/4.6.1/css/bootstrap.min.css",
-			"bootstrap@js":               "//cdn.staticfile.org/bootstrap/4.6.1/js/bootstrap.min.js",
+			"bootstrap@js":               "//cdn.staticfile.org/bootstrap/4.6.1/js/bootstrap.bundle.min.js",
+			"bootstrap@theme@css":        prefix + "/static/css/bootstrap-theme.css",
 			"Material+Icons@css":         "//fonts.loli.net/icon?family=Material+Icons",
+			"vue@js":                     "https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js",
+			"vue-router@js":              "https://cdn.jsdelivr.net/npm/vue-router@4.3.0/dist/vue-router.global.prod.js",
+			"tailwind@js":                "https://cdn.tailwindcss.com",
+			"lucide@js":                  "https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js",
+			"oxygen@theme@js":            prefix + "/static/js/oxygen-theme/app.js",
+			"oxygen@theme@css":           prefix + "/static/css/oxygen-theme.css",
+			"oxygen@view@js":             prefix + "/static/js/oxygen-theme/view.js",
 		},
 		"2": KV{
 			"mdui@css":                   jp + "/static/lib/mdui@1.0.2/css/mdui.min.css",
@@ -483,12 +527,18 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"jquery@js":                  jp + "/static/lib/jquery@3.5.1/jquery.min.js",
 			"cookie@js":                  jp + "/static/lib/js-cookie@3.0.1/dist/js.cookie.min.js",
 			"md5@js":                     jp + "/static/lib/md5/md5.min.js",
-			"marked@js":                  jp + "/static/lib/marked/marked.min.js",
+			"markdown-it@js":             jp + "/static/lib/markdown-it@14.1.0/dist/markdown-it.min.js",
+			"markdown@js":                jp + "/static/js/markdown.js",
 			"clipboard@js":               jp + "/static/lib/clipboard@2.0.8/clipboard.min.js",
 			"mdui@index@js":              jp + "/static/js/mdui.index.js",
 			"mdui@index@css":             jp + "/static/css/index.css",
 			"sortablejs@js":              jp + "/static/lib/sortablejs@1.14.0/Sortable.min.js",
-			"admin@js":                   jp + "/static/js/admin.js",
+			"apexcharts@js":              jp + "/static/lib/apexcharts@3.54.1/dist/apexcharts.min.js",
+			"admin@js":                   jp + "/static/js/admin/app.js",
+			"admin@css":                  jp + "/static/css/admin.css",
+			"admin@api@js":               jp + "/static/js/admin/api.js",
+			"admin@icons@js":             jp + "/static/js/admin/icons.js",
+			"admin@ui@js":                jp + "/static/js/admin/ui.js",
 			"fontawesome@css":            jp + "/static/lib/fontawesome@5.15.4/css/all.min.css",
 			"APlayer@css":                jp + "/static/lib/aplayer@1.10.1/dist/APlayer.min.css",
 			"APlayer@js":                 jp + "/static/lib/aplayer@1.10.1/dist/APlayer.min.js",
@@ -512,8 +562,16 @@ func GetCdnFilesMap(cdn, version string) map[string]string {
 			"pdfh5@js":                   jp + "/static/lib/pdfh5@1.4.0/js/pdfh5.js",
 			"natural@compare@js":         jp + "/static/lib/natural-compare-lite@1.4.0/index.min.js",
 			"bootstrap@css":              jp + "/static/lib/bootstrap@4.6.1/css/bootstrap.min.css",
-			"bootstrap@js":               jp + "/static/lib/bootstrap@4.6.1/js/bootstrap.min.js",
+			"bootstrap@js":               jp + "/static/lib/bootstrap@4.6.1/js/bootstrap.bundle.min.js",
+			"bootstrap@theme@css":        jp + "/static/css/bootstrap-theme.css",
 			"Material+Icons@css":         "//fonts.loli.net/icon?family=Material+Icons",
+			"vue@js":                     jp + "/static/lib/vue@3.4.21/dist/vue.global.prod.js",
+			"vue-router@js":              jp + "/static/lib/vue-router@4.3.0/dist/vue-router.global.prod.js",
+			"tailwind@js":                jp + "/static/lib/tailwindcss/tailwindcss.js",
+			"lucide@js":                  jp + "/static/lib/lucide@0.460.0/dist/umd/lucide.min.js",
+			"oxygen@theme@js":            jp + "/static/js/oxygen-theme/app.js",
+			"oxygen@theme@css":           jp + "/static/css/oxygen-theme.css",
+			"oxygen@view@js":             jp + "/static/js/oxygen-theme/view.js",
 		},
 	}
 	cdnKV := cdnMap["0"].(KV)
@@ -591,6 +649,31 @@ func RsaEncode(origData []byte, j_rsakey string) string {
 		log.Errorf("err: %s", err.Error())
 	}
 	return b64tohex(base64.StdEncoding.EncodeToString(b))
+}
+
+// RsaEncryptHex encrypts with PKCS1v15 and returns standard hex (cloud189 PC login).
+func RsaEncryptHex(origData []byte, pubKey string) (string, error) {
+	publicKey := []byte("-----BEGIN PUBLIC KEY-----\n" + pubKey + "\n-----END PUBLIC KEY-----")
+	block, _ := pem.Decode(publicKey)
+	if block == nil {
+		return "", fmt.Errorf("public key error")
+	}
+	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return "", err
+	}
+	pub := pubInterface.(*rsa.PublicKey)
+	b, err := rsa.EncryptPKCS1v15(rand.Reader, pub, origData)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func HmacSha1(data, secret string) string {
+	mac := hmac.New(sha1.New, []byte(secret))
+	mac.Write([]byte(data))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 var b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
@@ -731,6 +814,10 @@ func Md5Params(params map[string]string) string {
 func GetCurrentTheme(theme string) string {
 	if strings.HasPrefix(theme, "mdui") {
 		return "mdui"
+	}
+	// oxygen is the current name; keep vue* as a compatibility alias.
+	if strings.HasPrefix(theme, "oxygen") || strings.HasPrefix(theme, "vue") {
+		return "oxygen"
 	}
 	return theme
 }

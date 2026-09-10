@@ -1,0 +1,26 @@
+﻿{{define "templates/pan/oxygen/view-ns.html"}}
+{{template "templates/pan/oxygen/view-base.html" .}}
+{{end}}
+{{define "oxygen-content-ns"}}
+<div class="min-h-[300px] flex items-center justify-center p-8 m-2 rounded-lg border border-[var(--vt-border)]">
+	<div class="text-center">
+		<p class="text-xl opacity-70 mb-4">该文件格式不支持预览</p>
+		<button id="downButton" type="button" class="px-4 py-2 rounded-lg text-white" style="background:var(--vt-primary)">
+			下载 {{ (index $.fns 0).SizeFmt }}
+		</button>
+	</div>
+</div>
+{{end}}
+{{define "oxygen-scripts-ns"}}
+<script>
+	(function () {
+		var btn = document.getElementById("downButton");
+		var pathEl = document.getElementById("view_down_link");
+		if (btn && pathEl) {
+			btn.addEventListener("click", function () {
+				window.location.href = pathEl.getAttribute("data-path");
+			});
+		}
+	})();
+</script>
+{{end}}

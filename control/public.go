@@ -165,10 +165,22 @@ func IndexData(c *gin.Context) {
 	path := c.PostForm("path")
 	sortBy := c.PostForm("sort_by")
 	order := c.PostForm("order")
+	if sortBy == "" {
+		sortBy = module.GloablConfig.SColumn
+		if cookie, err := c.Request.Cookie("sort_column"); err == nil && cookie.Value != "" {
+			sortBy = cookie.Value
+		}
+	}
+	if order == "" {
+		order = module.GloablConfig.SOrder
+		if cookie, err := c.Request.Cookie("sort_order"); err == nil && cookie.Value != "" {
+			order = cookie.Value
+		}
+	}
 	if strings.HasPrefix(path, module.GloablConfig.PathPrefix) {
 		path = strings.TrimPrefix(path, module.GloablConfig.PathPrefix)
 	}
-	ac, fullPath, path, _ := util.ParseFullPath(path, "")
+	ac, fullPath, path, bypassName := util.ParseFullPath(path, c.Request.Host)
 	middleware.PwdCheck(c, fullPath)
 	if module.GloablConfig.AccountChoose == "display" && fullPath == "/" {
 		//return account list
@@ -180,32 +192,41 @@ func IndexData(c *gin.Context) {
 	if ac.Mode == "aliyundrive" || ac.Mode == "aliyundrive-share" {
 		noReferrer = true
 	}
+	hasParent, parentPath := service.HasParent(fullPath)
+	meta := gin.H{
+		"is_folder":    !isFile,
+		"content":      fns,
+		"no_referrer":  noReferrer,
+		"last_file":    lastFile,
+		"next_file":    nextFile,
+		"page_no":      1,
+		"page_size":    10,
+		"pages":        1,
+		"path":         path,
+		"full_path":    fullPath,
+		"pre_paths":    util.GetPrePath(fullPath),
+		"has_parent":   hasParent,
+		"parent_path":  parentPath,
+		"account_path": CurrentAccountPath(ac.Name, bypassName),
+		"title":        CurrentTitle(ac, module.GloablConfig, bypassName),
+		"pwd_path":     c.GetString("pwd_path"),
+		"account": gin.H{
+			"Id":   ac.Id,
+			"Name": ac.Name,
+			"Mode": ac.Mode,
+		},
+	}
 	if c.GetBool("has_pwd") {
+		meta["content"] = []module.FileNode{}
 		c.JSON(http.StatusOK, gin.H{
 			"status": 403,
 			"msg":    c.GetString("pwd_err_msg"),
-			"data": gin.H{
-				"is_folder":   !isFile,
-				"content":     []module.FileNode{},
-				"no_referrer": noReferrer,
-				"last_file":   lastFile,
-				"next_file":   nextFile,
-				"pwd_path":    c.GetString("pwd_path"),
-			},
+			"data":   meta,
 		})
 		c.Abort()
 		return
 	}
-	CommonSuccessResp(c, "success", gin.H{
-		"is_folder":   !isFile,
-		"content":     fns,
-		"no_referrer": noReferrer,
-		"last_file":   lastFile,
-		"next_file":   nextFile,
-		"page_no":     1,
-		"page_size":   10,
-		"pages":       1,
-	})
+	CommonSuccessResp(c, "success", meta)
 }
 func SearchData(c *gin.Context) {
 	key := c.PostForm("key")

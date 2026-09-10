@@ -1,2 +1,29 @@
-/bin/*
-/.idea/
+# Build
+/bin/
+/PanIndex
+/PanIndex.exe
+*.exe
+
+# Runtime data
+/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temp / local
+*.log
+*.tmp
+tmp_*.bin
+tmp_readme.bin

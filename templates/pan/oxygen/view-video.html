@@ -1,0 +1,37 @@
+﻿{{define "templates/pan/oxygen/view-video.html"}}
+{{template "templates/pan/oxygen/view-base.html" .}}
+{{end}}
+{{define "oxygen-content-video"}}
+<div id="video_content" class="rounded-lg border border-[var(--vt-border)] p-4 m-2">
+	<button id="playlistBtn" type="button" data-account-id="{{$.account.Id}}"
+			data-config-subtitle="{{$.config.Subtitle}}"
+			data-config-subtitle-path="{{$.config.SubtitlePath}}"
+			data-config-danmuku="{{$.config.Danmuku}}"
+			data-config-danmuku-path="{{$.config.DanmukuPath}}"
+			data-file-name="{{(index $.fns 0).FileName}}" data-path="{{$.config.PathPrefix}}{{(index $.fns 0).Path}}"
+			data-file-type="{{(index $.fns 0).FileType}}" data-mode="{{$.account.Mode}}" data-parent-path="{{$.config.PathPrefix}}{{$.parent_path}}"
+			data-file-id="{{(index $.fns 0).FileId}}"
+			class="w-full mb-3 px-3 py-2 rounded-lg text-left border border-[var(--vt-border)] bg-[var(--vt-chip)]">
+		<span class="titleBtn" title="{{FormateName (index $.fns 0).FileName}}">{{FormateName (index $.fns 0).FileName}}</span>
+		{{- if or (eq $.account.Mode "aliyundrive") (eq $.account.Mode "aliyundrive-share")}}
+		<i id="transcodeBtn" class="float-right text-sm opacity-70" title="云转码">cloud</i>
+		{{- end}}
+		<span class="float-right text-sm opacity-70 mr-2" title="播放列表">playlist</span>
+	</button>
+	<ul class="mdui-menu mdui-menu-cascade br" id="playlist_menu" style="width: 40%; display:none"></ul>
+	<div class="relative w-full">
+		<div class="artplayer-app"></div>
+	</div>
+	<div class="danmuinput"></div>
+</div>
+{{end}}
+{{define "oxygen-scripts-video"}}
+<link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@css"}}"/>
+<script src="{{index $.config.CdnFiles "mdui@js"}}"></script>
+<script src="{{index $.config.CdnFiles "hls@js"}}"></script>
+<script src="{{index $.config.CdnFiles "flv@js"}}"></script>
+<script src="{{index $.config.CdnFiles "artplayer@js"}}"></script>
+<script src="{{index $.config.CdnFiles "artplayer-danmuku@js"}}"></script>
+<script src="{{index $.config.CdnFiles "natural@compare@js"}}"></script>
+<script src="{{index $.config.CdnFiles "video@mdui@js"}}?v={{$.version}}"></script>
+{{end}}

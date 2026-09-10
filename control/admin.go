@@ -13,37 +13,28 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 func AdminIndex(c *gin.Context) {
-	c.Redirect(http.StatusFound, module.GloablConfig.PathPrefix+module.GloablConfig.AdminPath+"/common")
+	c.Redirect(http.StatusFound, module.GloablConfig.PathPrefix+module.GloablConfig.AdminPath+"/dashboard")
 }
 
-// admin config managent
-func ConfigManagent(c *gin.Context) {
+// AdminSPA serves the Vue admin single-page application shell.
+func AdminSPA(c *gin.Context) {
 	middleware.AdminThemeCheck(c)
 	theme := c.GetString("theme")
-	fullPath := c.Request.URL.Path
-	adminModule := strings.Split(fullPath, "/")[2]
-	var cacheData []module.Cache
-	searchKey := ""
-	if adminModule == "cache" {
-		path := c.Query("path")
-		pathEsc, _ := url.QueryUnescape(path)
-		cacheData = service.GetCacheData(pathEsc)
-		searchKey = path
-	}
-	template := fmt.Sprintf("templates/pan/admin/%s.html", adminModule)
 	configData := module.GloablConfig
-	c.HTML(http.StatusOK, template, gin.H{
-		"config":       configData,
-		"cache":        cacheData,
-		"search_key":   searchKey,
-		"redirect_url": adminModule,
-		"version":      module.VERSION,
-		"theme":        theme,
+	configData.ShareInfoList = dao.GetShareInfoList()
+	c.HTML(http.StatusOK, "templates/pan/admin/index.html", gin.H{
+		"config":  configData,
+		"version": module.VERSION,
+		"theme":   theme,
 	})
+}
+
+// admin config managent (legacy alias → SPA)
+func ConfigManagent(c *gin.Context) {
+	AdminSPA(c)
 }
 
 // admin save config
@@ -191,6 +182,13 @@ func GetCache(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{"status": 0, "msg": service.GetCacheByPath(pathEsc)})
 	}
+}
+
+// list cache entries for admin cache page
+func GetCacheList(c *gin.Context) {
+	path := c.Query("path")
+	pathEsc, _ := url.QueryUnescape(path)
+	c.JSON(http.StatusOK, gin.H{"status": 0, "msg": "成功", "data": service.GetCacheData(pathEsc)})
 }
 
 // get file cache

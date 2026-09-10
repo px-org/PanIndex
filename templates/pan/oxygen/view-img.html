@@ -1,0 +1,8 @@
+﻿{{define "templates/pan/oxygen/view-img.html"}}
+{{template "templates/pan/oxygen/view-base.html" .}}
+{{end}}
+{{define "oxygen-content-img"}}
+<div class="rounded-lg border border-[var(--vt-border)] p-4 m-2">
+	<img id="view_link" class="max-w-full mx-auto rounded-lg" src="{{$.config.PathPrefix}}{{ (index $.fns 0).Path }}" lazy="loaded" />
+</div>
+{{end}}

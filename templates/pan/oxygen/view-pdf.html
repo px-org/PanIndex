@@ -1,0 +1,19 @@
+﻿{{define "templates/pan/oxygen/view-pdf.html"}}
+{{template "templates/pan/oxygen/view-base.html" .}}
+{{end}}
+{{define "oxygen-content-pdf"}}
+<div id="view_pdf" class="rounded-lg border border-[var(--vt-border)] p-4 m-2 w-[95%]"></div>
+<link rel="stylesheet" href="{{index $.config.CdnFiles "pdfh5@css"}}">
+{{end}}
+{{define "oxygen-scripts-pdf"}}
+<script src="{{index $.config.CdnFiles "pdf@js"}}"></script>
+<script src="{{index $.config.CdnFiles "pdf@worker@js"}}"></script>
+<script src="{{index $.config.CdnFiles "pdfh5@js"}}"></script>
+<script>
+	(function () {
+		var path = document.getElementById("view_down_link").getAttribute("data-path");
+		var fullUrl = encodeURI(window.location.protocol + "//" + window.location.host + path);
+		new Pdfh5("#view_pdf", { pdfurl: fullUrl, lazy: true });
+	})();
+</script>
+{{end}}

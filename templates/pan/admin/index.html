@@ -1,0 +1,52 @@
+{{define "templates/pan/admin/index.html"}}
+<!DOCTYPE html>
+<html lang="zh-CN" class="{{- if eq $.theme "dark"}}dark{{- end}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>系统配置 - PanIndex</title>
+    {{- if ne $.config.FaviconUrl ""}}
+    <link rel="icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+    {{- else}}
+    <link rel="icon" href="{{$.config.PathPrefix}}/static/img/favicon-native.ico" type="image/x-icon" />
+    {{- end}}
+    <script src="{{index $.config.CdnFiles "tailwind@js"}}"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link rel="stylesheet" href="{{index $.config.CdnFiles "admin@css"}}?v={{$.version}}">
+    <script src="{{index $.config.CdnFiles "vue@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "vue-router@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "lucide@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "sortablejs@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "apexcharts@js"}}"></script>
+    <script>
+        (function () {
+            var theme = {{toJSON .theme}};
+            var dark = theme === 'dark' || (theme === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', !!dark);
+        })();
+        window.__ADMIN__ = {
+            config: {{toJSON .config}},
+            version: {{toJSON .version}},
+            theme: {{toJSON .theme}},
+            apiUrl: {{toJSON (printf "%s/api/v3%s" .config.PathPrefix .config.AdminPath)}},
+            adminUrl: {{toJSON (printf "%s%s" .config.PathPrefix .config.AdminPath)}},
+            pathPrefix: {{toJSON .config.PathPrefix}}
+        };
+    </script>
+</head>
+<body>
+<div id="app"></div>
+<script src="{{$.config.PathPrefix}}/static/js/admin/api.js?v={{$.version}}"></script>
+<script src="{{$.config.PathPrefix}}/static/js/admin/icons.js?v={{$.version}}"></script>
+<script src="{{$.config.PathPrefix}}/static/js/admin/ui.js?v={{$.version}}"></script>
+<script src="{{$.config.PathPrefix}}/static/js/admin/pages/forms.js?v={{$.version}}"></script>
+<script src="{{$.config.PathPrefix}}/static/js/admin/pages/crud.js?v={{$.version}}"></script>
+<script src="{{$.config.PathPrefix}}/static/js/admin/pages/disk.js?v={{$.version}}"></script>
+<script src="{{$.config.PathPrefix}}/static/js/admin/pages/dashboard.js?v={{$.version}}"></script>
+<script src="{{index $.config.CdnFiles "admin@js"}}?v={{$.version}}"></script>
+</body>
+</html>
+{{end}}

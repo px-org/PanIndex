@@ -8,7 +8,7 @@ jobs:
       matrix:
         type: [build, build_musl]
         platform: [ubuntu-latest]
-        go-version: [1.20.1]
+        go-version: [1.23.0]
     name: Release and Build
     runs-on: ${{ matrix.platform }}
     steps:

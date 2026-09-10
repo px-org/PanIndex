@@ -53,12 +53,14 @@ func SetRouters(r *gin.Engine) {
 		adminApi.DELETE("/bypass", DelBypass)                    //del bypass config
 		adminApi.GET("/bypass", GetBypass)                       //get bypass by account
 		adminApi.GET("/cache", GetCache)                         //get file cache data
+		adminApi.GET("/cache/list", GetCacheList)                //list cache entries
 		adminApi.POST("/cache/clear", CacheClear)                //clear file cache
 		adminApi.POST("/cache/config", CacheConfig)              //save cache config
 		adminApi.GET("/ali/qrcode", AliQrcode)                   //ali qrcode
 		adminApi.POST("/ali/qrcode/check", AliQrcodeCheck)       //ali qrcode check
 		adminApi.DELETE("/share/info", DeleteShareInfo)          //del share info
 		adminApi.POST("/short/info", ShortInfo)                  //short url && qrcode
+		adminApi.GET("/dashboard", GetDashboard)                 //admin dashboard stats
 	}
 
 	admin := r.Group(module.GloablConfig.AdminPath)
@@ -68,18 +70,19 @@ func SetRouters(r *gin.Engine) {
 		auth := admin.Use(jwt.MiddlewareFunc())
 		auth.GET("", AdminIndex)
 		auth.GET("/", AdminIndex)
-		auth.GET("/common", ConfigManagent)     //base config
-		auth.GET("/appearance", ConfigManagent) //appearance
-		auth.GET("/view", ConfigManagent)       //view config
-		auth.GET("/pwd", ConfigManagent)        //pwd file config
-		auth.GET("/hide", ConfigManagent)       //hide file config
-		auth.GET("/safety", ConfigManagent)     //safety
-		auth.GET("/disk", ConfigManagent)       //bind net disk
-		auth.GET("/bypass", ConfigManagent)     //bypass download
-		auth.GET("/cache", ConfigManagent)      //cache
-		auth.GET("/webdav", ConfigManagent)     //webdav
-		auth.GET("/access", ConfigManagent)     //access
-		auth.GET("/share", ConfigManagent)      //share
+		auth.GET("/dashboard", AdminSPA)
+		auth.GET("/common", AdminSPA)
+		auth.GET("/appearance", AdminSPA)
+		auth.GET("/view", AdminSPA)
+		auth.GET("/pwd", AdminSPA)
+		auth.GET("/hide", AdminSPA)
+		auth.GET("/safety", AdminSPA)
+		auth.GET("/disk", AdminSPA)
+		auth.GET("/bypass", AdminSPA)
+		auth.GET("/cache", AdminSPA)
+		auth.GET("/webdav", AdminSPA)
+		auth.GET("/access", AdminSPA)
+		auth.GET("/share", AdminSPA)
 	}
 	r.GET("/s/*shortCode", func(context *gin.Context) {
 		ShortRedirect(context, r)

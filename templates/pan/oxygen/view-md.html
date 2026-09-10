@@ -1,0 +1,38 @@
+﻿{{define "templates/pan/oxygen/view-md.html"}}
+{{template "templates/pan/oxygen/view-base.html" .}}
+{{end}}
+{{define "oxygen-content-md"}}
+<div id="content" class="vt-md"></div>
+{{end}}
+{{define "oxygen-scripts-md"}}
+<script>
+	(function () {
+		var link = document.getElementById("view_down_link");
+		var box = document.getElementById("content");
+		if (!link || !box || typeof parseMarkdown !== "function") return;
+		var path = link.getAttribute("data-path") || "";
+		var prefix = {{toJSON $.config.PathPrefix}} || "";
+		if (prefix && path.indexOf(prefix) === 0) {
+			path = path.slice(prefix.length) || "/";
+		}
+		var fullUrl = encodeURI(window.location.protocol + "//" + window.location.host + prefix + "/api/v3/public/raw" + path);
+		$.ajax({
+			method: "GET",
+			url: fullUrl,
+			dataType: "text",
+			success: function (data) {
+				if (!data || typeof data !== "string") return;
+				var text = data.trim();
+				if (!text) return;
+				if (text.charAt(0) === "{") {
+					try {
+						var obj = JSON.parse(text);
+						if (obj && obj.status) return;
+					} catch (e) {}
+				}
+				box.innerHTML = parseMarkdown(data);
+			}
+		});
+	})();
+</script>
+{{end}}

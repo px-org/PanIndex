@@ -349,7 +349,7 @@ function mdContent(fullUrl, key, doc, isMark) {
             if(data && !data.status){
                 localStorage.setItem(key, data);
                 if(isMark){
-                    $("#"+doc).append(marked.parse(data));
+                    $("#"+doc).append(parseMarkdown(data));
                     $("table").addClass("mdui-table");
                     $("#"+doc).toggle();
                 }

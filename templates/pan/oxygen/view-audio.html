@@ -1,0 +1,72 @@
+﻿{{define "templates/pan/oxygen/view-audio.html"}}
+{{template "templates/pan/oxygen/view-base.html" .}}
+{{end}}
+{{define "oxygen-content-audio"}}
+<link rel="stylesheet" href="{{index $.config.CdnFiles "APlayer@css"}}">
+<div class="min-h-[300px] flex items-center justify-center p-4">
+	<div id="aplayer" class="w-full max-w-[500px]" data-lrc-path="{{$.config.LrcPath}}" data-enable-lrc="{{$.config.EnableLrc}}"></div>
+</div>
+{{end}}
+{{define "oxygen-scripts-audio"}}
+<script src="{{index $.config.CdnFiles "APlayer@js"}}"></script>
+<script>
+	(function () {
+		var path = document.getElementById("view_down_link").getAttribute("data-path");
+		var enableLrc = $("#aplayer").attr("data-enable-lrc");
+		var lrcPath = $("#aplayer").attr("data-lrc-path");
+		var n = {{toJSON (index $.fns 0).FileName}};
+		var formData = new FormData();
+		formData.append("path", {{toJSON $.parent_path}});
+		formData.append("viewType", "audio");
+		formData.append("sortColumn", Cookies.get("sort_column"));
+		formData.append("sortOrder", Cookies.get("sort_order"));
+		var playList = [];
+		var index = 0;
+		$.ajax({
+			method: "POST",
+			url: {{toJSON $.config.PathPrefix}} + "/api/v3/public/files",
+			data: formData,
+			cache: false,
+			contentType: false,
+			processData: false,
+			success: function (data) {
+				var lrcType = enableLrc == "1" ? 3 : 0;
+				$.each(data.data, function (i, item) {
+					if (item.file_name == n) index = i;
+					var v = {};
+					var vname = item.file_name.split(".")[0];
+					var ns = vname.split("-");
+					if (ns.length > 1) {
+						v.artist = ns[0];
+						v.name = ns[1];
+					} else {
+						v.name = vname;
+						v.artist = "艺术家";
+					}
+					v.url = item.file_name;
+					v.cover = {{toJSON $.config.PathPrefix}} + "/static/img/music-cover.png";
+					if (enableLrc == "1") v.lrc = lrcPath + vname + ".lrc";
+					playList.push(v);
+				});
+				var ap = new APlayer({
+					container: document.getElementById("aplayer"),
+					mini: false,
+					autoplay: false,
+					listFolded: false,
+					listMaxHeight: 200,
+					preload: "auto",
+					loop: "all",
+					order: "list",
+					lrcType: lrcType,
+					audio: playList
+				});
+				ap.list.switch(index);
+				if (document.documentElement.classList.contains("dark")) {
+					$(".aplayer-title").css("color", "#666");
+					$(".aplayer-list-title").css("color", "#666");
+				}
+			}
+		});
+	})();
+</script>
+{{end}}

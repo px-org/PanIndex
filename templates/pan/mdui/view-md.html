@@ -11,7 +11,7 @@
             method: 'GET',
             url: fullUrl,
             success: function (data) {
-                $("#content").append(marked.parse(data));
+                $("#content").append(parseMarkdown(data));
                 $("table").addClass("mdui-table");
             }
         });

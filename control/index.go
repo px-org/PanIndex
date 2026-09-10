@@ -139,6 +139,7 @@ func download(ac module.Account, fileNode module.FileNode, c *gin.Context) {
 		c.String(http.StatusForbidden, "401 Unauthorized")
 		return
 	}
+	recordDownloadStats(ac, fileNode)
 	downUrl := service.GetDownloadUrl(ac, fileNode.FileId)
 	if strings.HasPrefix(downUrl, "http") {
 		if ac.DownTransfer == 1 {

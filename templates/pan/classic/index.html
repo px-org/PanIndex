@@ -17,8 +17,8 @@
         a{text-decoration: none;}
     </style>
     {{- if ne $.config.FaviconUrl ""}}
-    <link rel="icon" href="{{$.config.FaviconUr}}" type="image/x-icon" />
-    <link rel="shortcut icon" href="{{$.config.FaviconUr}}" type="image/x-icon" />
+    <link rel="icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
     {{- else}}
     <link rel="icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
@@ -55,8 +55,8 @@
     <tr>
         <th class="file-name"><span class="table-head" data-order-seq="" data-order-type="file-name" style="cursor: default;">Name</span></th>
         <th class="file-size"><span class="table-head" data-order-seq="" data-order-type="file-size" style="cursor: default;">Size</span></th>
-        <th class="file-date-modified"><span class="table-head" data-order-seq="" data-order-type="file-date-modified" style="cursor: default;">Date Modified</span></th></th>
-        <th class="file-date-modified">Download</th>
+		<th class="file-date-modified"><span class="table-head" data-order-seq="" data-order-type="file-date-modified" style="cursor: default;">Date Modified</span></th>
+		<th class="file-date-modified">Download</th>
     </tr>
     </thead>
     <tbody>

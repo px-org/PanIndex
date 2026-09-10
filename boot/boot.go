@@ -243,10 +243,21 @@ func InitStaticBox(r *gin.Engine, fs embed.FS) {
 }
 
 func Templates(fs embed.FS, config BootConfig) *template.Template {
-	themes := [3]string{"mdui", "classic", "bootstrap"}
+	themes := [4]string{"mdui", "classic", "bootstrap", "oxygen"}
 	tmpl := template.New("")
-	templatesFileNames := []string{"base", "appearance", "common", "disk", "hide", "login", "access", "pwd", "safety", "view", "bypass", "cache", "webdav", "404", "share"}
+	templatesFileNames := []string{"index", "login", "404"}
 	addTemplatesFromFolder("admin", tmpl, fs, templatesFileNames, config)
+	themeFuncs := template.FuncMap{
+		"unescaped":    unescaped,
+		"contains":     strings.Contains,
+		"iconclass":    iconclass,
+		"FormateName":  FormateName,
+		"TruncateName": TruncateName,
+		"FormateUnix":  FormateUnix,
+		"Year":         Year,
+		"toJSON":       toJSON,
+		"isLast":       isLast,
+	}
 	for _, theme := range themes {
 		theme = util.GetCurrentTheme(theme)
 		tmpFile := strings.Join([]string{"templates/pan/", "/index.html"}, theme)
@@ -257,35 +268,23 @@ func Templates(fs embed.FS, config BootConfig) *template.Template {
 			s, _ := ioutil.ReadFile(tmpFilePath)
 			data = string(s)
 		}
-		tmpl.New(tmpFile).Funcs(template.FuncMap{
-			"unescaped":    unescaped,
-			"contains":     strings.Contains,
-			"iconclass":    iconclass,
-			"FormateName":  FormateName,
-			"TruncateName": TruncateName,
-			"FormateUnix":  FormateUnix,
-			"Year":         Year,
-		}).Parse(data)
+		tmpl.New(tmpFile).Funcs(themeFuncs).Parse(data)
 	}
 	//添加详情模板
+	viewThemes := [2]string{"mdui", "oxygen"}
 	viewTemplates := [10]string{"base", "img", "audio", "video", "code", "office", "ns", "pdf", "md", "epub"}
-	for _, vt := range viewTemplates {
-		tmpName := fmt.Sprintf("templates/pan/%s/view-%s.html", "mdui", vt)
-		dataBuf, _ := fs.ReadFile(tmpName)
-		data := string(dataBuf)
-		tmpNamePath := filepath.Join(util.ExeFilePath(config.Ui), tmpName)
-		if util.FileExist(tmpNamePath) {
-			s, _ := ioutil.ReadFile(tmpNamePath)
-			data = string(s)
+	for _, viewTheme := range viewThemes {
+		for _, vt := range viewTemplates {
+			tmpName := fmt.Sprintf("templates/pan/%s/view-%s.html", viewTheme, vt)
+			dataBuf, _ := fs.ReadFile(tmpName)
+			data := string(dataBuf)
+			tmpNamePath := filepath.Join(util.ExeFilePath(config.Ui), tmpName)
+			if util.FileExist(tmpNamePath) {
+				s, _ := ioutil.ReadFile(tmpNamePath)
+				data = string(s)
+			}
+			tmpl.New(tmpName).Funcs(themeFuncs).Parse(data)
 		}
-		tmpl.New(tmpName).Funcs(template.FuncMap{
-			"unescaped":    unescaped,
-			"contains":     strings.Contains,
-			"iconclass":    iconclass,
-			"FormateName":  FormateName,
-			"TruncateName": TruncateName,
-			"FormateUnix":  FormateUnix,
-		}).Parse(data)
 	}
 	return tmpl
 }
@@ -308,11 +307,20 @@ func addTemplatesFromFolder(folder string, tmpl *template.Template, fs embed.FS,
 			"FormateName":  FormateName,
 			"TruncateName": TruncateName,
 			"FormateUnix":  FormateUnix,
+			"toJSON":       toJSON,
 		}).Parse(data)
 	}
 }
 
 func unescaped(x string) interface{} { return template.HTML(x) }
+
+func toJSON(v interface{}) template.JS {
+	b, err := jsoniter.Marshal(v)
+	if err != nil {
+		return template.JS("null")
+	}
+	return template.JS(b)
+}
 
 func isLast(index int, len int) bool {
 	return index+1 == len
